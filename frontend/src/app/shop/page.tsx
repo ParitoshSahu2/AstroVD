@@ -5,27 +5,41 @@ import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { PageHeader } from '../../components/PageHeader';
 import { ProductsSection } from '../../components/ProductsSection';
-import { ShoppingCart, ShieldCheck, Award, Sparkles, ArrowRight, HelpCircle, CheckCircle, Search, Filter } from 'lucide-react';
+import { ShieldCheck, Award, Sparkles } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function ShopPage() {
+  const { t, language } = useLanguage();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const faqs = [
     {
-      q: 'How do I know which gemstone bracelet is right for me?',
-      a: 'Each crystal possesses distinct planetary vibration. For specific life hurdles (e.g. Nazar protection, wealth accumulation, or marital discord), our team can analyze your Janam Kundli. You can also select intuitively or choose based on your Zodiac/Moon sign.',
+      q: t('How do I know which gemstone bracelet is right for me?', 'मुझे कैसे पता चलेगा कि कौन सा सिद्ध ब्रेसलेट मेरे लिए सही है?'),
+      a: t(
+        'Each crystal possesses distinct planetary vibration. For specific life hurdles (e.g. Nazar protection, wealth accumulation, or marital discord), our team can analyze your Janam Kundli. You can also select intuitively or choose based on your Zodiac/Moon sign.',
+        'प्रत्येक रत्न व क्रिस्टल की एक विशिष्ट ग्रहीय ऊर्जा होती है। जीवन की विशिष्ट समस्याओं (जैसे नज़र दोष, धन अभाव, अथवा दांपत्य बाधा) हेतु हमारी वैदिक टीम आपकी जन्म कुंडली का विश्लेषण कर सकती है। आप अपनी चंद्र राशि के अनुसार भी चयन कर सकते हैं।'
+      ),
     },
     {
-      q: 'Are these gemstones 100% natural and certified?',
-      a: 'Yes, absolutely. All bracelets in the AstroVD collection are crafted from unheated, untreated natural minerals and accompanied by a verifiable Gemological Laboratory Certificate of Authenticity.',
+      q: t('Are these gemstones 100% natural and certified?', 'क्या ये सभी रत्न 100% प्राकृतिक एवं लैब प्रमाणित हैं?'),
+      a: t(
+        'Yes, absolutely. All bracelets in the AstroVD collection are crafted from unheated, untreated natural minerals and accompanied by a verifiable Gemological Laboratory Certificate of Authenticity.',
+        'हां, पूर्णतः। AstroVD के सभी ब्रेसलेट व रत्न 100% प्राकृतिक, अकृत्रिम और शुद्ध खनिजों से बने हैं, जिनके साथ सरकारी मान्यता प्राप्त जेमोलॉजिकल लैब का प्रामाणिकता प्रमाण-पत्र संलग्न होता है।'
+      ),
     },
     {
-      q: 'What is Vedic Prana Pratishtha and why is it essential?',
-      a: 'A gemstone remains dormant until infused with cosmic prana. Before shipping, our Varanasi Vedic Acharyas perform a formal Sankalp with your Name, Gotra, and Nakshatra chanting the prescribed Beej Mantra so the bracelet arrives spiritually activated.',
+      q: t('What is Vedic Prana Pratishtha and why is it essential?', 'वैदिक प्राण-प्रतिष्ठा क्या है और यह क्यों आवश्यक है?'),
+      a: t(
+        'A gemstone remains dormant until infused with cosmic prana. Before shipping, our Varanasi Vedic Acharyas perform a formal Sankalp with your Name, Gotra, and Nakshatra chanting the prescribed Beej Mantra so the bracelet arrives spiritually activated.',
+        'बिना प्राण-प्रतिष्ठा के कोई भी रत्न सुप्त अवस्था में रहता है। प्रेषण से पूर्व, काशी के वैदिक आचार्य आपके नाम, गोत्र व नक्षत्र का शास्त्रोक्त संकल्प लेकर संबंधित ग्रह के बीज मंत्रों द्वारा इसे जाग्रत करते हैं।'
+      ),
     },
     {
-      q: 'Which hand should I wear the bracelet on?',
-      a: 'As a Vedic principle: Wear on the Right Hand to project and radiate energy (confidence, action, career, leadership) or on the Left Hand to receive and internalize energy (healing, calm, emotional peace, intuition).',
+      q: t('Which hand should I wear the bracelet on?', 'ब्रेसलेट को किस हाथ में धारण करना चाहिए?'),
+      a: t(
+        'As a Vedic principle: Wear on the Right Hand to project and radiate energy (confidence, action, career, leadership) or on the Left Hand to receive and internalize energy (healing, calm, emotional peace, intuition).',
+        'वैदिक सिद्धांत के अनुसार: ऊर्जा को प्रक्षेपित करने (आत्मविश्वास, कर्म, करियर, धन आकर्षण) हेतु दाहिने हाथ में धारण करें, एवं आंतरिक शांति, स्वास्थ्य व अंतर्ज्ञान हेतु बाएं हाथ में धारण करें।'
+      ),
     },
   ];
 
@@ -33,15 +47,18 @@ export default function ShopPage() {
     <div className="relative min-h-screen w-full bg-[#FAF7F2] m-0 p-0 overflow-x-hidden selection:bg-amber-400">
       <Navbar />
 
-      {/* Header exactly matching user screenshot */}
+      {/* Header with dual-language support */}
       <PageHeader
-        breadcrumb="Sacred Products"
-        title="Sacred Vedic Products & Dhan Yog Talismans"
-        subtitle="100% Lab-certified, energized with Vedic Suktams by Dr. Pandit Vishal Dubey for wealth, protection, and planetary alignment."
+        breadcrumb={t('Sacred Products', 'सिद्ध आध्यात्मिक उत्पाद')}
+        title={t('Sacred Vedic Products & Dhan Yog Talismans', 'सिद्ध वैदिक उत्पाद एवं धन योग ताबीज')}
+        subtitle={t(
+          '100% Lab-certified, energized with Vedic Suktams by Dr. Pandit Vishal Dubey for wealth, protection, and planetary alignment.',
+          'पूज्य डॉ. पंडित विशाल दुबे द्वारा वैदिक सूक्तों से अभिमंत्रित, 100% लैब प्रमाणित आध्यात्मिक उत्पाद एवं रत्न।'
+        )}
       />
 
       <main className="w-full space-y-6">
-        {/* Sacred Astro Store Products Showcase (featuring all 14 newly added images) */}
+        {/* Sacred Astro Store Products Showcase */}
         <ProductsSection />
 
         {/* Certification & Guarantee Banner */}
@@ -52,10 +69,13 @@ export default function ShopPage() {
                 <Award className="w-6 h-6 text-[#800000]" />
               </div>
               <h4 className="font-serif font-bold text-sm text-[#2A1810]">
-                Govt &amp; Lab Certified
+                {t('Govt & Lab Certified', 'सरकारी एवं लैब द्वारा प्रमाणित')}
               </h4>
               <p className="text-xs text-stone-600 leading-relaxed">
-                Every gemstone bracelet comes with verifiable laboratory certification confirming natural mineral purity.
+                {t(
+                  'Every gemstone bracelet comes with verifiable laboratory certification confirming natural mineral purity.',
+                  'प्रत्येक रत्न ब्रेसलेट के साथ प्रामाणिक लैब प्रमाण-पत्र संलग्न होता है, जो 100% शुद्धता की पुष्टि करता है।'
+                )}
               </p>
             </div>
 
@@ -64,10 +84,13 @@ export default function ShopPage() {
                 <Sparkles className="w-6 h-6 text-[#800000]" />
               </div>
               <h4 className="font-serif font-bold text-sm text-[#2A1810]">
-                Vedic Prana Pratishtha
+                {t('Vedic Prana Pratishtha', 'वैदिक प्राण-प्रतिष्ठा व संकल्प')}
               </h4>
               <p className="text-xs text-stone-600 leading-relaxed">
-                Consecrated by certified Varanasi priests on auspicious Tithi &amp; Nakshatras in your personal name.
+                {t(
+                  'Consecrated by certified Varanasi priests on auspicious Tithi & Nakshatras in your personal name.',
+                  'काशी के विद्वान ब्राह्मणों द्वारा शुभ तिथि व नक्षत्र में आपके व्यक्तिगत नाम-गोत्र से शास्त्रोक्त सिद्ध।'
+                )}
               </p>
             </div>
 
@@ -76,10 +99,13 @@ export default function ShopPage() {
                 <ShieldCheck className="w-6 h-6 text-[#800000]" />
               </div>
               <h4 className="font-serif font-bold text-sm text-[#2A1810]">
-                Worldwide Insured Delivery
+                {t('Worldwide Insured Delivery', 'विश्वव्यापी सुरक्षित वितरण')}
               </h4>
               <p className="text-xs text-stone-600 leading-relaxed">
-                Safe, tamper-proof courier shipping with real-time tracking across India, UAE, UK, USA, and Australia.
+                {t(
+                  'Safe, tamper-proof courier shipping with real-time tracking across India, UAE, UK, USA, and Australia.',
+                  'भारत, यूएई, यूके, यूएसए और ऑस्ट्रेलिया सहित विश्व भर में सुरक्षित एवं ट्रैकिंग युक्त कूरियर सेवा।'
+                )}
               </p>
             </div>
           </div>
@@ -88,9 +114,11 @@ export default function ShopPage() {
         {/* Gemstone Wearing & Consecration FAQ */}
         <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-12 pb-16 space-y-6">
           <div className="text-center space-y-2">
-            <span className="text-xs font-bold tracking-widest text-[#800000] uppercase">FREQUENTLY ASKED QUESTIONS</span>
+            <span className="text-xs font-bold tracking-widest text-[#800000] uppercase">
+              {t('FREQUENTLY ASKED QUESTIONS', 'बारंबार पूछे जाने वाले प्रश्न')}
+            </span>
             <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#4A151B]">
-              Gemstone Activation &amp; Wearing Guidance
+              {t('Gemstone Activation & Wearing Guidance', 'रत्न धारण विधि एवं प्राण-प्रतिष्ठा मार्गदर्शन')}
             </h3>
           </div>
 

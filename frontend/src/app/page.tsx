@@ -6,6 +6,7 @@ import { ServicesCarousel } from '../components/ServicesCarousel';
 import { AboutSection } from '../components/AboutSection';
 import { ProductsSection } from '../components/ProductsSection';
 import { PoojaServicesSection } from '../components/PoojaServicesSection';
+import { GallerySection } from '../components/GallerySection';
 import { BlogSection } from '../components/BlogSection';
 import { FeedbackSection } from '../components/FeedbackSection';
 import { SectionDivider } from '../components/SectionDivider';
@@ -52,7 +53,15 @@ export default function Home() {
       {/* Divider after Pooja Services */}
       <SectionDivider />
 
-      {/* 5. Blog & Sacred Knowledge Section */}
+      {/* 5. Divine Gallery & Sacred Rituals Showcase */}
+      <div id="gallery">
+        <GallerySection />
+      </div>
+
+      {/* Divider after Gallery */}
+      <SectionDivider />
+
+      {/* 6. Blog & Sacred Knowledge Section */}
       <div id="blog">
         <BlogSection />
       </div>
@@ -60,7 +69,7 @@ export default function Home() {
       {/* Divider after Blog */}
       <SectionDivider />
 
-      {/* 6. Seeker Feedback & Reviews Section */}
+      {/* 7. Seeker Feedback & Reviews Section */}
       <div id="feedback">
         <FeedbackSection />
       </div>

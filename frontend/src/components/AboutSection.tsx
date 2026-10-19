@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ArrowUp, MessageCircle, Award, CheckCircle, ShieldCheck, Sparkles, BookOpen, GraduationCap, Star, Users } from 'lucide-react';
 import { SectionDivider } from './SectionDivider';
+import { useLanguage } from '../context/LanguageContext';
 
 interface AboutSectionProps {
   isHomePage?: boolean;
@@ -62,6 +63,7 @@ const AnimatedCounter: React.FC<{ target: number; suffix?: string; duration?: nu
 };
 
 export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }) => {
+  const { t, language } = useLanguage();
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -72,78 +74,78 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
 
   const certifications = [
     {
-      title: 'PhD in Jyotish & Rog',
-      institution: 'Maharishi College of Vedic Astrology, Rajasthan',
-      year: 'Specialization in Medical & Predictive Vedic Astrology',
+      title: t('PhD in Jyotish & Rog', 'ज्योतिष एवं रोग में पीएचडी'),
+      institution: t('Maharishi College of Vedic Astrology, Rajasthan', 'महर्षि वैदिक ज्योतिष महाविद्यालय, राजस्थान'),
+      year: t('Specialization in Medical & Predictive Vedic Astrology', 'मेडिकल एवं भविष्यसूचक वैदिक ज्योतिष में विशिष्ट शोध'),
       icon: GraduationCap,
-      badge: 'Doctorate Degree',
+      badge: t('Doctorate Degree', 'विद्यावाचस्पति / डॉक्टरेट'),
     },
     {
-      title: 'Jyotishacharya Title',
-      institution: 'Vedic Astrological Council of India',
-      year: 'Honored in 2018 for Exceptional Cosmic Mastery',
+      title: t('Jyotishacharya Title', 'ज्योतिषाचार्य मानद उपाधि'),
+      institution: t('Vedic Astrological Council of India', 'अखिल भारतीय वैदिक ज्योतिष परिषद'),
+      year: t('Honored in 2018 for Exceptional Cosmic Mastery', 'वर्ष 2018 में उत्कृष्ट ज्योतिषीय ज्ञान हेतु अलंकृत'),
       icon: Award,
-      badge: 'Highest Honor',
+      badge: t('Highest Honor', 'सर्वोच्च सम्मान'),
     },
     {
-      title: 'Best Jyotish Shastri Award',
-      institution: 'National Vedic Research Forum',
-      year: 'Consecrated Honor in 2015',
+      title: t('Best Jyotish Shastri Award', 'सर्वश्रेष्ठ ज्योतिष शास्त्री पुरस्कार'),
+      institution: t('National Vedic Research Forum', 'राष्ट्रीय वैदिक शोध संस्थान'),
+      year: t('Consecrated Honor in 2015', 'वर्ष 2015 में राष्ट्रीय स्तर पर सम्मानित'),
       icon: Star,
-      badge: 'National Award',
+      badge: t('National Award', 'राष्ट्रीय पुरस्कार'),
     },
     {
-      title: 'Affiliated Astrological Researcher',
-      institution: 'Shree Ganesh Vidyapith Research Center',
-      year: 'Leading Predictive Research Since 2009',
+      title: t('Affiliated Astrological Researcher', 'संबद्ध ज्योतिषीय शोध अध्येता'),
+      institution: t('Shree Ganesh Vidyapith Research Center', 'श्री गणेश विद्यापीठ शोध केंद्र'),
+      year: t('Leading Predictive Research Since 2009', '2009 से निरंतर सटीक भविष्यफल शोध'),
       icon: BookOpen,
-      badge: 'Senior Fellow',
+      badge: t('Senior Fellow', 'वरिष्ठ अध्येता'),
     },
     {
-      title: 'Certified Hypnotherapist & Tantra Scholar',
-      institution: 'Institute of Mind Sciences & Ancient Tantras',
-      year: 'Deep Palmistry, Vastu & Subconscious Alignment',
+      title: t('Certified Hypnotherapist & Tantra Scholar', 'सम्मोहन एवं तंत्र विद्या विशेषज्ञ'),
+      institution: t('Institute of Mind Sciences & Ancient Tantras', 'प्राचीन तंत्र व मानस विज्ञान संस्थान'),
+      year: t('Deep Palmistry, Vastu & Subconscious Alignment', 'हस्तरेखा, वास्तु दोष निवारण व अवचेतन संतुलन'),
       icon: ShieldCheck,
-      badge: 'Certified',
+      badge: t('Certified', 'प्रमाणित'),
     },
     {
-      title: 'B.Pharma & MBA Dual Foundations',
-      institution: 'Premier Indian Universities',
-      year: 'Bridging Medical Science, Analytics & Astrology',
+      title: t('B.Pharma & MBA Dual Foundations', 'बी.फार्मा एवं एमबीए उच्च शिक्षा'),
+      institution: t('Premier Indian Universities', 'प्रतिष्ठित भारतीय विश्वविद्यालय'),
+      year: t('Bridging Medical Science, Analytics & Astrology', 'चिकित्सा विज्ञान, विश्लेषण व ज्योतिष का समन्वय'),
       icon: Sparkles,
-      badge: 'Academic Foundation',
+      badge: t('Academic Foundation', 'शैक्षणिक आधार'),
     },
   ];
 
   const panditsList = [
     {
-      name: 'ACHARYA SOURABH SWAMI JI',
-      role: 'Senior Vedic Puja & Karmakand Acharya',
-      specialty: 'Specialist in Shukla Yajurveda Anushthan, Shat Chandi Path, and Navgrah Shanti',
+      name: t('ACHARYA SOURABH SWAMI JI', 'आचार्य सौरभ स्वामी जी'),
+      role: t('Senior Vedic Puja & Karmakand Acharya', 'वरिष्ठ वैदिक पूजा व कर्मकांड आचार्य'),
+      specialty: t('Specialist in Shukla Yajurveda Anushthan, Shat Chandi Path, and Navgrah Shanti', 'शुक्ल यजुर्वेद अनुष्ठान, शतचंडी महायज्ञ एवं नवग्रह शांति विशेषज्ञ'),
       image: '/pandits/sourabh_swami.jpg',
     },
     {
-      name: 'PANDIT JI (SENIOR ASTROLOGER)',
-      role: 'Senior Kundali & Horary Expert',
-      specialty: 'Janam Kundli analysis, Prashna Kundli, and planetary dosha remedies',
+      name: t('PANDIT JI (SENIOR ASTROLOGER)', 'पंडित जी (वरिष्ठ ज्योतिषी)'),
+      role: t('Senior Kundali & Horary Expert', 'वरिष्ठ जन्म कुंडली व प्रश्न शास्त्र विशेषज्ञ'),
+      specialty: t('Janam Kundli analysis, Prashna Kundli, and planetary dosha remedies', 'सटीक जन्म कुंडली विश्लेषण, प्रश्न लग्न विचार व ग्रह शांति उपाय'),
       image: '/pandits/senior_astrologer.jpg',
     },
     {
-      name: 'PANDIT JI (YAGYASHALA)',
-      role: 'Yagna & Agnihotra Specialist',
-      specialty: 'Kashi Vishwanath Parampara, Mahamrityunjaya Havan & Graha Shanti',
+      name: t('PANDIT JI (YAGYASHALA)', 'पंडित जी (यज्ञशाला आचार्य)'),
+      role: t('Yagna & Agnihotra Specialist', 'वैदिक यज्ञ एवं अग्निहोत्र विशेषज्ञ'),
+      specialty: t('Kashi Vishwanath Parampara, Mahamrityunjaya Havan & Graha Shanti', 'काशी विश्वनाथ परंपरा, महामृत्युंजय हवन एवं गृह क्लेश शांति'),
       image: '/pandits/yagyashala_pandit.jpg',
     },
     {
-      name: 'PANDIT JI (KARAMKAND)',
-      role: 'Ritual & Shastra Vidhan Expert',
-      specialty: 'Grah Pravesh, Vaastu Shanti, Ark/Kumbh Vivah & Mangal Dosh Nivaran',
+      name: t('PANDIT JI (KARAMKAND)', 'पंडित जी (कर्मकांड शास्त्री)'),
+      role: t('Ritual & Shastra Vidhan Expert', 'शास्त्र विधान एवं संस्कार विशेषज्ञ'),
+      specialty: t('Grah Pravesh, Vaastu Shanti, Ark/Kumbh Vivah & Mangal Dosh Nivaran', 'गृह प्रवेश, वास्तु शांति, अर्क/कुंभ विवाह व मांगलिक दोष निवारण'),
       image: '/pandits/karamkand_pandit.jpg',
     },
   ];
 
   return (
-    <section id="about" className={`relative w-full bg-[#FAF7F2] ${isHomePage ? 'py-14 sm:py-18' : 'pt-28 sm:pt-36 pb-16 sm:pb-24'} px-4 sm:px-6 lg:px-12 overflow-hidden selection:bg-amber-400`}>
+    <section id="about" className={`relative w-full bg-[#FAF7F2] ${isHomePage ? 'py-14 sm:py-18' : 'py-10 sm:py-16'} px-4 sm:px-6 lg:px-12 overflow-hidden selection:bg-amber-400`}>
       
       {/* Background Sacred Ornaments */}
       <img
@@ -161,34 +163,28 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
         
         {/* ================= SECTION 1: HEADER ================= */}
         {!isHomePage ? (
-          /* Dedicated About Page: Single Majestic Warm Hero */
-          <div className="text-center space-y-4 max-w-4xl mx-auto">
-            {/* Breadcrumb Navigation */}
-            <nav className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-stone-500">
-              <Link href="/" className="text-[#800000] hover:text-[#5B0D15] font-semibold transition-colors">
-                Home
-              </Link>
-              <span className="text-stone-400">›</span>
-              <span className="text-stone-700 font-semibold">About Us &amp; Sacred Lineage</span>
-            </nav>
-
+          /* Dedicated About Page: Sacred Parampara Intro */
+          <div className="text-center space-y-3.5 max-w-3xl mx-auto">
             {/* Sacred Vedic Tag */}
             <div>
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-100/90 border border-amber-300 text-amber-950 text-xs font-bold uppercase tracking-widest shadow-sm">
                 <span className="text-sm">ॐ</span>
-                <span>Spiritual Lineage &amp; Vedic Parampara</span>
+                <span>{t('Spiritual Lineage & Vedic Parampara', 'आध्यात्मिक परंपरा एवं वैदिक ज्ञान')}</span>
                 <span className="text-sm">ॐ</span>
               </div>
             </div>
 
             {/* Main Page Title */}
-            <h1 className="font-serif text-3xl sm:text-4xl lg:text-[46px] font-bold text-[#4A151B] leading-[1.18] tracking-tight">
-              Spiritual Lineage &amp; Sacred Vedic Guidance
-            </h1>
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#4A151B] leading-tight tracking-tight">
+              {t('Spiritual Lineage & Sacred Vedic Guidance', 'आध्यात्मिक परंपरा एवं पवित्र वैदिक मार्गदर्शन')}
+            </h2>
 
             {/* Subtitle */}
-            <p className="text-xs sm:text-sm lg:text-[15.5px] text-stone-600 leading-relaxed max-w-2xl mx-auto">
-              Preserving ancient Varanasi astrological traditions under the revered guidance of Gold Medalist Dr. Pandit Vishal Dubey (AstroVD) — bridging ancient Jyotish Shastras with medical insight and profound spiritual wisdom.
+            <p className="text-xs sm:text-sm lg:text-[15px] text-stone-600 leading-relaxed max-w-2xl mx-auto">
+              {t(
+                'Preserving ancient Varanasi astrological traditions under the revered guidance of Gold Medalist Dr. Pandit Vishal Dubey (AstroVD) — bridging ancient Jyotish Shastras with medical insight and profound spiritual wisdom.',
+                'गोल्ड मेडलिस्ट डॉ. पंडित विशाल दुबे (AstroVD) के सानिध्य में प्राचीन काशी ज्योतिष परंपरा — वैदिक शास्त्रों, वैज्ञानिक दृष्टिकोण एवं गहन आध्यात्मिक ज्ञान का अद्भुत संगम।'
+              )}
             </p>
           </div>
         ) : (
@@ -196,16 +192,19 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
           <div className="text-center space-y-2.5 max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-100/90 border border-amber-300 text-amber-900 text-xs font-bold uppercase tracking-widest shadow-sm">
               <span>✦</span>
-              <span>ABOUT US &amp; SPIRITUAL LINEAGE</span>
+              <span>{t('ABOUT US & SPIRITUAL LINEAGE', 'परिचय एवं आध्यात्मिक परंपरा')}</span>
               <span>✦</span>
             </div>
 
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#4A151B] leading-tight">
-              Guiding Your Destiny with Authentic Vedic Truth
+              {t('Guiding Your Destiny with Authentic Vedic Truth', 'प्रामाणिक वैदिक सत्य से आपके भाग्य का मार्गदर्शन')}
             </h2>
 
             <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-xl mx-auto">
-              Led by Gold Medalist Dr. Pandit Vishal Dubey (AstroVD) — bridging ancient Varanasi Shastras with medical and scientific precision.
+              {t(
+                'Led by Gold Medalist Dr. Pandit Vishal Dubey (AstroVD) — bridging ancient Varanasi Shastras with medical and scientific precision.',
+                'गोल्ड मेडलिस्ट डॉ. पंडित विशाल दुबे (AstroVD) के मार्गदर्शन में — प्राचीन काशी शास्त्रों एवं वैज्ञानिक सटीकता का संगम।'
+              )}
             </p>
           </div>
         )}
@@ -224,6 +223,8 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                     <img
                       src="/dr_vishal_dubey.jpg"
                       alt="Dr. Pandit Vishal Dubey (AstroVD)"
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-auto object-cover object-top hover:scale-102 transition-transform duration-500"
                     />
                   </div>
@@ -233,7 +234,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                 <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-[94%] py-2 px-3 rounded-full bg-[#231A16] border border-amber-400/70 shadow-2xl flex items-center justify-center gap-2 text-center z-10">
                   <span className="text-amber-400 text-sm">🏆</span>
                   <span className="text-amber-200 text-xs sm:text-[13px] font-bold tracking-wide">
-                    PhD in Jyotish &amp; Rog • Gold Medalist
+                    {t('PhD in Jyotish & Rog • Gold Medalist', 'ज्योतिष एवं रोग में पीएचडी • स्वर्ण पदक विजेता')}
                   </span>
                 </div>
               </div>
@@ -245,19 +246,19 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
               {/* Title & Qualification Pill */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-amber-700 text-xs font-bold uppercase tracking-widest">Founder &amp; Chief Astrologer</span>
+                  <span className="text-amber-700 text-xs font-bold uppercase tracking-widest">{t('Founder & Chief Astrologer', 'संस्थापक एवं मुख्य ज्योतिषाचार्य')}</span>
                   <span className="h-px w-12 bg-amber-400"></span>
                 </div>
                 <h3 className="font-serif text-3xl sm:text-4xl lg:text-[44px] font-bold text-[#2A1810] tracking-tight leading-tight">
-                  Dr. Pandit Vishal Dubey
+                  {t('Dr. Pandit Vishal Dubey', 'डॉ. पंडित विशाल दुबे')}
                 </h3>
 
                 <div className="inline-flex flex-wrap items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#B98E4B] via-[#C59B56] to-[#A87B38] text-white text-xs font-semibold shadow-sm">
                   <span>AstroVD</span>
                   <span>•</span>
-                  <span>PhD in Vedic Astrology</span>
+                  <span>{t('PhD in Vedic Astrology', 'पीएचडी वैदिक ज्योतिष')}</span>
                   <span>•</span>
-                  <span>Jyotishacharya (2018)</span>
+                  <span>{t('Jyotishacharya (2018)', 'ज्योतिषाचार्य (2018)')}</span>
                 </div>
               </div>
 
@@ -266,27 +267,30 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                 /* Home Page: Concise & Impactful Glimpse */
                 <div className="space-y-3.5 text-xs sm:text-sm text-stone-700 leading-relaxed">
                   <p>
-                    Dr. Pandit Vishal Dubey Ji (AstroVD) is a celebrated Vedic astrologer who holds a <strong>PhD in Jyotish &amp; Rog</strong> from the prestigious Maharishi College of Vedic Astrology in Rajasthan. Uniquely combining qualifications in Pharmacy (B.Pharma) and MBA, he bridges empirical science with ancient cosmic vibrations.
+                    {t(
+                      'Dr. Pandit Vishal Dubey Ji (AstroVD) is a celebrated Vedic astrologer who holds a PhD in Jyotish & Rog from the prestigious Maharishi College of Vedic Astrology in Rajasthan. Uniquely combining qualifications in Pharmacy (B.Pharma) and MBA, he bridges empirical science with ancient cosmic vibrations.',
+                      'डॉ. पंडित विशाल दुबे जी (AstroVD) एक प्रतिष्ठित वैदिक ज्योतिषी हैं, जिन्होंने राजस्थान के सुविख्यात महर्षि वैदिक ज्योतिष महाविद्यालय से ज्योतिष एवं रोग में पीएचडी की उपाधि प्राप्त की है। फार्मेसी (B.Pharma) और एमबीए की उच्च शिक्षा के साथ वे वैज्ञानिक दृष्टिकोण एवं प्राचीन वैदिक ऋचाओं का अद्भुत समन्वय करते हैं।'
+                    )}
                   </p>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                     <div className="p-3 rounded-2xl bg-white border border-amber-200 shadow-sm space-y-1">
                       <div className="text-xs font-bold text-[#5B0D15] flex items-center gap-1.5">
                         <GraduationCap className="w-4 h-4 text-amber-700" />
-                        <span>Science &amp; Shastra</span>
+                        <span>{t('Science & Shastra', 'विज्ञान एवं शास्त्र')}</span>
                       </div>
                       <p className="text-[11px] text-stone-600">
-                        In-depth research across Vedic Astrology, Palmistry, Vastu, Hypnosis &amp; Tantras.
+                        {t('In-depth research across Vedic Astrology, Palmistry, Vastu, Hypnosis & Tantras.', 'वैदिक ज्योतिष, हस्तरेखा, वास्तु, सम्मोहन एवं तंत्र पर गहन शोध।')}
                       </p>
                     </div>
 
                     <div className="p-3 rounded-2xl bg-white border border-amber-200 shadow-sm space-y-1">
                       <div className="text-xs font-bold text-[#5B0D15] flex items-center gap-1.5">
                         <Award className="w-4 h-4 text-amber-700" />
-                        <span>15+ Years Heritage</span>
+                        <span>{t('15+ Years Heritage', '15+ वर्षों की वैदिक परंपरा')}</span>
                       </div>
                       <p className="text-[11px] text-stone-600">
-                        Affiliated with Shree Ganesh Vidyapith since 2009; honored Best Jyotish Shastri (2015).
+                        {t('Affiliated with Shree Ganesh Vidyapith since 2009; honored Best Jyotish Shastri (2015).', '2009 से श्री गणेश विद्यापीठ से संबद्ध; \'सर्वश्रेष्ठ ज्योतिष शास्त्री\' (2015) से सम्मानित।')}
                       </p>
                     </div>
                   </div>
@@ -295,11 +299,17 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                 /* Dedicated About Page: Complete In-Depth Biography */
                 <div className="space-y-3.5 text-xs sm:text-[14px] text-stone-700 leading-relaxed">
                   <p>
-                    Dr. Pandit Vishal Dubey Ji, also known as AstroVD, is a renowned astrologer who holds a <strong>PhD in Jyotish &amp; Rog</strong> from the esteemed Maharishi College of Vedic Astrology in Rajasthan, specializing in Vedic Astrology. Despite having educational qualifications in Pharmacy (B.Pharma) at the undergraduate level and an MBA at the postgraduate level, Vishal’s career path diverged significantly into the field of Astrology. He believes that his calling was to pursue a career in Astrology, as it was through this field that he discovered a profound connection with Cosmic Power.
+                    {t(
+                      'Dr. Pandit Vishal Dubey Ji, also known as AstroVD, is a renowned astrologer who holds a PhD in Jyotish & Rog from the esteemed Maharishi College of Vedic Astrology in Rajasthan, specializing in Vedic Astrology. Despite having educational qualifications in Pharmacy (B.Pharma) at the undergraduate level and an MBA at the postgraduate level, Vishal’s career path diverged significantly into the field of Astrology. He believes that his calling was to pursue a career in Astrology, as it was through this field that he discovered a profound connection with Cosmic Power.',
+                      'डॉ. पंडित विशाल दुबे जी, जिन्हें AstroVD के नाम से भी जाना जाता है, एक प्रतिष्ठित ज्योतिषी हैं जिन्होंने राजस्थान के प्रतिष्ठित महर्षि वैदिक ज्योतिष महाविद्यालय से वैदिक ज्योतिष में विशेषज्ञता के साथ ज्योतिष एवं रोग में पीएचडी प्राप्त की है। स्नातक स्तर पर फार्मेसी (B.Pharma) और स्नातकोत्तर स्तर पर एमबीए की योग्यता होने के बावजूद, विशाल जी का जीवन मार्ग पूर्णतः ज्योतिष के प्रति समर्पित हो गया। वे मानते हैं कि ज्योतिष उनका ईश्वरीय आह्वान था, जिसके माध्यम से उन्होंने ब्रह्मांडीय शक्तियों से गहरा संबंध अनुभव किया।'
+                    )}
                   </p>
 
                   <p>
-                    Drawing on his background in medicine and technology, Vishal conducted extensive research in Vedic Astrology, Palmistry, Vastu, Hypnosis, and Tantras. He was honored with the titles of <strong>Best Jyotish Shastri in 2015</strong> and <strong>Jyotishacharya in 2018</strong>. Since 2009, he has been affiliated with India’s esteemed Astrology research center, Shree Ganesh Vidyapith, where he has accurately predicted significant national events. With a substantial client base spanning across countries like Dubai, Australia, Sri Lanka, and Russia, Dr. Pandit Vishal Dubey Ji has established himself as a trusted and respected figure in the realm of Astrology.
+                    {t(
+                      'Drawing on his background in medicine and technology, Vishal conducted extensive research in Vedic Astrology, Palmistry, Vastu, Hypnosis, and Tantras. He was honored with the titles of Best Jyotish Shastri in 2015 and Jyotishacharya in 2018. Since 2009, he has been affiliated with India’s esteemed Astrology research center, Shree Ganesh Vidyapith, where he has accurately predicted significant national events. With a substantial client base spanning across countries like Dubai, Australia, Sri Lanka, and Russia, Dr. Pandit Vishal Dubey Ji has established himself as a trusted and respected figure in the realm of Astrology.',
+                      'चिकित्सा एवं विश्लेषणात्मक पृष्ठभूमि का उपयोग करते हुए, विशाल जी ने वैदिक ज्योतिष, हस्तरेखा, वास्तु, सम्मोहन और प्राचीन तंत्रों में गहन शोध किया। उन्हें 2015 में \'सर्वश्रेष्ठ ज्योतिष शास्त्री\' और 2018 में \'ज्योतिषाचार्य\' की उपाधि से अलंकृत किया गया। वर्ष 2009 से वे भारत के प्रतिष्ठित ज्योतिष शोध केंद्र, श्री गणेश विद्यापीठ से जुड़े हैं, जहां उन्होंने राष्ट्रीय व अंतर्राष्ट्रीय स्तर पर सटीक भविष्यवाणियां की हैं। दुबई, ऑस्ट्रेलिया, श्रीलंका और रूस जैसे देशों में फैले अपने विशाल जातक समुदाय के साथ, डॉ. पंडित विशाल दुबे जी ने ज्योतिष जगत में एक अत्यंत विश्वसनीय एवं आदरणीय स्थान बनाया है।'
+                    )}
                   </p>
                 </div>
               )}
@@ -310,13 +320,13 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                   <div className="text-lg sm:text-xl font-bold text-[#5B0D15]">
                     <AnimatedCounter target={50000} suffix="+" />
                   </div>
-                  <div className="text-xs text-stone-600 font-medium mt-0.5">Seekers Guided</div>
+                  <div className="text-xs text-stone-600 font-medium mt-0.5">{t('Seekers Guided', 'संतुष्ट जातक')}</div>
                 </div>
                 <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/60 shadow-sm">
                   <div className="text-lg sm:text-xl font-bold text-[#5B0D15]">
                     <AnimatedCounter target={15000} suffix="+" />
                   </div>
-                  <div className="text-xs text-stone-600 font-medium mt-0.5">5★ Reviews</div>
+                  <div className="text-xs text-stone-600 font-medium mt-0.5">{t('5★ Reviews', '5★ रेटिंग')}</div>
                 </div>
               </div>
 
@@ -327,7 +337,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                     href="/about"
                     className="px-8 py-3.5 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#73121D] to-[#480A10] hover:from-[#73121D] hover:to-[#5B0D15] text-amber-100 font-bold text-xs sm:text-sm shadow-xl shadow-rose-950/25 hover:scale-105 transition-all inline-flex items-center gap-2 cursor-pointer"
                   >
-                    <span>Explore More About Us</span>
+                    <span>{t('Explore More About Us', 'हमारे बारे में और जानें')}</span>
                     <ArrowRight className="w-4 h-4 text-amber-300" />
                   </Link>
                 ) : (
@@ -335,7 +345,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                     onClick={() => openWhatsApp('Dr. Vishal Dubey')}
                     className="px-8 py-3.5 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#73121D] to-[#480A10] hover:from-[#73121D] hover:to-[#5B0D15] text-amber-100 font-bold text-xs sm:text-sm shadow-xl shadow-rose-950/25 hover:scale-105 transition-all inline-flex items-center gap-2 cursor-pointer"
                   >
-                    <span>Book Consultation with Dr. Vishal Dubey</span>
+                    <span>{t('Book Consultation with Dr. Vishal Dubey', 'डॉ. विशाल दुबे से परामर्श लें')}</span>
                     <ArrowRight className="w-4 h-4 text-amber-300" />
                   </button>
                 )}
@@ -363,11 +373,11 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                 <div className="md:col-span-4 flex justify-center">
                   <div className="relative w-40 sm:w-48 md:w-52">
                     <div className="rounded-t-[120px] rounded-b-2xl border-2 border-amber-400 p-2 bg-white shadow-lg">
-                      <div className="rounded-t-[110px] rounded-b-xl overflow-hidden bg-stone-100">
+                      <div className="rounded-t-[110px] rounded-b-xl overflow-hidden bg-stone-100 h-64 sm:h-72 w-full">
                         <img
                           src="/pandits/madhuri_dubey.jpg"
                           alt="Madhuri Dubey - Tarot Card Reader"
-                          className="w-full h-auto object-cover object-top hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover object-[center_30%] hover:scale-105 transition-transform duration-500"
                         />
                       </div>
                     </div>
@@ -381,17 +391,20 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
 
                 <div className="md:col-span-8 space-y-4 text-left">
                   <div>
-                    <span className="text-amber-700 text-xs font-bold uppercase tracking-widest">Spiritual Guide &amp; Intuitive Master</span>
+                    <span className="text-amber-700 text-xs font-bold uppercase tracking-widest">{t('Spiritual Guide & Intuitive Master', 'आध्यात्मिक मार्गदर्शक एवं टैरो विशेषज्ञ')}</span>
                     <h3 className="font-serif text-3xl sm:text-4xl font-bold text-[#2A1810]">
-                      Madhuri Dubey
+                      {t('Madhuri Dubey', 'माधुरी दुबे')}
                     </h3>
                     <p className="text-amber-800 text-sm font-semibold tracking-wide">
-                      ( Tarot Card Reader )
+                      {t('( Tarot Card Reader )', '( टैरो कार्ड रीडर )')}
                     </p>
                   </div>
 
                   <p className="text-stone-700 text-sm sm:text-base leading-relaxed italic bg-white/70 p-4 rounded-2xl border border-amber-200/80">
-                    &ldquo;Madhuri Dubey is a well-known tarot card reader and spiritual guide with a focus on providing accurate and meaningful readings represents a path of self-awareness and depicts different stages as one encounters the greater meaning and understanding of life.&rdquo;
+                    &ldquo;{t(
+                      'Madhuri Dubey is a well-known tarot card reader and spiritual guide with a focus on providing accurate and meaningful readings represents a path of self-awareness and depicts different stages as one encounters the greater meaning and understanding of life.',
+                      'माधुरी दुबे एक सुप्रसिद्ध टैरो कार्ड रीडर एवं आध्यात्मिक मार्गदर्शक हैं, जो सटीक एवं अर्थपूर्ण भविष्यकथन के माध्यम से आत्म-जागरूकता का मार्ग प्रशस्त करती हैं तथा जीवन के गूढ़ अर्थों को समझने में दिव्य मार्गदर्शन प्रदान करती हैं।'
+                    )}&rdquo;
                   </p>
 
                   <div className="pt-2">
@@ -399,7 +412,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                       onClick={() => openWhatsApp('Madhuri Dubey')}
                       className="px-7 py-3 rounded-full bg-white hover:bg-amber-50 border-2 border-amber-400 text-[#2A1810] font-bold text-xs sm:text-sm shadow-md hover:border-amber-500 hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
                     >
-                      <span>Book Tarot Reading with Madhuri Ji</span>
+                      <span>{t('Book Tarot Reading with Madhuri Ji', 'माधुरी जी संग टैरो रीडिंग बुक करें')}</span>
                       <ArrowRight className="w-4 h-4 text-amber-700" />
                     </button>
                   </div>
@@ -415,13 +428,16 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
               <div className="text-center space-y-2">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100/90 text-amber-900 text-xs font-semibold">
                   <Award className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Accreditations &amp; Vedic Honors</span>
+                  <span>{t('Accreditations & Vedic Honors', 'वैदिक सम्मान व उपाधियां')}</span>
                 </div>
                 <h3 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#4A151B] tracking-tight">
-                  CERTIFICATIONS &amp; ACADEMIC EXCELLENCE
+                  {t('CERTIFICATIONS & ACADEMIC EXCELLENCE', 'प्रमाणपत्र एवं शैक्षणिक उत्कृष्टता')}
                 </h3>
                 <p className="text-xs sm:text-sm text-stone-600 max-w-2xl mx-auto">
-                  Our credentials reflect decades of scholarly research, verified Vedic lineage, and national honors in Jyotish Vidya.
+                  {t(
+                    'Our credentials reflect decades of scholarly research, verified Vedic lineage, and national honors in Jyotish Vidya.',
+                    'हमारे प्रमाण पत्र दशकों के शास्त्रीय अनुसंधान, प्रमाणित वैदिक परंपरा एवं ज्योतिष विद्या में राष्ट्रीय सम्मानों के प्रतीक हैं।'
+                  )}
                 </p>
               </div>
 
@@ -508,12 +524,6 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                       <p className="text-[10px] text-stone-500 italic line-clamp-2">
                         {pandit.specialty}
                       </p>
-                      <button
-                        onClick={() => openWhatsApp(pandit.name)}
-                        className="mt-2 w-full py-1.5 rounded-full bg-amber-50 hover:bg-[#5B0D15] hover:text-white border border-amber-300 text-[#2A1810] text-[10px] font-bold transition-all cursor-pointer"
-                      >
-                        Request Pooja Ritual
-                      </button>
                     </div>
                   </div>
                 ))}

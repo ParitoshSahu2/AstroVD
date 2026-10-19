@@ -5,170 +5,285 @@ import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { PageHeader } from '../../components/PageHeader';
 import { Calendar, Clock, ArrowRight, Search, Filter, BookOpen, X, Share2, Sparkles, User, MessageCircle } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface BlogPost {
   id: string;
   title: string;
+  titleHi: string;
   category: string;
+  categoryHi: string;
   author: string;
+  authorHi: string;
   authorRole: string;
+  authorRoleHi: string;
   date: string;
+  dateHi: string;
   readTime: string;
+  readTimeHi: string;
   image: string;
   excerpt: string;
+  excerptHi: string;
   content: string[];
+  contentHi: string[];
   keyTakeaways: string[];
+  keyTakeawaysHi: string[];
 }
 
 const allArticles: BlogPost[] = [
   {
     id: 'planetary-transits-2026',
     title: 'Major Planetary Transits of 2026: Navigating Jupiter and Saturn’s Cosmic Shift',
+    titleHi: 'वर्ष 2026 के प्रमुख ग्रह गोचर: देवगुरु बृहस्पति एवं शनिदेव का राशि परिवर्तन',
     category: 'Vedic Jyotish',
+    categoryHi: 'वैदिक ज्योतिष',
     author: 'Dr. Pandit Vishal Dubey',
+    authorHi: 'डॉ. पंडित विशाल दुबे',
     authorRole: 'PhD, Jyotishacharya',
+    authorRoleHi: 'पीएचडी, ज्योतिषाचार्य',
     date: 'Oct 14, 2026',
+    dateHi: '14 अक्टूबर, 2026',
     readTime: '6 min read',
+    readTimeHi: '6 मिनट पठन',
     image: '/services/kundli.jpg',
     excerpt: 'Detailed overview of Jupiter transiting into Cancer and Saturn moving across Pisces, bringing immense opportunities for spiritual transformation and financial realignment.',
+    excerptHi: 'कर्क राशि में उच्च के देवगुरु बृहस्पति और मीन राशि में शनिदेव के गोचर का सूक्ष्म विश्लेषण, जो आध्यात्मिक प्रगति एवं आर्थिक समृद्धि के नए द्वार खोलेगा।',
     content: [
       'In Vedic Astrology, planetary transits (Gochar) act as cosmic catalysts that activate the dormant promises inscribed in your Janam Kundli. As we advance through 2026, Jupiter (Brihaspati) occupies its exalted sign of Cancer, radiating benevolence, higher learning, and domestic peace.',
       'Simultaneously, Saturn (Shani Dev) traversing through the water element of Pisces invites deep introspection, karmic settlements, and spiritual grounding. Those experiencing Sade Sati or Kantaka Shani will find this an auspicious time for charitable service, mantra sadhana, and rectifying past life imbalances.',
       'To harness this harmonious frequency, chant the Brihaspati Beej Mantra (ॐ ग्रां ग्रीं ग्रौं सः गुरवे नमः) on Thursdays and perform regular Shani Tailabhishek on Saturdays.',
+    ],
+    contentHi: [
+      'वैदिक ज्योतिष में ग्रह गोचर उन ब्रह्मांडीय उत्प्रेरकों का कार्य करते हैं जो आपकी जन्म कुंडली में संचित कर्म फलों को जाग्रत करते हैं। वर्ष 2026 में देवगुरु बृहस्पति अपनी उच्च राशि कर्क में विराजमान होकर आध्यात्मिक ज्ञान, पारिवारिक शांति एवं धन वृद्धि का मार्ग प्रशस्त करेंगे।',
+      'वहीं शनिदेव का मीन राशि में संचरण आत्म-निरीक्षण, कर्म शुद्धि और पूर्व जन्म के बंधनों के शमन का समय है। साढ़ेसाती अथवा ढैय्या से प्रभावित जातकों हेतु यह समय सेवा, मंत्र साधना एवं दान-पुण्य द्वारा ग्रहों की कृपा प्राप्त करने का पावन अवसर है।',
+      'इस दुर्लभ ग्रहीय सामंजस्य का लाभ उठाने हेतु गुरुवार को गुरु बीज मंत्र (ॐ ग्रां ग्रीं ग्रौं सः गुरवे नमः) एवं शनिवार को शनि तैलभिषेक अत्यंत फलदायी है।',
     ],
     keyTakeaways: [
       'Jupiter in Cancer blesses genuine spiritual seekers and family expansion.',
       'Saturn in Pisces dissolves rigid ego structures, calling for surrender and patience.',
       'Wearing natural Yellow Sapphire (Pukhraj) or Blue Sapphire should only follow birth chart verification.',
     ],
+    keyTakeawaysHi: [
+      'कर्क में गुरु का उच्च प्रभाव साधकों को ज्ञान, संतान सुख व गृह शांति प्रदान करता है।',
+      'मीन में शनि अहंकार को मिटाकर आत्म-समर्पण एवं धैर्य की परीक्षा लेते हैं।',
+      'पीला पुखराज अथवा नीलम धारण करने से पूर्व जन्म कुंडली का सूक्ष्म परीक्षण अनिवार्य है।',
+    ],
   },
   {
     id: 'tarot-wisdom-intuitive-guide',
     title: 'The Language of the Cards: How Intuitive Tarot Bridges Past, Present & Future',
+    titleHi: 'कार्ड्स की दिव्य भाषा: अंतर्ज्ञान व टैरो से जीवन के महत्वपूर्ण निर्णयों में स्पष्टता',
     category: 'Tarot Wisdom',
+    categoryHi: 'टैरो ज्ञान',
     author: 'Madhuri Dubey',
+    authorHi: 'माधुरी दुबे',
     authorRole: 'Tarot Card Reader & Spiritual Guide',
+    authorRoleHi: 'टैरो रीडर एवं आध्यात्मिक मार्गदर्शक',
     date: 'Oct 11, 2026',
+    dateHi: '11 अक्टूबर, 2026',
     readTime: '5 min read',
+    readTimeHi: '5 मिनट पठन',
     image: '/services/consultation.jpg',
     excerpt: 'How archetypal symbolism in the Major Arcana activates inner intuition, resolves subconscious anxieties, and provides reassurance during life-altering transitions.',
+    excerptHi: 'मेजर अरकाना के 22 प्रतीकों द्वारा अवचेतन भय का निवारण और जीवन के कठिन मोड़ों पर आत्मबल एवं दिशा-निर्देश प्राप्त करने का रहस्य।',
     content: [
       'Tarot is not fortune-telling; it is a sacred mirror reflecting the unconscious currents of the soul. Each card in the 78-card deck represents an archetype of human consciousness, as mapped by Carl Jung and ancient mystical traditions.',
       'When you ask a question regarding love, career, or spiritual dilemma, the cards drawn mirror your vibrational resonance in that exact moment. They illuminate hidden motives, highlight blindspots, and unveil the highest probable trajectory.',
       'Through compassionate and intuitive readings, you gain the clarity required to make decisions with confidence, shifting fear into grounded purpose.',
+    ],
+    contentHi: [
+      'टैरो केवल भविष्य जानने का साधन नहीं, अपितु आत्मा के अवचेतन प्रवाह को दर्शाने वाला एक पावन दर्पण है। 78 कार्ड्स की यह प्रणाली मानवीय चेतना की विविध अवस्थाओं को प्रतिबिंबित करती है।',
+      'जब आप प्रेम, विवाह अथवा करियर संबंधी प्रश्न पूछते हैं, तो चयनित कार्ड्स उस क्षण आपकी ऊर्जा और संभावित मार्ग को स्पष्ट करते हैं। यह अचेतन शंकाओं का समाधान कर सत्य को उजागर करते हैं।',
+      'माधुरी जी के सानिध्य में इंट्यूटिव टैरो पठन से आपको निर्णय लेने का दृढ़ विश्वास और अंतर्मन की गहन शांति प्राप्त होती है।',
     ],
     keyTakeaways: [
       'Tarot clarifies the emotional energy surrounding your present circumstances.',
       'The High Priestess and The Hermit guide inward reflection before outward action.',
       'Combine Tarot insights with Vedic astrology for a 360-degree spiritual compass.',
     ],
+    keyTakeawaysHi: [
+      'टैरो वर्तमान परिस्थितियों से जुड़ी भावनात्मक ऊर्जा को तत्काल स्पष्ट करता है।',
+      'हाई प्रीस्टेस एवं हर्मिट कार्ड्स किसी भी निर्णय से पूर्व अंतर्मुखी चिंतन का संदेश देते हैं।',
+      'वैदिक ज्योतिष एवं टैरो का संयुक्त उपयोग 360 डिग्री संपूर्ण आध्यात्मिक मार्गदर्शन प्रदान करता है।',
+    ],
   },
   {
     id: 'gemstone-science-frequency',
     title: 'Vedic Gemstone Therapy: Selecting the Precise Optical Crystal for Your Kundli',
+    titleHi: 'वैदिक रत्न चिकित्सा: अपनी जन्म कुंडली के अनुसार सटीक रत्न का चयन',
     category: 'Remedies & Gems',
+    categoryHi: 'रत्न एवं उपाय',
     author: 'Acharya Sourabh Swami',
+    authorHi: 'आचार्य सौरभ स्वामी',
     authorRole: 'Senior Vedic Puja Acharya',
+    authorRoleHi: 'वरिष्ठ वैदिक पूजा आचार्य',
     date: 'Oct 04, 2026',
+    dateHi: '04 अक्टूबर, 2026',
     readTime: '7 min read',
+    readTimeHi: '7 मिनट पठन',
     image: '/services/gemstones.jpg',
     excerpt: 'Why unheated natural gemstones act as optical prisms capturing planetary cosmic rays and realigning physical, mental, and subtle energy meridians.',
+    excerptHi: 'प्राकृतिक शुद्ध रत्न कैसे ब्रह्मांडीय किरणों को प्रिज्म की भांति अवशोषित कर शरीर, मन और भाग्य के ऊर्जा केंद्रों को पुनः संतुलित करते हैं।',
     content: [
       'Ancient Rishis understood that cosmic rays emitted by the nine grahas constantly penetrate the Earth’s atmosphere. When a planet is benefic yet weak in your horoscope, a flawless natural gemstone acts as an optical amplifier, absorbing and channeling that specific wavelength into your biofield.',
       'For instance, natural Ruby transmits cosmic red rays governed by the Sun, vitalizing the heart, spine, and leadership faculties. Emerald channels green rays for Mercury, enhancing intellect, nervous balance, and commercial acumen.',
       'Crucially, synthetic or heat-treated stones lack crystalline vitality. Every gemstone recommended at AstroVD undergoes authentic Varanasi Prana Pratishtha to awaken its celestial dormant force.',
+    ],
+    contentHi: [
+      'प्राचीन ऋषियों ने यह प्रत्यक्ष अनुभव किया था कि नवग्रहों द्वारा उत्सर्जित रश्मियां निरंतर पृथ्वी और मानव शरीर को प्रभावित करती हैं। जब कोई कारक ग्रह कुंडली में दुर्बल होता है, तो दोषमुक्त प्राकृतिक रत्न उस ग्रह की किरणों को शरीर में अवशोषित करने का कार्य करता है।',
+      'उदाहरणार्थ, प्राकृतिक माणिक्य सूर्य की लाल किरणों को संचित कर हृदय, रीढ़ एवं नेतृत्व शक्ति को जाग्रत करता है। पन्ना बुध की हरित किरणों द्वारा बुद्धि, वाणी और व्यापार में सफलता दिलाता है।',
+      'सिंथेटिक अथवा हीटर-ट्रीटेड रत्नों में यह ऊर्जा नहीं होती। AstroVD द्वारा अनुशंसित प्रत्येक रत्न काशी की यज्ञशाला में वैदिक प्राण-प्रतिष्ठा से अभिमंत्रित किया जाता है।',
     ],
     keyTakeaways: [
       'Never wear gemstones for Maraka (death-inflicting) or malefic dusthana lords.',
       'Gemstones must touch the skin to transmit photonic cosmic energy.',
       'Purify and energize your stone on its designated ruling weekday at sunrise.',
     ],
+    keyTakeawaysHi: [
+      'मारक अथवा क्रूर त्रिक भावों (6, 8, 12) के स्वामियों के रत्न कभी धारण न करें।',
+      'रत्न का आधार त्वचा से स्पर्श होना अनिवार्य है ताकि ऊर्जा का संचार हो सके।',
+      'रत्न को उसके संबंधित शुभ वार को सूर्योदय वेला में गंगाजल व कच्चे दूध से शुद्ध कर धारण करें।',
+    ],
   },
   {
     id: 'understanding-mangal-dosh',
     title: 'Understanding Mangal Dosh: Scientific Analysis, Myths & Traditional Remedies',
+    titleHi: 'मंगल दोष का वैज्ञानिक विश्लेषण: भ्रांतियां, शास्त्रीय सत्य एवं अचूक उपाय',
     category: 'Kundli Milan',
+    categoryHi: 'कुंडली मिलान',
     author: 'Dr. Pandit Vishal Dubey',
+    authorHi: 'डॉ. पंडित विशाल दुबे',
     authorRole: 'PhD in Jyotish & Rog',
+    authorRoleHi: 'पीएचडी ज्योतिष एवं रोग',
     date: 'Sep 26, 2026',
+    dateHi: '26 सितंबर, 2026',
     readTime: '8 min read',
+    readTimeHi: '8 मिनट पठन',
     image: '/services/marriage.jpg',
     excerpt: 'Demystifying Mars placement in the 1st, 4th, 7th, 8th, and 12th houses, and traditional Vedic remedies including Kumbh Vivah and Hanuman Upasana.',
+    excerptHi: '1, 4, 7, 8 एवं 12वें भाव में मंगल की स्थिति, मांगलिक दोष के भंग होने के नियम एवं कुंभ विवाह व भौम शांति के शास्त्रीय उपाय।',
     content: [
       'Few astrological terms generate as much unfounded panic as "Manglik Dosha." In classical Jyotish, Mars represents raw vitality, drive, passion, and assertiveness. When placed in houses governing relationship harmony (1st, 4th, 7th, 8th, 12th), its intense fiery nature can create friction if left unchanneled.',
       'However, classical texts enumerate dozens of automatic cancellations (Bhanga), such as Mars residing in its own signs (Aries, Scorpio) or exalted in Capricorn, or receiving the benign aspect of Jupiter.',
       'Where genuine Mangal Dosha exists, proven Vedic remedies such as Ark Vivah or Kumbh Vivah, Bhauma Yagya, and continuous Hanuman Chalisa recitation successfully neutralize disharmony.',
+    ],
+    contentHi: [
+      'ज्योतिष में "मांगलिक दोष" को लेकर जनमानस में अनेक भ्रांतियां हैं। मंगल ऊर्जा, पराक्रम और शौर्य का कारक है। जब यह 1, 4, 7, 8 अथवा 12वें भाव में होता है, तो इसकी उग्र प्रकृति दांपत्य भाव में सामंजस्य की परीक्षा लेती है।',
+      'किंतु पाराशर होरा शास्त्र के अनुसार 60% से अधिक कुंडलियों में मंगल दोष स्वतः भंग हो जाता है—जैसे अपनी स्वराशि मेष, वृश्चिक में होना, अथवा गुरु की शुभ दृष्टि पड़ना।',
+      'यदि वास्तविक दोष हो, तो कुंभ विवाह, अर्क विवाह, भौम शांति हवन एवं नित्य हनुमान उपासना से पूर्ण दांपत्य सुख प्राप्त होता है।',
     ],
     keyTakeaways: [
       'Over 60% of perceived Manglik charts have astrological cancellation factors.',
       'Mutual Manglik compatibility neutralizes the energetic disparity between partners.',
       'Pooja and Sankalp performed by learned Acharyas harmonize Martian energy into courage and mutual loyalty.',
     ],
+    keyTakeawaysHi: [
+      'अधिकांश कुंडलियों में मंगल दोष शास्त्रोक्त नियमों के आधार पर निरस्त हो जाता है।',
+      'वर एवं वधू दोनों के मांगलिक होने पर ऊर्जा का स्वतः संतुलन स्थापित होता है।',
+      'विद्वान ब्राह्मणों द्वारा संकल्पित भौम शांति पूजा से वैवाहिक जीवन में मधुरता आती है।',
+    ],
   },
   {
     id: 'power-of-shree-yantra',
     title: 'The Sacred Science of Shree Yantra: Geometry of Infinite Abundance & Peace',
+    titleHi: 'श्री यंत्र का पावन विज्ञान: अनंत समृद्धि, वास्तु शांति एवं लक्ष्मी तत्व की ज्यामिति',
     category: 'Pooja & Rituals',
+    categoryHi: 'पूजा व अनुष्ठान',
     author: 'Pandit Ji (Karamkand Specialist)',
+    authorHi: 'पंडित जी (कर्मकांड विशेषज्ञ)',
     authorRole: 'Shastra Vidhan Expert',
+    authorRoleHi: 'शास्त्र विधान विशेषज्ञ',
     date: 'Sep 19, 2026',
+    dateHi: '19 सितंबर, 2026',
     readTime: '6 min read',
+    readTimeHi: '6 मिनट पठन',
     image: '/products/prod-pyrite.png',
     excerpt: 'Why the 9 interlocking triangles of the Sri Chakra generate an electromagnetic vortex of Lakshmi energy in homes, offices, and temples.',
+    excerptHi: 'श्री चक्र के 9 परस्पर जुड़े त्रिकोण किस प्रकार घर और व्यापार स्थल पर महालक्ष्मी ऊर्जा का विद्युत-चुंबकीय आभामंडल निर्मित करते हैं।',
     content: [
       'The Shree Yantra (Sri Chakra) is regarded as the queen of all sacred yantras. Composed of nine interlocking triangles that radiate out from the central Bindu point, it represents the union of the Divine Masculine (Shiva) and Divine Feminine (Shakti).',
       'Modern physics verifies that viewing and meditating on this precise sacred geometry synchronizes the left and right hemispheres of the human brain, inducing deep alpha wave states and mental stillness.',
       'Consecrated in your northeastern Ishan corner on a Friday, an energized Maha Meru Shree Yantra clears chronic financial stagnation and protects the dwelling from negative environmental frequencies.',
+    ],
+    contentHi: [
+      'श्री यंत्र को समस्त यंत्रों का अधिपति (यंत्रराज) कहा गया है। मध्य में स्थित बिंदु से प्रसारित 9 त्रिकोण शिव और शक्ति के दिव्य मिलन का प्रतीक हैं।',
+      'आधुनिक विज्ञान भी यह प्रमाणित करता है कि श्री यंत्र की पवित्र ज्यामिति पर ध्यान केंद्रित करने से मस्तिष्क के दोनों गोलार्ध संतुलित होते हैं और मानसिक शांति प्राप्त होती है।',
+      'ईशान कोण में शुक्रवार के दिन प्राण-प्रतिष्ठित महामेरु श्री यंत्र की स्थापना से आर्थिक रुकावटें दूर होती हैं और गृह में सदैव लक्ष्मी वास रहता है।',
     ],
     keyTakeaways: [
       'The central Bindu radiates primordial cosmic vibration (Para Shakti).',
       'Daily chanting of Sri Suktam or Kanakadhara Stotra before the Yantra multiplies its energetic radius.',
       'Must be placed facing East or North on clean silk cloth consecrated with chandan.',
     ],
+    keyTakeawaysHi: [
+      'केंद्रीय बिंदु पराशक्ति की आदि ब्रह्मांडीय तरंगों का निरंतर उत्सर्जन करता है।',
+      'यंत्र के समक्ष श्री सूक्तम अथवा कनकधारा स्तोत्र का नित्य पाठ इसके प्रभाव को कई गुना बढ़ाता है।',
+      'इसे पूर्व अथवा उत्तर दिशा की ओर मुख कर शुद्ध पीले या लाल रेशमी वस्त्र पर स्थापित करें।',
+    ],
   },
   {
     id: 'aura-scanning-chakra-alignment',
     title: 'Aura Scanning & Subtle Energy Fields: Restoring Vitality Before Disease Manifests',
+    titleHi: 'औरा स्कैनिंग एवं चक्र संतुलन: रोग प्रकट होने से पूर्व सूक्ष्म ऊर्जा का शोधन',
     category: 'Occult & Healing',
+    categoryHi: 'ऊर्जा एवं गूढ़ विद्या',
     author: 'Dr. Pandit Vishal Dubey',
+    authorHi: 'डॉ. पंडित विशाल दुबे',
     authorRole: 'Certified Hypnotherapist & Rog Specialist',
+    authorRoleHi: 'प्रमाणित हिप्नोथेरेपिस्ट व रोग विशेषज्ञ',
     date: 'Sep 12, 2026',
+    dateHi: '12 सितंबर, 2026',
     readTime: '7 min read',
+    readTimeHi: '7 मिनट पठन',
     image: '/services/career.jpg',
     excerpt: 'Combining ancient Prana Vidya with electro-photonic aura scanning to identify energetic imbalances and emotional blockages before they manifest physically.',
+    excerptHi: 'प्राण विद्या और आधुनिक इलेक्ट्रो-फोटोनिक औरा स्कैनिंग का समन्वय कर चक्रों के अवरोध एवं नकारात्मक ऊर्जा को दूर करने की वैज्ञानिक विधि।',
     content: [
       'Long before any physical disorder manifests in the biological body, it registers as a frequency disturbance in the Pranamaya Kosha (subtle etheric double). Your aura reflects your emotional thoughts, planetary dasha influences, and psychic stress.',
       'Through advanced aura scanning and intuitive pendulum dowsing, we map the rotation, color density, and blockages of the seven major chakras (Muladhara to Sahasrara).',
       'Targeted remedies including gemstone vibration, clinical hypnotherapy, and Rudrabhishek clear negative energy cords, restoring radiant vitality and deep peace.',
+    ],
+    contentHi: [
+      'शरीर में किसी भी व्याधि के प्रकट होने से पूर्व, उसका प्रभाव प्राणमय कोष (सूक्ष्म औरा) में एक ऊर्जा असंतुलन के रूप में दर्ज होता है। आपका आभामंडल आपके विचारों और ग्रह दशा का प्रत्यक्ष दर्पण है।',
+      'उन्नत औरा स्कैनिंग एवं पेंडुलम डाउजिंग द्वारा हम मूलाधार से सहस्रार तक सातों मुख्य चक्रों की गति, रंग सघनता और ऊर्जा अवरोधों का मानचित्रण करते हैं।',
+      'रत्न कंपन, हिप्नोथेरेपी और रुद्राभिषेक द्वारा नकारात्मक ऊर्जा तरंगों को निष्कासित कर पुनः ओज और शांति की पुनर्स्थापना की जाती है।',
     ],
     keyTakeaways: [
       'The human aura extends 1.5 to 3 feet around the physical body.',
       'Chakra blockages directly correspond to planetary afflictions in the horoscope.',
       'Regular meditation, salt-water cleansing, and mantra chanting strengthen your psychic shield.',
     ],
+    keyTakeawaysHi: [
+      'मानव आभामंडल भौतिक शरीर से 1.5 से 3 फीट परिधि तक फैला रहता है।',
+      'चक्रों का अवरोध सीधे तौर पर जन्म पत्रिका में पीड़ित ग्रहों से संबंधित होता है।',
+      'नित्य ध्यान, सेंधा नमक स्नान एवं वैदिक मंत्र जप से औरा का सुरक्षा कवच सुदृढ़ होता है।',
+    ],
   },
 ];
 
 export default function BlogPage() {
+  const { t, language } = useLanguage();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [query, setQuery] = useState('');
   const [readingArticle, setReadingArticle] = useState<BlogPost | null>(null);
 
   const categories = [
-    'All',
-    'Vedic Jyotish',
-    'Tarot Wisdom',
-    'Remedies & Gems',
-    'Kundli Milan',
-    'Pooja & Rituals',
-    'Occult & Healing',
+    { id: 'All', label: t('All Articles (6)', 'सभी लेख (6)') },
+    { id: 'Vedic Jyotish', label: t('Vedic Jyotish', 'वैदिक ज्योतिष') },
+    { id: 'Tarot Wisdom', label: t('Tarot Wisdom', 'टैरो ज्ञान') },
+    { id: 'Remedies & Gems', label: t('Remedies & Gems', 'रत्न एवं उपाय') },
+    { id: 'Kundli Milan', label: t('Kundli Milan', 'कुंडली मिलान') },
+    { id: 'Pooja & Rituals', label: t('Pooja & Rituals', 'पूजा व अनुष्ठान') },
+    { id: 'Occult & Healing', label: t('Occult & Healing', 'ऊर्जा एवं गूढ़ विद्या') },
   ];
 
   const filtered = allArticles.filter((a) => {
     const matchCat = selectedCategory === 'All' || a.category === selectedCategory;
     const matchQuery =
       a.title.toLowerCase().includes(query.toLowerCase()) ||
+      a.titleHi.includes(query) ||
       a.excerpt.toLowerCase().includes(query.toLowerCase()) ||
+      a.excerptHi.includes(query) ||
       a.author.toLowerCase().includes(query.toLowerCase());
     return matchCat && matchQuery;
   });
@@ -180,9 +295,12 @@ export default function BlogPage() {
       <Navbar />
 
       <PageHeader
-        breadcrumb="Sacred Blogs &amp; Articles"
-        title="Vedic Wisdom &amp; Astrological Articles"
-        subtitle="Scholarly discourses on Kundali analysis, planetary transits, intuitive Tarot, Vastu energy, and ancient mantra sciences by AstroVD Acharyas."
+        breadcrumb={t('Sacred Blogs & Articles', 'वैदिक लेख एवं शोध')}
+        title={t('Vedic Wisdom & Astrological Articles', 'वैदिक ज्ञान, शोध पत्र एवं ज्योतिषीय लेख')}
+        subtitle={t(
+          'Scholarly discourses on Kundali analysis, planetary transits, intuitive Tarot, Vastu energy, and ancient mantra sciences by AstroVD Acharyas.',
+          'जन्म कुंडली विश्लेषण, ग्रह गोचर, इंट्यूटिव टैरो, वास्तु ऊर्जा एवं प्राचीन मंत्र विज्ञान पर AstroVD आचार्यों के प्रामाणिक शोध लेख।'
+        )}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-16 space-y-12">
@@ -195,31 +313,31 @@ export default function BlogPage() {
               <div className="lg:col-span-7 p-6 sm:p-10 lg:p-12 space-y-4">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold uppercase tracking-wider">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Featured Discourse</span>
+                  <span>{t('Featured Discourse', 'विशेष संपादकीय शोध')}</span>
                 </div>
 
                 <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-100 leading-tight">
-                  {featured.title}
+                  {language === 'hi' ? featured.titleHi : featured.title}
                 </h2>
 
                 <p className="text-xs sm:text-sm text-stone-300 leading-relaxed max-w-xl">
-                  {featured.excerpt}
+                  {language === 'hi' ? featured.excerptHi : featured.excerpt}
                 </p>
 
                 <div className="flex flex-wrap items-center gap-4 text-xs text-stone-400 pt-2">
                   <span className="flex items-center gap-1.5 font-semibold text-amber-300">
                     <User className="w-3.5 h-3.5" />
-                    {featured.author} ({featured.authorRole})
+                    {language === 'hi' ? `${featured.authorHi} (${featured.authorRoleHi})` : `${featured.author} (${featured.authorRole})`}
                   </span>
                   <span>•</span>
                   <span className="flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5" />
-                    {featured.date}
+                    {language === 'hi' ? featured.dateHi : featured.date}
                   </span>
                   <span>•</span>
                   <span className="flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5" />
-                    {featured.readTime}
+                    {language === 'hi' ? featured.readTimeHi : featured.readTime}
                   </span>
                 </div>
 
@@ -229,7 +347,7 @@ export default function BlogPage() {
                     className="px-6 py-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-stone-950 font-bold text-xs sm:text-sm shadow-xl flex items-center gap-2 transition-all hover:scale-105 cursor-pointer"
                   >
                     <BookOpen className="w-4 h-4" />
-                    <span>Read Full Discourse</span>
+                    <span>{t('Read Full Discourse', 'संपूर्ण लेख पढ़ें')}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -239,7 +357,7 @@ export default function BlogPage() {
               <div className="lg:col-span-5 h-64 lg:h-full relative overflow-hidden">
                 <img
                   src={featured.image}
-                  alt={featured.title}
+                  alt={language === 'hi' ? featured.titleHi : featured.title}
                   className="w-full h-full object-cover opacity-85 hover:scale-105 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-[#1C090C] via-transparent to-transparent"></div>
@@ -255,7 +373,7 @@ export default function BlogPage() {
             <Search className="w-4 h-4 text-stone-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search articles by topic, author, or keyword..."
+              placeholder={t('Search articles by topic, author, or keyword...', 'विषय, लेखक या कीवर्ड द्वारा लेख खोजें...')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-full pl-11 pr-4 py-3 rounded-full bg-white border border-stone-200 text-xs sm:text-sm text-stone-800 placeholder-stone-400 shadow-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-300"
@@ -271,8 +389,8 @@ export default function BlogPage() {
               className="px-4 py-2.5 rounded-full bg-white border border-amber-300 text-xs font-semibold text-stone-800 shadow-sm focus:outline-none focus:border-amber-500 cursor-pointer"
             >
               {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c === 'All' ? 'All Articles (6)' : c}
+                <option key={c.id} value={c.id}>
+                  {c.label}
                 </option>
               ))}
             </select>
@@ -283,177 +401,174 @@ export default function BlogPage() {
         <div className="flex flex-wrap items-center gap-2">
           {categories.map((cat) => (
             <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
               className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                selectedCategory === cat
+                selectedCategory === cat.id
                   ? 'bg-[#5B0D15] text-white shadow-md'
                   : 'bg-white hover:bg-amber-50 text-stone-700 border border-stone-200'
               }`}
             >
-              {cat}
+              {cat.label}
             </button>
           ))}
         </div>
 
         {/* Articles Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 sm:gap-8">
-          {filtered.map((post) => (
-            <article
-              key={post.id}
-              className="rounded-3xl overflow-hidden bg-white border border-stone-200 shadow-md hover:shadow-2xl hover:border-amber-400 transition-all duration-300 flex flex-col justify-between group"
-            >
-              <div>
-                <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-stone-100">
-                  <img
-                    src={post.image}
-                    alt={post.title}
-                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
-                  />
-                  <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-amber-300/60 text-amber-300 text-[10px] font-bold uppercase tracking-wider">
-                    ✦ {post.category}
-                  </span>
-                  <span className="absolute bottom-3 right-3 px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-stone-200 text-[10px] font-medium flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-amber-300" />
-                    {post.readTime}
-                  </span>
-                </div>
+          {filtered.map((post) => {
+            const title = language === 'hi' ? post.titleHi : post.title;
+            const excerpt = language === 'hi' ? post.excerptHi : post.excerpt;
+            const category = language === 'hi' ? post.categoryHi : post.category;
+            const author = language === 'hi' ? post.authorHi : post.author;
+            const authorRole = language === 'hi' ? post.authorRoleHi : post.authorRole;
+            const date = language === 'hi' ? post.dateHi : post.date;
+            const readTime = language === 'hi' ? post.readTimeHi : post.readTime;
 
-                <div className="p-6 space-y-3">
-                  <div className="flex items-center gap-2 text-[11px] text-stone-500">
-                    <Calendar className="w-3.5 h-3.5 text-amber-700" />
-                    <span>{post.date}</span>
-                    <span>•</span>
-                    <span className="font-semibold text-stone-700">{post.author}</span>
+            return (
+              <article
+                key={post.id}
+                className="rounded-3xl overflow-hidden bg-white border border-stone-200 shadow-md hover:shadow-2xl hover:border-amber-400 transition-all duration-300 flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-stone-100">
+                    <img
+                      src={post.image}
+                      alt={title}
+                      className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
+                    />
+                    <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-amber-300/60 text-amber-300 text-[10px] font-bold uppercase tracking-wider">
+                      ✦ {category}
+                    </span>
+                    <span className="absolute bottom-3 right-3 px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-stone-200 text-[10px] font-medium flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-amber-300" />
+                      {readTime}
+                    </span>
                   </div>
 
-                  <h3 className="font-serif font-bold text-lg sm:text-xl text-[#2A1810] group-hover:text-[#5B0D15] transition-colors leading-snug">
-                    {post.title}
-                  </h3>
+                  <div className="p-6 space-y-3">
+                    <div className="flex items-center gap-2 text-[11px] text-stone-500">
+                      <Calendar className="w-3.5 h-3.5 text-amber-700" />
+                      <span>{date}</span>
+                      <span>•</span>
+                      <span className="font-semibold text-stone-700">{author}</span>
+                    </div>
 
-                  <p className="text-xs text-stone-600 leading-relaxed line-clamp-3">
-                    {post.excerpt}
-                  </p>
+                    <h3 className="font-serif font-bold text-lg sm:text-xl text-[#2A1810] group-hover:text-[#5B0D15] transition-colors leading-snug">
+                      {title}
+                    </h3>
+
+                    <p className="text-xs text-stone-600 leading-relaxed line-clamp-3">
+                      {excerpt}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="px-6 pb-6 pt-3 border-t border-stone-100 flex items-center justify-between bg-stone-50/50">
-                <span className="text-[11px] font-semibold text-amber-800">
-                  {post.authorRole}
-                </span>
+                <div className="px-6 pb-6 pt-3 border-t border-stone-100 flex items-center justify-between bg-stone-50/50">
+                  <span className="text-[11px] font-semibold text-amber-800">
+                    {authorRole}
+                  </span>
 
-                <button
-                  onClick={() => setReadingArticle(post)}
-                  className="px-4 py-1.5 rounded-full bg-white hover:bg-[#5B0D15] text-[#5B0D15] hover:text-white border border-[#5B0D15] text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-                >
-                  <span>Read Discourse</span>
-                  <ArrowRight className="w-3 h-3" />
-                </button>
-              </div>
-            </article>
-          ))}
+                  <button
+                    onClick={() => setReadingArticle(post)}
+                    className="px-4 py-1.5 rounded-full bg-white hover:bg-[#5B0D15] text-[#5B0D15] hover:text-white border border-[#5B0D15] text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>{t('Read Discourse', 'विस्तार से पढ़ें')}</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
 
       </main>
 
-      {/* Full Article Reading Modal */}
+      {/* Reading Modal */}
       {readingArticle && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fadeIn overflow-y-auto"
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fadeIn"
           onClick={() => setReadingArticle(null)}
         >
           <div
-            className="relative max-w-3xl w-full bg-white rounded-3xl overflow-hidden border-2 border-amber-400 shadow-2xl my-8 text-stone-800"
+            className="relative max-w-3xl w-full bg-[#FAF7F2] rounded-3xl overflow-hidden border-2 border-amber-300 shadow-2xl my-8"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header Bar */}
-            <div className="relative h-60 sm:h-72 w-full overflow-hidden bg-stone-900">
+            {/* Header Image */}
+            <div className="relative h-64 sm:h-72 w-full bg-stone-900">
               <img
                 src={readingArticle.image}
-                alt={readingArticle.title}
-                className="w-full h-full object-cover opacity-75"
+                alt={language === 'hi' ? readingArticle.titleHi : readingArticle.title}
+                className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-
               <button
                 onClick={() => setReadingArticle(null)}
-                className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md border border-white/40 text-white flex items-center justify-center hover:bg-black/90 transition-colors cursor-pointer"
+                className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
-
-              <div className="absolute bottom-6 left-6 right-6 space-y-2 text-white">
-                <span className="px-3 py-1 rounded-full bg-amber-400 text-stone-950 font-bold text-[10px] uppercase tracking-wider">
-                  ✦ {readingArticle.category}
+              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs text-white">
+                <span className="px-3 py-1 rounded-full bg-[#5B0D15] font-bold">
+                  {language === 'hi' ? readingArticle.categoryHi : readingArticle.category}
                 </span>
-                <h2 className="font-serif font-bold text-xl sm:text-2xl lg:text-3xl text-white leading-snug">
-                  {readingArticle.title}
-                </h2>
-                <div className="flex items-center gap-3 text-xs text-stone-300">
-                  <span>By {readingArticle.author} ({readingArticle.authorRole})</span>
-                  <span>•</span>
-                  <span>{readingArticle.date}</span>
-                  <span>•</span>
-                  <span>{readingArticle.readTime}</span>
-                </div>
+                <span className="bg-black/60 px-3 py-1 rounded-full backdrop-blur-sm">
+                  {language === 'hi' ? readingArticle.readTimeHi : readingArticle.readTime}
+                </span>
               </div>
             </div>
 
-            {/* Modal Article Body */}
-            <div className="p-6 sm:p-8 space-y-6 max-h-[60vh] overflow-y-auto">
+            {/* Body */}
+            <div className="p-6 sm:p-10 space-y-6 max-h-[70vh] overflow-y-auto">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs text-amber-800 font-semibold">
+                  <span>{language === 'hi' ? readingArticle.authorHi : readingArticle.author}</span>
+                  <span>•</span>
+                  <span>{language === 'hi' ? readingArticle.authorRoleHi : readingArticle.authorRole}</span>
+                  <span>•</span>
+                  <span>{language === 'hi' ? readingArticle.dateHi : readingArticle.date}</span>
+                </div>
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#4A151B] leading-snug">
+                  {language === 'hi' ? readingArticle.titleHi : readingArticle.title}
+                </h2>
+              </div>
+
               {/* Key Takeaways Box */}
-              <div className="p-5 rounded-2xl bg-amber-50 border border-amber-300/80 space-y-2">
-                <h4 className="font-serif font-bold text-xs uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-amber-700" />
-                  <span>Key Vedic Principles &amp; Insights</span>
+              <div className="p-4 sm:p-5 rounded-2xl bg-amber-50 border border-amber-200/80 space-y-2">
+                <h4 className="font-serif font-bold text-xs uppercase tracking-wider text-[#800000] flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>{t('Key Astrological Takeaways', 'मुख्य ज्योतिषीय निष्कर्ष')}</span>
                 </h4>
-                <ul className="space-y-1.5 text-xs text-stone-700">
-                  {readingArticle.keyTakeaways.map((point, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="text-amber-700 text-sm">✦</span>
-                      <span>{point}</span>
-                    </li>
+                <ul className="text-xs text-stone-700 space-y-1.5 list-disc pl-4 leading-relaxed">
+                  {(language === 'hi' ? readingArticle.keyTakeawaysHi : readingArticle.keyTakeaways).map((point, idx) => (
+                    <li key={idx}>{point}</li>
                   ))}
                 </ul>
               </div>
 
-              {/* Paragraphs */}
-              <div className="space-y-4 text-sm text-stone-700 leading-relaxed">
-                {readingArticle.content.map((paragraph, idx) => (
-                  <p key={idx}>{paragraph}</p>
+              {/* Full Article Content Paragraphs */}
+              <div className="space-y-4 text-xs sm:text-sm text-stone-700 leading-relaxed font-normal">
+                {(language === 'hi' ? readingArticle.contentHi : readingArticle.content).map((para, idx) => (
+                  <p key={idx}>{para}</p>
                 ))}
               </div>
 
-              {/* Astrologer Consultation CTA Banner */}
-              <div className="p-6 rounded-2xl bg-gradient-to-r from-[#1C090C] to-[#3B1E22] text-white flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Consultation CTA Banner at end of Discourse */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-[#5B0D15] to-[#7E1420] text-white flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="space-y-1 text-center sm:text-left">
-                  <h4 className="font-serif font-bold text-base text-amber-200">
-                    Seek Guidance from {readingArticle.author}?
+                  <h4 className="font-serif font-bold text-base">
+                    {t('Want Personal Guidance on This Subject?', 'क्या आप इस विषय पर व्यक्तिगत मार्गदर्शन चाहते हैं?')}
                   </h4>
-                  <p className="text-xs text-stone-300">
-                    Book a personalized 1-on-1 horoscope or Tarot consultation with our Varanasi peeth.
+                  <p className="text-xs text-amber-200">
+                    {t('Schedule a confidential session with Dr. Pandit Vishal Dubey.', 'डॉ. पंडित विशाल दुबे के साथ एक गोपनीय परामर्श सत्र बुक करें।')}
                   </p>
                 </div>
                 <a
-                  href={`https://wa.me/919826012345?text=Hello%20AstroVD,%20I%20read%20the%20article%20on%20${encodeURIComponent(readingArticle.title)}%20and%20would%20like%20a%20consultation.`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-5 py-2.5 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-bold shadow-lg flex items-center gap-1.5 shrink-0"
+                  href="/appointment"
+                  className="shrink-0 px-5 py-2.5 rounded-full bg-amber-400 hover:bg-amber-300 text-stone-950 font-bold text-xs transition-all shadow-md"
                 >
-                  <MessageCircle className="w-4 h-4 fill-current" />
-                  <span>Inquire on WhatsApp</span>
+                  {t('Book Consultation', 'परामर्श बुक करें')}
                 </a>
               </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-4 sm:p-5 border-t border-stone-200 flex justify-end bg-stone-50">
-              <button
-                onClick={() => setReadingArticle(null)}
-                className="px-6 py-2 rounded-full bg-stone-800 hover:bg-stone-900 text-white text-xs font-semibold"
-              >
-                Close Article
-              </button>
             </div>
           </div>
         </div>

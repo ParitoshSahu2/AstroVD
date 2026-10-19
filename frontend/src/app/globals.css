@@ -7,40 +7,60 @@
   }
 }
 
-/* Global 90% Scale / Magnification Setting as preferred by user */
+/* Clean, buttery smooth 60fps scrolling optimization */
 html {
-  zoom: 0.9;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: auto !important;
 }
 
 /* Hide default browser scrollbar across all engines while preserving 100% smooth scrolling */
+html,
+body,
+*,
+*::before,
+*::after {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
 html, body {
   margin: 0;
   padding: 0;
   background-color: #FAF7F2;
   overflow-x: hidden;
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* IE and Edge */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Chrome, Safari, Edge, Opera */
+::-webkit-scrollbar,
+*::-webkit-scrollbar,
 html::-webkit-scrollbar,
-body::-webkit-scrollbar,
-*::-webkit-scrollbar {
+body::-webkit-scrollbar {
   display: none !important;
   width: 0px !important;
   height: 0px !important;
   background: transparent !important;
+  opacity: 0 !important;
 }
 
-* {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
+::-webkit-scrollbar-thumb,
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  display: none !important;
+  background: transparent !important;
+  width: 0px !important;
+  height: 0px !important;
 }
 
 /* Authentic Translucent Frosted Glass Effect Matching Reference Image */
 .nav-glassmorphism {
   position: relative;
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
   background-color: rgba(255, 255, 255, 0.74) !important;
   background-image: linear-gradient(
     135deg,

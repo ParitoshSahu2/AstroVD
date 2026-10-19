@@ -2,8 +2,10 @@
 
 import React, { useState } from 'react';
 import { ArrowRight, Flame, Sparkles, Shield, Heart } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export const PoojaServicesSection: React.FC = () => {
+  const { t } = useLanguage();
   const [modalOpen, setModalOpen] = useState(false);
 
   const openWhatsAppClaim = () => {
@@ -15,39 +17,39 @@ export const PoojaServicesSection: React.FC = () => {
 
   const poojaList = [
     {
-      title: 'Maha Mrityunjaya Jaap',
-      benefit: 'Bestows health, vitality & protection from malefic afflictions.',
-      priests: '5 Vedic Priests',
+      title: t('Maha Mrityunjaya Jaap', 'महामृत्युंजय जाप अनुष्ठान'),
+      benefit: t('Bestows health, vitality & protection from malefic afflictions.', 'दीर्घायु, आरोग्य एवं अकाल मृत्यु व गंभीर रोगों से दिव्य रक्षा।'),
+      priests: t('5 Vedic Priests', '5 वैदिक ब्राह्मण'),
       icon: '🕉️',
     },
     {
-      title: 'Navgrah Shanti Havan',
-      benefit: 'Harmonizes all 9 planetary energies and dissolves Graha doshas.',
-      priests: '7 Vedic Priests',
+      title: t('Navgrah Shanti Havan', 'नवग्रह शांति महाहवन'),
+      benefit: t('Harmonizes all 9 planetary energies and dissolves Graha doshas.', 'समस्त 9 ग्रहों की अनुकूलता, ग्रह दोष शांति व सुख-समृद्धि।'),
+      priests: t('7 Vedic Priests', '7 वैदिक ब्राह्मण'),
       icon: '☀️',
     },
     {
-      title: 'Kaal Sarp Dosh Nivaran',
-      benefit: 'Dissolves karmic blocks, delays in career and mental stress.',
-      priests: 'Specialized Acharya',
+      title: t('Kaal Sarp Dosh Nivaran', 'कालसर्प दोष निवारण पूजा'),
+      benefit: t('Dissolves karmic blocks, delays in career and mental stress.', 'करियर में आ रही बाधाएं, मानसिक तनाव व कर्म बंधनों का नाश।'),
+      priests: t('Specialized Acharya', 'विशेषज्ञ आचार्य'),
       icon: '🐍',
     },
     {
-      title: 'Mangal Dosh & Vivah Shanti',
-      benefit: 'Eliminates marital obstacles, relationship misunderstandings.',
-      priests: 'Vedic Acharyas',
+      title: t('Mangal Dosh & Vivah Shanti', 'मंगल दोष एवं विवाह शांति'),
+      benefit: t('Eliminates marital obstacles, relationship misunderstandings.', 'विवाह में विलंब, वैवाहिक कलह एवं मांगलिक बाधा निवारण।'),
+      priests: t('Vedic Acharyas', 'वैदिक आचार्य मंडल'),
       icon: '🔴',
     },
     {
-      title: 'Shree Suktam & Mahalakshmi Yagya',
-      benefit: 'Attracts perpetual financial prosperity, abundance & auspiciousness.',
-      priests: 'Kashi Scholars',
+      title: t('Shree Suktam & Mahalakshmi Yagya', 'श्री सूक्तम एवं महालक्ष्मी यज्ञ'),
+      benefit: t('Attracts perpetual financial prosperity, abundance & auspiciousness.', 'निरंतर धन-समृद्धि, व्यापार में अकूत लाभ एवं आर्थिक संपन्नता।'),
+      priests: t('Kashi Scholars', 'काशी के विद्वान पंडित'),
       icon: '🪷',
     },
     {
-      title: 'Vastu Dosh Shanti Puja',
-      benefit: 'Purifies home/office energy, dispels negative planetary vibes.',
-      priests: 'Vastu Specialist',
+      title: t('Vastu Dosh Shanti Puja', 'वास्तु दोष शांति पूजा'),
+      benefit: t('Purifies home/office energy, dispels negative planetary vibes.', 'गृह व व्यापार स्थल की ऊर्जा शुद्धिकरण एवं नकारात्मकता का नाश।'),
+      priests: t('Vastu Specialist', 'वास्तु शास्त्री'),
       icon: '🏛️',
     },
   ];
@@ -67,7 +69,7 @@ export const PoojaServicesSection: React.FC = () => {
         {/* ================= 1. SECTION HEADER (FROM IMAGE 1) ================= */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-amber-200/60 pb-6">
           <h2 className="font-serif text-2xl sm:text-3xl lg:text-[34px] font-bold text-[#4A151B] tracking-[0.03em] flex items-center gap-2">
-            <span>OUR ASTROLOGY &amp; POOJA SERVICES</span>
+            <span>{t('OUR ASTROLOGY & POOJA SERVICES', 'हमारी ज्योतिष एवं पूजा सेवाएं')}</span>
             <span className="text-amber-600 text-lg sm:text-xl">✦</span>
           </h2>
 
@@ -78,7 +80,7 @@ export const PoojaServicesSection: React.FC = () => {
             }}
             className="px-5 py-2.5 rounded-full bg-white/90 hover:bg-amber-50 border border-stone-300 hover:border-amber-400 text-stone-800 hover:text-[#5B0D15] text-xs sm:text-sm font-semibold shadow-sm transition-all flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
           >
-            <span>View All 28+ Services</span>
+            <span>{t('View All 28+ Services', 'सभी 28+ सेवाएं देखें')}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -95,15 +97,18 @@ export const PoojaServicesSection: React.FC = () => {
 
             <div className="space-y-2">
               <span className="inline-block px-3 py-0.5 rounded-full bg-pink-100 text-pink-700 font-bold text-[10px] sm:text-[11px] uppercase tracking-wider">
-                SPECIAL DIVINE BLESSING
+                {t('SPECIAL DIVINE BLESSING', 'विशेष ईश्वरीय आशीर्वाद व सेवा')}
               </span>
 
               <h3 className="font-serif text-lg sm:text-xl md:text-2xl font-bold text-[#2A1810] tracking-wide leading-snug">
-                FREE BIRTH CHART FOR BABY GIRL BELOW 9 YEARS OLD
+                {t('FREE BIRTH CHART FOR BABY GIRL BELOW 9 YEARS OLD', '9 वर्ष से कम उम्र की बालिकाओं के लिए निःशुल्क जन्म कुंडली')}
               </h3>
 
               <p className="text-xs sm:text-sm text-stone-600 max-w-2xl leading-relaxed">
-                In honor of Devi Swaroop Kanya Poojan, Dr. Pandit Vishal Dubey provides completely complimentary Janampatri creation and planetary analysis for young daughters.
+                {t(
+                  'In honor of Devi Swaroop Kanya Poojan, Dr. Pandit Vishal Dubey provides completely complimentary Janampatri creation and planetary analysis for young daughters.',
+                  'देवी स्वरूपा कन्या पूजन परंपरा के अंतर्गत पूज्य डॉ. पंडित विशाल दुबे द्वारा 9 वर्ष तक की बालिकाओं की जन्म कुंडली एवं ग्रह विचार पूर्णतः निःशुल्क प्रदान किया जाता है।'
+                )}
               </p>
             </div>
           </div>
@@ -114,7 +119,7 @@ export const PoojaServicesSection: React.FC = () => {
               onClick={openWhatsAppClaim}
               className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-[#A2671A] hover:bg-[#8B5612] text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span>Claim Free Kundli</span>
+              <span>{t('Claim Free Kundli', 'निःशुल्क कुंडली प्राप्त करें')}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -149,13 +154,13 @@ export const PoojaServicesSection: React.FC = () => {
 
               <div className="pt-4 mt-4 border-t border-amber-100 flex items-center justify-between">
                 <span className="text-[11px] font-semibold text-amber-800">
-                  Vedic Vidhi &amp; Samagri Included
+                  {t('Vedic Vidhi & Samagri Included', 'शास्त्रोक्त विधि व पूजन सामग्री सहित')}
                 </span>
                 <button
                   onClick={() => openWhatsAppClaim()}
                   className="text-xs font-bold text-[#800000] hover:text-[#500000] flex items-center gap-1 group-hover:translate-x-1 transition-transform cursor-pointer"
                 >
-                  <span>Book Sankalp</span>
+                  <span>{t('Book Sankalp', 'संकल्प लें')}</span>
                   <span>→</span>
                 </button>
               </div>

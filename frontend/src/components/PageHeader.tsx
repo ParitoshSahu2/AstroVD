@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface PageHeaderProps {
   breadcrumb: string;
@@ -15,6 +16,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   title,
   subtitle,
 }) => {
+  const { t } = useLanguage();
   return (
     <div className="relative w-full bg-gradient-to-b from-[#1C090C] via-[#2A0E13] to-[#1C090C] text-white pt-28 sm:pt-36 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-12 overflow-hidden border-b border-amber-900/30">
       
@@ -31,7 +33,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             href="/"
             className="text-amber-400 hover:text-amber-300 transition-colors font-semibold"
           >
-            Home
+            {t('Home', 'होम')}
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-stone-500 shrink-0" />
           <span className="text-stone-300">{breadcrumb}</span>

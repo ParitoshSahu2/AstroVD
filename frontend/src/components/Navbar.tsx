@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, ShoppingCart, Menu, X } from 'lucide-react';
+import { Search, ShoppingCart, Menu, X, Globe } from 'lucide-react';
 import { AuthModal } from './AuthModal';
+import { useLanguage } from '../context/LanguageContext';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
+  const { language, toggleLanguage, t } = useLanguage();
   const [visible, setVisible] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -17,25 +19,65 @@ export const Navbar: React.FC = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    let lastScrollY = window.scrollY;
+    setMounted(true);
+    try {
+      const saved = localStorage.getItem('astro_user');
+      if (saved) setUser(JSON.parse(saved));
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    let lastScrollY = typeof window !== 'undefined' ? (window.pageYOffset || document.documentElement.scrollTop || 0) : 0;
+    let ticking = false;
+    let isCurrentlyVisible = true;
+    let isCurrentlyScrolled = false;
 
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      setScrolled(currentScrollY > 20);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
 
-      // Always show when near top of the page
-      if (currentScrollY < 40) {
-        setVisible(true);
-      } else if (currentScrollY > lastScrollY + 6) {
-        // Scrolling DOWN -> hide smoothly
-        setVisible(false);
-      } else if (currentScrollY < lastScrollY - 4) {
-        // Scrolling UP -> reveal immediately
-        setVisible(true);
+          if (currentScrollY <= 40) {
+            if (!isCurrentlyVisible) {
+              setVisible(true);
+              isCurrentlyVisible = true;
+            }
+            if (isCurrentlyScrolled) {
+              setScrolled(false);
+              isCurrentlyScrolled = false;
+            }
+            lastScrollY = currentScrollY;
+            ticking = false;
+            return;
+          }
+
+          if (!isCurrentlyScrolled) {
+            setScrolled(true);
+            isCurrentlyScrolled = true;
+          }
+
+          const delta = currentScrollY - lastScrollY;
+
+          if (Math.abs(delta) >= 10) {
+            if (delta > 0 && isCurrentlyVisible) {
+              setVisible(false);
+              isCurrentlyVisible = false;
+            } else if (delta < 0 && !isCurrentlyVisible) {
+              setVisible(true);
+              isCurrentlyVisible = true;
+            }
+            lastScrollY = currentScrollY;
+          }
+
+          ticking = false;
+        });
+        ticking = true;
       }
-      lastScrollY = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -54,19 +96,20 @@ export const Navbar: React.FC = () => {
   }, []);
 
   const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'About', href: '/about' },
-    { name: 'Services', href: '/services' },
-    { name: 'Blog', href: '/blog' },
-    { name: 'Appointment', href: '/appointment' },
-    { name: 'Shop', href: '/products' },
-    { name: 'Contact', href: '/contact' },
+    { name: t('Home', 'होम'), href: '/' },
+    { name: t('About', 'परिचय'), href: '/about' },
+    { name: t('Services', 'सेवाएं'), href: '/services' },
+    { name: t('Gallery', 'गैलरी'), href: '/gallery' },
+    { name: t('Blog', 'ब्लॉग'), href: '/blog' },
+    { name: t('Appointment', 'परामर्श'), href: '/appointment' },
+    { name: t('Shop', 'स्टोर'), href: '/products' },
+    { name: t('Contact', 'संपर्क'), href: '/contact' },
   ];
 
   return (
     <>
       <header
-        className={`fixed top-3 sm:top-5 left-0 right-0 z-50 flex justify-center px-3 sm:px-6 md:px-8 pointer-events-none transition-all duration-300 transform ${
+        className={`fixed top-3 sm:top-5 left-0 right-0 z-50 flex justify-center px-3 sm:px-6 md:px-8 pointer-events-none transition-[transform,opacity] duration-300 ease-out transform will-change-transform ${
           visible ? 'translate-y-0 opacity-100' : '-translate-y-28 opacity-0 pointer-events-none'
         }`}
       >
@@ -74,8 +117,8 @@ export const Navbar: React.FC = () => {
           {/* Glassmorphic Capsule Nav Bar */}
           <nav
             className={`relative overflow-hidden w-full rounded-full nav-glassmorphism ${
-              scrolled ? 'nav-glassmorphism-scrolled py-2 sm:py-2.5' : 'py-2.5 sm:py-3.5'
-            } px-4 sm:px-6 md:px-8 flex items-center justify-between transition-all duration-300`}
+              scrolled ? 'nav-glassmorphism-scrolled' : ''
+            } py-2.5 sm:py-3 px-4 sm:px-6 md:px-8 flex items-center justify-between transition-colors duration-200`}
             style={{
               backdropFilter: scrolled
                 ? 'blur(24px) saturate(190%) contrast(105%)'
@@ -126,8 +169,25 @@ export const Navbar: React.FC = () => {
               })}
             </div>
 
-            {/* Right: Search, Cart Badge & Sign Up Pill */}
-            <div className="relative z-10 flex items-center gap-3 sm:gap-4 md:gap-5">
+            {/* Right: Language Toggle, Search, Cart Badge & Sign Up Pill */}
+            <div className="relative z-10 flex items-center gap-2.5 sm:gap-3 md:gap-4">
+              {/* Hindi / English Toggle Button */}
+              <button
+                onClick={toggleLanguage}
+                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white/75 hover:bg-white text-xs font-bold border border-amber-300/80 text-[#3B1E22] hover:text-[#5B0D15] shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer active:scale-95"
+                title={language === 'en' ? 'हिन्दी में पढ़ें' : 'Read in English'}
+                aria-label="Toggle Language"
+              >
+                <Globe className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                <span className={language === 'en' ? 'text-[#800000] font-black' : 'text-stone-400 font-medium'}>
+                  EN
+                </span>
+                <span className="text-amber-400 text-[10px]">/</span>
+                <span className={language === 'hi' ? 'text-[#800000] font-black' : 'text-stone-400 font-medium'}>
+                  हिन्दी
+                </span>
+              </button>
+
               {/* Search Icon / Expandable Input */}
               <div className="relative">
                 {searchOpen ? (
@@ -136,7 +196,7 @@ export const Navbar: React.FC = () => {
                     <input
                       type="text"
                       autoFocus
-                      placeholder="Search..."
+                      placeholder={t('Search...', 'खोजें...')}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="bg-transparent text-xs text-[#3B1E22] placeholder-stone-400 focus:outline-none w-28 sm:w-36"
@@ -153,7 +213,7 @@ export const Navbar: React.FC = () => {
                     onClick={() => setSearchOpen(true)}
                     className="p-1.5 text-[#3B1E22] hover:text-[#5B0D15] transition-colors cursor-pointer"
                     aria-label="Search"
-                    title="Search"
+                    title={t('Search', 'खोजें')}
                   >
                     <Search className="w-5 h-5 stroke-[1.8]" />
                   </button>
@@ -166,7 +226,7 @@ export const Navbar: React.FC = () => {
                   onClick={() => setCartOpen(!cartOpen)}
                   className="p-1.5 text-[#3B1E22] hover:text-[#5B0D15] transition-colors relative cursor-pointer"
                   aria-label="Shopping Cart"
-                  title="Cart"
+                  title={t('Cart', 'कार्ट')}
                 >
                   <ShoppingCart className="w-5 h-5 stroke-[1.8]" />
                   {cartCount > 0 && (
@@ -180,7 +240,7 @@ export const Navbar: React.FC = () => {
                 {cartOpen && (
                   <div className="absolute top-full right-0 mt-3 w-64 rounded-2xl bg-white/95 backdrop-blur-2xl border border-amber-200/80 shadow-2xl p-4 animate-fadeIn">
                     <div className="flex items-center justify-between pb-2 border-b border-stone-200">
-                      <span className="text-xs font-bold text-[#3B1E22]">Your Cart ({cartCount})</span>
+                      <span className="text-xs font-bold text-[#3B1E22]">{t('Your Cart', 'आपकी कार्ट')} ({cartCount})</span>
                       <button onClick={() => setCartOpen(false)} className="text-stone-400 hover:text-stone-700">
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -188,7 +248,7 @@ export const Navbar: React.FC = () => {
                     <div className="py-3 text-xs text-stone-600 flex items-center gap-2.5">
                       <span className="text-xl">📿</span>
                       <div>
-                        <div className="font-semibold text-stone-900">Tiger Eye Bracelet</div>
+                        <div className="font-semibold text-stone-900">{t('Tiger Eye Bracelet', 'टाइगर आई ब्रेसलेट')}</div>
                         <div className="text-[11px] text-[#5B0D15] font-bold">1 × ₹1,299</div>
                       </div>
                     </div>
@@ -197,14 +257,14 @@ export const Navbar: React.FC = () => {
                       onClick={() => setCartOpen(false)}
                       className="block text-center w-full py-2 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs font-bold transition-colors cursor-pointer"
                     >
-                      View Cart &amp; Shop
+                      {t('View Cart & Shop', 'कार्ट देखें और खरीदें')}
                     </Link>
                   </div>
                 )}
               </div>
 
               {/* Sign Up Button (Maroon capsule from image) */}
-              {user ? (
+              {mounted && user ? (
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-[#5B0D15] hidden sm:inline">
                     {user.name?.split(' ')[0]}
@@ -217,7 +277,7 @@ export const Navbar: React.FC = () => {
                     }}
                     className="px-4 py-2 rounded-full border border-amber-300/80 bg-white/70 hover:bg-white text-[#5B0D15] text-xs font-semibold shadow-sm transition-all cursor-pointer"
                   >
-                    Logout
+                    {t('Logout', 'लॉग आउट')}
                   </button>
                 </div>
               ) : (
@@ -225,7 +285,7 @@ export const Navbar: React.FC = () => {
                   onClick={() => setAuthModalOpen(true)}
                   className="px-5 sm:px-6 py-2 sm:py-2.5 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs sm:text-sm font-semibold tracking-wide shadow-md shadow-rose-950/25 transition-all transform hover:scale-[1.03] cursor-pointer"
                 >
-                  Sign Up
+                  {t('Sign Up', 'साइन अप')}
                 </button>
               )}
 
@@ -266,6 +326,18 @@ export const Navbar: React.FC = () => {
                 ))}
               </div>
 
+              {/* Mobile Language Toggle */}
+              <div className="pt-2 pb-1 flex items-center justify-between border-t border-amber-200/60">
+                <span className="text-xs font-bold text-stone-600">{t('Select Language', 'भाषा चुनें')}:</span>
+                <button
+                  onClick={toggleLanguage}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-amber-300 text-xs font-bold text-[#5B0D15] shadow-xs"
+                >
+                  <Globe className="w-3.5 h-3.5 text-amber-700" />
+                  <span>{language === 'en' ? 'हिन्दी में बदलें' : 'Switch to English'}</span>
+                </button>
+              </div>
+
               <div className="pt-2 border-t border-stone-200">
                 <button
                   onClick={() => {
@@ -274,7 +346,7 @@ export const Navbar: React.FC = () => {
                   }}
                   className="w-full py-2.5 rounded-full bg-[#5B0D15] text-white font-semibold text-xs shadow-md"
                 >
-                  Sign Up / Login
+                  {t('Sign Up / Login', 'साइन अप / लॉग इन')}
                 </button>
               </div>
             </div>
