@@ -1,4 +1,4 @@
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000/api';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api';
 
 export async function fetchHoroscope(sign: string, period = 'daily') {
   try {
@@ -89,24 +89,315 @@ export async function fetchAstrologers(category = 'all') {
   }
 }
 
-export async function bookConsultation(bookingData: any) {
-  try {
-    const res = await fetch(`${BACKEND_URL}/astrologers/book`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bookingData),
-    });
-    if (!res.ok) throw new Error('Failed to book consultation');
-    return await res.json();
-  } catch (err) {
-    return {
-      bookingId: `DEMO-${Date.now().toString(36).toUpperCase()}`,
-      status: 'Confirmed',
-      totalAmount: 45 * (bookingData.durationMinutes || 15),
-      scheduledTime: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
-      message: 'Consultation session connected successfully via cosmic bridge!',
-    };
+export async function bookConsultation(bookingData: {
+  astrologerId: string;
+  userPhone: string;
+  userName?: string;
+  consultationType: 'chat' | 'call' | 'video';
+  durationMinutes: number;
+  birthDetails?: { dob: string; tob: string; pob: string };
+  queryTopic?: string;
+}) {
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
+
+  const res = await fetch(`${BACKEND_URL}/astrologers/book`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(bookingData),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const errorMsg = Array.isArray(data.message)
+      ? data.message.join(' • ')
+      : data.message || 'Failed to book consultation session.';
+    throw new Error(errorMsg);
+  }
+
+  return data;
+}
+
+export interface RegisterResponse {
+  message: string;
+  email?: string;
+  phone?: string;
+  channel?: 'EMAIL' | 'PHONE';
+  emailVerificationRequired?: boolean;
+  phoneVerificationRequired?: boolean;
+  verificationRequired?: boolean;
+  deliveryStatus?: 'SENT' | 'FAILED';
+}
+
+export interface VerifyEmailOtpResponse {
+  message: string;
+  accessToken: string;
+  user: {
+    id: string;
+    name?: string;
+    email?: string | null;
+    phone?: string | null;
+    role: string;
+    status: string;
+    emailVerified: boolean;
+    phoneVerified: boolean;
+    walletBalance: number;
+    [key: string]: unknown;
+  };
+}
+
+export interface ResendEmailOtpResponse {
+  message: string;
+  deliveryStatus?: 'SENT' | 'FAILED';
+}
+
+export interface VerifyMobileOtpResponse {
+  message: string;
+  accessToken: string;
+  user: {
+    id: string;
+    name?: string;
+    email?: string | null;
+    phone?: string | null;
+    role: string;
+    status: string;
+    emailVerified: boolean;
+    phoneVerified: boolean;
+    walletBalance: number;
+    [key: string]: unknown;
+  };
+}
+
+export interface ResendMobileOtpResponse {
+  message: string;
+  deliveryStatus?: 'SENT' | 'FAILED';
+}
+
+export async function verifyEmailOtp(
+  email: string,
+  otp: string,
+): Promise<VerifyEmailOtpResponse> {
+  const backendBase = (
+    process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
+  ).replace(/\/api\/?$/, '');
+  const res = await fetch(`${backendBase}/api/auth/verify-email-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email.trim().toLowerCase(), otp: otp.trim() }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    const errorMsg = Array.isArray(data.message)
+      ? data.message.join(' • ')
+      : data.message || 'Verification failed.';
+    const error = new Error(errorMsg);
+    (error as unknown as { statusCode: number; error?: string }).statusCode = res.status;
+    (error as unknown as { statusCode: number; error?: string }).error = data.error;
+    throw error;
+  }
+  return data;
+}
+
+export async function resendEmailOtp(
+  email: string,
+): Promise<ResendEmailOtpResponse> {
+  const backendBase = (
+    process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
+  ).replace(/\/api\/?$/, '');
+  const res = await fetch(`${backendBase}/api/auth/resend-email-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email.trim().toLowerCase() }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    const errorMsg = Array.isArray(data.message)
+      ? data.message.join(' • ')
+      : data.message || 'Failed to resend verification code.';
+    const error = new Error(errorMsg);
+    (error as unknown as { statusCode: number; error?: string }).statusCode = res.status;
+    (error as unknown as { statusCode: number; error?: string }).error = data.error;
+    throw error;
+  }
+  return data;
+}
+
+export async function verifyMobileOtp(
+  phone: string,
+  otp: string,
+): Promise<VerifyMobileOtpResponse> {
+  const backendBase = (
+    process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
+  ).replace(/\/api\/?$/, '');
+  const res = await fetch(`${backendBase}/api/auth/verify-mobile-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone: phone.trim(), otp: otp.trim() }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    const errorMsg = Array.isArray(data.message)
+      ? data.message.join(' • ')
+      : data.message || 'Verification failed.';
+    const error = new Error(errorMsg);
+    (error as unknown as { statusCode: number; error?: string }).statusCode = res.status;
+    (error as unknown as { statusCode: number; error?: string }).error = data.error;
+    throw error;
+  }
+  return data;
+}
+
+export async function resendMobileOtp(
+  phone: string,
+): Promise<ResendMobileOtpResponse> {
+  const backendBase = (
+    process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
+  ).replace(/\/api\/?$/, '');
+  const res = await fetch(`${backendBase}/api/auth/resend-mobile-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone: phone.trim() }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    const errorMsg = Array.isArray(data.message)
+      ? data.message.join(' • ')
+      : data.message || 'Failed to resend verification code.';
+    const error = new Error(errorMsg);
+    (error as unknown as { statusCode: number; error?: string }).statusCode = res.status;
+    (error as unknown as { statusCode: number; error?: string }).error = data.error;
+    throw error;
+  }
+  return data;
+}
+
+export interface GenericRecoveryResponse {
+  message: string;
+}
+
+export async function forgotPasswordEmail(
+  email: string,
+): Promise<GenericRecoveryResponse> {
+  const backendBase = (
+    process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
+  ).replace(/\/api\/?$/, '');
+  const res = await fetch(`${backendBase}/api/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email.trim().toLowerCase() }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    const errorMsg = Array.isArray(data.message)
+      ? data.message.join(' • ')
+      : data.message || 'Failed to request password reset link.';
+    const error = new Error(errorMsg);
+    (error as unknown as { statusCode: number; error?: string }).statusCode = res.status;
+    throw error;
+  }
+  return data;
+}
+
+export async function forgotPasswordMobile(
+  phone: string,
+): Promise<GenericRecoveryResponse> {
+  const backendBase = (
+    process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
+  ).replace(/\/api\/?$/, '');
+  const res = await fetch(`${backendBase}/api/auth/forgot-password-mobile`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone: phone.trim() }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    const errorMsg = Array.isArray(data.message)
+      ? data.message.join(' • ')
+      : data.message || 'Failed to request password reset code.';
+    const error = new Error(errorMsg);
+    (error as unknown as { statusCode: number; error?: string }).statusCode = res.status;
+    throw error;
+  }
+  return data;
+}
+
+export async function resetPasswordEmail(
+  token: string,
+  newPassword: string,
+): Promise<{ message: string }> {
+  const backendBase = (
+    process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
+  ).replace(/\/api\/?$/, '');
+  const res = await fetch(`${backendBase}/api/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: token.trim(), newPassword }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    const errorMsg = Array.isArray(data.message)
+      ? data.message.join(' • ')
+      : data.message || 'Failed to reset password.';
+    const error = new Error(errorMsg);
+    (error as unknown as { statusCode: number; error?: string }).statusCode = res.status;
+    throw error;
+  }
+  return data;
+}
+
+export async function resetPasswordMobile(
+  phone: string,
+  otp: string,
+  newPassword: string,
+): Promise<{ message: string }> {
+  const backendBase = (
+    process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
+  ).replace(/\/api\/?$/, '');
+  const res = await fetch(`${backendBase}/api/auth/reset-password-mobile`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone: phone.trim(), otp: otp.trim(), newPassword }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    const errorMsg = Array.isArray(data.message)
+      ? data.message.join(' • ')
+      : data.message || 'Failed to reset password.';
+    const error = new Error(errorMsg);
+    (error as unknown as { statusCode: number; error?: string }).statusCode = res.status;
+    throw error;
+  }
+  return data;
+}
+
+export async function verifyResetMobileOtp(
+  phone: string,
+  otp: string,
+): Promise<{ message: string; resetToken: string }> {
+  const backendBase = (
+    process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
+  ).replace(/\/api\/?$/, '');
+  const res = await fetch(`${backendBase}/api/auth/verify-reset-mobile-otp`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone: phone.trim(), otp: otp.trim() }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    const errorMsg = Array.isArray(data.message)
+      ? data.message.join(' • ')
+      : data.message || 'Failed to verify reset code.';
+    const error = new Error(errorMsg);
+    (error as unknown as { statusCode: number; error?: string }).statusCode = res.status;
+    throw error;
+  }
+  return data;
 }
 
 // Fallback generators

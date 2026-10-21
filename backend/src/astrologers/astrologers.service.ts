@@ -5,6 +5,22 @@ import { Astrologer, BookingRequestDto, BookingResponse } from './astrologers.ty
 export class AstrologersService {
   private astrologers: Astrologer[] = [
     {
+      id: 'vishal',
+      name: 'Dr. Pandit Vishal Dubey',
+      avatar: '/dr_vishal_dubey.jpg',
+      title: 'PhD in Vedic Astrology & Certified Hypnotherapist',
+      experienceYears: 24,
+      rating: 5.0,
+      reviewCount: 1420,
+      specializations: ['Vedic Kundli', 'Planetary Dosha Rectification', 'Career & Wealth', 'Matchmaking'],
+      languages: ['Hindi', 'English', 'Sanskrit'],
+      ratePerMin: 70,
+      originalRate: 100,
+      status: 'Online',
+      bio: 'Gold medalist from Varanasi Sanskrit University. 24+ years of divine astrological guidance in Vedic dosha rectification and karma alignment.',
+      totalOrders: 9800,
+    },
+    {
       id: 'ast-1',
       name: 'Acharya Devdutt Shastri',
       avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=250',

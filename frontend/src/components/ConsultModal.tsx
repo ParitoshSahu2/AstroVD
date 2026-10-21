@@ -14,6 +14,7 @@ import {
   Shield,
   Sparkles,
   X,
+  AlertCircle,
 } from 'lucide-react';
 
 interface ConsultModalProps {
@@ -36,10 +37,16 @@ export const ConsultModal: React.FC<ConsultModalProps> = ({
   const [loading, setLoading] = useState(true);
   const [bookingSuccess, setBookingSuccess] = useState<any>(null);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [contactPhone, setContactPhone] = useState(user?.phone || '');
+  const [phoneError, setPhoneError] = useState('');
+  const [bookingError, setBookingError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
+      setContactPhone(user?.phone || '');
+      setPhoneError('');
+      setBookingError('');
       fetchAstrologers('all').then((data) => {
         setAstrologers(data);
         if (data.length > 0 && !selectedAstrologer) {
@@ -48,26 +55,65 @@ export const ConsultModal: React.FC<ConsultModalProps> = ({
         setLoading(false);
       });
     }
-  }, [isOpen]);
+  }, [isOpen, user]);
 
   if (!isOpen) return null;
 
+  const normalizeInputPhone = (raw: string): string => {
+    let cleaned = raw.replace(/[\s\-\(\)\.]/g, '');
+    if (cleaned.startsWith('00')) cleaned = '+' + cleaned.slice(2);
+    if (/^[6-9]\d{9}$/.test(cleaned)) return `+91${cleaned}`;
+    if (/^0[6-9]\d{9}$/.test(cleaned)) return `+91${cleaned.slice(1)}`;
+    if (!cleaned.startsWith('+') && /^[1-9]\d{8,14}$/.test(cleaned)) return `+${cleaned}`;
+    return cleaned;
+  };
+
   const handleConfirmBooking = async () => {
+    if (bookingLoading) return;
+
     if (!user) {
       onClose();
       openAuthModal();
       return;
     }
+
+    setPhoneError('');
+    setBookingError('');
+
+    const trimmed = contactPhone.trim();
+    if (!trimmed) {
+      setPhoneError('Contact phone number is required for consultation connection.');
+      return;
+    }
+
+    const normalized = normalizeInputPhone(trimmed);
+
+    // Reject the obsolete dummy fallback
+    if (normalized === '+919876543210' || normalized === '9876543210') {
+      setPhoneError('Please enter your actual contact phone number, not the placeholder dummy number.');
+      return;
+    }
+
+    if (!/^\+[1-9]\d{7,14}$/.test(normalized)) {
+      setPhoneError('Please enter a valid 10-digit mobile number or standard international number starting with +.');
+      return;
+    }
+
     setBookingLoading(true);
-    const res = await bookConsultation({
-      astrologerId: selectedAstrologer?.id,
-      userName: user.name || 'Seeker',
-      userPhone: '+91 9876543210',
-      consultationType: consultType,
-      durationMinutes: duration,
-    });
-    setBookingSuccess(res);
-    setBookingLoading(false);
+    try {
+      const res = await bookConsultation({
+        astrologerId: selectedAstrologer?.id,
+        userName: user.name || 'Seeker',
+        userPhone: normalized,
+        consultationType: consultType,
+        durationMinutes: duration,
+      });
+      setBookingSuccess(res);
+    } catch (err: any) {
+      setBookingError(err.message || 'Failed to book consultation session.');
+    } finally {
+      setBookingLoading(false);
+    }
   };
 
   return (
@@ -236,11 +282,66 @@ export const ConsultModal: React.FC<ConsultModalProps> = ({
               </div>
             </div>
 
+            {/* Contact Phone Section */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-stone-700">
+                  4. Contact Phone Number (for Consultation Call/SMS)
+                </label>
+                {user?.phone ? (
+                  <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    From Account
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                    Required for connection
+                  </span>
+                )}
+              </div>
+              <div className="relative">
+                <PhoneCall className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="tel"
+                  disabled={bookingLoading}
+                  value={contactPhone}
+                  onChange={(e) => {
+                    setContactPhone(e.target.value);
+                    if (phoneError) setPhoneError('');
+                    if (bookingError) setBookingError('');
+                  }}
+                  placeholder="e.g. 9876543210 or +919876543210"
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border text-stone-900 text-xs focus:outline-none focus:ring-1 shadow-sm disabled:opacity-60 ${
+                    phoneError
+                      ? 'border-red-400 focus:border-red-500 focus:ring-red-400'
+                      : 'border-stone-300 focus:border-amber-500 focus:ring-amber-400'
+                  }`}
+                />
+              </div>
+              {phoneError ? (
+                <p className="text-[11px] text-red-600 mt-1 flex items-center gap-1 font-medium">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{phoneError}</span>
+                </p>
+              ) : (
+                <p className="text-[10px] text-stone-500 mt-1">
+                  We'll connect the sacred session to this number. Indian 10-digit numbers automatically normalize to +91.
+                </p>
+              )}
+            </div>
+
+            {/* Booking Error Display */}
+            {bookingError && (
+              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                <span>{bookingError}</span>
+              </div>
+            )}
+
             {/* Action Button */}
             <button
               onClick={handleConfirmBooking}
-              disabled={bookingLoading}
-              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold text-sm shadow-md shadow-amber-500/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+              disabled={bookingLoading || !selectedAstrologer}
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-extrabold text-sm shadow-md shadow-amber-500/25 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {bookingLoading ? (
                 <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />

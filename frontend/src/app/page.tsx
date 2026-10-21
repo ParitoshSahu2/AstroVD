@@ -14,7 +14,7 @@ import { Footer } from '../components/Footer';
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen w-full bg-[#FAF7F2] m-0 p-0 overflow-x-hidden">
+    <div className="relative min-h-screen w-full bg-[#FAF7F2] m-0 p-0 overflow-x-clip">
       {/* Floating Translucent Rounded Glassmorphic Navbar */}
       <Navbar />
 

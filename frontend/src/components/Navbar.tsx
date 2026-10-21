@@ -1,9 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, ShoppingCart, Menu, X, Globe } from 'lucide-react';
+import {
+  Search,
+  ShoppingCart,
+  Menu,
+  X,
+  ChevronDown,
+  Wallet,
+  Sparkles,
+  Compass,
+  LogOut,
+  User as UserIcon,
+  ShieldCheck,
+  Globe,
+} from 'lucide-react';
 import { AuthModal } from './AuthModal';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -17,67 +30,30 @@ export const Navbar: React.FC = () => {
   const [cartCount, setCartCount] = useState(1);
   const [cartOpen, setCartOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [mounted, setMounted] = useState(false);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setMounted(true);
-    try {
-      const saved = localStorage.getItem('astro_user');
-      if (saved) setUser(JSON.parse(saved));
-    } catch (e) {
-      // ignore
-    }
-  }, []);
-
-  useEffect(() => {
-    let lastScrollY = typeof window !== 'undefined' ? (window.pageYOffset || document.documentElement.scrollTop || 0) : 0;
-    let ticking = false;
-    let isCurrentlyVisible = true;
-    let isCurrentlyScrolled = false;
+    let lastScrollY = window.scrollY;
 
     const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+      const currentScrollY = window.scrollY;
+      setScrolled(currentScrollY > 20);
 
-          if (currentScrollY <= 40) {
-            if (!isCurrentlyVisible) {
-              setVisible(true);
-              isCurrentlyVisible = true;
-            }
-            if (isCurrentlyScrolled) {
-              setScrolled(false);
-              isCurrentlyScrolled = false;
-            }
-            lastScrollY = currentScrollY;
-            ticking = false;
-            return;
-          }
-
-          if (!isCurrentlyScrolled) {
-            setScrolled(true);
-            isCurrentlyScrolled = true;
-          }
-
-          const delta = currentScrollY - lastScrollY;
-
-          if (Math.abs(delta) >= 10) {
-            if (delta > 0 && isCurrentlyVisible) {
-              setVisible(false);
-              isCurrentlyVisible = false;
-            } else if (delta < 0 && !isCurrentlyVisible) {
-              setVisible(true);
-              isCurrentlyVisible = true;
-            }
-            lastScrollY = currentScrollY;
-          }
-
-          ticking = false;
-        });
-        ticking = true;
+      // Always show when near top of the page
+      if (currentScrollY < 40) {
+        setVisible(true);
+      } else if (currentScrollY > lastScrollY + 6) {
+        // Scrolling DOWN -> hide smoothly
+        setVisible(false);
+      } else if (currentScrollY < lastScrollY - 4) {
+        // Scrolling UP -> reveal immediately
+        setVisible(true);
       }
+      lastScrollY = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -85,15 +61,91 @@ export const Navbar: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const saved = localStorage.getItem('astro_user');
-    if (saved) {
-      try {
-        setUser(JSON.parse(saved));
-      } catch (e) {
-        // ignore
+    const syncUser = () => {
+      const saved = localStorage.getItem('astro_user');
+      const token = localStorage.getItem('astro_token');
+
+      if (saved) {
+        try {
+          setUser(JSON.parse(saved));
+        } catch (e) {
+          setUser(null);
+        }
+      } else {
+        setUser(null);
       }
-    }
+
+      if (token) {
+        const backendBase = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
+        fetch(`${backendBase}/api/auth/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((res) => {
+            if (res.ok) return res.json();
+            if (res.status === 401) {
+              localStorage.removeItem('astro_token');
+              localStorage.removeItem('astro_user');
+              setUser(null);
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('astro-auth-change', { detail: null }));
+              }
+            }
+            return null;
+          })
+          .then((freshUser) => {
+            if (freshUser) {
+              setUser(freshUser);
+              localStorage.setItem('astro_user', JSON.stringify(freshUser));
+            }
+          })
+          .catch(() => {});
+      }
+    };
+
+    syncUser();
+
+    window.addEventListener('astro-auth-change', syncUser);
+    window.addEventListener('storage', syncUser);
+
+    return () => {
+      window.removeEventListener('astro-auth-change', syncUser);
+      window.removeEventListener('storage', syncUser);
+    };
   }, []);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(event.target as Node)
+      ) {
+        setProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const getInitials = (name?: string) => {
+    if (!name) return 'U';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('astro_token');
+    localStorage.removeItem('astro_user');
+    setUser(null);
+    setProfileDropdownOpen(false);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('astro-auth-change', { detail: null }));
+    }
+  };
 
   const navLinks = [
     { name: t('Home', 'होम'), href: '/' },
@@ -109,16 +161,16 @@ export const Navbar: React.FC = () => {
   return (
     <>
       <header
-        className={`fixed top-3 sm:top-5 left-0 right-0 z-50 flex justify-center px-3 sm:px-6 md:px-8 pointer-events-none transition-[transform,opacity] duration-300 ease-out transform will-change-transform ${
+        className={`fixed top-3 sm:top-5 left-0 right-0 z-50 flex justify-center px-3 sm:px-6 md:px-8 pointer-events-none transition-all duration-300 transform ${
           visible ? 'translate-y-0 opacity-100' : '-translate-y-28 opacity-0 pointer-events-none'
         }`}
       >
         <div className="w-full max-w-6xl pointer-events-auto">
           {/* Glassmorphic Capsule Nav Bar */}
           <nav
-            className={`relative overflow-hidden w-full rounded-full nav-glassmorphism ${
-              scrolled ? 'nav-glassmorphism-scrolled' : ''
-            } py-2.5 sm:py-3 px-4 sm:px-6 md:px-8 flex items-center justify-between transition-colors duration-200`}
+            className={`relative w-full rounded-full nav-glassmorphism ${
+              scrolled ? 'nav-glassmorphism-scrolled py-2 sm:py-2.5' : 'py-2.5 sm:py-3.5'
+            } px-4 sm:px-6 md:px-8 flex items-center justify-between transition-all duration-300`}
             style={{
               backdropFilter: scrolled
                 ? 'blur(24px) saturate(190%) contrast(105%)'
@@ -129,8 +181,10 @@ export const Navbar: React.FC = () => {
             }}
           >
             {/* Glass Specular Gloss Sheen Reflection */}
-            <div className="absolute inset-x-0 top-0 h-1/2 rounded-t-full bg-gradient-to-b from-white/70 via-white/20 to-transparent pointer-events-none z-0" />
-            <div className="absolute -top-10 -left-10 w-48 h-28 bg-gradient-to-r from-transparent via-white/40 to-transparent rotate-45 pointer-events-none blur-sm z-0" />
+            <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none z-0">
+              <div className="absolute inset-x-0 top-0 h-1/2 rounded-t-full bg-gradient-to-b from-white/70 via-white/20 to-transparent" />
+              <div className="absolute -top-10 -left-10 w-48 h-28 bg-gradient-to-r from-transparent via-white/40 to-transparent rotate-45 blur-sm" />
+            </div>
 
             {/* Left: Maroon AstroVD Logo */}
             <div className="relative z-10 flex items-center gap-2 shrink-0">
@@ -223,7 +277,12 @@ export const Navbar: React.FC = () => {
               {/* Shopping Cart Icon with Badge */}
               <div className="relative">
                 <button
-                  onClick={() => setCartOpen(!cartOpen)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCartOpen(!cartOpen);
+                    setProfileDropdownOpen(false);
+                    setSearchOpen(false);
+                  }}
                   className="p-1.5 text-[#3B1E22] hover:text-[#5B0D15] transition-colors relative cursor-pointer"
                   aria-label="Shopping Cart"
                   title={t('Cart', 'कार्ट')}
@@ -253,7 +312,7 @@ export const Navbar: React.FC = () => {
                       </div>
                     </div>
                     <Link
-                      href="/shop"
+                      href="/products"
                       onClick={() => setCartOpen(false)}
                       className="block text-center w-full py-2 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs font-bold transition-colors cursor-pointer"
                     >
@@ -263,30 +322,173 @@ export const Navbar: React.FC = () => {
                 )}
               </div>
 
-              {/* Sign Up Button (Maroon capsule from image) */}
-              {mounted && user ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-[#5B0D15] hidden sm:inline">
-                    {user.name?.split(' ')[0]}
-                  </span>
+              {/* User Profile Pill & Dropdown or Sign Up Button */}
+              {user ? (
+                <div className="relative" ref={profileDropdownRef}>
                   <button
-                    onClick={() => {
-                      localStorage.removeItem('astro_token');
-                      localStorage.removeItem('astro_user');
-                      setUser(null);
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setProfileDropdownOpen((prev) => !prev);
+                      setCartOpen(false);
+                      setSearchOpen(false);
                     }}
-                    className="px-4 py-2 rounded-full border border-amber-300/80 bg-white/70 hover:bg-white text-[#5B0D15] text-xs font-semibold shadow-sm transition-all cursor-pointer"
+                    className="flex items-center gap-2 pl-1 pr-2.5 sm:pr-3 py-1 rounded-full border border-amber-300/80 bg-white/80 hover:bg-white text-[#3B1E22] shadow-sm hover:shadow transition-all cursor-pointer group"
+                    aria-label="User account menu"
+                    aria-expanded={profileDropdownOpen}
                   >
-                    {t('Logout', 'लॉग आउट')}
+                    {/* Royal Maroon & Gold Gradient Initials Avatar */}
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-[#5B0D15] via-[#7B121C] to-[#3B1E22] text-amber-200 font-bold text-xs flex items-center justify-center shadow-inner border border-amber-300/60 ring-2 ring-amber-100/50">
+                      {getInitials(user.name)}
+                    </div>
+
+                    {/* Name & Balance Subtitle */}
+                    <div className="text-left hidden sm:block leading-tight">
+                      <div className="text-xs font-bold text-[#3B1E22] group-hover:text-[#5B0D15] transition-colors truncate max-w-[110px]">
+                        {user.name?.split(' ')[0]}
+                      </div>
+                      <div className="text-[10px] text-amber-800 font-semibold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                        ₹{user.walletBalance ?? 150}
+                      </div>
+                    </div>
+
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-stone-500 transition-transform duration-200 ${
+                        profileDropdownOpen ? 'rotate-180 text-[#5B0D15]' : ''
+                      }`}
+                    />
                   </button>
+
+                  {/* Luxury Frosted Glass Dropdown Menu */}
+                  {profileDropdownOpen && (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute top-full right-0 mt-2.5 w-72 rounded-2xl bg-white/95 backdrop-blur-2xl border border-amber-200/90 shadow-2xl p-3 z-50 animate-fadeIn text-[#3B1E22]"
+                    >
+                      {/* Identity Card */}
+                      <div className="flex items-center gap-3 p-2.5 bg-gradient-to-r from-amber-50/80 via-rose-50/40 to-amber-50/50 rounded-xl border border-amber-200/60 mb-2.5">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#5B0D15] to-[#7B121C] text-amber-200 font-bold text-sm flex items-center justify-center shadow-sm border border-amber-300/80 ring-2 ring-amber-200/50 shrink-0">
+                          {getInitials(user.name)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-[#3B1E22] truncate">{user.name}</span>
+                            <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300/70 uppercase tracking-wider">
+                              {user.role || 'Member'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-stone-500 truncate">{user.email}</p>
+                        </div>
+                      </div>
+
+                      {/* Astro Wallet Highlight Card */}
+                      <div className="px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-300/60 flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-900 flex items-center justify-center">
+                            <Wallet className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-[10px] uppercase font-bold text-amber-800 tracking-wider">Astro Balance</div>
+                            <div className="text-xs font-black text-[#5B0D15]">
+                              ₹{user.walletBalance ?? 150} <span className="text-[10px] font-normal text-stone-500">Credits</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Link
+                          href="/appointment"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="text-[10px] font-bold text-[#5B0D15] hover:text-[#3B1E22] hover:underline"
+                        >
+                          Book Now →
+                        </Link>
+                      </div>
+
+                      {/* Quick Navigation Items */}
+                      <div className="space-y-0.5 text-xs text-stone-700">
+                        {(user.role === 'ADMIN' || user.role === 'SUPERADMIN') && (
+                          <Link
+                            href="/admin"
+                            onClick={() => setProfileDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-purple-50 text-purple-900 border border-purple-200 font-bold hover:bg-purple-100 transition-colors mb-1"
+                          >
+                            <ShieldCheck className="w-4 h-4 text-purple-700" />
+                            <span>👑 Admin Control Panel</span>
+                          </Link>
+                        )}
+                        <Link
+                          href="/dashboard"
+                          onClick={() => {
+                            setProfileDropdownOpen(false);
+                            if (typeof window !== 'undefined') {
+                              window.dispatchEvent(new CustomEvent('astro-auth-change'));
+                            }
+                          }}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-amber-500/10 text-[#5B0D15] font-bold hover:bg-amber-500/20 transition-colors"
+                        >
+                          <UserIcon className="w-4 h-4 text-[#5B0D15]" />
+                          <span>Customer Dashboard</span>
+                        </Link>
+                        <Link
+                          href="/services"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-stone-100/80 transition-colors"
+                        >
+                          <Sparkles className="w-4 h-4 text-amber-600" />
+                          <span>My Kundli &amp; Vedic Reports</span>
+                        </Link>
+                        <Link
+                          href="/appointment"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-stone-100/80 transition-colors"
+                        >
+                          <Compass className="w-4 h-4 text-[#5B0D15]" />
+                          <span>Astrology Consultations</span>
+                        </Link>
+                        <Link
+                          href="/products"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-stone-100/80 transition-colors"
+                        >
+                          <ShoppingCart className="w-4 h-4 text-stone-600" />
+                          <span>Astro Store Orders</span>
+                        </Link>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="border-t border-stone-200/80 my-2" />
+
+                      {/* Logout Action */}
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer"
+                      >
+                        <LogOut className="w-4 h-4 text-rose-600" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <button
-                  onClick={() => setAuthModalOpen(true)}
-                  className="px-5 sm:px-6 py-2 sm:py-2.5 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs sm:text-sm font-semibold tracking-wide shadow-md shadow-rose-950/25 transition-all transform hover:scale-[1.03] cursor-pointer"
-                >
-                  {t('Sign Up', 'साइन अप')}
-                </button>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <button
+                    onClick={() => {
+                      setAuthMode('login');
+                      setAuthModalOpen(true);
+                    }}
+                    className="hidden sm:inline-block px-3 py-1.5 text-xs font-semibold text-[#5B0D15] hover:text-[#3B1E22] transition-colors cursor-pointer"
+                  >
+                    {t('Sign In', 'लॉग इन')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAuthMode('register');
+                      setAuthModalOpen(true);
+                    }}
+                    className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs sm:text-sm font-semibold tracking-wide shadow-md shadow-rose-950/25 transition-all transform hover:scale-[1.03] cursor-pointer"
+                  >
+                    {t('Sign Up', 'साइन अप')}
+                  </button>
+                </div>
               )}
 
               {/* Mobile Menu Hamburger */}
@@ -338,17 +540,62 @@ export const Navbar: React.FC = () => {
                 </button>
               </div>
 
-              <div className="pt-2 border-t border-stone-200">
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    setAuthModalOpen(true);
-                  }}
-                  className="w-full py-2.5 rounded-full bg-[#5B0D15] text-white font-semibold text-xs shadow-md"
-                >
-                  {t('Sign Up / Login', 'साइन अप / लॉग इन')}
-                </button>
-              </div>
+              {user ? (
+                <div className="pt-2 border-t border-stone-200 space-y-2">
+                  <div className="flex items-center gap-3 p-2.5 bg-white/70 rounded-2xl border border-amber-200/60">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#5B0D15] to-[#7B121C] text-amber-200 font-bold text-xs flex items-center justify-center shrink-0 border border-amber-300/60">
+                      {getInitials(user.name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-bold text-[#3B1E22] truncate">{user.name}</div>
+                      <div className="text-[11px] text-[#5B0D15] font-semibold">🪙 ₹{user.walletBalance ?? 150} Balance</div>
+                    </div>
+                  </div>
+                  {(user.role === 'ADMIN' || user.role === 'SUPERADMIN') && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full py-2.5 px-4 rounded-xl bg-purple-50 text-purple-900 border border-purple-200 font-bold text-xs flex items-center justify-center gap-2 shadow-sm"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 text-purple-700" />
+                      <span>👑 Admin Control Panel</span>
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full py-2.5 rounded-full border border-rose-200 bg-rose-50 text-rose-700 font-semibold text-xs shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <div className="pt-2 border-t border-stone-200 grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setAuthMode('login');
+                      setAuthModalOpen(true);
+                    }}
+                    className="py-2.5 rounded-full border border-amber-300/80 bg-white text-[#5B0D15] font-semibold text-xs shadow-xs hover:bg-stone-50"
+                  >
+                    {t('Sign In', 'लॉग इन')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setAuthMode('register');
+                      setAuthModalOpen(true);
+                    }}
+                    className="py-2.5 rounded-full bg-[#5B0D15] text-white font-semibold text-xs shadow-md hover:bg-[#480a11]"
+                  >
+                    {t('Sign Up', 'साइन अप')}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -357,6 +604,7 @@ export const Navbar: React.FC = () => {
       {/* Auth Modal for Sign Up / Login */}
       <AuthModal
         isOpen={authModalOpen}
+        initialMode={authMode}
         onClose={() => setAuthModalOpen(false)}
         onLoginSuccess={(userData) => setUser(userData)}
       />
