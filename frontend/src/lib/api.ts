@@ -698,3 +698,8 @@ function getFallbackAstrologers() {
     },
   ];
 }
+
+// Product Catalog & Sacred Store API exports
+export { fetchProducts, fetchProductBySlug, fetchCategories } from './productsApi';
+export type { ProductsQueryOptions, ProductsResponse, ProductDetailResponse, CategorySummary } from './productsApi';
+

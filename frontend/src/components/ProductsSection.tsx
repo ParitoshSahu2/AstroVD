@@ -1,48 +1,95 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Sparkles, ArrowRight, Eye, X, ShieldCheck, CheckCircle2 } from 'lucide-react';
-import { PRODUCTS_CATALOG, ProductItem } from '../data/products';
+import { ArrowRight, ShieldCheck, Search, ChevronLeft, ChevronRight, Sparkles, RefreshCw } from 'lucide-react';
+import { fetchProducts, CategorySummary, fetchCategories } from '../lib/productsApi';
+import { ProductItem } from '../data/products';
 import { useLanguage } from '../context/LanguageContext';
 
 interface ProductsSectionProps {
   limit?: number;
   showExploreMore?: boolean;
+  enableSearchAndPagination?: boolean;
 }
 
 export const ProductsSection: React.FC<ProductsSectionProps> = ({
   limit,
   showExploreMore = false,
+  enableSearchAndPagination = true,
 }) => {
   const { t, language } = useLanguage();
   const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
-  const [sankalpName, setSankalpName] = useState('');
-  const [sankalpGotra, setSankalpGotra] = useState('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [debouncedSearch, setDebouncedSearch] = useState<string>('');
+  const [page, setPage] = useState<number>(1);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [products, setProducts] = useState<ProductItem[]>([]);
+  const [total, setTotal] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [categories, setCategories] = useState<CategorySummary[]>([]);
+  const [isBackend, setIsBackend] = useState<boolean>(false);
 
-  const filterCategories = [
-    { id: 'all', label: t('All Bracelets (14)', 'सभी ब्रेसलेट (14)') },
-    { id: 'wealth', label: t('Wealth & Prosperity', 'धन एवं समृद्धि') },
-    { id: 'protection', label: t('Protection & Nazar', 'सुरक्षा एवं नज़र दोष') },
-    { id: 'love', label: t('Love & Peace', 'प्रेम एवं शांति') },
-    { id: 'healing', label: t('Healing & Balance', 'आरोग्य एवं संतुलन') },
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setPage(1); // reset to page 1 on new search
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  // Load categories on mount or language switch
+  useEffect(() => {
+    let mounted = true;
+    fetchCategories(language === 'hi' ? 'hi' : 'en').then((cats) => {
+      if (mounted) setCategories(cats);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [language]);
+
+  // Fetch products from GET /api/products
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+
+    fetchProducts({
+      category: activeCategory,
+      search: debouncedSearch,
+      page,
+      limit: limit || (enableSearchAndPagination ? 12 : 8),
+      lang: language === 'hi' ? 'hi' : 'en',
+    })
+      .then((res) => {
+        if (!mounted) return;
+        setProducts(res.data);
+        setTotal(res.total);
+        setTotalPages(res.totalPages);
+        setIsBackend(Boolean(res.isBackendSource));
+      })
+      .catch((err) => {
+        console.error('Failed to load products:', err);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [activeCategory, debouncedSearch, page, limit, language, enableSearchAndPagination]);
+
+  const defaultCategories = [
+    { id: 'all', label: t('All Bracelets', 'सभी ब्रेसलेट'), count: 19 },
+    { id: 'wealth', label: t('Wealth & Prosperity', 'धन एवं समृद्धि'), count: 7 },
+    { id: 'protection', label: t('Protection & Nazar', 'सुरक्षा एवं नज़र दोष'), count: 3 },
+    { id: 'love', label: t('Love & Peace', 'प्रेम एवं शांति'), count: 2 },
+    { id: 'healing', label: t('Healing & Balance', 'आरोग्य एवं संतुलन'), count: 7 },
   ];
 
-  const filteredProducts = activeCategory === 'all'
-    ? PRODUCTS_CATALOG
-    : PRODUCTS_CATALOG.filter(p => p.category === activeCategory);
-
-  const displayProducts = limit ? filteredProducts.slice(0, limit) : filteredProducts;
-
-  const openWhatsAppInquiry = (product: ProductItem) => {
-    const prodName = language === 'hi' && product.nameHi ? product.nameHi : product.name;
-    let text = `Hello AstroVD, I would like to order the consecrated ${prodName} (${product.price}).`;
-    if (sankalpName) {
-      text += ` Please consecrate it in the name of ${sankalpName}${sankalpGotra ? ` (Gotra: ${sankalpGotra})` : ''}.`;
-    }
-    window.open(`https://wa.me/919876543210?text=${encodeURIComponent(text)}`, '_blank');
-  };
+  const currentCategories = categories.length > 0 ? categories : defaultCategories;
 
   return (
     <section id="shop" className="relative w-full bg-[#FAF7F2] py-20 lg:py-24 px-4 sm:px-6 lg:px-12 overflow-hidden selection:bg-amber-400">
@@ -59,10 +106,19 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
         className="absolute bottom-1/4 -right-32 w-80 sm:w-[480px] h-auto object-contain pointer-events-none opacity-20 select-none"
       />
 
-      <div className="max-w-7xl mx-auto space-y-12 sm:space-y-14 relative z-10">
+      <div className="max-w-7xl mx-auto space-y-10 sm:space-y-12 relative z-10">
         
         {/* Section Header */}
         <div className="text-center space-y-3 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-100/90 border border-amber-300 text-amber-900 text-xs font-semibold">
+            <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+            <span>{t('Authentic Vedic Gemstones & Talismans', 'प्रामाणिक वैदिक रत्न एवं सिद्ध ताबीज')}</span>
+            {isBackend && (
+              <span className="ml-1 px-1.5 py-0.5 rounded-sm bg-emerald-100 text-emerald-800 text-[10px] font-mono">
+                API Live
+              </span>
+            )}
+          </div>
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#4A151B] leading-tight">
             {t('Energized Spiritual Gemstones & Sacred Bracelets', 'प्राण-प्रतिष्ठित आध्यात्मिक रत्न एवं सिद्ध ब्रेसलेट')}
           </h2>
@@ -74,144 +130,178 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
           </p>
         </div>
 
-        {/* Category Filter Tabs */}
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 max-w-4xl mx-auto">
-          {filterCategories.map((cat) => {
-            const isActive = activeCategory === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-[#5B0D15] text-amber-100 shadow-md shadow-rose-950/20 border border-amber-400/80 scale-105'
-                    : 'bg-white/80 hover:bg-amber-50 text-stone-700 border border-amber-200/80 shadow-sm'
-                }`}
-              >
-                {cat.label}
-              </button>
-            );
-          })}
+        {/* Live Search and Category Filter Toolbar */}
+        <div className="space-y-4 max-w-4xl mx-auto">
+          {enableSearchAndPagination && (
+            <div className="relative max-w-md mx-auto">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder={t('Search by gemstone, benefit, or planet (e.g. Tiger Eye, Rahu, Wealth)...', 'रत्न, लाभ अथवा ग्रह अनुसार खोजें (उदा: टाइगर आई, राहु, धन)...')}
+                className="w-full pl-10 pr-4 py-3 rounded-full bg-white/95 border-2 border-amber-200/90 text-stone-900 placeholder-stone-400 text-xs sm:text-sm shadow-sm focus:outline-none focus:border-[#5B0D15] transition-all"
+              />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400 hover:text-stone-700"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Category Filter Tabs */}
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5">
+            {currentCategories.map((cat) => {
+              const isActive = activeCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setActiveCategory(cat.id);
+                    setPage(1);
+                  }}
+                  className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-[#5B0D15] text-amber-100 shadow-md shadow-rose-950/20 border border-amber-400/80 scale-105'
+                      : 'bg-white/80 hover:bg-amber-50 text-stone-700 border border-amber-200/80 shadow-sm'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Product Cards Grid: Featuring the exact Tiger Eye card design with Default & Hover states */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-7 items-stretch justify-center">
-          
-          {displayProducts.map((item) => {
-            const prodName = language === 'hi' && item.nameHi ? item.nameHi : item.name;
-            const prodTag = language === 'hi' && item.tagHi ? item.tagHi : item.tag;
-            const prodDesc = language === 'hi' && item.descHi ? item.descHi : item.desc;
+        {/* Product Cards Grid */}
+        {loading ? (
+          <div className="py-20 flex flex-col items-center justify-center space-y-3">
+            <RefreshCw className="w-8 h-8 text-[#5B0D15] animate-spin" />
+            <p className="text-xs sm:text-sm text-stone-600 font-medium">
+              {t('Loading energized spiritual catalog from AstroVD API...', 'AstroVD API से सिद्ध उत्पाद लोड हो रहे हैं...')}
+            </p>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="py-16 text-center space-y-3 bg-white/60 rounded-3xl border border-amber-200 p-8 max-w-md mx-auto">
+            <p className="font-serif font-bold text-stone-800 text-base">
+              {t('No bracelets match your search criteria', 'आपकी खोज के अनुसार कोई ब्रेसलेट नहीं मिला')}
+            </p>
+            <p className="text-xs text-stone-500">
+              {t('Try searching with different keywords or reset category filters.', 'कृपया अन्य शब्द से खोजें या सभी श्रेणी चुनें।')}
+            </p>
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setActiveCategory('all');
+                setPage(1);
+              }}
+              className="px-5 py-2 rounded-full bg-[#5B0D15] text-white text-xs font-semibold hover:bg-[#480a11] transition-colors"
+            >
+              {t('Reset Filters', 'फ़िल्टर रीसेट करें')}
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-7 items-stretch justify-center">
+            {products.map((item) => {
+              const prodName = item.name;
+              const prodTag = item.tag;
 
-            return (
-              <div
-                key={item.id}
-                onClick={() => setSelectedProduct(item)}
-                className="relative rounded-3xl overflow-hidden shadow-xl border-2 border-amber-300/80 bg-stone-900 group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:shadow-amber-900/25 hover:-translate-y-1.5 flex flex-col"
-              >
-                {/* Outer Golden Corner Ornaments */}
-                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-amber-400/90 z-20 pointer-events-none" />
-                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-amber-400/90 z-20 pointer-events-none" />
-                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-amber-400/90 z-20 pointer-events-none" />
-                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-amber-400/90 z-20 pointer-events-none" />
+              return (
+                <Link
+                  key={item.id}
+                  href={`/products/${item.id}`}
+                  className="group rounded-3xl overflow-hidden bg-white border-2 border-amber-200/90 shadow-md hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between cursor-pointer"
+                >
+                  {/* Product Image Container */}
+                  <div className="relative h-64 sm:h-72 w-full overflow-hidden bg-stone-100">
+                    <img
+                      src={item.image}
+                      alt={prodName}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    />
 
-                {/* Price Tag Badge Top-Right */}
-                <div className="absolute top-4 right-4 z-20 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-amber-400/60 text-amber-200 font-serif font-bold text-xs shadow-md">
-                  {item.price}
-                </div>
-
-                {/* Base Product Image */}
-                <div className="relative h-[380px] sm:h-[420px] w-full overflow-hidden bg-stone-950">
-                  <img
-                    src={item.image}
-                    alt={prodName}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                  />
-
-                  {/* Subtle dark gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20 pointer-events-none" />
-                </div>
-
-                {/* ================= 1. DEFAULT STATE: Floating Bottom Pill ================= */}
-                <div className="absolute inset-x-0 bottom-5 flex justify-center z-20 transition-all duration-300 group-hover:opacity-0 group-hover:pointer-events-none group-hover:translate-y-4 px-3">
-                  <div className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-[#1F1916]/90 backdrop-blur-md border border-amber-400/70 shadow-xl text-center max-w-[90%]">
-                    <span className="text-amber-400 text-xs">✦</span>
-                    <span className="font-serif font-bold text-xs sm:text-sm text-amber-100 tracking-wider truncate">
-                      {prodName}
-                    </span>
-                    <span className="text-amber-400 text-xs">✦</span>
-                  </div>
-                </div>
-
-                {/* ================= 2. HOVER STATE: Expanding Details Overlay ================= */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1412]/98 via-[#1A1412]/90 to-transparent flex flex-col justify-end p-5 sm:p-6 text-center opacity-0 group-hover:opacity-100 transition-all duration-400 ease-out translate-y-3 group-hover:translate-y-0 z-30">
-                  
-                  {/* Decorative Sparkle at Bottom Right */}
-                  <span className="absolute bottom-5 right-5 text-amber-300/80 text-xl pointer-events-none">
-                    ✦
-                  </span>
-
-                  <div className="space-y-2.5">
-                    <span className="text-[10px] font-bold tracking-[0.2em] text-amber-300 uppercase block">
-                      {prodTag}
-                    </span>
-
-                    <h3 className="font-serif font-bold text-lg sm:text-xl text-white tracking-wide">
-                      {prodName}
-                    </h3>
-
-                    <div className="flex items-center justify-center gap-2 text-xs">
-                      <span className="text-amber-200 font-bold">{item.price}</span>
-                      <span className="text-stone-400 line-through text-[11px]">{item.originalPrice}</span>
-                      <span className="text-emerald-400 text-[10px] font-semibold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/40">
-                        {t('Lab Certified', 'लैब प्रमाणित')}
-                      </span>
+                    {/* Dark Floating Pill Price Badge Top-Right */}
+                    <div className="absolute top-3.5 right-3.5 px-3.5 py-1.5 rounded-full bg-[#2A231D]/85 backdrop-blur-md border border-amber-400/60 text-amber-300 font-serif font-bold text-xs sm:text-sm shadow-md">
+                      {item.priceFormatted || `₹${item.price}`}
                     </div>
 
-                    <p className="text-[11px] sm:text-xs text-stone-300 leading-relaxed line-clamp-3">
-                      {prodDesc}
-                    </p>
-
-                  <div className="pt-2 flex items-center justify-center gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openWhatsAppInquiry(item);
-                      }}
-                      className="px-4 py-2 rounded-full bg-[#5B0D15] hover:bg-[#72111c] border border-amber-400/80 text-amber-100 font-bold text-xs shadow-lg hover:scale-105 transition-all flex items-center gap-1 cursor-pointer"
-                    >
-                      <span>{t('Inquire / Order', 'ऑर्डर करें / पूछताछ')}</span>
-                      <ArrowRight className="w-3.5 h-3.5 text-amber-300" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedProduct(item);
-                      }}
-                      className="p-2 rounded-full bg-stone-800/80 hover:bg-stone-700 text-stone-200 border border-stone-600 transition-colors cursor-pointer"
-                      title="Quick View Details"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                    </button>
+                    {item.discountPercent && (
+                      <div className="absolute top-3.5 left-3.5 px-2.5 py-1 rounded-full bg-emerald-700/90 text-white font-bold text-[10px] tracking-wider uppercase shadow-sm">
+                        {item.discountPercent}% OFF
+                      </div>
+                    )}
                   </div>
-                </div>
 
-              </div>
+                  {/* Card Bottom Content Area */}
+                  <div className="p-5 sm:p-6 space-y-2.5 bg-white flex flex-col justify-between flex-1">
+                    <div className="space-y-1.5">
+                      {/* Category Tag */}
+                      <span className="text-[11px] sm:text-xs font-bold tracking-wider text-[#800000] uppercase block truncate">
+                        {prodTag}
+                      </span>
 
-            </div>
-            );
-          })}
-        </div>
+                      {/* Product Title */}
+                      <h3 className="font-serif font-bold text-base sm:text-lg text-stone-900 group-hover:text-[#5B0D15] transition-colors truncate">
+                        {prodName}
+                      </h3>
+                    </div>
 
-        {/* Explore More Products Button after 6 cards */}
+                    {/* Bottom Meta Row */}
+                    <div className="flex items-center justify-between pt-3 border-t border-stone-100 text-xs sm:text-sm">
+                      <span className="text-stone-500 text-xs">
+                        ★ {item.rating} ({item.reviewsCount})
+                      </span>
+                      <span className="font-bold text-[#800000] flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                        <span>{t('Details', 'विवरण')}</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-[#800000]" />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {enableSearchAndPagination && totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-4">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="p-2 rounded-full border border-amber-300 bg-white text-stone-700 hover:bg-amber-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-colors"
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="px-4 py-1.5 rounded-full bg-amber-100/80 text-amber-950 font-semibold text-xs border border-amber-300">
+              {t('Page', 'पृष्ठ')} {page} / {totalPages} ({total} {t('Items', 'उत्पाद')})
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="p-2 rounded-full border border-amber-300 bg-white text-stone-700 hover:bg-amber-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-colors"
+              aria-label="Next page"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Explore More Products Button */}
         {showExploreMore && (
           <div className="text-center pt-2">
             <Link
               href="/products"
               className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#73121D] to-[#480A10] hover:from-[#73121D] hover:to-[#5B0D15] text-amber-100 font-bold text-xs sm:text-sm shadow-xl shadow-rose-950/25 hover:scale-105 transition-all cursor-pointer"
             >
-              <span>{t('Explore More Products', 'और भी सिद्ध उत्पाद देखें')}</span>
+              <span>{t('Explore All 19 Authentic Bracelets', 'सभी 19 सिद्ध ब्रेसलेट देखें')}</span>
               <ArrowRight className="w-4 h-4 text-amber-300" />
             </Link>
           </div>
@@ -235,138 +325,15 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
             </p>
           </div>
           <Link
-            href="/shop"
+            href="/products"
             className="shrink-0 px-6 sm:px-8 py-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#3B1E22] font-serif font-bold text-xs sm:text-sm shadow-xl shadow-amber-950/40 hover:scale-105 transition-all flex items-center gap-2 cursor-pointer z-10"
           >
-            <span>{t('Explore All 14+ Bracelets in Shop', 'स्टोर में सभी 14+ ब्रेसलेट देखें')}</span>
+            <span>{t('Explore All 19 Bracelets', 'सभी 19 ब्रेसलेट देखें')}</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
       </div>
-
-      {/* ================= QUICK VIEW & SANKALP MODAL ================= */}
-      {selectedProduct && (
-        <div
-          onClick={() => setSelectedProduct(null)}
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-fadeIn"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-3xl rounded-3xl bg-[#FAF7F2] border-2 border-amber-300/90 shadow-2xl overflow-hidden my-8"
-          >
-            {/* Modal Close Button */}
-            <button
-              onClick={() => setSelectedProduct(null)}
-              className="absolute top-4 right-4 z-30 w-8 h-8 rounded-full bg-stone-900/60 hover:bg-stone-900 text-white flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-
-            <div className="grid grid-cols-1 md:grid-cols-2">
-              {/* Product Image Side */}
-              <div className="relative h-72 sm:h-96 md:h-full bg-stone-950">
-                <img
-                  src={selectedProduct.image}
-                  alt={language === 'hi' && selectedProduct.nameHi ? selectedProduct.nameHi : selectedProduct.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute bottom-4 left-4 right-4 p-3 rounded-2xl bg-black/70 backdrop-blur-md border border-amber-400/60 text-white text-xs space-y-1">
-                  <div className="text-amber-300 font-bold flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>{t('Consecration Mantra:', 'प्राण-प्रतिष्ठा मंत्र:')}</span>
-                  </div>
-                  <div className="font-serif italic text-stone-200">{selectedProduct.mantra}</div>
-                </div>
-              </div>
-
-              {/* Details & Sankalp Side */}
-              <div className="p-6 sm:p-8 space-y-5 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <span className="text-[10px] font-bold tracking-[0.2em] text-[#800000] uppercase block">
-                    {language === 'hi' && selectedProduct.tagHi ? selectedProduct.tagHi : selectedProduct.tag}
-                  </span>
-                  <h3 className="font-serif text-2xl font-bold text-[#4A151B]">
-                    {language === 'hi' && selectedProduct.nameHi ? selectedProduct.nameHi : selectedProduct.name}
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    <span className="font-serif text-2xl font-bold text-[#800000]">{selectedProduct.price}</span>
-                    <span className="text-stone-400 line-through text-sm">{selectedProduct.originalPrice}</span>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-                      {t('Govt Lab Certified', 'सरकारी लैब द्वारा प्रमाणित')}
-                    </span>
-                  </div>
-                  <p className="text-xs text-stone-600 leading-relaxed">
-                    {language === 'hi' && selectedProduct.descHi ? selectedProduct.descHi : selectedProduct.desc}
-                  </p>
-
-                  {/* Sacred Astro Attributes */}
-                  <div className="grid grid-cols-2 gap-2.5 pt-2 text-xs">
-                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200">
-                      <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Ruling Planet', 'स्वामी ग्रह')}</span>
-                      <span className="font-semibold text-stone-900">
-                        {language === 'hi' && selectedProduct.planetHi ? selectedProduct.planetHi : selectedProduct.planet}
-                      </span>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200">
-                      <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Active Chakra', 'सक्रिय चक्र')}</span>
-                      <span className="font-semibold text-stone-900">
-                        {language === 'hi' && selectedProduct.chakraHi ? selectedProduct.chakraHi : selectedProduct.chakra}
-                      </span>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200">
-                      <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Auspicious Day', 'शुभ धारण वार')}</span>
-                      <span className="font-semibold text-stone-900">
-                        {language === 'hi' && selectedProduct.dayToWearHi ? selectedProduct.dayToWearHi : selectedProduct.dayToWear}
-                      </span>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200">
-                      <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Bead Spec', 'मनका विवरण')}</span>
-                      <span className="font-semibold text-stone-900">
-                        {language === 'hi' && selectedProduct.beadSizeHi ? selectedProduct.beadSizeHi : selectedProduct.beadSize}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Free Sankalp Personalization Input */}
-                  <div className="p-3 rounded-2xl bg-white border border-amber-300/80 space-y-2">
-                    <span className="text-[11px] font-bold text-[#800000] flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      {t('Free Personal Vedic Sankalp:', 'निःशुल्क व्यक्तिगत वैदिक संकल्प:')}
-                    </span>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="text"
-                        placeholder={t('Your Name', 'आपका नाम')}
-                        value={sankalpName}
-                        onChange={(e) => setSankalpName(e.target.value)}
-                        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-stone-200 focus:outline-none focus:border-amber-400 bg-stone-50"
-                      />
-                      <input
-                        type="text"
-                        placeholder={t('Gotra (Optional)', 'गोत्र (ऐच्छिक)')}
-                        value={sankalpGotra}
-                        onChange={(e) => setSankalpGotra(e.target.value)}
-                        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-stone-200 focus:outline-none focus:border-amber-400 bg-stone-50"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* WhatsApp Order Action */}
-                <button
-                  onClick={() => openWhatsAppInquiry(selectedProduct)}
-                  className="w-full py-3 rounded-full bg-[#5B0D15] hover:bg-[#72111c] text-white font-serif font-bold text-sm shadow-xl flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02]"
-                >
-                  <span>{t('Order with Prana Pratishtha on WhatsApp', 'प्राण प्रतिष्ठा सहित WhatsApp पर ऑर्डर करें')}</span>
-                  <ArrowRight className="w-4 h-4 text-amber-300" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
     </section>
   );
 };

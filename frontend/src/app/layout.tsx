@@ -32,13 +32,11 @@ export default function RootLayout({
       <head>
         <style dangerouslySetInnerHTML={{
           __html: `
-            /* Eliminate all browser vertical and horizontal scrollbars completely */
-            html, body, *, *::before, *::after {
+            /* Eliminate root scrollbars without layout thrashing */
+            html, body {
               scrollbar-width: none !important;
               -ms-overflow-style: none !important;
             }
-            ::-webkit-scrollbar,
-            *::-webkit-scrollbar,
             html::-webkit-scrollbar,
             body::-webkit-scrollbar {
               display: none !important;
@@ -46,14 +44,6 @@ export default function RootLayout({
               height: 0px !important;
               opacity: 0 !important;
               background: transparent !important;
-            }
-            ::-webkit-scrollbar-thumb,
-            ::-webkit-scrollbar-track,
-            ::-webkit-scrollbar-corner {
-              display: none !important;
-              background: transparent !important;
-              width: 0px !important;
-              height: 0px !important;
             }
           `
         }} />

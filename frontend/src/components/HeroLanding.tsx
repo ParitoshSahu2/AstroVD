@@ -30,9 +30,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ openConsultModal, open
           backgroundSize: 'cover',
           backgroundPosition: 'right bottom',
           backgroundRepeat: 'no-repeat',
-          filter: 'contrast(1.08) saturate(1.14) brightness(1.02)',
           transform: 'translateZ(0)',
-          willChange: 'transform',
           backfaceVisibility: 'hidden',
         }}
       />
