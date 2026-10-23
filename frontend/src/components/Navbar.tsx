@@ -459,19 +459,21 @@ export const Navbar: React.FC = () => {
                             <span>👑 Admin Control Panel</span>
                           </Link>
                         )}
-                        <Link
-                          href="/dashboard"
-                          onClick={() => {
-                            setProfileDropdownOpen(false);
-                            if (typeof window !== 'undefined') {
-                              window.dispatchEvent(new CustomEvent('astro-auth-change'));
-                            }
-                          }}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-amber-500/10 text-[#5B0D15] font-bold hover:bg-amber-500/20 transition-colors"
-                        >
-                          <UserIcon className="w-4 h-4 text-[#5B0D15]" />
-                          <span>Customer Dashboard</span>
-                        </Link>
+                        {user.role !== 'ADMIN' && user.role !== 'SUPERADMIN' && (
+                          <Link
+                            href="/dashboard"
+                            onClick={() => {
+                              setProfileDropdownOpen(false);
+                              if (typeof window !== 'undefined') {
+                                window.dispatchEvent(new CustomEvent('astro-auth-change'));
+                              }
+                            }}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-amber-500/10 text-[#5B0D15] font-bold hover:bg-amber-500/20 transition-colors"
+                          >
+                            <UserIcon className="w-4 h-4 text-[#5B0D15]" />
+                            <span>Customer Dashboard</span>
+                          </Link>
+                        )}
                         <Link
                           href="/services"
                           onClick={() => setProfileDropdownOpen(false)}
