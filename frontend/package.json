@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test src/lib/auth-flow.test.mjs src/lib/cart-flow.test.mjs src/lib/products-batch.test.mjs src/lib/services-batch.test.mjs src/lib/role-separation.test.mjs"
+    "test": "node --test src/lib/auth-flow.test.mjs src/lib/cart-flow.test.mjs src/lib/products-batch.test.mjs src/lib/services-batch.test.mjs src/lib/role-separation.test.mjs src/lib/admin-content-management.test.mjs"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",

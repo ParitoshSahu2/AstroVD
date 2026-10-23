@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { getAuthToken, performLogout } from '../../lib/auth';
+import { getAuthToken, getStoredUser, performLogout } from '../../lib/auth';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { PageHeader } from '../../components/PageHeader';
@@ -127,6 +127,18 @@ export default function DashboardPage() {
       return;
     }
 
+    // Immediately populate dashboard with stored seeker identity if available
+    const stored = getStoredUser();
+    if (stored && !profileRef.current) {
+      setProfile(stored as any);
+      setWallet({
+        walletBalance: stored.walletBalance ?? 0,
+        currency: 'INR',
+        currencySymbol: '₹',
+      });
+      setEditName(stored.name || '');
+    }
+
     // Cancel any previous in-flight request to avoid race conditions
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -136,7 +148,7 @@ export default function DashboardPage() {
     isFetchingRef.current = true;
 
     // Display skeleton only on initial load when profile does not yet exist
-    if (!isRefresh && !profileRef.current) {
+    if (!isRefresh && !profileRef.current && !stored) {
       setLoading(true);
     }
     setTxLoading(true);

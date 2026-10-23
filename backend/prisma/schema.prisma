@@ -1,0 +1,230 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPERADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+model User {
+  id                  String        @id @default(uuid())
+  name                String
+  email               String?       @unique
+  passwordHash        String
+  role                Role          @default(USER)
+  status              AccountStatus @default(ACTIVE)
+  tokenVersion        Int           @default(0)
+  dateOfBirth         String?
+  timeOfBirth         String?
+  placeOfBirth        String?
+  zodiacSign          String        @default("Aries")
+  walletBalance       Float         @default(0.0)
+  emailVerified       Boolean       @default(false)
+  phone               String?       @unique
+  phoneVerified       Boolean       @default(false)
+  welcomeBonusClaimed Boolean       @default(false)
+  savedKundlis        Json          @default("[]")
+  savedReadings       Json          @default("[]")
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  transactions        WalletTransaction[]
+  bookings            Booking[]
+  orders              Order[]
+  auditLogsTriggered  AuditLog[]           @relation("ActorAuditLogs")
+  auditLogsReceived   AuditLog[]           @relation("TargetAuditLogs")
+  passwordResetTokens PasswordResetToken[]
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String
+  actorId     String?
+  actorEmail  String?
+  targetId    String?
+  targetEmail String?
+  details     Json?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  actor  User? @relation("ActorAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
+  target User? @relation("TargetAuditLogs", fields: [targetId], references: [id], onDelete: SetNull)
+
+  @@index([action])
+  @@index([actorId])
+  @@index([targetId])
+}
+
+model WalletTransaction {
+  id           String   @id @default(uuid())
+  userId       String
+  type         String // "CREDIT" or "DEBIT"
+  amount       Float
+  description  String
+  balanceAfter Float
+  reference    String?  @unique
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+}
+
+model Astrologer {
+  id              String   @id @default(uuid())
+  name            String
+  title           String
+  experienceYears Int
+  specialties     String[]
+  languages       String[]
+  rating          Float    @default(5.0)
+  reviewCount     Int      @default(0)
+  pricePerMinute  Float
+  availability    String   @default("Available")
+  imageUrl        String?
+  bio             String?
+  createdAt       DateTime @default(now())
+
+  bookings Booking[]
+}
+
+model Booking {
+  id              String   @id @default(uuid())
+  userId          String
+  astrologerId    String
+  serviceType     String // "AUDIO", "VIDEO", "CHAT"
+  scheduledDate   String
+  scheduledTime   String
+  durationMinutes Int      @default(15)
+  totalCost       Float
+  status          String   @default("CONFIRMED") // "PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  astrologer Astrologer @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([astrologerId])
+  @@index([scheduledDate])
+  @@index([astrologerId, scheduledDate, scheduledTime])
+}
+
+model Product {
+  id            String   @id @default(uuid())
+  name          String
+  category      String // "Gemstone", "Rudraksha", "Yantra", "Mala"
+  price         Float
+  originalPrice Float?
+  rating        Float    @default(5.0)
+  reviewCount   Int      @default(0)
+  inStock       Boolean  @default(true)
+  stockCount    Int      @default(50)
+  image         String
+  description   String
+  energizedBy   String   @default("Kashi Vishwanath Varanasi Acharyas")
+  labCertified  Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  orderItems OrderItem[]
+}
+
+model Order {
+  id              String   @id @default(uuid())
+  userId          String
+  totalAmount     Float
+  status          String   @default("PROCESSING") // "PENDING", "PROCESSING", "SHIPPED", "DELIVERED"
+  shippingAddress Json
+  createdAt       DateTime @default(now())
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items OrderItem[]
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model OrderItem {
+  id        String @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int    @default(1)
+  price     Float
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model PasswordResetToken {
+  id         String    @id @default(uuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+enum OtpType {
+  EMAIL_VERIFICATION
+  MOBILE_VERIFICATION
+  PASSWORD_RESET
+}
+
+model OtpVerification {
+  id             String    @id @default(uuid())
+  identifier     String
+  otpHash        String
+  type           OtpType
+  attempts       Int       @default(0)
+  maxAttempts    Int       @default(3)
+  deliveryFailed Boolean   @default(false)
+  expiresAt      DateTime
+  consumedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([identifier, type, consumedAt])
+}
+
+model AppointmentSlot {
+  id              String   @id @default(uuid())
+  date            String // Format: "YYYY-MM-DD"
+  startTime       String // e.g. "10:00 AM"
+  durationMinutes Int      @default(45)
+  isPublished     Boolean  @default(true)
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([date, startTime])
+  @@index([date, isPublished])
+}
+
+model BlockedDate {
+  id        String   @id @default(uuid())
+  date      String   @unique // Format: "YYYY-MM-DD"
+  reason    String?
+  createdAt DateTime @default(now())
+}

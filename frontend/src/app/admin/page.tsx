@@ -24,6 +24,7 @@ import {
   Compass,
   Package,
   Calendar,
+  History,
 } from 'lucide-react';
 import {
   UserSummary,
@@ -58,6 +59,15 @@ const AdminAvailabilityTab = dynamic(() => import('./components/AdminAvailabilit
     <div className="p-12 text-center flex flex-col items-center justify-center space-y-3 bg-white/70 rounded-3xl border border-stone-200/80">
       <RefreshCw className="w-6 h-6 animate-spin text-[#5B0D15]" />
       <p className="text-xs text-stone-500 font-medium">Loading Panditji availability schedule...</p>
+    </div>
+  ),
+});
+
+const AdminActivityTab = dynamic(() => import('./components/AdminActivityTab'), {
+  loading: () => (
+    <div className="p-12 text-center flex flex-col items-center justify-center space-y-3 bg-white/70 rounded-3xl border border-stone-200/80">
+      <RefreshCw className="w-6 h-6 animate-spin text-[#5B0D15]" />
+      <p className="text-xs text-stone-500 font-medium">Loading content management & audit history...</p>
     </div>
   ),
 });
@@ -133,8 +143,8 @@ export default function AdminPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // Admin Top-level Navigation: Users Directory vs Customer Appointments vs Shopping Orders vs Panditji Availability
-  const [adminTab, setAdminTab] = useState<'users' | 'bookings' | 'orders' | 'availability'>('users');
+  // Admin Top-level Navigation: Users Directory vs Customer Appointments vs Shopping Orders vs Panditji Availability vs Content Activity
+  const [adminTab, setAdminTab] = useState<'users' | 'bookings' | 'orders' | 'availability' | 'activity'>('users');
 
   // Admin Bookings List & Filter State
   const [bookingsList, setBookingsList] = useState<any[]>([]);
@@ -1555,6 +1565,19 @@ export default function AdminPage() {
                 <Calendar className="w-4 h-4 text-amber-500" />
                 <span>Panditji Availability &amp; Slots</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => setAdminTab('activity')}
+                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
+                  adminTab === 'activity'
+                    ? 'bg-[#5B0D15] text-white shadow-md'
+                    : 'bg-white hover:bg-stone-50 text-stone-700 border border-stone-200'
+                }`}
+              >
+                <History className="w-4 h-4 text-amber-500" />
+                <span>Content &amp; Activity History</span>
+              </button>
             </div>
 
             {/* TAB PANELS */}
@@ -1655,6 +1678,8 @@ export default function AdminPage() {
                 setInitScheduleDays={setInitScheduleDays}
               />
             )}
+
+            {adminTab === 'activity' && <AdminActivityTab />}
           </div>
         )}
       </main>

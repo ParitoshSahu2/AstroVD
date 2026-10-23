@@ -1,11 +1,32 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { PageHeader } from '../../components/PageHeader';
-import { Calendar, Clock, ArrowRight, Search, Filter, BookOpen, X, Share2, Sparkles, User, MessageCircle } from 'lucide-react';
+import {
+  Calendar,
+  Clock,
+  ArrowRight,
+  Search,
+  Filter,
+  BookOpen,
+  X,
+  Share2,
+  Sparkles,
+  User,
+  MessageCircle,
+  Plus,
+  Edit3,
+  Trash2,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  AlertCircle,
+} from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { getStoredUser, getAuthToken, AUTH_CHANGE_EVENT } from '../../lib/auth';
+import BlogManageModal, { BlogPostItem } from './components/BlogManageModal';
 
 interface BlogPost {
   id: string;
@@ -28,6 +49,7 @@ interface BlogPost {
   contentHi: string[];
   keyTakeaways: string[];
   keyTakeawaysHi: string[];
+  isPublished?: boolean;
 }
 
 const allArticles: BlogPost[] = [
@@ -267,8 +289,133 @@ export default function BlogPage() {
   const [query, setQuery] = useState('');
   const [readingArticle, setReadingArticle] = useState<BlogPost | null>(null);
 
+  // Dynamic Content & Admin Management State
+  const [articles, setArticles] = useState<BlogPost[]>(allArticles);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showDrafts, setShowDrafts] = useState(false);
+  const [manageModalOpen, setManageModalOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionToast, setActionToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const backendUrl = (
+    process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
+  ).replace(/\/api\/?$/, '');
+
+  const fetchArticles = useCallback(async () => {
+    try {
+      const queryParam = isAdmin && showDrafts ? '?includeUnpublished=true' : '';
+      const res = await fetch(`${backendUrl}/api/content/blog${queryParam}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setArticles(data);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching blogs from API, using fallback:', err);
+    }
+  }, [backendUrl, isAdmin, showDrafts]);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const user = getStoredUser();
+      const admin = user?.role === 'ADMIN' || user?.role === 'SUPERADMIN';
+      setIsAdmin(admin);
+    };
+    checkAuth();
+    window.addEventListener(AUTH_CHANGE_EVENT, checkAuth);
+    window.addEventListener('storage', checkAuth);
+    return () => {
+      window.removeEventListener(AUTH_CHANGE_EVENT, checkAuth);
+      window.removeEventListener('storage', checkAuth);
+    };
+  }, []);
+
+  useEffect(() => {
+    fetchArticles();
+  }, [fetchArticles]);
+
+  const handleTogglePublish = async (post: BlogPost, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const token = getAuthToken();
+    if (!token) return;
+
+    const newStatus = post.isPublished === false ? true : false;
+    setActionLoading(true);
+
+    try {
+      const res = await fetch(`${backendUrl}/api/content/blog/${post.id}/publish`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isPublished: newStatus }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to update publish state');
+      }
+
+      setActionToast({
+        type: 'success',
+        message: `"${post.title}" is now ${newStatus ? 'published & live' : 'saved as draft'}.`,
+      });
+      fetchArticles();
+    } catch (err: any) {
+      setActionToast({ type: 'error', message: err.message || 'Error updating status.' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeletePost = async (post: BlogPost, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Are you sure you want to permanently delete "${post.title}"?`)) {
+      return;
+    }
+
+    const token = getAuthToken();
+    if (!token) return;
+
+    setActionLoading(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/content/blog/${post.id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to delete blog article');
+      }
+
+      setActionToast({
+        type: 'success',
+        message: `"${post.title}" was successfully deleted.`,
+      });
+      fetchArticles();
+    } catch (err: any) {
+      setActionToast({ type: 'error', message: err.message || 'Error deleting article.' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handlePostSaved = () => {
+    setActionToast({
+      type: 'success',
+      message: 'Article saved successfully!',
+    });
+    fetchArticles();
+  };
+
   const categories = [
-    { id: 'All', label: t('All Articles (6)', 'सभी लेख (6)') },
+    { id: 'All', label: `${t('All Articles', 'सभी लेख')} (${articles.length})` },
     { id: 'Vedic Jyotish', label: t('Vedic Jyotish', 'वैदिक ज्योतिष') },
     { id: 'Tarot Wisdom', label: t('Tarot Wisdom', 'टैरो ज्ञान') },
     { id: 'Remedies & Gems', label: t('Remedies & Gems', 'रत्न एवं उपाय') },
@@ -277,18 +424,21 @@ export default function BlogPage() {
     { id: 'Occult & Healing', label: t('Occult & Healing', 'ऊर्जा एवं गूढ़ विद्या') },
   ];
 
-  const filtered = allArticles.filter((a) => {
+  const filtered = articles.filter((a) => {
+    if (!isAdmin && a.isPublished === false) return false;
+    if (isAdmin && !showDrafts && a.isPublished === false) return false;
+
     const matchCat = selectedCategory === 'All' || a.category === selectedCategory;
     const matchQuery =
       a.title.toLowerCase().includes(query.toLowerCase()) ||
-      a.titleHi.includes(query) ||
+      a.titleHi?.includes(query) ||
       a.excerpt.toLowerCase().includes(query.toLowerCase()) ||
-      a.excerptHi.includes(query) ||
+      a.excerptHi?.includes(query) ||
       a.author.toLowerCase().includes(query.toLowerCase());
     return matchCat && matchQuery;
   });
 
-  const featured = allArticles[0];
+  const featured = filtered[0] || articles[0];
 
   return (
     <div className="relative min-h-screen w-full bg-[#FAF7F2] m-0 p-0 overflow-x-clip selection:bg-amber-400">
@@ -304,7 +454,83 @@ export default function BlogPage() {
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-16 space-y-12">
-        
+        {/* Action Feedback Toast */}
+        {actionToast && (
+          <div
+            className={`p-4 rounded-2xl text-xs sm:text-sm font-semibold flex items-center justify-between shadow-sm animate-fadeIn ${
+              actionToast.type === 'success'
+                ? 'bg-emerald-50 text-emerald-900 border border-emerald-200'
+                : 'bg-rose-50 text-rose-900 border border-rose-200'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {actionToast.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              )}
+              <span>{actionToast.message}</span>
+            </div>
+            <button
+              onClick={() => setActionToast(null)}
+              className="text-stone-400 hover:text-stone-700 font-bold ml-4 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Admin Control Bar - ONLY VISIBLE TO AUTHENTICATED ADMINS */}
+        {isAdmin && (
+          <div className="rounded-3xl bg-gradient-to-r from-amber-50 via-white to-amber-50/80 border-2 border-amber-300 p-5 sm:p-6 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#5B0D15] text-amber-200 flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
+                👑
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-serif font-bold text-base text-[#3B1E22]">
+                    Admin Content Controls
+                  </h3>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 uppercase tracking-wider">
+                    Blog Management
+                  </span>
+                </div>
+                <p className="text-xs text-stone-600 mt-0.5">
+                  Publish, edit, unpublish, or delete articles directly from this public page. Customers never see these controls.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setShowDrafts(!showDrafts)}
+                className={`px-4 py-2 rounded-full text-xs font-bold transition-all border flex items-center gap-2 cursor-pointer shadow-xs ${
+                  showDrafts
+                    ? 'bg-amber-100 text-amber-950 border-amber-400 ring-2 ring-amber-300/40'
+                    : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
+                }`}
+              >
+                {showDrafts ? <Eye className="w-3.5 h-3.5 text-amber-800" /> : <EyeOff className="w-3.5 h-3.5 text-stone-500" />}
+                <span>{showDrafts ? 'Showing Drafts' : 'Include Drafts'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingPost(null);
+                  setManageModalOpen(true);
+                }}
+                className="px-5 py-2.5 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-amber-100 text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4 text-amber-300" />
+                <span>Add New Article</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Featured Article Hero Banner */}
         {featured && (
           <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#1C090C] via-[#2D0D12] to-[#1C090C] border-2 border-amber-500/40 shadow-2xl text-white">
@@ -444,6 +670,58 @@ export default function BlogPage() {
                       <Clock className="w-3 h-3 text-amber-300" />
                       {readTime}
                     </span>
+
+                    {/* Admin Actions Pill - ONLY VISIBLE TO AUTHENTICATED ADMINS */}
+                    {isAdmin && (
+                      <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md px-2 py-1 rounded-full border border-amber-400/80 shadow-lg">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                            post.isPublished === false
+                              ? 'bg-amber-400 text-stone-950 font-black'
+                              : 'bg-emerald-500 text-white'
+                          }`}
+                        >
+                          {post.isPublished === false ? 'Draft' : 'Live'}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingPost(post);
+                            setManageModalOpen(true);
+                          }}
+                          title="Edit Article"
+                          className="w-6 h-6 rounded-full bg-white/20 hover:bg-amber-400 hover:text-stone-950 text-white flex items-center justify-center transition-colors cursor-pointer"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => handleTogglePublish(post, e)}
+                          title={post.isPublished === false ? 'Publish Article' : 'Unpublish Article'}
+                          disabled={actionLoading}
+                          className="w-6 h-6 rounded-full bg-white/20 hover:bg-amber-400 hover:text-stone-950 text-white flex items-center justify-center transition-colors cursor-pointer"
+                        >
+                          {post.isPublished === false ? (
+                            <Eye className="w-3 h-3" />
+                          ) : (
+                            <EyeOff className="w-3 h-3" />
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeletePost(post, e)}
+                          title="Delete Article"
+                          disabled={actionLoading}
+                          className="w-6 h-6 rounded-full bg-white/20 hover:bg-rose-600 hover:text-white text-white flex items-center justify-center transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-6 space-y-3">
@@ -572,6 +850,16 @@ export default function BlogPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Admin Blog Management Modal */}
+      {isAdmin && (
+        <BlogManageModal
+          isOpen={manageModalOpen}
+          onClose={() => setManageModalOpen(false)}
+          postToEdit={editingPost as any}
+          onSaved={handlePostSaved}
+        />
       )}
 
       <Footer />

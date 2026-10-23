@@ -1,126 +1,1186 @@
-import { Injectable, ConflictException, Logger } from '@nestjs/common';
-import { BookAppointmentDto, AppointmentSlot } from './appointments.types.js';
-
-export interface BookingRecord {
-  id: string;
-  serviceId: string;
-  astrologerId?: string;
-  scheduledDate: string;
-  scheduledTime: string;
-  consultationType: 'video' | 'call' | 'in-person';
-  contactPhone: string;
-  customerName?: string;
-  email?: string;
-  notes?: string;
-  status: 'CONFIRMED' | 'PENDING' | 'CANCELLED';
-  meetLink?: string;
-  createdAt: string;
-}
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service.js';
+import { SERVICES_CATALOGUE, PUBLISHED_TIME_SLOTS, ServiceCatalogueItem } from './services.data.js';
+import { BookAppointmentDto } from './dto/book-appointment.dto.js';
+import { ListBookingsQueryDto } from './dto/list-bookings-query.dto.js';
+import { UpdateBookingStatusDto } from './dto/update-booking-status.dto.js';
+import { CreateSlotDto } from './dto/create-slot.dto.js';
+import { UpdateSlotDto } from './dto/update-slot.dto.js';
+import { BlockDateDto } from './dto/block-date.dto.js';
+import { InitializeScheduleDto } from './dto/initialize-schedule.dto.js';
+import { normalizePhoneNumber, isValidE164 } from '../auth/phone.util.js';
+import type { JwtPayload } from '../auth/decorators/current-user.decorator.js';
 
 @Injectable()
 export class AppointmentsService {
-  private readonly logger = new Logger(AppointmentsService.name);
-  private bookings: BookingRecord[] = [];
-
-  private readonly standardSlots: Array<{ time: string; period: 'morning' | 'afternoon' | 'evening' }> = [
-    { time: '09:00 AM', period: 'morning' },
-    { time: '10:00 AM', period: 'morning' },
-    { time: '11:00 AM', period: 'morning' },
-    { time: '12:00 PM', period: 'morning' },
-    { time: '02:00 PM', period: 'afternoon' },
-    { time: '03:00 PM', period: 'afternoon' },
-    { time: '04:00 PM', period: 'afternoon' },
-    { time: '05:00 PM', period: 'afternoon' },
-    { time: '06:00 PM', period: 'evening' },
-    { time: '07:00 PM', period: 'evening' },
-    { time: '08:00 PM', period: 'evening' },
-    { time: '09:00 PM', period: 'evening' },
-  ];
+  constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Generates and returns available slots for a given service and date
+   * Return the canonical catalogue of 29 services, optionally filtered by category.
    */
-  getAvailableSlots(serviceId: string, date: string): { serviceId: string; date: string; slots: AppointmentSlot[] } {
-    const existingBookedTimes = new Set(
-      this.bookings
-        .filter((b) => b.scheduledDate === date && b.status !== 'CANCELLED')
-        .map((b) => b.scheduledTime),
+  getServices(category?: string): ServiceCatalogueItem[] {
+    if (!category || category === 'all') {
+      return SERVICES_CATALOGUE;
+    }
+    return SERVICES_CATALOGUE.filter(
+      (s) => s.categoryKey.toLowerCase() === category.toLowerCase(),
     );
+  }
 
-    // Pseudorandom booked demo slots to make scheduling feel lively and realistic
-    const dateHash = (date || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const demoBookedIndices = [dateHash % 12, (dateHash + 5) % 12];
+  /**
+   * Return a single service by stable ID or slug.
+   */
+  getServiceById(serviceId: string): ServiceCatalogueItem {
+    const service = SERVICES_CATALOGUE.find((s) => s.id === serviceId);
+    if (!service) {
+      throw new NotFoundException(`Service with ID "${serviceId}" does not exist in catalogue.`);
+    }
+    return service;
+  }
 
-    const slots: AppointmentSlot[] = this.standardSlots.map((s, idx) => {
-      const isAlreadyBooked = existingBookedTimes.has(s.time) || demoBookedIndices.includes(idx);
+  /**
+   * Calculate published time slots for a service and date, querying PostgreSQL AppointmentSlot & BlockedDate.
+   */
+  async getAvailableSlots(serviceId: string, dateStr: string) {
+    this.getServiceById(serviceId); // Validate service exists
+
+    // Validate date format YYYY-MM-DD
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(dateStr)) {
+      throw new BadRequestException('Date must be formatted as YYYY-MM-DD');
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isPastDate = dateStr < todayStr;
+
+    // Check if date is blocked in sanctuary registry
+    const blockedDate = await this.prisma.blockedDate.findUnique({
+      where: { date: dateStr },
+    });
+    if (blockedDate) {
       return {
-        time: s.time,
-        period: s.period,
-        isAvailable: !isAlreadyBooked,
-        reason: isAlreadyBooked ? 'Slot reserved' : undefined,
+        serviceId,
+        date: dateStr,
+        isBlocked: true,
+        blockedReason: blockedDate.reason || 'Panditji is not accepting consultations on this date.',
+        slots: [],
+      };
+    }
+
+    // Query database-backed published slots
+    let dbSlots = await this.prisma.appointmentSlot.findMany({
+      where: {
+        date: dateStr,
+        isPublished: true,
+      },
+      orderBy: { startTime: 'asc' },
+    });
+
+    // If no slots exist yet for this date, auto-seed standard Vedic schedule so slots are persisted in DB
+    if (dbSlots.length === 0) {
+      const defaultSlotsData = PUBLISHED_TIME_SLOTS.map((time, idx) => ({
+        id: `slot-std-${idx}`,
+        date: dateStr,
+        startTime: time,
+        durationMinutes: 45,
+        isPublished: true,
+      }));
+
+      if (!isPastDate) {
+        await this.prisma.appointmentSlot.createMany({
+          data: defaultSlotsData.map(({ id, ...rest }) => rest),
+          skipDuplicates: true,
+        });
+
+        const reloaded = await this.prisma.appointmentSlot.findMany({
+          where: {
+            date: dateStr,
+            isPublished: true,
+          },
+          orderBy: { startTime: 'asc' },
+        });
+
+        dbSlots = reloaded.length > 0 ? reloaded : defaultSlotsData as any;
+      } else {
+        dbSlots = defaultSlotsData as any;
+      }
+    }
+
+    // Fetch existing non-cancelled bookings for this date
+    const existingBookings = await this.prisma.booking.findMany({
+      where: {
+        scheduledDate: dateStr,
+        status: { notIn: ['CANCELLED', 'REJECTED'] },
+      },
+      select: {
+        id: true,
+        scheduledTime: true,
+        serviceType: true,
+        astrologerId: true,
+      },
+    });
+
+    const bookedTimes = new Set(existingBookings.map((b) => b.scheduledTime));
+
+    const slots = dbSlots.map((slot) => {
+      const isBooked = bookedTimes.has(slot.startTime);
+      if (isPastDate) {
+        return {
+          id: slot.id,
+          time: slot.startTime,
+          durationMinutes: slot.durationMinutes,
+          isAvailable: false,
+          reason: 'Date is in the past',
+        };
+      }
+
+      if (isBooked) {
+        return {
+          id: slot.id,
+          time: slot.startTime,
+          durationMinutes: slot.durationMinutes,
+          isAvailable: false,
+          reason: 'Already Reserved',
+        };
+      }
+
+      return {
+        id: slot.id,
+        time: slot.startTime,
+        durationMinutes: slot.durationMinutes,
+        isAvailable: true,
       };
     });
 
     return {
       serviceId,
-      date,
+      date: dateStr,
+      isBlocked: false,
       slots,
     };
   }
 
   /**
-   * Reserves an appointment session
+   * Ensure default Lead Astrologer exists in PostgreSQL for relational integrity.
    */
-  bookAppointment(dto: BookAppointmentDto): { success: boolean; booking: BookingRecord; message: string } {
-    const isSlotTaken = this.bookings.some(
-      (b) =>
-        b.scheduledDate === dto.scheduledDate &&
-        b.scheduledTime === dto.scheduledTime &&
-        b.status !== 'CANCELLED',
-    );
+  private async getOrCreateLeadAstrologer() {
+    let astrologer = await this.prisma.astrologer.findFirst({
+      where: { name: { contains: 'Vishal Dubey' } },
+    });
 
-    if (isSlotTaken) {
-      throw new ConflictException(
-        `The time slot '${dto.scheduledTime}' on ${dto.scheduledDate} has just been reserved by another seeker. Please select another slot.`,
+    if (!astrologer) {
+      astrologer = await this.prisma.astrologer.create({
+        data: {
+          name: 'Dr. Pandit Vishal Dubey',
+          title: 'PhD in Vedic Astrology & Certified Hypnotherapist',
+          experienceYears: 24,
+          specialties: [
+            'Vedic Astrology',
+            'Kundli Analysis',
+            'Career & Wealth Guidance',
+            'Matchmaking',
+            'Planetary Dosha Rectification',
+          ],
+          languages: ['Hindi', 'English', 'Sanskrit'],
+          rating: 5.0,
+          reviewCount: 1420,
+          pricePerMinute: 70,
+          availability: 'Available',
+          imageUrl: '/dr_vishal_dubey.jpg',
+          bio: 'Gold Medalist Acharya with 24+ years experience in planetary dosha rectification, Vedic Kundli, and divine guidance.',
+        },
+      });
+    }
+
+    return astrologer;
+  }
+
+  /**
+   * Book an appointment with database transaction and concurrency double-booking prevention.
+   */
+  async bookAppointment(actor: JwtPayload, dto: BookAppointmentDto, ipAddress?: string) {
+    // 1. Verify user session
+    const user = await this.prisma.user.findUnique({
+      where: { id: actor.sub },
+      select: { id: true, name: true, email: true, phone: true, status: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Authenticated user account was not found.');
+    }
+    if (user.status === 'SUSPENDED') {
+      throw new ForbiddenException('Suspended accounts cannot book consultations.');
+    }
+
+    // 2. Validate canonical service definition (price is derived server-side only)
+    const service = this.getServiceById(dto.serviceId);
+
+    // 3. Validate appointment date and time slot
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(dto.scheduledDate)) {
+      throw new BadRequestException('Scheduled date must be in YYYY-MM-DD format.');
+    }
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (dto.scheduledDate < todayStr) {
+      throw new BadRequestException('Appointment date cannot be in the past.');
+    }
+
+    // Check if date is blocked in sanctuary registry
+    const blockedDate = await this.prisma.blockedDate.findUnique({
+      where: { date: dto.scheduledDate },
+    });
+    if (blockedDate) {
+      throw new BadRequestException(
+        `Panditji is not accepting consultations on ${dto.scheduledDate}: ${blockedDate.reason || 'Sanctuary Closed'}`,
       );
     }
 
-    const bookingId = `APT-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
-    const meetLink =
-      dto.consultationType === 'video'
-        ? `https://meet.jit.si/astrovd-${bookingId.toLowerCase()}`
-        : undefined;
+    // Verify database-backed appointment slot exists and is published
+    let slot = await this.prisma.appointmentSlot.findUnique({
+      where: {
+        date_startTime: {
+          date: dto.scheduledDate,
+          startTime: dto.scheduledTime,
+        },
+      },
+    });
 
-    const newBooking: BookingRecord = {
-      id: bookingId,
-      serviceId: dto.serviceId,
-      astrologerId: dto.astrologerId || 'vishal',
-      scheduledDate: dto.scheduledDate,
-      scheduledTime: dto.scheduledTime,
-      consultationType: dto.consultationType,
-      contactPhone: dto.contactPhone,
-      customerName: dto.customerName || 'Vedic Seeker',
-      email: dto.email,
-      notes: dto.notes,
-      status: 'CONFIRMED',
-      meetLink,
-      createdAt: new Date().toISOString(),
-    };
+    // If slot record does not exist yet but is a standard time slot, auto-create it in DB
+    if (!slot && PUBLISHED_TIME_SLOTS.includes(dto.scheduledTime)) {
+      slot = await this.prisma.appointmentSlot.create({
+        data: {
+          date: dto.scheduledDate,
+          startTime: dto.scheduledTime,
+          durationMinutes: 45,
+          isPublished: true,
+        },
+      });
+    }
 
-    this.bookings.push(newBooking);
-    this.logger.log(`Appointment confirmed: ${bookingId} for ${newBooking.customerName} on ${newBooking.scheduledDate} at ${newBooking.scheduledTime}`);
+    if (!slot || !slot.isPublished) {
+      throw new BadRequestException(
+        `The requested time slot (${dto.scheduledTime}) on ${dto.scheduledDate} is not available for booking.`,
+      );
+    }
+
+    // 4. Validate contact phone (reject dummy phone placeholder)
+    if (!dto.contactPhone || typeof dto.contactPhone !== 'string' || !dto.contactPhone.trim()) {
+      throw new BadRequestException('Valid contact phone number is required.');
+    }
+    const normalizedPhone = normalizePhoneNumber(dto.contactPhone.trim());
+    if (!isValidE164(normalizedPhone)) {
+      throw new BadRequestException(
+        'Please enter a valid 10-digit mobile or international E.164 phone number.',
+      );
+    }
+    if (normalizedPhone === '+919876543210') {
+      throw new BadRequestException(
+        'Dummy contact number is not allowed. Please enter your authentic contact number.',
+      );
+    }
+
+    // 5. Ensure lead astrologer exists
+    const astrologer = await this.getOrCreateLeadAstrologer();
+
+    const isFreeService = service.priceNumber === 0;
+    const isWalletPayment = dto.paymentMethod === 'WALLET';
+
+    // 6. Execute atomic booking within Serializable transaction to prevent concurrent double-booking
+    const booking = await this.prisma.$transaction(
+      async (tx) => {
+        // Query inside transaction to check slot collision
+        const existingSlot = await tx.booking.findFirst({
+          where: {
+            astrologerId: astrologer.id,
+            scheduledDate: dto.scheduledDate,
+            scheduledTime: dto.scheduledTime,
+            status: { notIn: ['CANCELLED', 'REJECTED'] },
+          },
+        });
+
+        if (existingSlot) {
+          throw new ConflictException(
+            `The time slot on ${dto.scheduledDate} at ${dto.scheduledTime} has just been reserved. Please select another slot.`,
+          );
+        }
+
+        // Determine status and handle wallet payment atomically
+        let initialStatus = 'PENDING_PAYMENT';
+        let updatedUserBalance: number | null = null;
+
+        if (isFreeService) {
+          initialStatus = 'CONFIRMED';
+        } else if (isWalletPayment) {
+          const userRecord = await tx.user.findUnique({
+            where: { id: user.id },
+            select: { id: true, walletBalance: true },
+          });
+
+          if (!userRecord) {
+            throw new NotFoundException('Authenticated user account was not found.');
+          }
+
+          if (userRecord.walletBalance < service.priceNumber) {
+            throw new BadRequestException(
+              `Insufficient spiritual wallet balance. Consultation requires ₹${service.priceNumber}, but available balance is ₹${userRecord.walletBalance}.`,
+            );
+          }
+
+          const userAfterDebit = await tx.user.update({
+            where: { id: user.id },
+            data: { walletBalance: { decrement: service.priceNumber } },
+            select: { walletBalance: true },
+          });
+
+          updatedUserBalance = userAfterDebit.walletBalance;
+          initialStatus = 'CONFIRMED';
+        }
+
+        const mode = dto.consultationType || 'video';
+        const formattedNotes = [
+          `Service: ${service.title}`,
+          `Mode: ${mode.toUpperCase()}`,
+          `Contact: ${normalizedPhone}`,
+          `Payment: ${isFreeService ? 'FREE' : isWalletPayment ? 'WALLET_PAID' : 'PENDING_PAYMENT'}`,
+          dto.notes ? `Seeker Notes: ${dto.notes.trim()}` : null,
+        ]
+          .filter(Boolean)
+          .join(' | ');
+
+        const newBooking = await tx.booking.create({
+          data: {
+            userId: user.id,
+            astrologerId: astrologer.id,
+            serviceType: service.id,
+            scheduledDate: dto.scheduledDate,
+            scheduledTime: dto.scheduledTime,
+            durationMinutes: service.durationMinutes,
+            totalCost: service.priceNumber,
+            status: initialStatus,
+            notes: formattedNotes,
+          },
+          include: {
+            astrologer: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+              },
+            },
+          },
+        });
+
+        // Record wallet ledger transaction if wallet was debited
+        if (isWalletPayment && updatedUserBalance !== null) {
+          await tx.walletTransaction.create({
+            data: {
+              userId: user.id,
+              type: 'DEBIT',
+              amount: service.priceNumber,
+              description: `Consultation fee: ${service.title}`,
+              balanceAfter: Math.round(Number(updatedUserBalance) * 100) / 100,
+              reference: `BOOKING_${newBooking.id}`,
+            },
+          });
+        }
+
+        // Update user phone if previously missing
+        if (!user.phone && normalizedPhone) {
+          await tx.user.update({
+            where: { id: user.id },
+            data: { phone: normalizedPhone },
+          });
+        }
+
+        return newBooking;
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      },
+    );
+
+    // 7. Append security audit log
+    await this.prisma.auditLog.create({
+      data: {
+        action: 'BOOKING_CREATED',
+        actorId: user.id,
+        actorEmail: user.email,
+        targetId: booking.id,
+        details: {
+          serviceId: service.id,
+          serviceTitle: service.title,
+          scheduledDate: dto.scheduledDate,
+          scheduledTime: dto.scheduledTime,
+          price: service.priceNumber,
+          contactPhone: normalizedPhone,
+        },
+        ipAddress: ipAddress || null,
+      },
+    });
 
     return {
       success: true,
-      booking: newBooking,
-      message: 'Consultation session booked successfully. May divine cosmic alignments guide your path.',
+      message: 'Consultation appointment booked successfully!',
+      booking: {
+        id: booking.id,
+        serviceId: service.id,
+        serviceTitle: service.title,
+        servicePrice: service.price,
+        scheduledDate: booking.scheduledDate,
+        scheduledTime: booking.scheduledTime,
+        status: booking.status,
+        durationMinutes: booking.durationMinutes,
+        totalCost: booking.totalCost,
+        createdAt: booking.createdAt,
+        contactPhone: normalizedPhone,
+        astrologer: {
+          id: astrologer.id,
+          name: astrologer.name,
+          title: astrologer.title,
+          image: astrologer.imageUrl,
+        },
+        customer: {
+          id: user.id,
+          name: dto.customerName?.trim() || user.name,
+          email: user.email,
+          phone: normalizedPhone,
+        },
+      },
     };
   }
 
   /**
-   * List all bookings for admin or user
+   * Return customer's own bookings only.
    */
-  getAllBookings() {
-    return this.bookings;
+  async getCustomerBookings(userId: string) {
+    const bookings = await this.prisma.booking.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        astrologer: {
+          select: {
+            id: true,
+            name: true,
+            title: true,
+            imageUrl: true,
+          },
+        },
+      },
+    });
+
+    return bookings.map((b) => {
+      const service = SERVICES_CATALOGUE.find((s) => s.id === b.serviceType);
+      return {
+        id: b.id,
+        serviceId: b.serviceType,
+        serviceTitle: service ? service.title : b.serviceType,
+        serviceImage: service ? service.image : '/services/consultation.jpg',
+        pandit: service ? service.pandit : b.astrologer.name,
+        scheduledDate: b.scheduledDate,
+        scheduledTime: b.scheduledTime,
+        durationMinutes: b.durationMinutes,
+        totalCost: b.totalCost,
+        status: b.status,
+        notes: b.notes,
+        createdAt: b.createdAt,
+        astrologer: b.astrologer,
+      };
+    });
+  }
+
+  /**
+   * Return single booking detail, enforcing customer privacy.
+   */
+  async getBookingById(actor: JwtPayload, bookingId: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        astrologer: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    if (!booking) {
+      throw new NotFoundException(`Booking with ID "${bookingId}" was not found.`);
+    }
+
+    const isAdmin = actor.role === 'ADMIN' || actor.role === 'SUPERADMIN';
+    if (!isAdmin && booking.userId !== actor.sub) {
+      throw new ForbiddenException('You are not authorized to view another customer’s booking.');
+    }
+
+    const service = SERVICES_CATALOGUE.find((s) => s.id === booking.serviceType);
+
+    return {
+      id: booking.id,
+      serviceId: booking.serviceType,
+      serviceTitle: service ? service.title : booking.serviceType,
+      serviceDesc: service?.desc,
+      serviceImage: service?.image,
+      scheduledDate: booking.scheduledDate,
+      scheduledTime: booking.scheduledTime,
+      durationMinutes: booking.durationMinutes,
+      totalCost: booking.totalCost,
+      status: booking.status,
+      notes: booking.notes,
+      createdAt: booking.createdAt,
+      astrologer: {
+        id: booking.astrologer.id,
+        name: booking.astrologer.name,
+        title: booking.astrologer.title,
+        imageUrl: booking.astrologer.imageUrl,
+      },
+      customer: {
+        id: booking.user.id,
+        name: booking.user.name,
+        email: booking.user.email,
+        phone: booking.user.phone,
+      },
+    };
+  }
+
+  /**
+   * Admin booking list with filtering, searching, and pagination.
+   */
+  async listAdminBookings(query: ListBookingsQueryDto) {
+    const page = Math.max(1, Number(query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(query.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.BookingWhereInput = {};
+
+    if (query.status && query.status !== 'ALL') {
+      where.status = query.status.toUpperCase();
+    }
+
+    if (query.serviceId && query.serviceId !== 'ALL') {
+      where.serviceType = query.serviceId;
+    }
+
+    if (query.date) {
+      where.scheduledDate = query.date;
+    }
+
+    if (query.search && query.search.trim()) {
+      const search = query.search.trim();
+      where.OR = [
+        { id: { contains: search, mode: 'insensitive' } },
+        { user: { name: { contains: search, mode: 'insensitive' } } },
+        { user: { email: { contains: search, mode: 'insensitive' } } },
+        { user: { phone: { contains: search, mode: 'insensitive' } } },
+        { notes: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [totalCount, bookings] = await Promise.all([
+      this.prisma.booking.count({ where }),
+      this.prisma.booking.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          astrologer: {
+            select: {
+              id: true,
+              name: true,
+              title: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    const formattedBookings = bookings.map((b) => {
+      const service = SERVICES_CATALOGUE.find((s) => s.id === b.serviceType);
+      return {
+        id: b.id,
+        serviceId: b.serviceType,
+        serviceTitle: service ? service.title : b.serviceType,
+        servicePrice: service ? service.price : `₹${b.totalCost}`,
+        scheduledDate: b.scheduledDate,
+        scheduledTime: b.scheduledTime,
+        durationMinutes: b.durationMinutes,
+        totalCost: b.totalCost,
+        status: b.status,
+        notes: b.notes,
+        createdAt: b.createdAt,
+        astrologer: b.astrologer,
+        customer: b.user,
+      };
+    });
+
+    return {
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit) || 1,
+      page,
+      limit,
+      bookings: formattedBookings,
+    };
+  }
+
+  /**
+   * Update booking status enforcing valid lifecycle transitions.
+   */
+  async updateBookingStatus(
+    actor: JwtPayload,
+    bookingId: string,
+    dto: UpdateBookingStatusDto,
+    ipAddress?: string,
+  ) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { user: true },
+    });
+
+    if (!booking) {
+      throw new NotFoundException(`Booking with ID "${bookingId}" was not found.`);
+    }
+
+    const currentStatus = booking.status.toUpperCase();
+    const targetStatus = dto.status.toUpperCase();
+
+    if (currentStatus === targetStatus) {
+      return {
+        message: `Booking is already in ${targetStatus} status.`,
+        booking,
+      };
+    }
+
+    // Terminal state checks
+    if (currentStatus === 'COMPLETED') {
+      throw new BadRequestException('Cannot change status of an already COMPLETED appointment.');
+    }
+    if (currentStatus === 'CANCELLED') {
+      throw new BadRequestException('Cannot change status of an already CANCELLED appointment.');
+    }
+
+    // Allowed transition matrix:
+    // PENDING_PAYMENT -> CONFIRMED, CANCELLED
+    // PENDING -> CONFIRMED, CANCELLED
+    // CONFIRMED -> COMPLETED, CANCELLED
+    const validTransitions: Record<string, string[]> = {
+      PENDING_PAYMENT: ['CONFIRMED', 'CANCELLED'],
+      PENDING: ['CONFIRMED', 'CANCELLED'],
+      CONFIRMED: ['COMPLETED', 'CANCELLED'],
+    };
+
+    const allowed = validTransitions[currentStatus] || [];
+    if (!allowed.includes(targetStatus)) {
+      throw new BadRequestException(
+        `Invalid status transition from "${currentStatus}" to "${targetStatus}". Allowed: ${allowed.join(', ')}`,
+      );
+    }
+
+    // Guard: Unpaid booking cannot jump directly to COMPLETED
+    if (currentStatus === 'PENDING_PAYMENT' && targetStatus === 'COMPLETED') {
+      throw new BadRequestException(
+        'Cannot complete an unpaid appointment. Payment must be verified (CONFIRMED) first.',
+      );
+    }
+
+    // If a confirmed wallet-paid booking is cancelled, refund wallet balance atomically
+    if (targetStatus === 'CANCELLED' && booking.notes?.includes('Payment: WALLET_PAID') && booking.totalCost > 0) {
+      const refundRef = `REFUND_BOOKING_${bookingId}`;
+      const existingRefund = await this.prisma.walletTransaction.findUnique({
+        where: { reference: refundRef },
+      });
+      if (!existingRefund) {
+        const u = await this.prisma.user.update({
+          where: { id: booking.userId },
+          data: { walletBalance: { increment: booking.totalCost } },
+          select: { walletBalance: true },
+        });
+        await this.prisma.walletTransaction.create({
+          data: {
+            userId: booking.userId,
+            type: 'CREDIT',
+            amount: booking.totalCost,
+            description: `Refund for Cancelled Consultation #${bookingId.slice(0, 8).toUpperCase()}`,
+            balanceAfter: Math.round(Number(u.walletBalance) * 100) / 100,
+            reference: refundRef,
+          },
+        });
+      }
+    }
+
+    const updatedNotes = dto.notes?.trim()
+      ? `${booking.notes ? booking.notes + ' | ' : ''}Status update (${targetStatus}): ${dto.notes.trim()}`
+      : booking.notes;
+
+    const updatedBooking = await this.prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        status: targetStatus,
+        notes: updatedNotes,
+      },
+      include: {
+        astrologer: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    // Record audit log
+    await this.prisma.auditLog.create({
+      data: {
+        action: 'BOOKING_STATUS_UPDATED',
+        actorId: actor.sub,
+        actorEmail: actor.email,
+        targetId: bookingId,
+        details: {
+          fromStatus: currentStatus,
+          toStatus: targetStatus,
+          notes: dto.notes || null,
+        },
+        ipAddress: ipAddress || null,
+      },
+    });
+
+    return {
+      message: `Booking status successfully updated to ${targetStatus}.`,
+      booking: updatedBooking,
+    };
+  }
+
+  /**
+   * Return full availability management view for a date (Admin/Superadmin only).
+   */
+  async getAdminAvailability(dateStr: string) {
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(dateStr)) {
+      throw new BadRequestException('Date must be formatted as YYYY-MM-DD');
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isPastDate = dateStr < todayStr;
+
+    // Check blocked status
+    const blockedDate = await this.prisma.blockedDate.findUnique({
+      where: { date: dateStr },
+    });
+
+    // Query all slots for this date
+    let dbSlots = await this.prisma.appointmentSlot.findMany({
+      where: { date: dateStr },
+      orderBy: { startTime: 'asc' },
+    });
+
+    // If no slots exist yet and date is not in past, auto-seed standard slots for convenience
+    if (dbSlots.length === 0 && !isPastDate) {
+      const defaultSlotsData = PUBLISHED_TIME_SLOTS.map((time) => ({
+        date: dateStr,
+        startTime: time,
+        durationMinutes: 45,
+        isPublished: true,
+      }));
+
+      await this.prisma.appointmentSlot.createMany({
+        data: defaultSlotsData,
+        skipDuplicates: true,
+      });
+
+      dbSlots = await this.prisma.appointmentSlot.findMany({
+        where: { date: dateStr },
+        orderBy: { startTime: 'asc' },
+      });
+    }
+
+    // Query active bookings for this date
+    const existingBookings = await this.prisma.booking.findMany({
+      where: {
+        scheduledDate: dateStr,
+        status: { notIn: ['CANCELLED', 'REJECTED'] },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    const bookingByTime = new Map(existingBookings.map((b) => [b.scheduledTime, b]));
+
+    const enrichedSlots = dbSlots.map((slot) => {
+      const booking = bookingByTime.get(slot.startTime);
+      const isBooked = Boolean(booking);
+
+      return {
+        id: slot.id,
+        date: slot.date,
+        startTime: slot.startTime,
+        durationMinutes: slot.durationMinutes,
+        isPublished: slot.isPublished,
+        notes: slot.notes,
+        isBooked,
+        booking: booking
+          ? {
+              id: booking.id,
+              serviceType: booking.serviceType,
+              status: booking.status,
+              customerName: booking.user?.name || 'Vedic Seeker',
+              customerEmail: booking.user?.email || null,
+              customerPhone: booking.user?.phone || null,
+            }
+          : null,
+        canDelete: !isBooked,
+      };
+    });
+
+    return {
+      date: dateStr,
+      isBlocked: Boolean(blockedDate),
+      blockedReason: blockedDate?.reason || null,
+      slots: enrichedSlots,
+      totalSlots: enrichedSlots.length,
+      bookedCount: enrichedSlots.filter((s) => s.isBooked).length,
+    };
+  }
+
+  /**
+   * Create an available consultation time slot (Admin/Superadmin only).
+   */
+  async createAdminSlot(actor: JwtPayload, dto: CreateSlotDto, ipAddress?: string) {
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (dto.date < todayStr) {
+      throw new BadRequestException('Appointment slot date cannot be in the past.');
+    }
+
+    const cleanStartTime = dto.startTime.trim();
+    const existing = await this.prisma.appointmentSlot.findUnique({
+      where: {
+        date_startTime: {
+          date: dto.date,
+          startTime: cleanStartTime,
+        },
+      },
+    });
+
+    if (existing) {
+      throw new ConflictException(
+        `Slot on ${dto.date} at ${cleanStartTime} already exists in the sanctuary schedule.`,
+      );
+    }
+
+    const slot = await this.prisma.appointmentSlot.create({
+      data: {
+        date: dto.date,
+        startTime: cleanStartTime,
+        durationMinutes: dto.durationMinutes || 45,
+        isPublished: dto.isPublished !== undefined ? dto.isPublished : true,
+        notes: dto.notes?.trim() || null,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        action: 'SLOT_CREATED',
+        actorId: actor.sub,
+        actorEmail: actor.email,
+        targetId: slot.id,
+        details: {
+          date: slot.date,
+          startTime: slot.startTime,
+          durationMinutes: slot.durationMinutes,
+          isPublished: slot.isPublished,
+        },
+        ipAddress: ipAddress || null,
+      },
+    });
+
+    return {
+      message: 'Consultation slot successfully created.',
+      slot,
+    };
+  }
+
+  /**
+   * Update or publish/unpublish a slot (Admin/Superadmin only).
+   */
+  async updateAdminSlot(actor: JwtPayload, slotId: string, dto: UpdateSlotDto, ipAddress?: string) {
+    const slot = await this.prisma.appointmentSlot.findUnique({
+      where: { id: slotId },
+    });
+
+    if (!slot) {
+      throw new NotFoundException('Appointment slot not found.');
+    }
+
+    if (dto.startTime && dto.startTime.trim() !== slot.startTime) {
+      const cleanStartTime = dto.startTime.trim();
+      const activeBooking = await this.prisma.booking.findFirst({
+        where: {
+          scheduledDate: slot.date,
+          scheduledTime: slot.startTime,
+          status: { notIn: ['CANCELLED', 'REJECTED'] },
+        },
+      });
+
+      if (activeBooking) {
+        throw new BadRequestException(
+          'Cannot modify the start time of an appointment slot with an active booking. Please reschedule the booking first.',
+        );
+      }
+
+      const duplicate = await this.prisma.appointmentSlot.findUnique({
+        where: {
+          date_startTime: {
+            date: slot.date,
+            startTime: cleanStartTime,
+          },
+        },
+      });
+
+      if (duplicate && duplicate.id !== slot.id) {
+        throw new ConflictException(
+          `Another slot already exists on ${slot.date} at ${cleanStartTime}.`,
+        );
+      }
+    }
+
+    const updated = await this.prisma.appointmentSlot.update({
+      where: { id: slotId },
+      data: {
+        ...(dto.startTime ? { startTime: dto.startTime.trim() } : {}),
+        ...(dto.durationMinutes !== undefined ? { durationMinutes: dto.durationMinutes } : {}),
+        ...(dto.isPublished !== undefined ? { isPublished: dto.isPublished } : {}),
+        ...(dto.notes !== undefined ? { notes: dto.notes.trim() } : {}),
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        action: 'SLOT_UPDATED',
+        actorId: actor.sub,
+        actorEmail: actor.email,
+        targetId: slot.id,
+        details: {
+          date: updated.date,
+          startTime: updated.startTime,
+          isPublished: updated.isPublished,
+          durationMinutes: updated.durationMinutes,
+        },
+        ipAddress: ipAddress || null,
+      },
+    });
+
+    return {
+      message: 'Consultation slot successfully updated.',
+      slot: updated,
+    };
+  }
+
+  /**
+   * Delete an appointment slot, rejecting if active booking exists (Admin/Superadmin only).
+   */
+  async deleteAdminSlot(actor: JwtPayload, slotId: string, ipAddress?: string) {
+    const slot = await this.prisma.appointmentSlot.findUnique({
+      where: { id: slotId },
+    });
+
+    if (!slot) {
+      throw new NotFoundException('Appointment slot not found.');
+    }
+
+    const activeBooking = await this.prisma.booking.findFirst({
+      where: {
+        scheduledDate: slot.date,
+        scheduledTime: slot.startTime,
+        status: { notIn: ['CANCELLED', 'REJECTED'] },
+      },
+    });
+
+    if (activeBooking) {
+      throw new BadRequestException(
+        'Cannot delete appointment slot with an active customer booking. Cancel the booking first to prevent invalidating confirmed consultations.',
+      );
+    }
+
+    await this.prisma.appointmentSlot.delete({
+      where: { id: slotId },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        action: 'SLOT_DELETED',
+        actorId: actor.sub,
+        actorEmail: actor.email,
+        targetId: slotId,
+        details: {
+          date: slot.date,
+          startTime: slot.startTime,
+        },
+        ipAddress: ipAddress || null,
+      },
+    });
+
+    return {
+      message: `Appointment slot on ${slot.date} at ${slot.startTime} has been permanently deleted.`,
+    };
+  }
+
+  /**
+   * Block a date or holiday (Admin/Superadmin only).
+   */
+  async blockDate(actor: JwtPayload, dto: BlockDateDto, ipAddress?: string) {
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (dto.date < todayStr) {
+      throw new BadRequestException('Cannot block dates in the past.');
+    }
+
+    const blocked = await this.prisma.blockedDate.upsert({
+      where: { date: dto.date },
+      create: {
+        date: dto.date,
+        reason: dto.reason?.trim() || 'Sanctuary Closed / Panditji Unavailable',
+      },
+      update: {
+        reason: dto.reason?.trim() || 'Sanctuary Closed / Panditji Unavailable',
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        action: 'DATE_BLOCKED',
+        actorId: actor.sub,
+        actorEmail: actor.email,
+        targetId: blocked.id,
+        details: {
+          date: blocked.date,
+          reason: blocked.reason,
+        },
+        ipAddress: ipAddress || null,
+      },
+    });
+
+    return {
+      message: `Date ${dto.date} is now blocked. No customer bookings will be accepted for this date.`,
+      blockedDate: blocked,
+    };
+  }
+
+  /**
+   * Unblock a date (Admin/Superadmin only).
+   */
+  async unblockDate(actor: JwtPayload, dateStr: string, ipAddress?: string) {
+    const existing = await this.prisma.blockedDate.findUnique({
+      where: { date: dateStr },
+    });
+
+    if (existing) {
+      await this.prisma.blockedDate.delete({
+        where: { date: dateStr },
+      });
+
+      await this.prisma.auditLog.create({
+        data: {
+          action: 'DATE_UNBLOCKED',
+          actorId: actor.sub,
+          actorEmail: actor.email,
+          targetId: existing.id,
+          details: {
+            date: dateStr,
+          },
+          ipAddress: ipAddress || null,
+        },
+      });
+    }
+
+    return {
+      message: `Date ${dateStr} has been unblocked. Published slots are now available for customer bookings.`,
+    };
+  }
+
+  /**
+   * Bulk initialize standard Vedic schedule for upcoming days (Admin/Superadmin only).
+   */
+  async initializeStandardSchedule(
+    actor: JwtPayload,
+    dto: InitializeScheduleDto,
+    ipAddress?: string,
+  ) {
+    const days = dto.daysCount || 7;
+    const start = new Date(dto.startDate);
+    let createdCount = 0;
+
+    for (let i = 0; i < days; i++) {
+      const cur = new Date(start);
+      cur.setDate(start.getDate() + i);
+      const curDateStr = cur.toISOString().split('T')[0];
+
+      for (const time of PUBLISHED_TIME_SLOTS) {
+        await this.prisma.appointmentSlot.upsert({
+          where: {
+            date_startTime: {
+              date: curDateStr,
+              startTime: time,
+            },
+          },
+          create: {
+            date: curDateStr,
+            startTime: time,
+            durationMinutes: 45,
+            isPublished: true,
+          },
+          update: {},
+        });
+        createdCount++;
+      }
+    }
+
+    await this.prisma.auditLog.create({
+      data: {
+        action: 'SCHEDULE_INITIALIZED',
+        actorId: actor.sub,
+        actorEmail: actor.email,
+        details: {
+          startDate: dto.startDate,
+          daysCount: days,
+          slotsProcessed: createdCount,
+        },
+        ipAddress: ipAddress || null,
+      },
+    });
+
+    return {
+      message: `Standard Vedic schedule successfully initialized for ${days} days starting from ${dto.startDate}.`,
+      daysCount: days,
+      slotsProcessed: createdCount,
+    };
   }
 }

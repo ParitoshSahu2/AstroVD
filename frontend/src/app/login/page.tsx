@@ -75,6 +75,7 @@ function LoginForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           identifier: identifier.trim(),
+          email: identifier.trim(),
           password,
         }),
       });

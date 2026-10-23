@@ -19,8 +19,13 @@ import {
   ChevronRight,
   AlertCircle,
   CheckCircle2,
+  Plus,
+  Edit3,
+  Trash2,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { getStoredUser, getAuthToken, AUTH_CHANGE_EVENT } from '../../lib/auth';
+import GalleryManageModal, { GalleryItemData } from './components/GalleryManageModal';
 
 interface GalleryItem {
   id: string;
@@ -36,6 +41,7 @@ interface GalleryItem {
   dateHi: string;
   description: string;
   descriptionHi: string;
+  isPublished?: boolean;
 }
 
 const BATCH_SIZE = 9;
@@ -51,7 +57,7 @@ export default function GalleryPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const galleryItems: GalleryItem[] = [
+  const initialGalleryItems: GalleryItem[] = [
     {
       id: '1',
       title: 'Grand Shat Chandi Maha Yagya & Sacred Havan',
@@ -459,6 +465,95 @@ export default function GalleryPage() {
     },
   ];
 
+  // Dynamic Content & Admin Management State
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(initialGalleryItems);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [manageModalOpen, setManageModalOpen] = useState(false);
+  const [itemToEdit, setItemToEdit] = useState<any | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionToast, setActionToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const backendUrl = (
+    process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
+  ).replace(/\/api\/?$/, '');
+
+  const fetchGalleryItems = useCallback(async () => {
+    try {
+      const queryParam = isAdmin ? '?includeUnpublished=true' : '';
+      const res = await fetch(`${backendUrl}/api/content/gallery${queryParam}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setGalleryItems(data);
+        }
+      }
+    } catch (err) {
+      console.error('Error loading gallery items from API, using fallback:', err);
+    }
+  }, [backendUrl, isAdmin]);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const user = getStoredUser();
+      const admin = user?.role === 'ADMIN' || user?.role === 'SUPERADMIN';
+      setIsAdmin(admin);
+    };
+    checkAuth();
+    window.addEventListener(AUTH_CHANGE_EVENT, checkAuth);
+    window.addEventListener('storage', checkAuth);
+    return () => {
+      window.removeEventListener(AUTH_CHANGE_EVENT, checkAuth);
+      window.removeEventListener('storage', checkAuth);
+    };
+  }, []);
+
+  useEffect(() => {
+    fetchGalleryItems();
+  }, [fetchGalleryItems]);
+
+  const handleDeleteItem = async (item: GalleryItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Are you sure you want to permanently delete "${item.title}"?`)) {
+      return;
+    }
+
+    const token = getAuthToken();
+    if (!token) return;
+
+    setActionLoading(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/content/gallery/${item.id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to delete gallery item');
+      }
+
+      setActionToast({
+        type: 'success',
+        message: `"${item.title}" was deleted successfully.`,
+      });
+      fetchGalleryItems();
+    } catch (err: any) {
+      setActionToast({ type: 'error', message: err.message || 'Error deleting photo.' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleItemSaved = () => {
+    setActionToast({
+      type: 'success',
+      message: 'Photo entry saved successfully!',
+    });
+    fetchGalleryItems();
+  };
+
   const categories = [
     {
       id: 'all',
@@ -499,9 +594,10 @@ export default function GalleryPage() {
   ];
 
   // Filtered collection based on active category
-  const filtered = galleryItems.filter(
-    (item) => activeCategory === 'all' || item.category === activeCategory
-  );
+  const filtered = galleryItems.filter((item) => {
+    if (!isAdmin && item.isPublished === false) return false;
+    return activeCategory === 'all' || item.category === activeCategory;
+  });
 
   // Paginated visible items (initial 9, then +9 per scroll batch)
   const visibleItems = filtered.slice(0, visibleCount);
@@ -618,7 +714,70 @@ export default function GalleryPage() {
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-16 space-y-10">
-        
+        {/* Action Feedback Toast */}
+        {actionToast && (
+          <div
+            className={`p-4 rounded-2xl text-xs sm:text-sm font-semibold flex items-center justify-between shadow-sm animate-fadeIn ${
+              actionToast.type === 'success'
+                ? 'bg-emerald-50 text-emerald-900 border border-emerald-200'
+                : 'bg-rose-50 text-rose-900 border border-rose-200'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {actionToast.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              )}
+              <span>{actionToast.message}</span>
+            </div>
+            <button
+              onClick={() => setActionToast(null)}
+              className="text-stone-400 hover:text-stone-700 font-bold ml-4 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Admin Control Bar - ONLY VISIBLE TO AUTHENTICATED ADMINS */}
+        {isAdmin && (
+          <div className="rounded-3xl bg-gradient-to-r from-amber-50 via-white to-amber-50/80 border-2 border-amber-300 p-5 sm:p-6 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#5B0D15] text-amber-200 flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
+                👑
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-serif font-bold text-base text-[#3B1E22]">
+                    Admin Gallery Controls
+                  </h3>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 uppercase tracking-wider">
+                    Gallery Management
+                  </span>
+                </div>
+                <p className="text-xs text-stone-600 mt-0.5">
+                  Upload photos, edit titles/descriptions, or delete entries directly from this public gallery.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setItemToEdit(null);
+                  setManageModalOpen(true);
+                }}
+                className="px-5 py-2.5 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-amber-100 text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4 text-amber-300" />
+                <span>Add New Photo</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Category Filter Pills */}
         <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3" role="tablist" aria-label="Gallery Categories">
           {categories.map((cat) => {
@@ -690,6 +849,7 @@ export default function GalleryPage() {
                     src={item.image}
                     alt={title}
                     fill
+                    unoptimized
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     priority={index < 3}
                     className="object-cover object-center group-hover:scale-108 transition-transform duration-700 ease-out"
@@ -706,6 +866,37 @@ export default function GalleryPage() {
                   <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-amber-300/60 text-amber-300 text-[10px] font-bold uppercase tracking-wider">
                     ✦ {catLabel}
                   </div>
+
+                  {/* Admin Actions Overlay - ONLY VISIBLE TO AUTHENTICATED ADMINS */}
+                  {isAdmin && (
+                    <div
+                      className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md px-2 py-1 rounded-full border border-amber-400/80 shadow-lg"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setItemToEdit(item);
+                          setManageModalOpen(true);
+                        }}
+                        title="Edit Photo Details"
+                        className="w-6 h-6 rounded-full bg-white/20 hover:bg-amber-400 hover:text-stone-950 text-white flex items-center justify-center transition-colors cursor-pointer"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteItem(item, e)}
+                        title="Delete Entry"
+                        disabled={actionLoading}
+                        className="w-6 h-6 rounded-full bg-white/20 hover:bg-rose-600 hover:text-white text-white flex items-center justify-center transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Bottom Card Information */}
@@ -906,6 +1097,16 @@ export default function GalleryPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Admin Gallery Management Modal */}
+      {isAdmin && (
+        <GalleryManageModal
+          isOpen={manageModalOpen}
+          onClose={() => setManageModalOpen(false)}
+          itemToEdit={itemToEdit}
+          onSaved={handleItemSaved}
+        />
       )}
 
       <Footer />

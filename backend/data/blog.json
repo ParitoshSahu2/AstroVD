@@ -1,0 +1,521 @@
+[
+  {
+    "id": "audit-log-test-blog-mvkkyimb",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 23, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-23T06:19:48.803Z",
+    "updatedAt": "2026-10-23T06:19:48.804Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvkkyili",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 23, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-23T06:19:48.774Z",
+    "updatedAt": "2026-10-23T06:19:48.783Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvkkhiqr",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 23, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-23T06:06:35.811Z",
+    "updatedAt": "2026-10-23T06:06:35.812Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvkkhiq2",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 23, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-23T06:06:35.787Z",
+    "updatedAt": "2026-10-23T06:06:35.793Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvkk5ugs",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 23, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-23T05:57:31.132Z",
+    "updatedAt": "2026-10-23T05:57:31.133Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvkk5ug4",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 23, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-23T05:57:31.109Z",
+    "updatedAt": "2026-10-23T05:57:31.116Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvkjscia",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 23, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-23T05:47:01.330Z",
+    "updatedAt": "2026-10-23T05:47:01.330Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvkjschn",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 23, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-23T05:47:01.308Z",
+    "updatedAt": "2026-10-23T05:47:01.313Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvkj0qld",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 23, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-23T05:25:33.217Z",
+    "updatedAt": "2026-10-23T05:25:33.217Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvkj0qkv",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 23, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-23T05:25:33.199Z",
+    "updatedAt": "2026-10-23T05:25:33.204Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "planetary-transits-2026",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "वर्ष 2026 के प्रमुख ग्रह गोचर: देवगुरु बृहस्पति एवं शनिदेव का राशि परिवर्तन",
+    "category": "Vedic Jyotish",
+    "categoryHi": "वैदिक ज्योतिष",
+    "author": "Dr. Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "PhD, Jyotishacharya",
+    "authorRoleHi": "पीएचडी, ज्योतिषाचार्य",
+    "date": "Oct 14, 2026",
+    "dateHi": "14 अक्टूबर, 2026",
+    "readTime": "12 min read",
+    "readTimeHi": "6 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Detailed overview of Jupiter transiting into Cancer and Saturn moving across Pisces, bringing immense opportunities for spiritual transformation and financial realignment.",
+    "excerptHi": "कर्क राशि में उच्च के देवगुरु बृहस्पति और मीन राशि में शनिदेव के गोचर का सूक्ष्म विश्लेषण, जो आध्यात्मिक प्रगति एवं आर्थिक समृद्धि के नए द्वार खोलेगा।",
+    "content": [
+      "In Vedic Astrology, planetary transits (Gochar) act as cosmic catalysts that activate the dormant promises inscribed in your Janam Kundli. As we advance through 2026, Jupiter (Brihaspati) occupies its exalted sign of Cancer, radiating benevolence, higher learning, and domestic peace.",
+      "Simultaneously, Saturn (Shani Dev) traversing through the water element of Pisces invites deep introspection, karmic settlements, and spiritual grounding. Those experiencing Sade Sati or Kantaka Shani will find this an auspicious time for charitable service, mantra sadhana, and rectifying past life imbalances.",
+      "To harness this harmonious frequency, chant the Brihaspati Beej Mantra (ॐ ग्रां ग्रीं ग्रौं सः गुरवे नमः) on Thursdays and perform regular Shani Tailabhishek on Saturdays."
+    ],
+    "contentHi": [
+      "वैदिक ज्योतिष में ग्रह गोचर उन ब्रह्मांडीय उत्प्रेरकों का कार्य करते हैं जो आपकी जन्म कुंडली में संचित कर्म फलों को जाग्रत करते हैं। वर्ष 2026 में देवगुरु बृहस्पति अपनी उच्च राशि कर्क में विराजमान होकर आध्यात्मिक ज्ञान, पारिवारिक शांति एवं धन वृद्धि का मार्ग प्रशस्त करेंगे।",
+      "वहीं शनिदेव का मीन राशि में संचरण आत्म-निरीक्षण, कर्म शुद्धि और पूर्व जन्म के बंधनों के शमन का समय है।"
+    ],
+    "keyTakeaways": [
+      "Jupiter in Cancer blesses genuine spiritual seekers and family expansion.",
+      "Saturn in Pisces dissolves rigid ego structures, calling for surrender and patience.",
+      "Wearing natural Yellow Sapphire (Pukhraj) or Blue Sapphire should only follow birth chart verification."
+    ],
+    "keyTakeawaysHi": [
+      "कर्क में गुरु का उच्च प्रभाव साधकों को ज्ञान, संतान सुख व गृह शांति प्रदान करता है।",
+      "मीन में शनि अहंकार को मिटाकर आत्म-समर्पण एवं धैर्य की परीक्षा लेते हैं।"
+    ],
+    "isPublished": true,
+    "createdAt": "2026-10-23T05:24:35.074Z",
+    "updatedAt": "2026-10-23T05:24:35.096Z",
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "tarot-wisdom-intuitive-guide",
+    "title": "The Language of the Cards: How Intuitive Tarot Bridges Past, Present & Future",
+    "titleHi": "कार्ड्स की दिव्य भाषा: अंतर्ज्ञान व टैरो से जीवन के महत्वपूर्ण निर्णयों में स्पष्टता",
+    "category": "Tarot Wisdom",
+    "categoryHi": "टैरो ज्ञान",
+    "author": "Madhuri Dubey",
+    "authorHi": "माधुरी दुबे",
+    "authorRole": "Tarot Card Reader & Spiritual Guide",
+    "authorRoleHi": "टैरो रीडर एवं आध्यात्मिक मार्गदर्शक",
+    "date": "Oct 11, 2026",
+    "dateHi": "11 अक्टूबर, 2026",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/consultation.jpg",
+    "excerpt": "How archetypal symbolism in the Major Arcana activates inner intuition, resolves subconscious anxieties, and provides reassurance during life-altering transitions.",
+    "excerptHi": "मेजर अरकाना के 22 प्रतीकों द्वारा अवचेतन भय का निवारण और जीवन के कठिन मोड़ों पर आत्मबल एवं दिशा-निर्देश प्राप्त करने का रहस्य।",
+    "content": [
+      "Tarot is not fortune-telling; it is a sacred mirror reflecting the unconscious currents of the soul. Each card in the 78-card deck represents an archetype of human consciousness, as mapped by Carl Jung and ancient mystical traditions.",
+      "When you ask a question regarding love, career, or spiritual dilemma, the cards drawn mirror your vibrational resonance in that exact moment. They illuminate hidden motives, highlight blindspots, and unveil the highest probable trajectory."
+    ],
+    "contentHi": [
+      "टैरो केवल भविष्य जानने का साधन नहीं, अपितु आत्मा के अवचेतन प्रवाह को दर्शाने वाला एक पावन दर्पण है। 78 कार्ड्स की यह प्रणाली मानवीय चेतना की विविध अवस्थाओं को प्रतिबिंबित करती है।"
+    ],
+    "keyTakeaways": [
+      "Tarot clarifies the emotional energy surrounding your present circumstances.",
+      "Open-ended inquiry unlocks far deeper subconscious resolution than binary yes/no questions."
+    ],
+    "keyTakeawaysHi": [
+      "टैरो आपकी वर्तमान भावनात्मक ऊर्जा व अवचेतन शंकाओं को स्पष्ट करता है।"
+    ],
+    "isPublished": true,
+    "createdAt": "2026-10-23T05:24:35.074Z",
+    "updatedAt": "2026-10-23T05:24:35.074Z"
+  },
+  {
+    "id": "rudraksha-consecration-science",
+    "title": "The Science of Prana Pratishtha: How Natural Rudraksha Beads Are Energized in Kashi",
+    "titleHi": "प्राण-प्रतिष्ठा का शास्त्रीय विज्ञान: काशी में रुद्राक्ष एवं वैदिक रत्नों का दिव्य सिद्धिकरण",
+    "category": "Spiritual Remedies",
+    "categoryHi": "आध्यात्मिक उपाय",
+    "author": "Acharya Sourabh Swami Ji",
+    "authorHi": "आचार्य सौरभ स्वामी जी",
+    "authorRole": "Kashi Peeth Karmakand Specialist",
+    "authorRoleHi": "काशी पीठ कर्मकांड मर्मज्ञ",
+    "date": "Oct 07, 2026",
+    "dateHi": "7 अक्टूबर, 2026",
+    "readTime": "7 min read",
+    "readTimeHi": "7 मिनट पठन",
+    "image": "/services/gemstones.jpg",
+    "excerpt": "Step-by-step exposition of Panchamrit snan, Beej mantra nyasa, and Agni Havanam performed to align mineral electromagnetic vibrations with the seeker’s biofield.",
+    "excerptHi": "पंचामृत स्नान, न्यास, और बीज मंत्र आहुतियों द्वारा रुद्राक्ष व रत्नों की सूक्ष्म ऊर्जा को जाग्रत करने की प्रामाणिक वैदिक पद्धति।",
+    "content": [
+      "A sacred bead or gemstone unaligned with personal planetary frequencies remains physically beautiful yet energetically dormant. In the sanctified ghats of Kashi, our Acharyas conduct rigorous 108-cycle Prana Pratishtha according to the Shukla Yajurveda Samhita.",
+      "The ritual commences at Brahma Muhurta with Shodashopachara pujan, followed by infusion of the specific planetary Gayatri and Beej Mantras."
+    ],
+    "contentHi": [
+      "बिना प्राण-प्रतिष्ठा के धारण किया गया रत्न अथवा रुद्राक्ष केवल एक आभूषण मात्र रहता है। काशी के पावन तट पर यजुर्वेदीय पद्धति से 108 बार वैदिक मंत्रों की आहुति देकर रत्न में प्राण-ऊर्जा संचरित की जाती है।"
+    ],
+    "keyTakeaways": [
+      "Prana Pratishtha aligns the natural electromagnetic frequency of organic rudraksha with the wearer.",
+      "Consecration includes personal Sankalp reciting your Gotra and Nakshatra."
+    ],
+    "keyTakeawaysHi": [
+      "प्राण-प्रतिष्ठा रुद्राक्ष की चुंबकीय ऊर्जा को धारक के औरा से जोड़ती है।"
+    ],
+    "isPublished": true,
+    "createdAt": "2026-10-23T05:24:35.074Z",
+    "updatedAt": "2026-10-23T05:24:35.074Z"
+  }
+]

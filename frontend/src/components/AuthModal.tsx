@@ -290,6 +290,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       } else {
         body = {
           identifier: loginIdentifier.trim(),
+          email: loginIdentifier.trim(),
           password,
         };
       }

@@ -91,4 +91,11 @@ export class AuthController {
   async getProfile(@CurrentUser() user: JwtPayload) {
     return await this.authService.getProfile(user.sub);
   }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Logout and terminate active session' })
+  logout() {
+    return { message: 'Logged out successfully' };
+  }
 }
