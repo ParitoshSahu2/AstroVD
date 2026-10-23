@@ -288,149 +288,147 @@ export default function AdminOverviewTab({
       {/* 3. Middle Section: Platform Activity & Needs Attention */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
         {/* Left (2 cols): Platform Activity Multi-Line Chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-5 border border-stone-150/80 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-stone-700" />
-                <h2 className="text-sm sm:text-base font-bold text-stone-900">Platform activity</h2>
-              </div>
-              <select
-                value={timeRange}
-                onChange={(e) => setTimeRange(e.target.value as any)}
-                className="text-xs font-medium text-stone-600 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-lg px-2.5 py-1 outline-none cursor-pointer"
-              >
-                <option value="7">Last 7 days</option>
-                <option value="14">Last 14 days</option>
-                <option value="30">Last 30 days</option>
-              </select>
+        <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-5 border border-stone-150/80 shadow-xs flex flex-col justify-start">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-stone-700" />
+              <h2 className="text-sm sm:text-base font-bold text-stone-900">Platform activity</h2>
             </div>
-
-            {/* Responsive SVG Multi-line Chart matching screenshot */}
-            <div className="w-full overflow-x-auto">
-              <div className="min-w-[460px]">
-                <div className="relative h-36 sm:h-40 w-full">
-                  <svg viewBox="0 0 540 150" className="w-full h-full overflow-visible">
-                    {/* Grid Lines */}
-                    <line x1="30" y1="15" x2="530" y2="15" stroke="#F3F4F6" strokeDasharray="3 3" />
-                    <text x="15" y="19" fontSize="9" fill="#9CA3AF" textAnchor="middle">20</text>
-
-                    <line x1="30" y1="45" x2="530" y2="45" stroke="#F3F4F6" strokeDasharray="3 3" />
-                    <text x="15" y="49" fontSize="9" fill="#9CA3AF" textAnchor="middle">15</text>
-
-                    <line x1="30" y1="75" x2="530" y2="75" stroke="#F3F4F6" strokeDasharray="3 3" />
-                    <text x="15" y="79" fontSize="9" fill="#9CA3AF" textAnchor="middle">10</text>
-
-                    <line x1="30" y1="105" x2="530" y2="105" stroke="#F3F4F6" strokeDasharray="3 3" />
-                    <text x="15" y="109" fontSize="9" fill="#9CA3AF" textAnchor="middle">5</text>
-
-                    <line x1="30" y1="130" x2="530" y2="130" stroke="#E5E7EB" />
-                    <text x="15" y="133" fontSize="9" fill="#9CA3AF" textAnchor="middle">0</text>
-
-                    {/* 1. Yellow/Amber Curve: Inspections */}
-                    <path
-                      d="M 50 85 Q 125 45, 200 60 T 350 25 T 425 60 T 510 48"
-                      fill="none"
-                      stroke="#D97706"
-                      strokeWidth="2"
-                    />
-                    {/* Yellow Dots */}
-                    <circle cx="50" cy="85" r="2.5" fill="#D97706" />
-                    <circle cx="125" cy="55" r="2.5" fill="#D97706" />
-                    <circle cx="200" cy="60" r="2.5" fill="#D97706" />
-                    <circle cx="275" cy="55" r="2.5" fill="#D97706" />
-                    <circle cx="350" cy="25" r="2.5" fill="#D97706" />
-                    <circle cx="425" cy="60" r="2.5" fill="#D97706" />
-                    <circle cx="475" cy="55" r="2.5" fill="#D97706" />
-                    <circle cx="510" cy="48" r="2.5" fill="#D97706" />
-
-                    {/* 2. Green Curve: New Seekers */}
-                    <path
-                      d="M 50 102 Q 125 88, 200 94 T 350 72 T 425 88 T 510 80"
-                      fill="none"
-                      stroke="#059669"
-                      strokeWidth="2"
-                    />
-                    {/* Green Dots */}
-                    <circle cx="50" cy="102" r="2.5" fill="#059669" />
-                    <circle cx="125" cy="88" r="2.5" fill="#059669" />
-                    <circle cx="200" cy="94" r="2.5" fill="#059669" />
-                    <circle cx="275" cy="91" r="2.5" fill="#059669" />
-                    <circle cx="350" cy="72" r="2.5" fill="#059669" />
-                    <circle cx="425" cy="88" r="2.5" fill="#059669" />
-                    <circle cx="475" cy="84" r="2.5" fill="#059669" />
-                    <circle cx="510" cy="80" r="2.5" fill="#059669" />
-
-                    {/* 3. Purple Curve: New Orders */}
-                    <path
-                      d="M 50 115 Q 125 106, 200 110 T 350 98 T 425 108 T 510 102"
-                      fill="none"
-                      stroke="#7C3AED"
-                      strokeWidth="2"
-                    />
-                    {/* Purple Dots */}
-                    <circle cx="50" cy="115" r="2.5" fill="#7C3AED" />
-                    <circle cx="125" cy="106" r="2.5" fill="#7C3AED" />
-                    <circle cx="200" cy="110" r="2.5" fill="#7C3AED" />
-                    <circle cx="275" cy="106" r="2.5" fill="#7C3AED" />
-                    <circle cx="350" cy="98" r="2.5" fill="#7C3AED" />
-                    <circle cx="425" cy="108" r="2.5" fill="#7C3AED" />
-                    <circle cx="475" cy="104" r="2.5" fill="#7C3AED" />
-                    <circle cx="510" cy="102" r="2.5" fill="#7C3AED" />
-
-                    {/* 4. Blue Curve: Active Pandits */}
-                    <path
-                      d="M 50 124 L 125 124 L 200 124 L 275 124 L 350 122 L 425 124 L 510 123"
-                      fill="none"
-                      stroke="#0284C7"
-                      strokeWidth="2"
-                    />
-                    {/* Blue Dots */}
-                    <circle cx="50" cy="124" r="2.5" fill="#0284C7" />
-                    <circle cx="125" cy="124" r="2.5" fill="#0284C7" />
-                    <circle cx="200" cy="124" r="2.5" fill="#0284C7" />
-                    <circle cx="275" cy="124" r="2.5" fill="#0284C7" />
-                    <circle cx="350" cy="122" r="2.5" fill="#0284C7" />
-                    <circle cx="425" cy="124" r="2.5" fill="#0284C7" />
-                    <circle cx="510" cy="123" r="2.5" fill="#0284C7" />
-
-                    {/* X Axis Date Labels */}
-                    <text x="50" y="145" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 17</text>
-                    <text x="125" y="145" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 18</text>
-                    <text x="200" y="145" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 19</text>
-                    <text x="275" y="145" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 20</text>
-                    <text x="350" y="145" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 21</text>
-                    <text x="425" y="145" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 22</text>
-                    <text x="510" y="145" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 23</text>
-                  </svg>
-                </div>
-              </div>
-            </div>
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value as any)}
+              className="text-xs font-medium text-stone-600 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-lg px-2.5 py-1 outline-none cursor-pointer"
+            >
+              <option value="7">Last 7 days</option>
+              <option value="14">Last 14 days</option>
+              <option value="30">Last 30 days</option>
+            </select>
           </div>
 
-          {/* Chart Legend matching screenshot */}
-          <div className="flex items-center justify-start gap-4 sm:gap-6 mt-2 pt-2 border-t border-stone-100 flex-wrap">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block" />
-              <span>New Seekers</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block" />
-              <span>New Orders</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block" />
-              <span>Inspections</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
-              <span className="w-2.5 h-2.5 rounded-full bg-sky-600 inline-block" />
-              <span>Active Pandits</span>
+          {/* Responsive SVG Multi-line Chart matching screenshot */}
+          <div className="w-full overflow-x-auto">
+            <div className="min-w-[460px]">
+              <div className="relative h-28 sm:h-32 w-full">
+                <svg viewBox="0 0 540 132" className="w-full h-full overflow-visible">
+                  {/* Grid Lines */}
+                  <line x1="30" y1="12" x2="530" y2="12" stroke="#F3F4F6" strokeDasharray="3 3" />
+                  <text x="15" y="15" fontSize="9" fill="#9CA3AF" textAnchor="middle">20</text>
+
+                  <line x1="30" y1="38" x2="530" y2="38" stroke="#F3F4F6" strokeDasharray="3 3" />
+                  <text x="15" y="41" fontSize="9" fill="#9CA3AF" textAnchor="middle">15</text>
+
+                  <line x1="30" y1="64" x2="530" y2="64" stroke="#F3F4F6" strokeDasharray="3 3" />
+                  <text x="15" y="67" fontSize="9" fill="#9CA3AF" textAnchor="middle">10</text>
+
+                  <line x1="30" y1="90" x2="530" y2="90" stroke="#F3F4F6" strokeDasharray="3 3" />
+                  <text x="15" y="93" fontSize="9" fill="#9CA3AF" textAnchor="middle">5</text>
+
+                  <line x1="30" y1="112" x2="530" y2="112" stroke="#E5E7EB" />
+                  <text x="15" y="115" fontSize="9" fill="#9CA3AF" textAnchor="middle">0</text>
+
+                  {/* 1. Yellow/Amber Curve: Inspections */}
+                  <path
+                    d="M 50 75 Q 125 38, 200 52 T 350 20 T 425 50 T 510 40"
+                    fill="none"
+                    stroke="#D97706"
+                    strokeWidth="2"
+                  />
+                  {/* Yellow Dots */}
+                  <circle cx="50" cy="75" r="2.5" fill="#D97706" />
+                  <circle cx="125" cy="48" r="2.5" fill="#D97706" />
+                  <circle cx="200" cy="52" r="2.5" fill="#D97706" />
+                  <circle cx="275" cy="48" r="2.5" fill="#D97706" />
+                  <circle cx="350" cy="20" r="2.5" fill="#D97706" />
+                  <circle cx="425" cy="50" r="2.5" fill="#D97706" />
+                  <circle cx="475" cy="46" r="2.5" fill="#D97706" />
+                  <circle cx="510" cy="40" r="2.5" fill="#D97706" />
+
+                  {/* 2. Green Curve: New Seekers */}
+                  <path
+                    d="M 50 90 Q 125 78, 200 82 T 350 62 T 425 76 T 510 70"
+                    fill="none"
+                    stroke="#059669"
+                    strokeWidth="2"
+                  />
+                  {/* Green Dots */}
+                  <circle cx="50" cy="90" r="2.5" fill="#059669" />
+                  <circle cx="125" cy="78" r="2.5" fill="#059669" />
+                  <circle cx="200" cy="82" r="2.5" fill="#059669" />
+                  <circle cx="275" cy="80" r="2.5" fill="#059669" />
+                  <circle cx="350" cy="62" r="2.5" fill="#059669" />
+                  <circle cx="425" cy="76" r="2.5" fill="#059669" />
+                  <circle cx="475" cy="73" r="2.5" fill="#059669" />
+                  <circle cx="510" cy="70" r="2.5" fill="#059669" />
+
+                  {/* 3. Purple Curve: New Orders */}
+                  <path
+                    d="M 50 102 Q 125 94, 200 97 T 350 86 T 425 96 T 510 90"
+                    fill="none"
+                    stroke="#7C3AED"
+                    strokeWidth="2"
+                  />
+                  {/* Purple Dots */}
+                  <circle cx="50" cy="102" r="2.5" fill="#7C3AED" />
+                  <circle cx="125" cy="94" r="2.5" fill="#7C3AED" />
+                  <circle cx="200" cy="97" r="2.5" fill="#7C3AED" />
+                  <circle cx="275" cy="94" r="2.5" fill="#7C3AED" />
+                  <circle cx="350" cy="86" r="2.5" fill="#7C3AED" />
+                  <circle cx="425" cy="96" r="2.5" fill="#7C3AED" />
+                  <circle cx="475" cy="93" r="2.5" fill="#7C3AED" />
+                  <circle cx="510" cy="90" r="2.5" fill="#7C3AED" />
+
+                  {/* 4. Blue Curve: Active Pandits */}
+                  <path
+                    d="M 50 110 L 125 110 L 200 110 L 275 110 L 350 108 L 425 110 L 510 109"
+                    fill="none"
+                    stroke="#0284C7"
+                    strokeWidth="2"
+                  />
+                  {/* Blue Dots */}
+                  <circle cx="50" cy="110" r="2.5" fill="#0284C7" />
+                  <circle cx="125" cy="110" r="2.5" fill="#0284C7" />
+                  <circle cx="200" cy="110" r="2.5" fill="#0284C7" />
+                  <circle cx="275" cy="110" r="2.5" fill="#0284C7" />
+                  <circle cx="350" cy="108" r="2.5" fill="#0284C7" />
+                  <circle cx="425" cy="110" r="2.5" fill="#0284C7" />
+                  <circle cx="510" cy="109" r="2.5" fill="#0284C7" />
+
+                  {/* X Axis Date Labels */}
+                  <text x="50" y="127" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 17</text>
+                  <text x="125" y="127" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 18</text>
+                  <text x="200" y="127" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 19</text>
+                  <text x="275" y="127" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 20</text>
+                  <text x="350" y="127" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 21</text>
+                  <text x="425" y="127" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 22</text>
+                  <text x="510" y="127" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 23</text>
+                </svg>
+              </div>
+
+              {/* Chart Legend matching screenshot */}
+              <div className="flex items-center justify-start gap-4 sm:gap-6 mt-1 pt-1.5 border-t border-stone-100 flex-wrap">
+                <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block" />
+                  <span>New Seekers</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
+                  <span className="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block" />
+                  <span>New Orders</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block" />
+                  <span>Inspections</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
+                  <span className="w-2.5 h-2.5 rounded-full bg-sky-600 inline-block" />
+                  <span>Active Pandits</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Right (1 col): Needs Attention */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-150/80 shadow-xs flex flex-col justify-between">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-150/80 shadow-xs flex flex-col justify-start">
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
