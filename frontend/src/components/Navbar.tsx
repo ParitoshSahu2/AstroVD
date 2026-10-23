@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Search,
   ShoppingCart,
+  Bell,
   Menu,
   X,
   ChevronDown,
@@ -26,6 +27,8 @@ import { AuthModal } from './AuthModal';
 import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
 import { performLogout } from '../lib/auth';
+import { PRODUCTS_CATALOG } from '../data/products';
+import { SERVICES_CATALOGUE } from '../data/servicesData';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -45,15 +48,19 @@ export const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [mobileSearchQuery, setMobileSearchQuery] = useState('');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
 
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const aboutDropdownRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
   const aboutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Scroll visibility & glassmorphic state
@@ -164,6 +171,18 @@ export const Navbar: React.FC = () => {
       ) {
         setAboutDropdownOpen(false);
       }
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target as Node)
+      ) {
+        setNotificationOpen(false);
+      }
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
+        setSearchOpen(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -175,6 +194,7 @@ export const Navbar: React.FC = () => {
     setMobileMenuOpen(false);
     setProfileDropdownOpen(false);
     setSearchOpen(false);
+    setNotificationOpen(false);
   }, [pathname]);
 
   const handleAboutMouseEnter = () => {
@@ -188,13 +208,41 @@ export const Navbar: React.FC = () => {
     }, 180);
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = searchQuery.trim();
+    if (query) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('astro-search-change', { detail: query }));
+      }
+      router.push(`/products?search=${encodeURIComponent(query)}`);
       setSearchOpen(false);
     }
   };
+
+  // Instant live search matches
+  const trimmedSearch = searchQuery.trim().toLowerCase();
+  const liveMatchingProducts = trimmedSearch
+    ? PRODUCTS_CATALOG.filter((p) => {
+        return (
+          p.name.toLowerCase().includes(trimmedSearch) ||
+          (p.nameHi && p.nameHi.toLowerCase().includes(trimmedSearch)) ||
+          p.tag.toLowerCase().includes(trimmedSearch) ||
+          p.categoryLabel.toLowerCase().includes(trimmedSearch) ||
+          p.planet.toLowerCase().includes(trimmedSearch)
+        );
+      }).slice(0, 4)
+    : [];
+
+  const liveMatchingServices = trimmedSearch
+    ? SERVICES_CATALOGUE.filter((s) => {
+        return (
+          s.title.toLowerCase().includes(trimmedSearch) ||
+          s.desc.toLowerCase().includes(trimmedSearch) ||
+          s.categoryTag.toLowerCase().includes(trimmedSearch)
+        );
+      }).slice(0, 2)
+    : [];
 
   const getUserInitials = (u?: any, nameOverride?: string) => {
     const raw = (nameOverride || u?.name || '').trim();
@@ -243,7 +291,7 @@ export const Navbar: React.FC = () => {
     { name: t('Home', 'होम'), href: '/' },
     { name: t('Services', 'सेवाएं'), href: '/services' },
     { name: t('Products', 'उत्पाद'), href: '/products' },
-    { name: t('Appointment', 'अपॉइंटमेंट'), href: '/appointment' },
+    { name: t('Consultation', 'परामर्श'), href: '/appointment' },
   ];
 
   // About Us dropdown items with icons matching reference image
@@ -364,44 +412,211 @@ export const Navbar: React.FC = () => {
                   )}
                 </button>
 
-                {/* About Us Dropdown Menu */}
+                {/* About Us Dropdown Menu - Seamlessly Attached Extension Below Nav */}
                 {aboutDropdownOpen && (
                   <div
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 rounded-2xl bg-white/98 backdrop-blur-2xl border border-amber-200/90 shadow-xl shadow-amber-950/10 p-2 z-50 animate-fadeIn"
-                    style={{
-                      boxShadow: '0 12px 32px -4px rgba(91, 13, 21, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.05)',
-                    }}
+                    className="absolute top-full -left-2 pt-3 sm:pt-3.5 z-50 animate-fadeIn"
                   >
-                    <div className="space-y-0.5">
-                      {aboutDropdownItems.map((item) => {
-                        const Icon = item.icon;
-                        const isSubActive =
-                          pathname === item.href ||
-                          (item.href !== '/' && pathname?.startsWith(item.href));
-                        return (
-                          <Link
-                            key={item.name}
-                            href={item.href}
-                            onClick={() => setAboutDropdownOpen(false)}
-                            className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-colors ${
-                              isSubActive
-                                ? 'bg-amber-100/70 text-[#5B0D15] font-semibold'
-                                : 'text-stone-700 hover:text-[#5B0D15] hover:bg-amber-50/80'
-                            }`}
-                          >
-                            <Icon className="w-4 h-4 text-amber-700 shrink-0" />
-                            <span>{item.name}</span>
-                          </Link>
-                        );
-                      })}
+                    <div
+                      className="w-52 rounded-2xl bg-white/98 backdrop-blur-2xl border border-amber-300/80 shadow-2xl p-2"
+                      style={{
+                        boxShadow: '0 16px 36px -4px rgba(91, 13, 21, 0.14), 0 4px 14px -2px rgba(0, 0, 0, 0.06)',
+                      }}
+                    >
+                      <div className="space-y-0.5">
+                        {aboutDropdownItems.map((item) => {
+                          const Icon = item.icon;
+                          const isSubActive =
+                            pathname === item.href ||
+                            (item.href !== '/' && pathname?.startsWith(item.href));
+                          return (
+                            <Link
+                              key={item.name}
+                              href={item.href}
+                              onClick={() => setAboutDropdownOpen(false)}
+                              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-colors ${
+                                isSubActive
+                                  ? 'bg-amber-100/70 text-[#5B0D15] font-semibold'
+                                  : 'text-stone-700 hover:text-[#5B0D15] hover:bg-amber-50/80'
+                              }`}
+                            >
+                              <Icon className="w-4 h-4 text-amber-700 shrink-0" />
+                              <span>{item.name}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Right: Language Pill, Search, Cart Badge & Sign Up Pill */}
+            {/* Right: Search, Language Pill, Cart Badge & Sign Up Pill */}
             <div className="relative z-10 flex items-center gap-3 sm:gap-3.5 md:gap-4">
+              {/* Search Icon with Expandable Input & Live Suggestions Dropdown */}
+              <div className="relative" ref={searchRef}>
+                {searchOpen ? (
+                  <form
+                    onSubmit={handleSearchSubmit}
+                    className="flex items-center bg-white/95 backdrop-blur-md border border-amber-300/90 rounded-full px-3 py-1.5 shadow-md animate-fadeIn"
+                  >
+                    <button
+                      type="submit"
+                      title={t('Search', 'खोजें')}
+                      className="text-[#4A262B] hover:text-[#5B0D15] mr-1.5 cursor-pointer focus:outline-none"
+                    >
+                      <Search className="w-4 h-4 shrink-0" />
+                    </button>
+                    <input
+                      type="text"
+                      autoFocus
+                      placeholder={t('Search crystals, services...', 'क्रिस्टल या सेवाएं खोजें...')}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="bg-transparent text-xs text-[#3B1E22] placeholder-stone-400 focus:outline-none w-32 sm:w-44"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchOpen(false);
+                        setSearchQuery('');
+                      }}
+                      className="text-stone-400 hover:text-stone-700 ml-1.5 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </form>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchOpen(true);
+                      setNotificationOpen(false);
+                      setProfileDropdownOpen(false);
+                      setAboutDropdownOpen(false);
+                    }}
+                    className="p-1.5 text-stone-700 hover:text-[#5B0D15] transition-colors cursor-pointer"
+                    aria-label="Search"
+                    title={t('Search', 'खोजें')}
+                  >
+                    <Search className="w-5 h-5 stroke-[1.8]" />
+                  </button>
+                )}
+
+                {/* Instant Live Search Results Popover */}
+                {searchOpen && trimmedSearch.length > 0 && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute top-full right-0 mt-3 w-80 sm:w-96 rounded-2xl bg-white/98 backdrop-blur-2xl border border-amber-300/80 shadow-2xl p-3 z-50 animate-fadeIn text-[#3B1E22]"
+                    style={{
+                      boxShadow: '0 16px 40px -4px rgba(91, 13, 21, 0.16), 0 4px 16px -2px rgba(0, 0, 0, 0.08)',
+                    }}
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between pb-2 border-b border-amber-200/70 text-[11px] font-bold text-stone-500 uppercase tracking-wider">
+                      <span>{t('Instant Suggestions', 'त्वरित सुझाव')}</span>
+                      <span className="text-[#5B0D15] font-semibold lowercase">
+                        "{searchQuery}"
+                      </span>
+                    </div>
+
+                    {/* Products Suggestions */}
+                    {liveMatchingProducts.length > 0 && (
+                      <div className="py-2 space-y-1">
+                        <div className="text-[10px] uppercase font-bold text-amber-800 tracking-wider px-1">
+                          {t('Products & Talismans', 'उत्पाद एवं ताबीज')}
+                        </div>
+                        {liveMatchingProducts.map((prod) => (
+                          <Link
+                            key={prod.id}
+                            href={`/products/${prod.id}`}
+                            onClick={() => {
+                              setSearchOpen(false);
+                              setSearchQuery('');
+                            }}
+                            className="flex items-center gap-3 p-2 rounded-xl hover:bg-amber-50/80 transition-colors group"
+                          >
+                            <div className="w-10 h-10 rounded-lg overflow-hidden border border-amber-200/80 shrink-0 bg-stone-100 relative">
+                              <img
+                                src={prod.image}
+                                alt={prod.name}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs font-bold text-[#3B1E22] group-hover:text-[#5B0D15] truncate">
+                                {prod.name}
+                              </div>
+                              <div className="text-[10px] text-stone-500 truncate">
+                                {prod.categoryLabel}
+                              </div>
+                            </div>
+                            <div className="text-xs font-extrabold text-[#5B0D15] shrink-0">
+                              {prod.price}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Services Suggestions */}
+                    {liveMatchingServices.length > 0 && (
+                      <div className="py-2 border-t border-amber-200/70 space-y-1">
+                        <div className="text-[10px] uppercase font-bold text-amber-800 tracking-wider px-1">
+                          {t('Vedic Consultations & Services', 'परामर्श एवं सेवाएं')}
+                        </div>
+                        {liveMatchingServices.map((srv) => (
+                          <Link
+                            key={srv.id}
+                            href="/services"
+                            onClick={() => {
+                              setSearchOpen(false);
+                              setSearchQuery('');
+                            }}
+                            className="flex items-center gap-3 p-2 rounded-xl hover:bg-amber-50/80 transition-colors group"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-amber-100/80 text-amber-900 flex items-center justify-center shrink-0">
+                              <Sparkles className="w-4 h-4 text-amber-700" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs font-bold text-[#3B1E22] group-hover:text-[#5B0D15] truncate">
+                                {srv.title}
+                              </div>
+                              <div className="text-[10px] text-stone-500 truncate">
+                                {srv.categoryTag}
+                              </div>
+                            </div>
+                            <div className="text-xs font-bold text-[#5B0D15] shrink-0">
+                              {srv.price}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* No matches state */}
+                    {liveMatchingProducts.length === 0 && liveMatchingServices.length === 0 && (
+                      <div className="py-4 text-center text-xs text-stone-500">
+                        {t('No instant matches found.', 'कोई त्वरित परिणाम नहीं मिला।')}
+                      </div>
+                    )}
+
+                    {/* View all search results button */}
+                    <div className="pt-2 border-t border-amber-200/70">
+                      <button
+                        type="button"
+                        onClick={() => handleSearchSubmit()}
+                        className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-50 to-rose-50 hover:from-amber-100 hover:to-rose-100 text-center text-xs font-bold text-[#5B0D15] transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                      >
+                        <span>{t('Search all store results for', 'सभी उत्पादों में खोजें')} "{searchQuery}"</span>
+                        <span>→</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Hindi / English Language Pill */}
               <button
                 onClick={toggleLanguage}
@@ -419,40 +634,101 @@ export const Navbar: React.FC = () => {
                 </span>
               </button>
 
-              {/* Search Icon with Expandable Input */}
-              <div className="relative">
-                {searchOpen ? (
-                  <form
-                    onSubmit={handleSearchSubmit}
-                    className="flex items-center bg-white/90 backdrop-blur-md border border-amber-300/90 rounded-full px-3 py-1.5 shadow-sm animate-fadeIn"
+              {/* Notification Bell in Top Right Corner */}
+              <div className="relative" ref={notificationRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNotificationOpen((prev) => !prev);
+                    setProfileDropdownOpen(false);
+                    setSearchOpen(false);
+                  }}
+                  className="p-1.5 text-stone-700 hover:text-[#5B0D15] transition-colors relative cursor-pointer"
+                  aria-label="Notifications"
+                  title={t('Notifications', 'सूचनाएं')}
+                >
+                  <Bell className="w-5 h-5 stroke-[1.8]" />
+                  {/* Subtle Unread Indicator Dot */}
+                  <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#800000] ring-2 ring-white animate-pulse" />
+                </button>
+
+                {/* Notifications Popover Dropdown */}
+                {notificationOpen && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute top-full right-0 mt-3 w-80 sm:w-88 rounded-2xl bg-white/98 backdrop-blur-2xl border border-amber-200/90 shadow-2xl p-4 z-50 animate-fadeIn text-[#3B1E22]"
+                    style={{
+                      boxShadow: '0 16px 40px -4px rgba(91, 13, 21, 0.15), 0 4px 16px -2px rgba(0, 0, 0, 0.06)',
+                    }}
                   >
-                    <Search className="w-4 h-4 text-[#4A262B] mr-2 shrink-0" />
-                    <input
-                      type="text"
-                      autoFocus
-                      placeholder={t('Search...', 'खोजें...')}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-transparent text-xs text-[#3B1E22] placeholder-stone-400 focus:outline-none w-28 sm:w-36"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setSearchOpen(false)}
-                      className="text-stone-400 hover:text-stone-700 ml-1 cursor-pointer"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </form>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setSearchOpen(true)}
-                    className="p-1.5 text-stone-700 hover:text-[#5B0D15] transition-colors cursor-pointer"
-                    aria-label="Search"
-                    title={t('Search', 'खोजें')}
-                  >
-                    <Search className="w-5 h-5 stroke-[1.8]" />
-                  </button>
+                    <div className="flex items-center justify-between pb-2.5 border-b border-stone-200/80">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-[#3B1E22] uppercase tracking-wider">
+                          {t('Notifications', 'सूचनाएं')}
+                        </span>
+                        <span className="px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">
+                          3 new
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setNotificationOpen(false)}
+                        className="text-stone-400 hover:text-stone-600 cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="py-2 space-y-2 max-h-72 overflow-y-auto">
+                      <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-200/70 text-xs">
+                        <div className="flex items-center justify-between font-bold text-[#5B0D15] mb-1">
+                          <span>🪙 {t('Spiritual Welcome Bonus', 'स्वागत बोनस')}</span>
+                          <span className="text-[10px] text-stone-400 font-normal">Just now</span>
+                        </div>
+                        <p className="text-[11px] text-stone-600 leading-snug">
+                          {t(
+                            '150 spiritual credits were added to your Astro Wallet for consultations.',
+                            'परामर्श हेतु आपके वॉलेट में 150 क्रेडिट जोड़े गए हैं।'
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl hover:bg-stone-50 border border-transparent hover:border-stone-200 transition-colors text-xs">
+                        <div className="flex items-center justify-between font-semibold text-stone-800 mb-1">
+                          <span>🪐 {t('Planetary Transit Alert', 'ग्रह गोचर सूचना')}</span>
+                          <span className="text-[10px] text-stone-400">Today</span>
+                        </div>
+                        <p className="text-[11px] text-stone-600 leading-snug">
+                          {t(
+                            'Auspicious Guru transit occurring this week. Check your customized Kundli.',
+                            'इस सप्ताह शुभ गुरु गोचर हो रहा है। अपनी जन्मकुंडली देखें।'
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl hover:bg-stone-50 border border-transparent hover:border-stone-200 transition-colors text-xs">
+                        <div className="flex items-center justify-between font-semibold text-stone-800 mb-1">
+                          <span>📿 {t('Consecration Complete', 'प्राण प्रतिष्ठा पूर्ण')}</span>
+                          <span className="text-[10px] text-stone-400">Yesterday</span>
+                        </div>
+                        <p className="text-[11px] text-stone-600 leading-snug">
+                          {t(
+                            'Vedic rituals and mantra energization for gemstones completed by Varanasi Acharyas.',
+                            'काशी के आचार्यों द्वारा रत्नों की वैदिक प्राण प्रतिष्ठा संपन्न।'
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-stone-200/80 text-center">
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setNotificationOpen(false)}
+                        className="text-[11px] font-bold text-[#5B0D15] hover:text-[#3B1E22] hover:underline"
+                      >
+                        {t('View All in Dashboard →', 'डैशबोर्ड में सभी देखें →')}
+                      </Link>
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -573,15 +849,7 @@ export const Navbar: React.FC = () => {
                           className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-amber-500/10 text-[#5B0D15] font-bold hover:bg-amber-500/20 transition-colors"
                         >
                           <UserIcon className="w-4 h-4 text-[#5B0D15]" />
-                          <span>Customer Dashboard</span>
-                        </Link>
-                        <Link
-                          href="/services"
-                          onClick={() => setProfileDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-stone-100/80 transition-colors"
-                        >
-                          <Sparkles className="w-4 h-4 text-amber-600" />
-                          <span>My Kundli &amp; Vedic Reports</span>
+                          <span>{t('Dashboard', 'डैशबोर्ड')}</span>
                         </Link>
                         <Link
                           href="/appointment"
@@ -589,15 +857,15 @@ export const Navbar: React.FC = () => {
                           className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-stone-100/80 transition-colors"
                         >
                           <Compass className="w-4 h-4 text-[#5B0D15]" />
-                          <span>Astrology Consultations</span>
+                          <span>{t('My Consultations', 'मेरे परामर्श')}</span>
                         </Link>
                         <Link
-                          href="/products"
+                          href="/dashboard?tab=orders"
                           onClick={() => setProfileDropdownOpen(false)}
                           className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-stone-100/80 transition-colors"
                         >
                           <ShoppingCart className="w-4 h-4 text-stone-600" />
-                          <span>Astro Store Orders</span>
+                          <span>{t('My Orders', 'मेरे ऑर्डर्स')}</span>
                         </Link>
                       </div>
 
@@ -649,6 +917,42 @@ export const Navbar: React.FC = () => {
                 WebkitBackdropFilter: 'blur(24px) saturate(190%) contrast(105%)',
               }}
             >
+              {/* Mobile Search Bar */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (mobileSearchQuery.trim()) {
+                    if (typeof window !== 'undefined') {
+                      window.dispatchEvent(
+                        new CustomEvent('astro-search-change', { detail: mobileSearchQuery.trim() })
+                      );
+                    }
+                    router.push(`/products?search=${encodeURIComponent(mobileSearchQuery.trim())}`);
+                    setMobileMenuOpen(false);
+                    setMobileSearchQuery('');
+                  }
+                }}
+                className="flex items-center bg-white/95 rounded-full border border-amber-300/90 px-3.5 py-2 shadow-sm"
+              >
+                <Search className="w-4 h-4 text-[#4A262B] mr-2 shrink-0" />
+                <input
+                  type="text"
+                  placeholder={t('Search crystals, bracelets, pooja...', 'क्रिस्टल, ब्रेसलेट, पूजा खोजें...')}
+                  value={mobileSearchQuery}
+                  onChange={(e) => setMobileSearchQuery(e.target.value)}
+                  className="bg-transparent text-xs text-[#3B1E22] placeholder-stone-400 focus:outline-none w-full"
+                />
+                {mobileSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setMobileSearchQuery('')}
+                    className="text-stone-400 hover:text-stone-700 ml-1 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </form>
+
               {/* Primary Links */}
               <div className="grid grid-cols-2 gap-2">
                 {topNavLinks.map((link) => (
