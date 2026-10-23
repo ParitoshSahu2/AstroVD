@@ -1289,8 +1289,9 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] flex flex-col text-[#3B1E22]">
-      <Navbar />
+    <div className={`min-h-screen bg-[#FAF7F2] flex flex-col text-[#3B1E22] ${currentUser && isAdmin ? 'h-screen overflow-hidden' : ''}`}>
+      {/* Website Navbar is hidden in the admin panel to provide a clean, dedicated full-viewport dashboard */}
+      {false && <Navbar />}
 
       {(!currentUser || !isAdmin) && (
         <PageHeader
@@ -1300,7 +1301,7 @@ export default function AdminPage() {
         />
       )}
 
-      <main className={`flex-1 w-full ${currentUser && isAdmin ? 'p-0 max-w-none flex flex-col' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12'}`}>
+      <main className={`flex-1 w-full ${currentUser && isAdmin ? 'p-0 max-w-none flex flex-col h-screen overflow-hidden' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12'}`}>
         {/* ACCESS CONTROL CHECK */}
         {!currentUser ? (
           <div className="max-w-xl mx-auto my-12 p-8 sm:p-12 text-center rounded-3xl bg-white/80 backdrop-blur-xl border border-amber-200/80 shadow-xl space-y-6">
@@ -1315,12 +1316,20 @@ export default function AdminPage() {
                 Please sign in with your designated Admin or Superadmin account to inspect customer details and manage platform users.
               </p>
             </div>
-            <button
-              onClick={() => setAuthModalOpen(true)}
-              className="px-8 py-3 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white font-semibold text-sm shadow-lg shadow-rose-950/20 transition-all cursor-pointer"
-            >
-              Sign In to Admin Portal
-            </button>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <button
+                onClick={() => setAuthModalOpen(true)}
+                className="px-8 py-3 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white font-semibold text-sm shadow-lg shadow-rose-950/20 transition-all cursor-pointer"
+              >
+                Sign In to Admin Portal
+              </button>
+              <Link
+                href="/"
+                className="px-6 py-3 rounded-full border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 font-semibold text-sm transition-all"
+              >
+                ← Back to Website
+              </Link>
+            </div>
           </div>
         ) : !isAdmin ? (
           <div className="max-w-xl mx-auto my-12 p-8 sm:p-12 text-center rounded-3xl bg-white/80 backdrop-blur-xl border border-rose-200 shadow-xl space-y-6">
@@ -1335,17 +1344,25 @@ export default function AdminPage() {
                 Your current account ({currentUser.email}) has role <strong className="text-rose-700">{currentUser.role}</strong>. Only <strong>ADMIN</strong> (Dr. Pandit Vishal Dubey) and <strong>SUPERADMIN</strong> (Platform Owner) can view customer details.
               </p>
             </div>
-            <Link
-              href="/dashboard"
-              className="inline-block px-8 py-3 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white font-semibold text-sm shadow-md transition-all"
-            >
-              Go to Seeker Dashboard
-            </Link>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <Link
+                href="/dashboard"
+                className="inline-block px-8 py-3 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white font-semibold text-sm shadow-md transition-all"
+              >
+                Go to Seeker Dashboard
+              </Link>
+              <Link
+                href="/"
+                className="inline-block px-6 py-3 rounded-full border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 font-semibold text-sm transition-all"
+              >
+                ← Back to Website
+              </Link>
+            </div>
           </div>
         ) : (
-          <div className="flex-1 flex overflow-hidden min-h-[calc(100vh-70px)]">
+          <div className="flex-1 flex overflow-hidden h-screen">
             {/* ===================== DESKTOP SIDEBAR ===================== */}
-            <aside className="hidden md:flex w-64 bg-[#2A0808] text-stone-200 flex-col shrink-0 border-r border-[#3D0F14] select-none relative z-10">
+            <aside className="hidden md:flex w-64 bg-[#2A0808] text-stone-200 flex-col shrink-0 border-r border-[#3D0F14] select-none relative z-10 h-screen">
               {/* Top Logo & Title */}
               <div className="p-5 flex items-center gap-3 border-b border-[#3D0F14]/90">
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center text-[#2A0808] shadow-md shrink-0">
@@ -2221,7 +2238,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      <Footer />
+      {(!currentUser || !isAdmin) && <Footer />}
     </div>
   );
 }
