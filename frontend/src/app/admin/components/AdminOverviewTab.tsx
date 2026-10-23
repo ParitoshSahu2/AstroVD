@@ -286,10 +286,11 @@ export default function AdminOverviewTab({
       </div>
 
       {/* 3. Middle Section: Platform Activity & Needs Attention */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
+      {/* 3. Middle Section: Platform Activity & Needs Attention */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 items-start">
         {/* Left (2 cols): Platform Activity Multi-Line Chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-5 border border-stone-150/80 shadow-xs flex flex-col justify-start">
-          <div className="flex items-center justify-between mb-2">
+        <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-5 border border-stone-150/80 shadow-xs flex flex-col">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-stone-700" />
               <h2 className="text-sm sm:text-base font-bold text-stone-900">Platform activity</h2>
@@ -305,123 +306,123 @@ export default function AdminOverviewTab({
             </select>
           </div>
 
-          {/* Responsive SVG Multi-line Chart matching screenshot */}
-          <div className="w-full overflow-x-auto">
-            <div className="min-w-[460px]">
-              <div className="relative h-28 sm:h-32 w-full">
-                <svg viewBox="0 0 540 132" className="w-full h-full overflow-visible">
-                  {/* Grid Lines */}
-                  <line x1="30" y1="12" x2="530" y2="12" stroke="#F3F4F6" strokeDasharray="3 3" />
-                  <text x="15" y="15" fontSize="9" fill="#9CA3AF" textAnchor="middle">20</text>
+          {/* Full-width, full-height multi-line chart with responsive stretching */}
+          <div className="w-full">
+            <div className="relative w-full h-56 sm:h-64">
+              <svg viewBox="0 0 680 215" className="w-full h-full" preserveAspectRatio="none">
+                {/* Horizontal Grid Lines */}
+                <line x1="40" y1="18" x2="665" y2="18" stroke="#F1F3F5" strokeDasharray="3 3" />
+                <text x="20" y="22" fontSize="10" fill="#9CA3AF" textAnchor="middle">20</text>
 
-                  <line x1="30" y1="38" x2="530" y2="38" stroke="#F3F4F6" strokeDasharray="3 3" />
-                  <text x="15" y="41" fontSize="9" fill="#9CA3AF" textAnchor="middle">15</text>
+                <line x1="40" y1="58" x2="665" y2="58" stroke="#F1F3F5" strokeDasharray="3 3" />
+                <text x="20" y="62" fontSize="10" fill="#9CA3AF" textAnchor="middle">15</text>
 
-                  <line x1="30" y1="64" x2="530" y2="64" stroke="#F3F4F6" strokeDasharray="3 3" />
-                  <text x="15" y="67" fontSize="9" fill="#9CA3AF" textAnchor="middle">10</text>
+                <line x1="40" y1="98" x2="665" y2="98" stroke="#F1F3F5" strokeDasharray="3 3" />
+                <text x="20" y="102" fontSize="10" fill="#9CA3AF" textAnchor="middle">10</text>
 
-                  <line x1="30" y1="90" x2="530" y2="90" stroke="#F3F4F6" strokeDasharray="3 3" />
-                  <text x="15" y="93" fontSize="9" fill="#9CA3AF" textAnchor="middle">5</text>
+                <line x1="40" y1="138" x2="665" y2="138" stroke="#F1F3F5" strokeDasharray="3 3" />
+                <text x="20" y="142" fontSize="10" fill="#9CA3AF" textAnchor="middle">5</text>
 
-                  <line x1="30" y1="112" x2="530" y2="112" stroke="#E5E7EB" />
-                  <text x="15" y="115" fontSize="9" fill="#9CA3AF" textAnchor="middle">0</text>
+                <line x1="40" y1="178" x2="665" y2="178" stroke="#E5E7EB" />
+                <text x="20" y="182" fontSize="10" fill="#9CA3AF" textAnchor="middle">0</text>
 
-                  {/* 1. Yellow/Amber Curve: Inspections */}
-                  <path
-                    d="M 50 75 Q 125 38, 200 52 T 350 20 T 425 50 T 510 40"
-                    fill="none"
-                    stroke="#D97706"
-                    strokeWidth="2"
-                  />
-                  {/* Yellow Dots */}
-                  <circle cx="50" cy="75" r="2.5" fill="#D97706" />
-                  <circle cx="125" cy="48" r="2.5" fill="#D97706" />
-                  <circle cx="200" cy="52" r="2.5" fill="#D97706" />
-                  <circle cx="275" cy="48" r="2.5" fill="#D97706" />
-                  <circle cx="350" cy="20" r="2.5" fill="#D97706" />
-                  <circle cx="425" cy="50" r="2.5" fill="#D97706" />
-                  <circle cx="475" cy="46" r="2.5" fill="#D97706" />
-                  <circle cx="510" cy="40" r="2.5" fill="#D97706" />
+                {/* Vertical subtle grid lines matching reference */}
+                <line x1="70" y1="18" x2="70" y2="178" stroke="#F3F4F6" strokeDasharray="3 3" />
+                <line x1="165" y1="18" x2="165" y2="178" stroke="#F3F4F6" strokeDasharray="3 3" />
+                <line x1="260" y1="18" x2="260" y2="178" stroke="#F3F4F6" strokeDasharray="3 3" />
+                <line x1="355" y1="18" x2="355" y2="178" stroke="#F3F4F6" strokeDasharray="3 3" />
+                <line x1="450" y1="18" x2="450" y2="178" stroke="#F3F4F6" strokeDasharray="3 3" />
+                <line x1="545" y1="18" x2="545" y2="178" stroke="#F3F4F6" strokeDasharray="3 3" />
+                <line x1="640" y1="18" x2="640" y2="178" stroke="#F3F4F6" strokeDasharray="3 3" />
 
-                  {/* 2. Green Curve: New Seekers */}
-                  <path
-                    d="M 50 90 Q 125 78, 200 82 T 350 62 T 425 76 T 510 70"
-                    fill="none"
-                    stroke="#059669"
-                    strokeWidth="2"
-                  />
-                  {/* Green Dots */}
-                  <circle cx="50" cy="90" r="2.5" fill="#059669" />
-                  <circle cx="125" cy="78" r="2.5" fill="#059669" />
-                  <circle cx="200" cy="82" r="2.5" fill="#059669" />
-                  <circle cx="275" cy="80" r="2.5" fill="#059669" />
-                  <circle cx="350" cy="62" r="2.5" fill="#059669" />
-                  <circle cx="425" cy="76" r="2.5" fill="#059669" />
-                  <circle cx="475" cy="73" r="2.5" fill="#059669" />
-                  <circle cx="510" cy="70" r="2.5" fill="#059669" />
+                {/* 1. Yellow/Amber Curve: Inspections */}
+                <path
+                  d="M 70 114 Q 117 82, 165 82 T 260 98 T 355 90 T 450 50 T 545 82 T 640 66"
+                  fill="none"
+                  stroke="#D97706"
+                  strokeWidth="2.2"
+                />
+                <circle cx="70" cy="114" r="3.5" fill="#D97706" />
+                <circle cx="165" cy="82" r="3.5" fill="#D97706" />
+                <circle cx="260" cy="98" r="3.5" fill="#D97706" />
+                <circle cx="355" cy="90" r="3.5" fill="#D97706" />
+                <circle cx="450" cy="50" r="3.5" fill="#D97706" />
+                <circle cx="545" cy="82" r="3.5" fill="#D97706" />
+                <circle cx="640" cy="66" r="3.5" fill="#D97706" />
 
-                  {/* 3. Purple Curve: New Orders */}
-                  <path
-                    d="M 50 102 Q 125 94, 200 97 T 350 86 T 425 96 T 510 90"
-                    fill="none"
-                    stroke="#7C3AED"
-                    strokeWidth="2"
-                  />
-                  {/* Purple Dots */}
-                  <circle cx="50" cy="102" r="2.5" fill="#7C3AED" />
-                  <circle cx="125" cy="94" r="2.5" fill="#7C3AED" />
-                  <circle cx="200" cy="97" r="2.5" fill="#7C3AED" />
-                  <circle cx="275" cy="94" r="2.5" fill="#7C3AED" />
-                  <circle cx="350" cy="86" r="2.5" fill="#7C3AED" />
-                  <circle cx="425" cy="96" r="2.5" fill="#7C3AED" />
-                  <circle cx="475" cy="93" r="2.5" fill="#7C3AED" />
-                  <circle cx="510" cy="90" r="2.5" fill="#7C3AED" />
+                {/* 2. Green Curve: New Seekers */}
+                <path
+                  d="M 70 130 Q 117 118, 165 118 T 260 126 T 355 118 T 450 106 T 545 114 T 640 106"
+                  fill="none"
+                  stroke="#059669"
+                  strokeWidth="2.2"
+                />
+                <circle cx="70" cy="130" r="3.5" fill="#059669" />
+                <circle cx="165" cy="118" r="3.5" fill="#059669" />
+                <circle cx="260" cy="126" r="3.5" fill="#059669" />
+                <circle cx="355" cy="118" r="3.5" fill="#059669" />
+                <circle cx="450" cy="106" r="3.5" fill="#059669" />
+                <circle cx="545" cy="114" r="3.5" fill="#059669" />
+                <circle cx="640" cy="106" r="3.5" fill="#059669" />
 
-                  {/* 4. Blue Curve: Active Pandits */}
-                  <path
-                    d="M 50 110 L 125 110 L 200 110 L 275 110 L 350 108 L 425 110 L 510 109"
-                    fill="none"
-                    stroke="#0284C7"
-                    strokeWidth="2"
-                  />
-                  {/* Blue Dots */}
-                  <circle cx="50" cy="110" r="2.5" fill="#0284C7" />
-                  <circle cx="125" cy="110" r="2.5" fill="#0284C7" />
-                  <circle cx="200" cy="110" r="2.5" fill="#0284C7" />
-                  <circle cx="275" cy="110" r="2.5" fill="#0284C7" />
-                  <circle cx="350" cy="108" r="2.5" fill="#0284C7" />
-                  <circle cx="425" cy="110" r="2.5" fill="#0284C7" />
-                  <circle cx="510" cy="109" r="2.5" fill="#0284C7" />
+                {/* 3. Purple Curve: New Orders */}
+                <path
+                  d="M 70 146 Q 117 138, 165 138 T 260 142 T 355 138 T 450 130 T 545 142 T 640 134"
+                  fill="none"
+                  stroke="#7C3AED"
+                  strokeWidth="2.2"
+                />
+                <circle cx="70" cy="146" r="3.5" fill="#7C3AED" />
+                <circle cx="165" cy="138" r="3.5" fill="#7C3AED" />
+                <circle cx="260" cy="142" r="3.5" fill="#7C3AED" />
+                <circle cx="355" cy="138" r="3.5" fill="#7C3AED" />
+                <circle cx="450" cy="130" r="3.5" fill="#7C3AED" />
+                <circle cx="545" cy="142" r="3.5" fill="#7C3AED" />
+                <circle cx="640" cy="134" r="3.5" fill="#7C3AED" />
 
-                  {/* X Axis Date Labels */}
-                  <text x="50" y="127" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 17</text>
-                  <text x="125" y="127" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 18</text>
-                  <text x="200" y="127" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 19</text>
-                  <text x="275" y="127" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 20</text>
-                  <text x="350" y="127" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 21</text>
-                  <text x="425" y="127" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 22</text>
-                  <text x="510" y="127" fontSize="9" fill="#6B7280" textAnchor="middle">Oct 23</text>
-                </svg>
+                {/* 4. Blue Curve: Active Pandits */}
+                <path
+                  d="M 70 162 Q 117 154, 165 154 T 260 158 T 355 156 T 450 154 T 545 158 T 640 154"
+                  fill="none"
+                  stroke="#0284C7"
+                  strokeWidth="2.2"
+                />
+                <circle cx="70" cy="162" r="3.5" fill="#0284C7" />
+                <circle cx="165" cy="154" r="3.5" fill="#0284C7" />
+                <circle cx="260" cy="158" r="3.5" fill="#0284C7" />
+                <circle cx="355" cy="156" r="3.5" fill="#0284C7" />
+                <circle cx="450" cy="154" r="3.5" fill="#0284C7" />
+                <circle cx="545" cy="158" r="3.5" fill="#0284C7" />
+                <circle cx="640" cy="154" r="3.5" fill="#0284C7" />
+
+                {/* X Axis Date Labels */}
+                <text x="70" y="202" fontSize="10" fill="#6B7280" textAnchor="middle">Oct 17</text>
+                <text x="165" y="202" fontSize="10" fill="#6B7280" textAnchor="middle">Oct 18</text>
+                <text x="260" y="202" fontSize="10" fill="#6B7280" textAnchor="middle">Oct 19</text>
+                <text x="355" y="202" fontSize="10" fill="#6B7280" textAnchor="middle">Oct 20</text>
+                <text x="450" y="202" fontSize="10" fill="#6B7280" textAnchor="middle">Oct 21</text>
+                <text x="545" y="202" fontSize="10" fill="#6B7280" textAnchor="middle">Oct 22</text>
+                <text x="640" y="202" fontSize="10" fill="#6B7280" textAnchor="middle">Oct 23</text>
+              </svg>
+            </div>
+
+            {/* Chart Legend directly below dates */}
+            <div className="flex items-center justify-start gap-4 sm:gap-6 mt-3 flex-wrap">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block" />
+                <span>New Seekers</span>
               </div>
-
-              {/* Chart Legend matching screenshot */}
-              <div className="flex items-center justify-start gap-4 sm:gap-6 mt-1 pt-1.5 border-t border-stone-100 flex-wrap">
-                <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block" />
-                  <span>New Seekers</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
-                  <span className="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block" />
-                  <span>New Orders</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block" />
-                  <span>Inspections</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
-                  <span className="w-2.5 h-2.5 rounded-full bg-sky-600 inline-block" />
-                  <span>Active Pandits</span>
-                </div>
+              <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block" />
+                <span>New Orders</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block" />
+                <span>Inspections</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
+                <span className="w-2.5 h-2.5 rounded-full bg-sky-600 inline-block" />
+                <span>Active Pandits</span>
               </div>
             </div>
           </div>
