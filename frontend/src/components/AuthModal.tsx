@@ -288,10 +288,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           body.phone = phone.trim();
         }
       } else {
+        const rawId = loginIdentifier.trim();
         body = {
-          identifier: loginIdentifier.trim(),
+          identifier: rawId,
           password,
         };
+        if (rawId.includes('@')) {
+          body.email = rawId.toLowerCase();
+        }
       }
 
       const backendBase = (

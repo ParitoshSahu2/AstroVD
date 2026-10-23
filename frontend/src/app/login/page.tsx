@@ -70,13 +70,19 @@ function LoginForm() {
         process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
       ).replace(/\/api\/?$/, '');
 
+      const rawId = identifier.trim();
+      const payload: any = {
+        password,
+        identifier: rawId,
+      };
+      if (rawId.includes('@')) {
+        payload.email = rawId.toLowerCase();
+      }
+
       const res = await fetch(`${backendBase}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          identifier: identifier.trim(),
-          password,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -226,11 +232,14 @@ function LoginForm() {
 
       {/* Trust & Registration helper */}
       <div className="pt-4 border-t border-stone-100 text-center space-y-3">
-        <p className="text-xs text-stone-500">
-          {t("Don't have an account yet?", 'क्या आपका खाता नहीं है?')}
-          <span className="ml-1 text-stone-700 font-medium">
-            {t('You can register via the Sign In button in the navigation bar.', 'नेविगेशन बार में साइन इन पर क्लिक कर नया खाता बनाएं।')}
-          </span>
+        <p className="text-xs text-stone-600">
+          {t("Don't have an account yet?", 'क्या आपका खाता नहीं है?')}{' '}
+          <Link
+            href={redirectParam ? `/signup?redirect=${encodeURIComponent(redirectParam)}` : '/signup'}
+            className="text-[#8B2635] hover:text-[#5B0D15] font-bold underline decoration-amber-400 hover:decoration-[#5B0D15] underline-offset-2 transition-colors cursor-pointer"
+          >
+            {t('Sign up here →', 'यहाँ साइन अप करें →')}
+          </Link>
         </p>
 
         <div className="flex items-center justify-center gap-2 text-[11px] text-stone-400">
