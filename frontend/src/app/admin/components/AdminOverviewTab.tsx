@@ -175,26 +175,26 @@ export default function AdminOverviewTab({
       </div>
 
       {/* 2. Top 4 KPI Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5">
         {/* Card 1: Registered Seekers */}
         <div
           onClick={() => onNavigateTab('seekers')}
-          className="bg-white rounded-2xl p-3.5 sm:p-4 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-emerald-300 min-h-[92px]"
+          className="bg-white rounded-xl p-3 sm:p-3.5 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-emerald-300"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-              <Users className="w-5 h-5" />
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+              <Users className="w-4.5 h-4.5" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-semibold text-stone-500 truncate">
+              <div className="text-[11px] font-semibold text-stone-500 truncate leading-tight">
                 Registered Seekers
               </div>
-              <div className="text-xl sm:text-2xl font-serif font-bold text-stone-900 tracking-tight leading-tight">
+              <div className="text-lg sm:text-xl font-serif font-bold text-stone-900 tracking-tight leading-tight mt-0.5">
                 {seekersCount}
               </div>
             </div>
           </div>
-          <div className="mt-2.5 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
+          <div className="mt-2 pt-1.5 border-t border-stone-100 flex items-center justify-between text-[10.5px] sm:text-[11px]">
             <div className="flex items-center gap-1 font-semibold text-emerald-600">
               <span className="text-xs">↗</span>
               <span>+12% this month</span>
@@ -206,22 +206,22 @@ export default function AdminOverviewTab({
         {/* Card 2: Active Pandits */}
         <div
           onClick={() => onNavigateTab('pandits')}
-          className="bg-white rounded-2xl p-3.5 sm:p-4 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-purple-300 min-h-[92px]"
+          className="bg-white rounded-xl p-3 sm:p-3.5 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-purple-300"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5" />
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4.5 h-4.5" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-semibold text-stone-500 truncate">
+              <div className="text-[11px] font-semibold text-stone-500 truncate leading-tight">
                 Active Pandits
               </div>
-              <div className="text-xl sm:text-2xl font-serif font-bold text-stone-900 tracking-tight leading-tight">
+              <div className="text-lg sm:text-xl font-serif font-bold text-stone-900 tracking-tight leading-tight mt-0.5">
                 {panditsCount}
               </div>
             </div>
           </div>
-          <div className="mt-2.5 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
+          <div className="mt-2 pt-1.5 border-t border-stone-100 flex items-center justify-between text-[10.5px] sm:text-[11px]">
             <div className="flex items-center gap-1 font-semibold text-stone-500">
               <span>→</span>
               <span>0% this month</span>
@@ -233,22 +233,22 @@ export default function AdminOverviewTab({
         {/* Card 3: Pending Approvals */}
         <div
           onClick={() => onNavigateTab('appointments')}
-          className="bg-white rounded-2xl p-3.5 sm:p-4 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-amber-300 min-h-[92px]"
+          className="bg-white rounded-xl p-3 sm:p-3.5 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-amber-300"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-              <Clock className="w-5 h-5" />
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+              <Clock className="w-4.5 h-4.5" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-semibold text-stone-500 truncate">
+              <div className="text-[11px] font-semibold text-stone-500 truncate leading-tight">
                 Pending Approvals
               </div>
-              <div className="text-xl sm:text-2xl font-serif font-bold text-stone-900 tracking-tight leading-tight">
+              <div className="text-lg sm:text-xl font-serif font-bold text-stone-900 tracking-tight leading-tight mt-0.5">
                 {pendingApprovalsCount}
               </div>
             </div>
           </div>
-          <div className="mt-2.5 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
+          <div className="mt-2 pt-1.5 border-t border-stone-100 flex items-center justify-between text-[10.5px] sm:text-[11px]">
             <div className="flex items-center gap-1 font-semibold text-amber-600">
               <AlertTriangle className="w-3 h-3" />
               <span>Needs attention</span>
@@ -260,22 +260,22 @@ export default function AdminOverviewTab({
         {/* Card 4: Operational Orders */}
         <div
           onClick={() => onNavigateTab('orders')}
-          className="bg-white rounded-2xl p-3.5 sm:p-4 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-teal-300 min-h-[92px]"
+          className="bg-white rounded-xl p-3 sm:p-3.5 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-teal-300"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
-              <ShoppingCart className="w-5 h-5" />
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
+              <ShoppingCart className="w-4.5 h-4.5" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-semibold text-stone-500 truncate">
+              <div className="text-[11px] font-semibold text-stone-500 truncate leading-tight">
                 Operational Orders
               </div>
-              <div className="text-xl sm:text-2xl font-serif font-bold text-stone-900 tracking-tight leading-tight">
+              <div className="text-lg sm:text-xl font-serif font-bold text-stone-900 tracking-tight leading-tight mt-0.5">
                 {operationalOrdersCount}
               </div>
             </div>
           </div>
-          <div className="mt-2.5 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
+          <div className="mt-2 pt-1.5 border-t border-stone-100 flex items-center justify-between text-[10.5px] sm:text-[11px]">
             <div className="flex items-center gap-1 font-semibold text-emerald-600">
               <span className="text-xs">↗</span>
               <span>+50% this week</span>
