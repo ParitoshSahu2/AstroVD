@@ -141,18 +141,18 @@ export default function AdminOverviewTab({
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-fadeIn">
+    <div className="space-y-5 animate-fadeIn">
       {/* 1. Header Greeting & Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-500 shrink-0 mt-0.5">
-            <Sun className="w-6 h-6 animate-pulse" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-0.5">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-500 shrink-0">
+            <Sun className="w-5 h-5 animate-pulse" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#2A0E12] tracking-tight">
+            <h1 className="text-lg sm:text-xl font-serif font-bold text-[#2A0E12] tracking-tight">
               {greeting}, {adminDisplayName}
             </h1>
-            <p className="text-xs sm:text-sm text-stone-500 font-medium">
+            <p className="text-[11px] sm:text-xs text-stone-500 font-medium">
               Here&apos;s what&apos;s happening with your AstroVD platform today.
             </p>
           </div>
@@ -167,104 +167,120 @@ export default function AdminOverviewTab({
               window.print();
             }
           }}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D9943B] to-[#C27E2D] hover:from-[#C8842E] hover:to-[#B36F22] text-white text-xs sm:text-sm font-semibold shadow-sm hover:shadow transition-all cursor-pointer shrink-0"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D9943B] to-[#C27E2D] hover:from-[#C8842E] hover:to-[#B36F22] text-white text-xs font-semibold shadow-xs hover:shadow transition-all cursor-pointer shrink-0"
         >
-          <span className="text-base leading-none font-bold">+</span>
+          <span className="text-sm leading-none font-bold">+</span>
           <span>Create report</span>
         </button>
       </div>
 
       {/* 2. Top 4 KPI Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Card 1: Registered Seekers */}
         <div
           onClick={() => onNavigateTab('seekers')}
-          className="bg-white rounded-2xl p-5 border border-stone-150/80 shadow-xs hover:shadow-md transition-all group cursor-pointer relative overflow-hidden"
+          className="bg-white rounded-2xl p-3.5 sm:p-4 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-emerald-300 min-h-[92px]"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <Users className="w-5 h-5" />
             </div>
-            <ArrowRight className="w-4 h-4 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-all" />
-          </div>
-          <div className="space-y-1">
-            <div className="text-xs font-semibold text-stone-500">Registered Seekers</div>
-            <div className="text-2xl sm:text-3xl font-bold text-stone-900 font-serif tracking-tight">
-              {seekersCount}
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-semibold text-stone-500 truncate">
+                Registered Seekers
+              </div>
+              <div className="text-xl sm:text-2xl font-serif font-bold text-stone-900 tracking-tight leading-tight">
+                {seekersCount}
+              </div>
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600">
-            <span>↗</span>
-            <span>+12% this month</span>
+          <div className="mt-2.5 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
+            <div className="flex items-center gap-1 font-semibold text-emerald-600">
+              <span className="text-xs">↗</span>
+              <span>+12% this month</span>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-all shrink-0" />
           </div>
         </div>
 
         {/* Card 2: Active Pandits */}
         <div
           onClick={() => onNavigateTab('pandits')}
-          className="bg-white rounded-2xl p-5 border border-stone-150/80 shadow-xs hover:shadow-md transition-all group cursor-pointer relative overflow-hidden"
+          className="bg-white rounded-2xl p-3.5 sm:p-4 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-purple-300 min-h-[92px]"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
               <Sparkles className="w-5 h-5" />
             </div>
-            <ArrowRight className="w-4 h-4 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-all" />
-          </div>
-          <div className="space-y-1">
-            <div className="text-xs font-semibold text-stone-500">Active Pandits</div>
-            <div className="text-2xl sm:text-3xl font-bold text-stone-900 font-serif tracking-tight">
-              {panditsCount}
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-semibold text-stone-500 truncate">
+                Active Pandits
+              </div>
+              <div className="text-xl sm:text-2xl font-serif font-bold text-stone-900 tracking-tight leading-tight">
+                {panditsCount}
+              </div>
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-stone-500">
-            <span>→</span>
-            <span>0% this month</span>
+          <div className="mt-2.5 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
+            <div className="flex items-center gap-1 font-semibold text-stone-500">
+              <span>→</span>
+              <span>0% this month</span>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-all shrink-0" />
           </div>
         </div>
 
         {/* Card 3: Pending Approvals */}
         <div
           onClick={() => onNavigateTab('appointments')}
-          className="bg-white rounded-2xl p-5 border border-stone-150/80 shadow-xs hover:shadow-md transition-all group cursor-pointer relative overflow-hidden"
+          className="bg-white rounded-2xl p-3.5 sm:p-4 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-amber-300 min-h-[92px]"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
               <Clock className="w-5 h-5" />
             </div>
-            <ArrowRight className="w-4 h-4 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-all" />
-          </div>
-          <div className="space-y-1">
-            <div className="text-xs font-semibold text-stone-500">Pending Approvals</div>
-            <div className="text-2xl sm:text-3xl font-bold text-stone-900 font-serif tracking-tight">
-              {pendingApprovalsCount}
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-semibold text-stone-500 truncate">
+                Pending Approvals
+              </div>
+              <div className="text-xl sm:text-2xl font-serif font-bold text-stone-900 tracking-tight leading-tight">
+                {pendingApprovalsCount}
+              </div>
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-amber-600">
-            <AlertTriangle className="w-3 h-3" />
-            <span>Needs attention</span>
+          <div className="mt-2.5 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
+            <div className="flex items-center gap-1 font-semibold text-amber-600">
+              <AlertTriangle className="w-3 h-3" />
+              <span>Needs attention</span>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-all shrink-0" />
           </div>
         </div>
 
         {/* Card 4: Operational Orders */}
         <div
           onClick={() => onNavigateTab('orders')}
-          className="bg-white rounded-2xl p-5 border border-stone-150/80 shadow-xs hover:shadow-md transition-all group cursor-pointer relative overflow-hidden"
+          className="bg-white rounded-2xl p-3.5 sm:p-4 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-teal-300 min-h-[92px]"
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
               <ShoppingCart className="w-5 h-5" />
             </div>
-            <ArrowRight className="w-4 h-4 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-all" />
-          </div>
-          <div className="space-y-1">
-            <div className="text-xs font-semibold text-stone-500">Operational Orders</div>
-            <div className="text-2xl sm:text-3xl font-bold text-stone-900 font-serif tracking-tight">
-              {operationalOrdersCount}
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-semibold text-stone-500 truncate">
+                Operational Orders
+              </div>
+              <div className="text-xl sm:text-2xl font-serif font-bold text-stone-900 tracking-tight leading-tight">
+                {operationalOrdersCount}
+              </div>
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600">
-            <span>↗</span>
-            <span>+50% this week</span>
+          <div className="mt-2.5 pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
+            <div className="flex items-center gap-1 font-semibold text-emerald-600">
+              <span className="text-xs">↗</span>
+              <span>+50% this week</span>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-all shrink-0" />
           </div>
         </div>
       </div>
