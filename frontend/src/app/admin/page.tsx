@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { getAuthToken, performLogout } from '../../lib/auth';
@@ -1364,20 +1365,21 @@ export default function AdminPage() {
             {/* ===================== DESKTOP SIDEBAR ===================== */}
             <aside className="hidden md:flex w-64 bg-[#2A0808] text-stone-200 flex-col shrink-0 border-r border-[#3D0F14] select-none fixed top-0 bottom-0 left-0 z-30 h-screen overflow-y-auto">
               {/* Top Logo & Title */}
-              <div className="p-5 flex items-center gap-3 border-b border-[#3D0F14]/90">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center text-[#2A0808] shadow-md shrink-0">
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#2A0808]">
-                    <path d="M12 2L14.5 8.5L21.5 9.5L16.5 14.5L18 21.5L12 18L6 21.5L7.5 14.5L2.5 9.5L9.5 8.5L12 2Z" />
-                  </svg>
-                </div>
-                <div className="min-w-0">
-                  <div className="font-serif font-bold text-lg text-[#F5E6C8] tracking-wide leading-tight">
-                    AstroVD
-                  </div>
-                  <div className="text-[10px] text-[#B89462] font-medium tracking-tight truncate">
-                    Vedic Astrology &amp; 360° Inspection
-                  </div>
-                </div>
+              <div className="p-4 sm:p-5 border-b border-[#3D0F14]/90 flex items-center justify-between">
+                <Link
+                  href="/"
+                  title="Return to AstroVD Homepage"
+                  className="flex items-center group transition-all"
+                >
+                  <Image
+                    src="/astro-vd-logo.png"
+                    alt="AstroVD"
+                    width={160}
+                    height={42}
+                    priority
+                    className="h-8 sm:h-9 w-auto object-contain brightness-0 invert opacity-95 group-hover:opacity-100 transition-opacity"
+                  />
+                </Link>
               </div>
 
               {/* Nav Groups Container */}
@@ -1609,11 +1611,24 @@ export default function AdminPage() {
                 />
                 <div className="relative w-64 max-w-[80vw] bg-[#2A0808] text-stone-200 flex flex-col h-full shadow-2xl z-10">
                   <div className="p-4 flex items-center justify-between border-b border-[#3D0F14]">
-                    <div className="font-serif font-bold text-lg text-[#F5E6C8]">AstroVD Admin</div>
+                    <Link
+                      href="/"
+                      onClick={() => setMobileSidebarOpen(false)}
+                      title="Return to AstroVD Homepage"
+                      className="flex items-center group"
+                    >
+                      <Image
+                        src="/astro-vd-logo.png"
+                        alt="AstroVD"
+                        width={140}
+                        height={38}
+                        className="h-8 w-auto object-contain brightness-0 invert opacity-95 group-hover:opacity-100 transition-opacity"
+                      />
+                    </Link>
                     <button
                       type="button"
                       onClick={() => setMobileSidebarOpen(false)}
-                      className="p-1 text-stone-400 hover:text-white"
+                      className="p-1 text-stone-400 hover:text-white cursor-pointer"
                     >
                       <X className="w-5 h-5" />
                     </button>
