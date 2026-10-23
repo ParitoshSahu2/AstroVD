@@ -167,12 +167,16 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     setItems((prevItems) => {
       const existingIndex = prevItems.findIndex((i) => i.id === product.id);
-      const numericPrice = 'priceFormatted' in product
-        ? product.price
-        : parsePriceNumber(product.price);
-      const formattedPrice = 'priceFormatted' in product
-        ? product.priceFormatted
-        : product.price;
+      const numericPrice =
+        typeof product.price === 'number'
+          ? product.price
+          : parsePriceNumber(product.price);
+      const formattedPrice =
+        'priceFormatted' in product && typeof product.priceFormatted === 'string' && product.priceFormatted
+          ? product.priceFormatted
+          : typeof product.price === 'string'
+            ? product.price
+            : `₹${numericPrice.toLocaleString('en-IN')}`;
 
       if (existingIndex > -1) {
         // Increase quantity of existing item

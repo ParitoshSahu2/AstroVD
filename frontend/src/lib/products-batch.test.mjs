@@ -28,10 +28,10 @@ describe('Products Page Infinite Scrolling (Batches of 8)', () => {
   const PRODUCTS_BATCH_SIZE = 8;
   const GALLERY_BATCH_SIZE = 9;
 
-  test('TEST-01: canonical products catalog contains all 14 consecrated products', () => {
-    assert.equal(PRODUCTS_CATALOG.length, 14, 'PRODUCTS_CATALOG must have 14 items');
+  test('TEST-01: canonical products catalog contains all 19 consecrated products', () => {
+    assert.equal(PRODUCTS_CATALOG.length, 19, 'PRODUCTS_CATALOG must have 19 items');
     const ids = new Set(PRODUCTS_CATALOG.map((p) => p.id));
-    assert.equal(ids.size, 14, 'Every product ID must be strictly unique');
+    assert.equal(ids.size, 19, 'Every product ID must be strictly unique');
   });
 
   test('TEST-02: initial batch displays exactly 8 products', () => {
@@ -41,27 +41,32 @@ describe('Products Page Infinite Scrolling (Batches of 8)', () => {
     assert.equal(initialBatch[7].id, PRODUCTS_CATALOG[7].id, '8th product should match catalog order');
   });
 
-  test('TEST-03: second batch loads next 8 products, correctly displaying only remaining 6 products', () => {
+  test('TEST-03: progressive batches load next 8 products until all 19 are displayed', () => {
     const visibleCountBatch1 = PRODUCTS_BATCH_SIZE; // 8
-    const visibleCountBatch2 = Math.min(visibleCountBatch1 + PRODUCTS_BATCH_SIZE, PRODUCTS_CATALOG.length); // min(16, 14) = 14
+    const visibleCountBatch2 = Math.min(visibleCountBatch1 + PRODUCTS_BATCH_SIZE, PRODUCTS_CATALOG.length); // 16
+    const visibleCountBatch3 = Math.min(visibleCountBatch2 + PRODUCTS_BATCH_SIZE, PRODUCTS_CATALOG.length); // 19
 
     const batch1Items = PRODUCTS_CATALOG.slice(0, visibleCountBatch1);
     const batch2AllVisible = PRODUCTS_CATALOG.slice(0, visibleCountBatch2);
     const batch2NewItems = batch2AllVisible.slice(visibleCountBatch1);
+    const batch3AllVisible = PRODUCTS_CATALOG.slice(0, visibleCountBatch3);
+    const batch3NewItems = batch3AllVisible.slice(visibleCountBatch2);
 
     assert.equal(batch1Items.length, 8, 'First batch must be 8 items');
-    assert.equal(batch2NewItems.length, 6, 'Second batch must only load the remaining 6 items');
-    assert.equal(batch2AllVisible.length, 14, 'Total displayed after batch 2 must be all 14 items');
+    assert.equal(batch2NewItems.length, 8, 'Second batch must load next 8 items');
+    assert.equal(batch2AllVisible.length, 16, 'Total displayed after batch 2 must be 16 items');
+    assert.equal(batch3NewItems.length, 3, 'Third batch must load remaining 3 items');
+    assert.equal(batch3AllVisible.length, 19, 'Total displayed after batch 3 must be all 19 items');
   });
 
   test('TEST-04: no duplicate products appear across batches', () => {
-    const visibleProducts = PRODUCTS_CATALOG.slice(0, 14);
+    const visibleProducts = PRODUCTS_CATALOG.slice(0, 19);
     const seenIds = new Set();
     for (const item of visibleProducts) {
       assert.ok(!seenIds.has(item.id), `Duplicate product ID detected: ${item.id}`);
       seenIds.add(item.id);
     }
-    assert.equal(seenIds.size, 14, 'All 14 items must be distinct');
+    assert.equal(seenIds.size, 19, 'All 19 items must be distinct');
   });
 
   test('TEST-05: filtering by category resets displayed items to first 8 (or all available if < 8)', () => {

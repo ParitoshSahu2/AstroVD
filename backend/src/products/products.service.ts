@@ -1,0 +1,1023 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ProductItem,
+  ProductsFilterDto,
+  PaginatedProductsResponse,
+} from './products.types.js';
+
+@Injectable()
+export class ProductsService {
+  private readonly products: ProductItem[] = [
+    {
+      id: 'tiger_eye',
+      slug: 'tiger-eye',
+      name: 'TIGER EYE BRACELET',
+      nameHi: 'टाइगर आई सिद्ध ब्रेसलेट',
+      tag: 'NATURAL GEMSTONE • SOLAR ENERGY',
+      tagHi: 'प्राकृतिक रत्न • सौर ऊर्जा व आत्मविश्वास',
+      desc: 'Brings fierce confidence, unwavering willpower & grounded solar energy. Crafted with Grade-A chatoyant golden tiger eye beads.',
+      descHi: 'प्रबल आत्मविश्वास, अटूट इच्छाशक्ति एवं सौर ऊर्जा प्रदान करता है। काशी के वैदिक आचार्यों द्वारा प्राण-प्रतिष्ठित ए-ग्रेड प्राकृतिक मनके।',
+      image: '/products/prod-tiger-eye-macro.jpg',
+      category: 'wealth',
+      categoryLabel: 'Courage & Wealth',
+      categoryLabelHi: 'साहस एवं धन लाभ',
+      price: 1299,
+      priceFormatted: '₹1,299',
+      originalPrice: 2499,
+      originalPriceFormatted: '₹2,499',
+      discountPercent: 48,
+      planet: 'Sun (Surya) & Mars (Mangal)',
+      planetHi: 'सूर्य एवं मंगल ग्रह',
+      chakra: 'Solar Plexus (Manipura)',
+      chakraHi: 'मणिपूर चक्र (नाभि)',
+      mantra: 'ॐ सूर्याय नमः (Om Suryaya Namaha)',
+      dayToWear: 'Sunday or Tuesday Morning',
+      dayToWearHi: 'रविवार अथवा मंगलवार प्रातः',
+      beadSize: '8mm Natural Beads',
+      beadSizeHi: '8 मिमी प्राकृतिक मनके',
+      rating: 4.9,
+      reviewsCount: 342,
+      inStock: true,
+      stock: 45,
+      isFeatured: true,
+      benefits: [
+        'Ignites personal courage, willpower, and leadership presence',
+        'Channels solar energy to overcome procrastination and self-doubt',
+        'Pacifies weak Surya in birth charts, boosting career reputation',
+      ],
+      benefitsHi: [
+        'आत्मविश्वास, साहस और निर्णय लेने की क्षमता में वृद्धि',
+        'सूर्य व मंगल की सकारात्मक ऊर्जा से आलस्य व संकोच का नाश',
+        'कुंडली में कमजोर सूर्य को बलवान कर करियर व मान-सम्मान दिलाता है',
+      ],
+    },
+    {
+      id: 'black_tourmaline',
+      slug: 'black-tourmaline',
+      name: 'BLACK TOURMALINE BRACELET',
+      nameHi: 'ब्लैक टूमलाइन रक्षा ब्रेसलेट',
+      tag: 'AURA SHIELD • NAZAR DOSHA RAKSHA',
+      tagHi: 'औरा कवच • नज़र दोष व नकारात्मकता रक्षा',
+      desc: 'The ultimate psychic shield against evil eye (Buri Nazar), heavy vibrations, and negative psychic frequencies.',
+      descHi: 'बुरी नज़र, तांत्रिक दोष और नकारात्मक तरंगों के विरुद्ध सर्वोत्तम सुरक्षा कवच। मन को शांत एवं ऊर्जावान रखता है।',
+      image: '/products/prod-black-tourmaline.png',
+      category: 'protection',
+      categoryLabel: 'Nazar & Protection',
+      categoryLabelHi: 'नज़र दोष व सुरक्षा',
+      price: 1499,
+      priceFormatted: '₹1,499',
+      originalPrice: 2799,
+      originalPriceFormatted: '₹2,799',
+      discountPercent: 46,
+      planet: 'Saturn (Shani) & Rahu',
+      planetHi: 'शनि एवं राहु ग्रह',
+      chakra: 'Root Chakra (Muladhara)',
+      chakraHi: 'मूलाधार चक्र',
+      mantra: 'ॐ शं शनैश्चराय नमः (Om Sham Shanaishcharaya Namaha)',
+      dayToWear: 'Saturday Evening',
+      dayToWearHi: 'शनिवार सायंकाल',
+      beadSize: '8mm Natural Shield Beads',
+      beadSizeHi: '8 मिमी प्राकृतिक सुरक्षा मनके',
+      rating: 5.0,
+      reviewsCount: 489,
+      inStock: true,
+      stock: 38,
+      isFeatured: true,
+      benefits: [
+        'Deflects psychic attacks, jealousy, and heavy low vibrations',
+        'Grounds spiritual energy directly through the root chakra',
+        'Protects homes and workplaces from unseen energetic toxins',
+      ],
+      benefitsHi: [
+        'ईर्ष्या, बुरी नजर और नकारात्मक तांत्रिक ऊर्जा से अभेद्य सुरक्षा',
+        'मूलाधार चक्र को संतुलित कर भय और घबराहट दूर करता है',
+        'कार्यक्षेत्र एवं घर में सकारात्मक ऊर्जा का आभामंडल बनाता है',
+      ],
+    },
+    {
+      id: 'golden_pyrite',
+      slug: 'golden-pyrite',
+      name: 'GOLDEN PYRITE BRACELET',
+      nameHi: 'गोल्डन पाइराइट धन योग ब्रेसलेट',
+      tag: 'MONEY MAGNET • WEALTH & ABUNDANCE',
+      tagHi: 'धन चुंबक • व्यापार वृद्धि व समृद्धि',
+      desc: 'Known as the stone of wealth and luck. Golden Pyrite stimulates the solar plexus, attracting career breakthroughs and financial growth.',
+      descHi: 'धन, व्यापारिक सफलता और सौभाग्य का महा-रत्न। मणिपूर चक्र को जाग्रत कर अटके हुए धन को आकर्षित करने में सहायक।',
+      image: '/products/prod-pyrite.png',
+      category: 'wealth',
+      categoryLabel: 'Wealth & Prosperity',
+      categoryLabelHi: 'धन एवं समृद्धि',
+      price: 1599,
+      priceFormatted: '₹1,599',
+      originalPrice: 2999,
+      originalPriceFormatted: '₹2,999',
+      discountPercent: 47,
+      planet: 'Sun & Jupiter (Guru)',
+      planetHi: 'सूर्य एवं बृहस्पति (गुरु)',
+      chakra: 'Solar Plexus (Manipura)',
+      chakraHi: 'मणिपूर चक्र',
+      mantra: 'ॐ श्रीं ह्रीं क्लीं महालक्ष्म्यै नमः',
+      dayToWear: 'Thursday Morning',
+      dayToWearHi: 'गुरुवार प्रातः',
+      beadSize: '8mm High-Grade Pyrite',
+      beadSizeHi: '8 मिमी उच्च श्रेणी पाइराइट',
+      rating: 4.9,
+      reviewsCount: 521,
+      inStock: true,
+      stock: 50,
+      isFeatured: true,
+      benefits: [
+        'Known globally as the Fool Gold Wealth Magnet',
+        'Stimulates rapid business deal closures and promotions',
+        'Manifests gold-level prosperity and financial abundance',
+      ],
+      benefitsHi: [
+        'व्यापार में नए ग्राहक व धन लाभ के अप्रत्याशित अवसर',
+        'अटके हुए पैतृक अथवा व्यावसायिक धन की शीघ्र प्राप्ति',
+        'महालक्ष्मी एवं कुबेर देव की दिव्य कृपा का अनुभव',
+      ],
+    },
+    {
+      id: 'rose_quartz',
+      slug: 'rose-quartz',
+      name: 'ROSE QUARTZ BRACELET',
+      nameHi: 'रोज क्वार्ट्ज प्रेम एवं शांति ब्रेसलेट',
+      tag: 'DIVINE LOVE • HEART CHAKRA HEALING',
+      tagHi: 'दिव्य प्रेम • हृदय चक्र व संबंध शुद्धि',
+      desc: 'Stone of unconditional love, emotional tenderness, and relationship harmony. Deeply pacifies emotional wounds and attracts soulful love.',
+      descHi: 'सच्चे प्रेम, दांपत्य मधुरता और भावनात्मक शांति का पावन रत्न। मानसिक तनाव दूर कर संबंधों में विश्वास बढ़ाता है।',
+      image: '/products/prod-rose-quartz.png',
+      category: 'love',
+      categoryLabel: 'Love & Peace',
+      categoryLabelHi: 'प्रेम एवं शांति',
+      price: 1199,
+      priceFormatted: '₹1,199',
+      originalPrice: 2199,
+      originalPriceFormatted: '₹2,199',
+      discountPercent: 45,
+      planet: 'Venus (Shukra)',
+      planetHi: 'शुक्र ग्रह',
+      chakra: 'Heart Chakra (Anahata)',
+      chakraHi: 'अनाहत चक्र (हृदय)',
+      mantra: 'ॐ शुं शुक्राय नमः (Om Shum Shukraya Namaha)',
+      dayToWear: 'Friday Morning',
+      dayToWearHi: 'शुक्रवार प्रातः',
+      beadSize: '8mm Translucent Rose Quartz',
+      beadSizeHi: '8 मिमी पारभासी रोज क्वार्ट्ज',
+      rating: 4.8,
+      reviewsCount: 295,
+      inStock: true,
+      stock: 40,
+      isFeatured: true,
+      benefits: [
+        'Opens heart chakra to radiate and receive compassionate love',
+        'Resolves marital misunderstandings and brings emotional sweetness',
+        'Helps overcome relationship trauma and inner anxiety',
+      ],
+      benefitsHi: [
+        'हृदय चक्र को जाग्रत कर दांपत्य जीवन में मधुरता व प्रेम बढ़ाता है',
+        'पारिवारिक कलह और कटुता को समाप्त कर शांति प्रदान करता है',
+        'विवाह बाधा दूर करने में शुक्र ग्रह को विशेष बल प्रदान करता है',
+      ],
+    },
+    {
+      id: 'green_aventurine',
+      slug: 'green-aventurine',
+      name: 'GREEN AVENTURINE BRACELET',
+      nameHi: 'ग्रीन एवेंट्यूरिन सौभाग्य ब्रेसलेट',
+      tag: 'OPPORTUNITY STONE • FORTUNE & LUCK',
+      tagHi: 'अवसर व भाग्य रत्न • नवीन व्यापार वृद्धि',
+      desc: 'The stone of pure opportunity. Strongly aligned with luck in new business, property investments, and releasing old mental blocks.',
+      descHi: 'नवीन अवसरों, नौकरी में पदोन्नति एवं आर्थिक लाभ का प्रामाणिक रत्न। बुध ग्रह को बलवान कर वाणी व बुद्धि निखारता है।',
+      image: '/products/prod-aventurine.png',
+      category: 'wealth',
+      categoryLabel: 'Wealth & Prosperity',
+      categoryLabelHi: 'धन एवं समृद्धि',
+      price: 1299,
+      priceFormatted: '₹1,299',
+      originalPrice: 2399,
+      originalPriceFormatted: '₹2,399',
+      discountPercent: 46,
+      planet: 'Mercury (Budha)',
+      planetHi: 'बुध ग्रह',
+      chakra: 'Heart Chakra (Anahata)',
+      chakraHi: 'अनाहत चक्र',
+      mantra: 'ॐ बुं बुधाय नमः (Om Bum Budhaya Namaha)',
+      dayToWear: 'Wednesday Morning',
+      dayToWearHi: 'बुधवार प्रातः',
+      beadSize: '8mm Natural Aventurine',
+      beadSizeHi: '8 मिमी प्राकृतिक एवेंट्यूरिन',
+      rating: 4.9,
+      reviewsCount: 218,
+      inStock: true,
+      stock: 35,
+      isFeatured: false,
+      benefits: [
+        'The Stone of Opportunity and fortunate luck',
+        'Strengthens communicative skills and Mercury intelligence',
+        'Assists financial investors and enterprise founders',
+      ],
+      benefitsHi: [
+        'व्यापार, शेयर बाजार और नए निवेश में लाभ के योग',
+        'बुध ग्रह को अनुकूल बनाकर वाणी व बुद्धिमत्ता में निखार',
+        'हृदय को शीतलता और मानसिक शांति प्रदान करता है',
+      ],
+    },
+    {
+      id: 'carnelian',
+      slug: 'carnelian',
+      name: 'CARNELIAN FIRE BRACELET',
+      nameHi: 'कार्नेलियन अग्नि ब्रेसलेट',
+      tag: 'VITALITY & PASSION • SACRAL CHAKRA',
+      tagHi: 'ऊर्जा व पराक्रम • स्वाधिष्ठान चक्र',
+      desc: 'Awakens suppressed vitality, ignites creative fire, and removes social fear and hesitation with warm solar energy.',
+      descHi: 'सुप्त ऊर्जा व रचनात्मकता को जाग्रत करता है। भय, संकोच और आलस्य दूर कर मंगल का पराक्रम प्रदान करता है।',
+      image: '/products/prod-carnelian.png',
+      category: 'wealth',
+      categoryLabel: 'Courage & Vitality',
+      categoryLabelHi: 'साहस एवं ऊर्जा',
+      price: 1349,
+      priceFormatted: '₹1,349',
+      originalPrice: 2499,
+      originalPriceFormatted: '₹2,499',
+      discountPercent: 46,
+      planet: 'Mars (Mangal)',
+      planetHi: 'मंगल ग्रह',
+      chakra: 'Sacral Chakra (Svadhisthana)',
+      chakraHi: 'स्वाधिष्ठान चक्र',
+      mantra: 'ॐ अं अंगारकाय नमः (Om Am Angarakaya Namaha)',
+      dayToWear: 'Tuesday Morning',
+      dayToWearHi: 'मंगलवार प्रातः',
+      beadSize: '8mm Fire Agate Beads',
+      beadSizeHi: '8 मिमी अग्नि अकीक मनके',
+      rating: 4.8,
+      reviewsCount: 176,
+      inStock: true,
+      stock: 28,
+      isFeatured: false,
+      benefits: [
+        'Restores physical motivation, passion, and artistic spark',
+        'Clears the sacral chakra of lethargy and past guilt',
+        'Aids athletes and performers in expressing peak confidence',
+      ],
+      benefitsHi: [
+        'मंगल दोष का शमन कर शौर्य व पराक्रम में वृद्धि',
+        'रचनात्मकता, उत्साह और मानसिक दृढ़ता को जाग्रत करता है',
+        'रक्त संचार एवं शारीरिक ऊर्जा को संतुलित रखता है',
+      ],
+    },
+    {
+      id: 'rainbow_moonstone',
+      slug: 'rainbow-moonstone',
+      name: 'RAINBOW MOONSTONE BRACELET',
+      nameHi: 'इंद्रधनुषी मूनस्टोन चंद्र ब्रेसलेट',
+      tag: 'INTUITION & SERENITY • LUNAR HARMONY',
+      tagHi: 'अंतर्ज्ञान व शीतलता • चंद्र शांति',
+      desc: 'Channels serene lunar cooling energy. Calms turbulent mindwaves, aids restful sleep, and deepens meditative awareness.',
+      descHi: 'शीतल चंद्र ऊर्जा से मन की अशांति, अनिद्रा और भावनात्मक उथल-पुथल शांत करता है। ध्यान व अंतर्ज्ञान बढ़ाता है।',
+      image: '/products/prod-moonstone.png',
+      category: 'love',
+      categoryLabel: 'Love & Peace',
+      categoryLabelHi: 'प्रेम एवं शांति',
+      price: 1699,
+      priceFormatted: '₹1,699',
+      originalPrice: 3199,
+      originalPriceFormatted: '₹3,199',
+      discountPercent: 47,
+      planet: 'Moon (Chandra)',
+      planetHi: 'चंद्रमा',
+      chakra: 'Crown & Third Eye Chakra',
+      chakraHi: 'आज्ञा एवं सहस्रार चक्र',
+      mantra: 'ॐ सों सोमाय नमः (Om Som Somaya Namaha)',
+      dayToWear: 'Monday Morning or Full Moon Night',
+      dayToWearHi: 'सोमवार प्रातः अथवा पूर्णिमा',
+      beadSize: '8mm Iridescent Moonstone',
+      beadSizeHi: '8 मिमी प्राकृतिक मूनस्टोन',
+      rating: 5.0,
+      reviewsCount: 312,
+      inStock: true,
+      stock: 22,
+      isFeatured: true,
+      benefits: [
+        'Deep lunar cooling balm for stressful and overthinking minds',
+        'Enhances psychic intuition, dream recall, and gentle inner wisdom',
+        'Supports hormonal balance and emotional stillness',
+      ],
+      benefitsHi: [
+        'चंद्रमा को बलवान कर मानसिक तनाव, भय व अवसाद से मुक्ति',
+        'गहरी व शांत निद्रा प्रदान करता है, ध्यान साधना में सहायक',
+        'अंतःप्रेरणा व भावनात्मक संतुलन को मजबूत करता है',
+      ],
+    },
+    {
+      id: 'sulemani_hakik',
+      slug: 'sulemani-hakik',
+      name: 'SULEMANI HAKIK BRACELET',
+      nameHi: 'सुलेमानी हकीक रक्षा ब्रेसलेट',
+      tag: 'RAHU-KETU SHIELD • EVIL EYE DEFENSE',
+      tagHi: 'राहु-केतु शांति • तंत्र व भय निवारण',
+      desc: 'Sacred Agate celebrated in classical scriptures to balance malefic Rahu-Ketu, shield against black magic, and restore inner peace.',
+      descHi: 'राहु-केतु के दुष्प्रभावों और अज्ञात भय से रक्षा करता है। प्राचीन शास्त्रों में वर्णित अत्यंत प्रभावशाली सुरक्षा कवच।',
+      image: '/products/prod-sulemani-hakik.png',
+      category: 'protection',
+      categoryLabel: 'Nazar & Protection',
+      categoryLabelHi: 'नज़र दोष व सुरक्षा',
+      price: 1399,
+      priceFormatted: '₹1,399',
+      originalPrice: 2599,
+      originalPriceFormatted: '₹2,599',
+      discountPercent: 46,
+      planet: 'Rahu & Saturn',
+      planetHi: 'राहु एवं शनि ग्रह',
+      chakra: 'Root Chakra (Muladhara)',
+      chakraHi: 'मूलाधार चक्र',
+      mantra: 'ॐ रां राहवे नमः (Om Ram Rahave Namaha)',
+      dayToWear: 'Saturday Night or Amavasya',
+      dayToWearHi: 'शनिवार सायंकाल अथवा अमावस्या',
+      beadSize: '8mm Banded Black Agate',
+      beadSizeHi: '8 मिमी प्राकृतिक सुलेमानी अकीक',
+      rating: 4.9,
+      reviewsCount: 420,
+      inStock: true,
+      stock: 40,
+      isFeatured: false,
+      benefits: [
+        'Neutralizes acute Rahu mahadasha disturbances and bad dreams',
+        'Acts as an impenetrable shield against evil gaze (nazar)',
+        'Brings deep mental stillness and courage during life trials',
+      ],
+      benefitsHi: [
+        'राहु-केतु एवं शनि के अनिष्टकारी प्रभावों का अचूक निवारण',
+        'अज्ञात भय, बुरे स्वप्न और नजर दोष से संपूर्ण रक्षा',
+        'कठिन परिस्थितियों में धैर्य और मनोबल को दृढ़ रखता है',
+      ],
+    },
+    {
+      id: 'hematite',
+      slug: 'hematite',
+      name: 'METALLIC HEMATITE BRACELET',
+      nameHi: 'मैटेलिक हेमेटाइट ग्राउंडिंग ब्रेसलेट',
+      tag: 'ROOT CHAKRA • GROUNDING & MENTAL FOCUS',
+      tagHi: 'मूलाधार चक्र • मानसिक एकाग्रता व स्थिरता',
+      desc: 'High iron grounding crystal that grounds excessive overthinking, pulls erratic energy into the earth, and strengthens spine and blood vitality.',
+      descHi: 'अत्यधिक सोच (ओवरथिंकिंग) को शांत कर एकाग्रता व शारीरिक संतुलन प्रदान करता है। रीढ़ एवं रक्त संचार हेतु हितकारी।',
+      image: '/products/prod-hematite.png',
+      category: 'healing',
+      categoryLabel: 'Healing & Balance',
+      categoryLabelHi: 'आरोग्य एवं संतुलन',
+      price: 1199,
+      priceFormatted: '₹1,199',
+      originalPrice: 2199,
+      originalPriceFormatted: '₹2,199',
+      discountPercent: 45,
+      planet: 'Saturn (Shani)',
+      planetHi: 'शनि ग्रह',
+      chakra: 'Root Chakra (Muladhara)',
+      chakraHi: 'मूलाधार चक्र',
+      mantra: 'ॐ प्रां प्रीं प्रौं सः शनैश्चराय नमः',
+      dayToWear: 'Saturday Morning',
+      dayToWearHi: 'शनिवार प्रातः',
+      beadSize: '8mm Mirror Finish Hematite',
+      beadSizeHi: '8 मिमी दर्पण-युक्त हेमेटाइट',
+      rating: 4.7,
+      reviewsCount: 165,
+      inStock: true,
+      stock: 30,
+      isFeatured: false,
+      benefits: [
+        'Absorbs toxic emotional debris and roots scattered attention',
+        'Strengthens focus for studies, complex coding, and strategic planning',
+        'Balances physical body magnetic field',
+      ],
+      benefitsHi: [
+        'ओवरथिंकिंग और मानसिक भटकाव को रोककर एकाग्रता बढ़ाता है',
+        'विद्यार्थियों और शोधकर्ताओं हेतु ध्यान केंद्रित करने में अत्यंत उपयोगी',
+        'मूलाधार चक्र को मजबूत कर स्थिरता व आत्मविश्वास देता है',
+      ],
+    },
+    {
+      id: 'moss_agate',
+      slug: 'moss-agate',
+      name: 'MOSS AGATE BRACELET',
+      nameHi: 'मॉस अगेट प्रकृति समृद्धि ब्रेसलेट',
+      tag: 'NEW BEGINNINGS • ABUNDANCE & GROWTH',
+      tagHi: 'नवीन आरंभ • सतत समृद्धि व आरोग्य',
+      desc: 'The crystal of organic wealth and steady growth. Balances the masculine and feminine energies and grounds spiritual seekers in nature.',
+      descHi: 'स्थिर धन, व्यापारिक वृद्धि एवं प्राकृतिक ऊर्जा का संतुलन करता है। शिव एवं शक्ति तत्वों को संतुलित करता है।',
+      image: '/products/prod-moss-agate.png',
+      category: 'healing',
+      categoryLabel: 'Healing & Balance',
+      categoryLabelHi: 'आरोग्य एवं संतुलन',
+      price: 1299,
+      priceFormatted: '₹1,299',
+      originalPrice: 2399,
+      originalPriceFormatted: '₹2,399',
+      discountPercent: 46,
+      planet: 'Mercury & Earth Goddess',
+      planetHi: 'बुध एवं भूदेवी तत्व',
+      chakra: 'Heart Chakra (Anahata)',
+      chakraHi: 'अनाहत चक्र',
+      mantra: 'ॐ बुधाय नमः (Om Budhaya Namaha)',
+      dayToWear: 'Wednesday Morning',
+      dayToWearHi: 'बुधवार प्रातः',
+      beadSize: '8mm Moss Dendritic Beads',
+      beadSizeHi: '8 मिमी प्राकृतिक मॉस अकीक',
+      rating: 4.8,
+      reviewsCount: 143,
+      inStock: true,
+      stock: 32,
+      isFeatured: false,
+      benefits: [
+        'Fosters steady compounding wealth and organic business growth',
+        'Connects consciousness to Earth Mother restorative vibrations',
+        'Releases long-held emotional baggage gently',
+      ],
+      benefitsHi: [
+        'व्यापार में निरंतर व स्थायी प्रगति के द्वार खोलता है',
+        'प्रकृति के साथ सामंजस्य स्थापित कर मानसिक शांति देता है',
+        'हृदय चक्र को संतुलित कर स्वास्थ्य लाभ पहुंचाता है',
+      ],
+    },
+    {
+      id: 'dalmatian_jasper',
+      slug: 'dalmatian-jasper',
+      name: 'DALMATIAN JASPER BRACELET',
+      nameHi: 'डालमेशियन जैस्पर आनंद ब्रेसलेट',
+      tag: 'PLAYFUL JOY • EMOTIONAL REBALANCING',
+      tagHi: 'प्रसन्नता • मानसिक अवसाद निवारण',
+      desc: 'Breaks through rigidity and mental burnout. Reconnects you with joy, dissolves skepticism, and anchors lighthearted protection.',
+      descHi: 'मानसिक तनाव और थकावट को मिटाकर जीवन में उल्लास लाता है। नकारात्मक विचारों से मन की रक्षा करता है।',
+      image: '/products/prod-dalmation-jasper.png',
+      category: 'healing',
+      categoryLabel: 'Healing & Balance',
+      categoryLabelHi: 'आरोग्य एवं संतुलन',
+      price: 1249,
+      priceFormatted: '₹1,249',
+      originalPrice: 2299,
+      originalPriceFormatted: '₹2,299',
+      discountPercent: 46,
+      planet: 'Earth & Mercury',
+      planetHi: 'पृथ्वी एवं बुध ग्रह',
+      chakra: 'Sacral & Root Chakra',
+      chakraHi: 'स्वाधिष्ठान एवं मूलाधार चक्र',
+      mantra: 'ॐ नमः शिवाय (Om Namah Shivaya)',
+      dayToWear: 'Monday or Thursday',
+      dayToWearHi: 'सोमवार अथवा गुरुवार',
+      beadSize: '8mm Spotted Jasper Beads',
+      beadSizeHi: '8 मिमी प्राकृतिक जैस्पर मनके',
+      rating: 4.8,
+      reviewsCount: 129,
+      inStock: true,
+      stock: 25,
+      isFeatured: false,
+      benefits: [
+        'Dissolves cynicism, pessimism, and burnout symptoms',
+        'Rekindles childlike lightness, spontaneity, and creative wonder',
+        'Transmutes negative vibrations into joyful resilience',
+      ],
+      benefitsHi: [
+        'अवसाद, मानसिक थकावट और नकारात्मक विचारों को समाप्त करता है',
+        'हृदय में उल्लास, सकारात्मकता व जीवन के प्रति नया उत्साह भरता है',
+        'मूलाधार व स्वाधिष्ठान चक्र का शुद्धिकरण करता है',
+      ],
+    },
+    {
+      id: 'unakite',
+      slug: 'unakite',
+      name: 'UNAKITE JASPER BRACELET',
+      nameHi: 'यूनाकाइट जैस्पर आध्यात्मिक नवजीवन ब्रेसलेट',
+      tag: 'SPIRITUAL REBIRTH • EMOTIONAL HEALING',
+      tagHi: 'आध्यात्मिक नवजीवन • भावनात्मक आरोग्य',
+      desc: 'Harmonious blend of pink feldspar and green epidote. Heals long-held emotional scars and promotes spiritual rebirth.',
+      descHi: 'हृदय के पुराने आघातों को मिटाकर आत्म-प्रेम व नवजीवन प्रदान करता है। ध्यान एवं साधना में मन को स्थिर करता है।',
+      image: '/products/prod-unakite.png',
+      category: 'healing',
+      categoryLabel: 'Healing & Balance',
+      categoryLabelHi: 'आरोग्य एवं संतुलन',
+      price: 1349,
+      priceFormatted: '₹1,349',
+      originalPrice: 2499,
+      originalPriceFormatted: '₹2,499',
+      discountPercent: 46,
+      planet: 'Venus & Mars Synergy',
+      planetHi: 'शुक्र व मंगल का दुर्लभ योग',
+      chakra: 'Heart & Third Eye Chakra',
+      chakraHi: 'अनाहत एवं आज्ञा चक्र',
+      mantra: 'ॐ महादेवाय नमः (Om Mahadevaya Namaha)',
+      dayToWear: 'Friday or Tuesday',
+      dayToWearHi: 'शुक्रवार अथवा मंगलवार',
+      beadSize: '8mm Natural Unakite',
+      beadSizeHi: '8 मिमी प्राकृतिक यूनाकाइट',
+      rating: 4.9,
+      reviewsCount: 188,
+      inStock: true,
+      stock: 20,
+      isFeatured: false,
+      benefits: [
+        'Combines Venus love energy with Mars decisive strength',
+        'Aids past-life regression integration and emotional releasing',
+        'Promotes healthy cell regeneration and peaceful heart space',
+      ],
+      benefitsHi: [
+        'हृदय के पुराने आघातों को मिटाकर आत्म-विश्वास व नवजीवन देता है',
+        'शुक्र एवं मंगल के शुभ योग से आकर्षण व आरोग्यता में वृद्धि',
+        'ध्यान एवं प्राणायाम में मन को तुरंत एकाग्र करता है',
+      ],
+    },
+    {
+      id: 'serpentine',
+      slug: 'serpentine',
+      name: 'SACRED SERPENTINE BRACELET',
+      nameHi: 'सिद्ध सर्पेंटाइन कुंडलिनी ब्रेसलेट',
+      tag: 'KUNDALINI ENERGY • CELLULAR RENEWAL',
+      tagHi: 'कुंडलिनी ऊर्जा • सुषुम्ना नाड़ी जागरण',
+      desc: 'Ancient green stone utilized by Yogis to clear energetic blocks along the spinal Sushumna Nadi and awaken dormant Kundalini Shakti.',
+      descHi: 'ऋषि-मुनियों द्वारा प्रयुक्त पावन रत्न। सुषुम्ना नाड़ी के अवरोधों को दूर कर प्राण ऊर्जा एवं कुंडलिनी को जाग्रत करता है।',
+      image: '/products/prod-serpentine.png',
+      category: 'healing',
+      categoryLabel: 'Healing & Balance',
+      categoryLabelHi: 'आरोग्य एवं संतुलन',
+      price: 1449,
+      priceFormatted: '₹1,449',
+      originalPrice: 2699,
+      originalPriceFormatted: '₹2,699',
+      discountPercent: 46,
+      planet: 'Ketu & Shiva Energy',
+      planetHi: 'केतु एवं शिव तत्व',
+      chakra: 'Crown & Heart Chakra',
+      chakraHi: 'सहस्रार एवं हृदय चक्र',
+      mantra: 'ॐ कें केतवे नमः (Om Kem Ketave Namaha)',
+      dayToWear: 'Tuesday or Thursday',
+      dayToWearHi: 'मंगलवार अथवा गुरुवार',
+      beadSize: '8mm Olive Serpentine Beads',
+      beadSizeHi: '8 मिमी प्राकृतिक सर्पेंटाइन',
+      rating: 4.9,
+      reviewsCount: 204,
+      inStock: true,
+      stock: 18,
+      isFeatured: false,
+      benefits: [
+        'Facilitates smooth pranic circulation up the spinal Sushumna',
+        'Assists Yogic practitioners in deepening meditation states',
+        'Clears phantom chakra aches and biofield lethargy',
+      ],
+      benefitsHi: [
+        'सुषुम्ना नाड़ी के अवरोधों को दूर कर प्राण ऊर्जा का संचार करता है',
+        'योग, ध्यान व साधना में लीन साधकों हेतु अत्यंत सिद्ध रत्न',
+        'केतु के अनिष्टकारी प्रभावों का शमन करता है',
+      ],
+    },
+    {
+      id: 'yellow_chalcedony',
+      slug: 'yellow-chalcedony',
+      name: 'YELLOW CHALCEDONY BRACELET',
+      nameHi: 'पीला कैल्सेडोनी गुरु कृपा ब्रेसलेट',
+      tag: 'JOY & CONFIDENCE • SOLAR PLEXUS',
+      tagHi: 'गुरु कृपा • सुख, सौभाग्य व यश',
+      desc: 'Luminescent golden chalcedony promoting benevolence, dispelling hostility, and imparting radiant optimism to your daily aura.',
+      descHi: 'बृहस्पति की दिव्य कृपा से यश, प्रतिष्ठा, ज्ञान और सौभाग्य में वृद्धि करता है। मन में सकारात्मकता भरता है।',
+      image: '/products/prod-yellow-chalcedony.png',
+      category: 'wealth',
+      categoryLabel: 'Courage & Joy',
+      categoryLabelHi: 'साहस एवं उल्लास',
+      price: 1399,
+      priceFormatted: '₹1,399',
+      originalPrice: 2599,
+      originalPriceFormatted: '₹2,599',
+      discountPercent: 46,
+      planet: 'Jupiter (Guru) & Sun',
+      planetHi: 'बृहस्पति (गुरु) एवं सूर्य',
+      chakra: 'Solar Plexus (Manipura)',
+      chakraHi: 'मणिपूर चक्र',
+      mantra: 'ॐ ग्रां ग्रीं ग्रौं सः गुरवे नमः',
+      dayToWear: 'Thursday Morning',
+      dayToWearHi: 'गुरुवार प्रातः',
+      beadSize: '8mm Translucent Yellow Chalcedony',
+      beadSizeHi: '8 मिमी पीला कैल्सेडोनी',
+      rating: 4.8,
+      reviewsCount: 157,
+      inStock: true,
+      stock: 26,
+      isFeatured: false,
+      benefits: [
+        'Channels Guru Jupiter generosity, wisdom, and social honor',
+        'Disarms hostile workplace debates with sweet eloquence',
+        'Protects travelers from unforeseen impediments',
+      ],
+      benefitsHi: [
+        'बृहस्पति देव की कृपा से विद्या, यश व पद-प्रतिष्ठा में वृद्धि',
+        'वाणी में ओज व माधुर्य लाकर दूसरों को प्रभावित करने में सहायक',
+        'सौभाग्य एवं पारिवारिक सुख-शांति का विस्तार करता है',
+      ],
+    },
+    {
+      id: 'crystal_quartz',
+      slug: 'crystal-quartz',
+      name: 'CLEAR QUARTZ CRYSTAL BRACELET',
+      nameHi: 'प्राकृतिक स्फटिक (क्रिस्टल) ब्रेसलेट',
+      tag: 'MASTER HEALER • MENTAL CLARITY',
+      tagHi: 'सर्वसिद्धि स्फटिक • मानसिक शांति व शुद्धि',
+      desc: 'The master healing stone. Dissolves mental fog, cools planetary heat, and amplifies spiritual prayers and concentration.',
+      descHi: 'मन को शांत व निर्मल रखने वाला पावन स्फटिक रत्न। शुक्र एवं चंद्र दोष का शमन कर एकाग्रता व सकारात्मक ऊर्जा का संचार करता है।',
+      image: '/products/prod-moonstone.png',
+      category: 'healing',
+      categoryLabel: 'Healing & Clarity',
+      categoryLabelHi: 'आरोग्य एवं मानसिक शुद्धि',
+      price: 1199,
+      priceFormatted: '₹1,199',
+      originalPrice: 2199,
+      originalPriceFormatted: '₹2,199',
+      discountPercent: 45,
+      planet: 'Venus (Shukra) & Moon (Chandra)',
+      planetHi: 'शुक्र एवं चंद्रमा',
+      chakra: 'Crown Chakra (Sahasrara)',
+      chakraHi: 'सहस्रार चक्र (शिरोभाग)',
+      mantra: 'ॐ नमः शिवाय (Om Namah Shivaya)',
+      dayToWear: 'Monday or Friday Morning',
+      dayToWearHi: 'सोमवार अथवा शुक्रवार प्रातः',
+      beadSize: '8mm Natural Sphatik Beads',
+      beadSizeHi: '8 मिमी शुद्ध प्राकृतिक स्फटिक',
+      rating: 4.9,
+      reviewsCount: 268,
+      inStock: true,
+      stock: 35,
+      isFeatured: true,
+      benefits: [
+        'Universal amplifier of prayer mantras and spiritual focus',
+        'Cools excessive bodily pitta heat and anger flare-ups',
+        'Cleanses and resets other crystals worn nearby',
+      ],
+      benefitsHi: [
+        'शुक्र व चंद्र की शीतलता से क्रोध, चिंता व रक्तचाप को नियंत्रित करता है',
+        'मंत्र साधना व ध्यान में शीघ्र सिद्धि प्रदान करने वाला सिद्ध स्फटिक',
+        'शरीर के सातों चक्रों का प्राकृतिक शुद्धिकरण करता है',
+      ],
+    },
+    {
+      id: 'gold_stone',
+      slug: 'gold-stone',
+      name: 'GOLD STONE ENERGY BRACELET',
+      nameHi: 'गोल्ड स्टोन दिव्य तेज ब्रेसलेट',
+      tag: 'AMBITION & DRIVE • SOLAR RADIANCE',
+      tagHi: 'लक्ष्य सिद्धि • सौर तेज व आत्मविश्वास',
+      desc: 'A shimmering stone of ambition and vitality. Helps overcome lethargy and instills optimism and drive for success.',
+      descHi: 'लक्ष्य प्राप्ति एवं आत्मविश्वास का अद्भुत प्रेरक रत्न। आलस्य दूर कर जीवन में नवोत्साह एवं धन आकर्षण की क्षमता बढ़ाता है।',
+      image: '/products/prod-carnelian.png',
+      category: 'wealth',
+      categoryLabel: 'Courage & Drive',
+      categoryLabelHi: 'साहस एवं ऊर्जा',
+      price: 1249,
+      priceFormatted: '₹1,249',
+      originalPrice: 2399,
+      originalPriceFormatted: '₹2,399',
+      discountPercent: 48,
+      planet: 'Sun (Surya)',
+      planetHi: 'सूर्य देव',
+      chakra: 'Sacral & Solar Plexus',
+      chakraHi: 'स्वाधिष्ठान एवं मणिपूर चक्र',
+      mantra: 'ॐ घृणि सूर्याय नमः (Om Ghrini Suryaya Namaha)',
+      dayToWear: 'Sunday Morning',
+      dayToWearHi: 'रविवार प्रातः',
+      beadSize: '8mm Shimmering Gold Stone',
+      beadSizeHi: '8 मिमी चमकीला गोल्ड स्टोन',
+      rating: 4.8,
+      reviewsCount: 142,
+      inStock: true,
+      stock: 24,
+      isFeatured: false,
+      benefits: [
+        'Ignites personal ambition, goal focus, and commercial drive',
+        'Radiates radiant solar glints that elevate public charisma',
+        'Overcomes self-sabotaging doubts and imposter feelings',
+      ],
+      benefitsHi: [
+        'लक्ष्य प्राप्ति के लिए अटूट संकल्प और उत्साह का संचार',
+        'व्यक्तिगत आकर्षण और नेतृत्व क्षमता को बढ़ाता है',
+        'व्यापार एवं करियर में नई सफलताओं के द्वार खोलता है',
+      ],
+    },
+    {
+      id: 'seven_chakra_clear_quartz',
+      slug: 'seven-chakra-clear-quartz',
+      name: 'SEVEN CHAKRA WITH CLEAR QUARTZ',
+      nameHi: 'सप्त चक्र स्फटिक ऊर्जा ब्रेसलेट',
+      tag: 'COMPLETE BALANCE • 7 CHAKRA HARMONY',
+      tagHi: 'समग्र संतुलन • 7 चक्र शुद्धि व स्फटिक ऊर्जा',
+      desc: 'Features the 7 sacred gemstone beads amplified with clear quartz spacers for total bio-energetic alignment and aura purification.',
+      descHi: 'सात प्रमुख चक्रों के पावन रत्नों के संग स्फटिक का दिव्य संगम। शरीर के संपूर्ण ऊर्जा केंद्रों का संतुलन कर औरा को शुद्ध करता है।',
+      image: '/products/prod-pyrite.png',
+      category: 'healing',
+      categoryLabel: 'Complete Balance',
+      categoryLabelHi: 'समग्र चक्र संतुलन',
+      price: 1499,
+      priceFormatted: '₹1,499',
+      originalPrice: 2899,
+      originalPriceFormatted: '₹2,899',
+      discountPercent: 48,
+      planet: 'All 9 Navgrahas (नवग्रह)',
+      planetHi: 'समस्त 9 नवग्रह',
+      chakra: 'All 7 Major Chakras',
+      chakraHi: 'मूलाधार से सहस्रार तक समस्त 7 चक्र',
+      mantra: 'ॐ नवग्रहाय नमः (Om Navagrahaya Namaha)',
+      dayToWear: 'Any Auspicious Morning',
+      dayToWearHi: 'किसी भी शुभ वार को प्रातः',
+      beadSize: '8mm 7-Gemstone & Sphatik',
+      beadSizeHi: '8 मिमी 7-रत्न एवं स्फटिक',
+      rating: 5.0,
+      reviewsCount: 384,
+      inStock: true,
+      stock: 36,
+      isFeatured: true,
+      benefits: [
+        'Harmonizes all 7 internal bodily energy vortices at once',
+        'Clear quartz spacer beads continuously purify adjacent mineral vibrations',
+        'Protects against full biofield disharmony and energetic fatigue',
+      ],
+      benefitsHi: [
+        'शरीर के सातों चक्रों का एक साथ संतुलन व शुद्धिकरण',
+        'स्फटिक मनकों द्वारा ऊर्जा का निरंतर संवर्धन व सकारात्मकता',
+        'नवग्रहों के कुप्रभावों को शांत कर समग्र स्वास्थ्य लाभ',
+      ],
+    },
+    {
+      id: 'seven_chakra',
+      slug: 'seven-chakra',
+      name: 'SEVEN CHAKRA HEALING BRACELET',
+      nameHi: 'सप्त चक्र प्राकृतिक आरोग्य ब्रेसलेट',
+      tag: 'VITALITY & WELLBEING • MULTI-GEMSTONE',
+      tagHi: 'आरोग्य व सामंजस्य • बहु-रत्न संतुलन',
+      desc: 'Combines 7 authentic gemstones corresponding to the 7 bodily energy centers. Relieves emotional blockages and promotes vitality.',
+      descHi: 'शारीरिक व मानसिक शांति हेतु 7 चक्रों के प्राकृतिक रत्नों का दिव्य संयोजन। नकारात्मक ऊर्जा दूर कर जीवन में संतुलन लाता है।',
+      image: '/products/prod-aventurine.png',
+      category: 'healing',
+      categoryLabel: 'Healing & Balance',
+      categoryLabelHi: 'आरोग्य एवं संतुलन',
+      price: 1399,
+      priceFormatted: '₹1,399',
+      originalPrice: 2599,
+      originalPriceFormatted: '₹2,599',
+      discountPercent: 46,
+      planet: 'Sun to Ketu (All 9 Planets)',
+      planetHi: 'सूर्य से केतु पर्यंत नवग्रह',
+      chakra: 'All 7 Chakras',
+      chakraHi: 'समस्त 7 चक्र',
+      mantra: 'ॐ गं गणपतये नमः (Om Gam Ganapataye Namaha)',
+      dayToWear: 'Wednesday or Thursday Morning',
+      dayToWearHi: 'बुधवार अथवा गुरुवार प्रातः',
+      beadSize: '8mm 7-Chakra Natural Beads',
+      beadSizeHi: '8 मिमी 7 चक्र प्राकृतिक मनके',
+      rating: 4.9,
+      reviewsCount: 310,
+      inStock: true,
+      stock: 42,
+      isFeatured: false,
+      benefits: [
+        'Restores balance across emotional, physical, and subtle spiritual sheaths',
+        'Ideal general talisman for seekers without an exact birth time Kundli',
+        'Fosters mental clarity, peace, and spiritual groundedness',
+      ],
+      benefitsHi: [
+        'शारीरिक व मानसिक ऊर्जा का अद्भुत समन्वय',
+        'जिनके पास सटीक जन्म समय नहीं है, उनके लिए सर्वोत्तम सर्वकल्याणकारी कवच',
+        'तनाव व नकारात्मक विचारों से मुक्ति दिलाकर आरोग्यता प्रदान करता है',
+      ],
+    },
+    {
+      id: 'red_tiger_eye',
+      slug: 'red-tiger-eye',
+      name: 'RED TIGER EYE BRACELET',
+      nameHi: 'लाल टाइगर आई शौर्य ब्रेसलेट',
+      tag: 'STRENGTH & FOCUSED ACTION • MARS POWER',
+      tagHi: 'शौर्य व पराक्रम • मंगल का तेज व विजय योग',
+      desc: 'Deep russet-red chatoyant tiger eye. Stimulates physical endurance, overcomes chronic fatigue, and ignites decisive courageous action.',
+      descHi: 'मंगल के शौर्य एवं पराक्रम का महा-रत्न। शारीरिक कमजोरी व आलस्य को मिटाकर दृढ़ संकल्प, साहस और कार्य में सफलता प्रदान करता है।',
+      image: '/products/prod-tiger-eye-macro.jpg',
+      category: 'wealth',
+      categoryLabel: 'Strength & Courage',
+      categoryLabelHi: 'साहस एवं पराक्रम',
+      price: 1349,
+      priceFormatted: '₹1,349',
+      originalPrice: 2499,
+      originalPriceFormatted: '₹2,499',
+      discountPercent: 46,
+      planet: 'Mars (Mangal)',
+      planetHi: 'मंगल ग्रह',
+      chakra: 'Root & Solar Plexus',
+      chakraHi: 'मूलाधार एवं मणिपूर चक्र',
+      mantra: 'ॐ भौं भौमाय नमः (Om Bhaum Bhaumaya Namaha)',
+      dayToWear: 'Tuesday Morning',
+      dayToWearHi: 'मंगलवार प्रातः',
+      beadSize: '8mm Red Chatoyant Beads',
+      beadSizeHi: '8 मिमी लाल टाइगर आई मनके',
+      rating: 4.9,
+      reviewsCount: 198,
+      inStock: true,
+      stock: 28,
+      isFeatured: false,
+      benefits: [
+        'Fortifies physical stamina, athletic drive, and muscular vitality',
+        'Dispels lethargy and hesitation with focused, aggressive action',
+        'Pacifies malefic Mars afflictions in personal horoscopes',
+      ],
+      benefitsHi: [
+        'शारीरिक ऊर्जा, उत्साह एवं रक्त संचार में वृद्धि करता है',
+        'संकट के समय साहस व त्वरित निर्णय लेने की क्षमता प्रदान करता है',
+        'कुंडली के मंगल दोष को शांत कर विजय योग का निर्माण करता है',
+      ],
+    },
+  ];
+
+  /**
+   * Retrieves products with filters, search, pagination, and language localization (?lang=hi)
+   */
+  findAll(query: ProductsFilterDto): PaginatedProductsResponse {
+    let filtered = [...this.products];
+    const { category, search, q, minPrice, maxPrice, inStock, featured, sort, page = 1, limit = 12, lang = 'en' } = query;
+
+    // 1. Category Filter
+    if (category && category !== 'all') {
+      filtered = filtered.filter(
+        (p) => p.category.toLowerCase() === category.toLowerCase(),
+      );
+    }
+
+    // 2. Search query (search or q)
+    const searchTerm = (search || q || '').trim().toLowerCase();
+    if (searchTerm) {
+      filtered = filtered.filter((p) => {
+        return (
+          p.name.toLowerCase().includes(searchTerm) ||
+          p.nameHi.includes(searchTerm) ||
+          p.desc.toLowerCase().includes(searchTerm) ||
+          p.descHi.includes(searchTerm) ||
+          p.tag.toLowerCase().includes(searchTerm) ||
+          p.tagHi.includes(searchTerm) ||
+          p.planet.toLowerCase().includes(searchTerm) ||
+          p.mantra.toLowerCase().includes(searchTerm) ||
+          p.benefits.some((b) => b.toLowerCase().includes(searchTerm)) ||
+          p.benefitsHi.some((b) => b.includes(searchTerm))
+        );
+      });
+    }
+
+    // 3. Price Range Filters
+    if (minPrice !== undefined && !isNaN(minPrice)) {
+      filtered = filtered.filter((p) => p.price >= minPrice);
+    }
+    if (maxPrice !== undefined && !isNaN(maxPrice)) {
+      filtered = filtered.filter((p) => p.price <= maxPrice);
+    }
+
+    // 4. In-Stock Filter
+    if (inStock !== undefined) {
+      filtered = filtered.filter((p) => p.inStock === inStock);
+    }
+
+    // 5. Featured Filter
+    if (featured !== undefined) {
+      filtered = filtered.filter((p) => p.isFeatured === featured);
+    }
+
+    // 6. Sorting
+    if (sort) {
+      switch (sort) {
+        case 'price_asc':
+          filtered.sort((a, b) => a.price - b.price);
+          break;
+        case 'price_desc':
+          filtered.sort((a, b) => b.price - a.price);
+          break;
+        case 'rating':
+          filtered.sort((a, b) => b.rating - a.rating);
+          break;
+        case 'popular':
+          filtered.sort((a, b) => b.reviewsCount - a.reviewsCount);
+          break;
+        case 'newest':
+          // default order or customized
+          break;
+      }
+    }
+
+    const total = filtered.length;
+    const totalPages = Math.ceil(total / limit) || 1;
+    const safePage = Math.max(1, Math.min(page, totalPages));
+    const startIndex = (safePage - 1) * limit;
+    const paginatedItems = filtered.slice(startIndex, startIndex + limit);
+
+    // Apply localization if lang === 'hi'
+    const localizedData = paginatedItems.map((item) => this.localizeProduct(item, lang));
+
+    return {
+      data: localizedData,
+      total,
+      page: safePage,
+      limit,
+      totalPages,
+      hasNextPage: safePage < totalPages,
+      hasPrevPage: safePage > 1,
+      filters: {
+        category,
+        search: searchTerm || undefined,
+        lang,
+        sort,
+      },
+    };
+  }
+
+  /**
+   * Retrieves single product by slug or id, localized by ?lang=hi
+   */
+  findBySlugOrId(slugOrId: string, lang: 'en' | 'hi' = 'en'): ProductItem & { relatedProducts: ProductItem[] } {
+    const cleanParam = slugOrId.trim().toLowerCase().replace(/-/g, '_');
+    const exactParam = slugOrId.trim().toLowerCase();
+
+    const product = this.products.find(
+      (p) =>
+        p.id.toLowerCase() === cleanParam ||
+        p.id.toLowerCase() === exactParam ||
+        p.slug.toLowerCase() === exactParam ||
+        p.slug.toLowerCase() === cleanParam ||
+        p.name.toLowerCase().replace(/\s+/g, '-') === exactParam,
+    );
+
+    if (!product) {
+      throw new NotFoundException(`Product with slug or ID '${slugOrId}' not found.`);
+    }
+
+    // Find related products
+    const related = this.products
+      .filter((p) => p.id !== product.id && p.category === product.category)
+      .slice(0, 4);
+
+    const fallbackRelated = related.length < 4
+      ? [
+          ...related,
+          ...this.products.filter((p) => p.id !== product.id && p.category !== product.category),
+        ].slice(0, 4)
+      : related;
+
+    return {
+      ...this.localizeProduct(product, lang),
+      relatedProducts: fallbackRelated.map((r) => this.localizeProduct(r, lang)),
+    };
+  }
+
+  /**
+   * Returns category summaries with counts
+   */
+  getCategories(lang: 'en' | 'hi' = 'en') {
+    const counts: Record<string, number> = {};
+    for (const p of this.products) {
+      counts[p.category] = (counts[p.category] || 0) + 1;
+    }
+
+    const categories = [
+      {
+        id: 'all',
+        label: lang === 'hi' ? `सभी ब्रेसलेट (${this.products.length})` : `All Bracelets (${this.products.length})`,
+        count: this.products.length,
+      },
+      {
+        id: 'wealth',
+        label: lang === 'hi' ? `धन एवं समृद्धि (${counts['wealth'] || 0})` : `Wealth & Prosperity (${counts['wealth'] || 0})`,
+        count: counts['wealth'] || 0,
+      },
+      {
+        id: 'protection',
+        label: lang === 'hi' ? `सुरक्षा एवं नज़र दोष (${counts['protection'] || 0})` : `Protection & Nazar (${counts['protection'] || 0})`,
+        count: counts['protection'] || 0,
+      },
+      {
+        id: 'love',
+        label: lang === 'hi' ? `प्रेम एवं शांति (${counts['love'] || 0})` : `Love & Peace (${counts['love'] || 0})`,
+        count: counts['love'] || 0,
+      },
+      {
+        id: 'healing',
+        label: lang === 'hi' ? `आरोग्य एवं संतुलन (${counts['healing'] || 0})` : `Healing & Balance (${counts['healing'] || 0})`,
+        count: counts['healing'] || 0,
+      },
+    ];
+
+    return categories;
+  }
+
+  private localizeProduct(item: ProductItem, lang: 'en' | 'hi'): ProductItem {
+    if (lang === 'hi') {
+      return {
+        ...item,
+        name: item.nameHi || item.name,
+        desc: item.descHi || item.desc,
+        tag: item.tagHi || item.tag,
+        categoryLabel: item.categoryLabelHi || item.categoryLabel,
+        planet: item.planetHi || item.planet,
+        chakra: item.chakraHi || item.chakra,
+        dayToWear: item.dayToWearHi || item.dayToWear,
+        beadSize: item.beadSizeHi || item.beadSize,
+        benefits: item.benefitsHi && item.benefitsHi.length > 0 ? item.benefitsHi : item.benefits,
+      };
+    }
+    return item;
+  }
+}

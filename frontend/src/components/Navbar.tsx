@@ -39,25 +39,36 @@ export const Navbar: React.FC = () => {
   const profileDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let lastScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
     let ticking = false;
-    let lastScrollY = window.scrollY;
+    let prevScrolled = lastScrollY > 20;
+    let prevVisible = true;
 
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-          const isScrolled = currentScrollY > 20;
-          setScrolled((prev) => (prev !== isScrolled ? isScrolled : prev));
+          const nextScrolled = currentScrollY > 20;
 
-          // Always show when near top of the page
+          if (nextScrolled !== prevScrolled) {
+            prevScrolled = nextScrolled;
+            setScrolled(nextScrolled);
+          }
+
+          let nextVisible = prevVisible;
           if (currentScrollY < 40) {
-            setVisible((prev) => (!prev ? true : prev));
-          } else if (currentScrollY > lastScrollY + 8) {
+            nextVisible = true;
+          } else if (currentScrollY > lastScrollY + 12) {
             // Scrolling DOWN -> hide smoothly
-            setVisible((prev) => (prev ? false : prev));
-          } else if (currentScrollY < lastScrollY - 8) {
+            nextVisible = false;
+          } else if (currentScrollY < lastScrollY - 10) {
             // Scrolling UP -> reveal immediately
-            setVisible((prev) => (!prev ? true : prev));
+            nextVisible = true;
+          }
+
+          if (nextVisible !== prevVisible) {
+            prevVisible = nextVisible;
+            setVisible(nextVisible);
           }
           lastScrollY = currentScrollY;
           ticking = false;
@@ -187,13 +198,13 @@ export const Navbar: React.FC = () => {
 
   const navLinks = [
     { name: t('Home', 'होम'), href: '/' },
-    { name: t('About', 'परिचय'), href: '/about' },
+    { name: t('About Us', 'हमारे बारे में'), href: '/about' },
     { name: t('Services', 'सेवाएं'), href: '/services' },
+    { name: t('Products', 'उत्पाद'), href: '/products' },
+    { name: t('Appointment', 'अपॉइंटमेंट'), href: '/appointment' },
+    { name: t('Contact Us', 'संपर्क करें'), href: '/contact' },
     { name: t('Gallery', 'गैलरी'), href: '/gallery' },
-    { name: t('Blog', 'ब्लॉग'), href: '/blog' },
-    { name: t('Appointment', 'परामर्श'), href: '/appointment' },
-    { name: t('Shop', 'स्टोर'), href: '/products' },
-    { name: t('Contact', 'संपर्क'), href: '/contact' },
+    { name: t('Blogs', 'ब्लॉग्स'), href: '/blog' },
   ];
 
   return (
@@ -209,14 +220,6 @@ export const Navbar: React.FC = () => {
             className={`relative w-full rounded-full nav-glassmorphism ${
               scrolled ? 'nav-glassmorphism-scrolled py-2 sm:py-2.5' : 'py-2.5 sm:py-3.5'
             } px-4 sm:px-6 md:px-8 flex items-center justify-between transition-all duration-300`}
-            style={{
-              backdropFilter: scrolled
-                ? 'blur(24px) saturate(190%) contrast(105%)'
-                : 'blur(20px) saturate(180%) contrast(105%)',
-              WebkitBackdropFilter: scrolled
-                ? 'blur(24px) saturate(190%) contrast(105%)'
-                : 'blur(20px) saturate(180%) contrast(105%)',
-            }}
           >
             {/* Glass Specular Gloss Sheen Reflection */}
             <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none z-0">
@@ -510,16 +513,7 @@ export const Navbar: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <button
-                    onClick={() => {
-                      setAuthMode('login');
-                      setAuthModalOpen(true);
-                    }}
-                    className="hidden sm:inline-block px-3 py-1.5 text-xs font-semibold text-[#5B0D15] hover:text-[#3B1E22] transition-colors cursor-pointer"
-                  >
-                    {t('Sign In', 'लॉग इन')}
-                  </button>
+                <div className="flex items-center">
                   <button
                     onClick={() => {
                       setAuthMode('register');
@@ -622,24 +616,14 @@ export const Navbar: React.FC = () => {
                   </button>
                 </div>
               ) : (
-                <div className="pt-2 border-t border-stone-200 grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      setAuthMode('login');
-                      setAuthModalOpen(true);
-                    }}
-                    className="py-2.5 rounded-full border border-amber-300/80 bg-white text-[#5B0D15] font-semibold text-xs shadow-xs hover:bg-stone-50"
-                  >
-                    {t('Sign In', 'लॉग इन')}
-                  </button>
+                <div className="pt-2 border-t border-stone-200">
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);
                       setAuthMode('register');
                       setAuthModalOpen(true);
                     }}
-                    className="py-2.5 rounded-full bg-[#5B0D15] text-white font-semibold text-xs shadow-md hover:bg-[#480a11]"
+                    className="w-full py-2.5 rounded-full bg-[#5B0D15] text-white font-semibold text-xs shadow-md hover:bg-[#480a11] cursor-pointer"
                   >
                     {t('Sign Up', 'साइन अप')}
                   </button>

@@ -177,16 +177,16 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
 
             {/* Main Page Title */}
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#4A151B] leading-tight tracking-tight">
-              {t('Spiritual Lineage & Sacred Vedic Guidance', 'आध्यात्मिक परंपरा एवं पवित्र वैदिक मार्गदर्शन')}
+              {t('About AstroVD & Our Sacred Mission', 'AstroVD का परिचय एवं हमारा पावन संकल्प')}
             </h2>
 
-            {/* Subtitle */}
-            <p className="text-xs sm:text-sm lg:text-[15px] text-stone-600 leading-relaxed max-w-2xl mx-auto">
-              {t(
-                'Preserving ancient Varanasi astrological traditions under the revered guidance of Gold Medalist Dr. Pandit Vishal Dubey (AstroVD) — bridging ancient Jyotish Shastras with medical insight and profound spiritual wisdom.',
-                'गोल्ड मेडलिस्ट डॉ. पंडित विशाल दुबे (AstroVD) के सानिध्य में प्राचीन काशी ज्योतिष परंपरा — वैदिक शास्त्रों, वैज्ञानिक दृष्टिकोण एवं गहन आध्यात्मिक ज्ञान का अद्भुत संगम।'
-              )}
-            </p>
+            {/* Official Welcome Statement from PDF Page 1 */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-white/90 border border-amber-200/90 shadow-sm text-stone-700 text-xs sm:text-sm leading-relaxed max-w-3xl mx-auto italic text-center">
+              &ldquo;{t(
+                'Welcome to our platform dedicated to Indian astrology and pooja services! We are passionate about providing authentic and personalized insights into the ancient wisdom of Vedic astrology and the transformative power of poojas. Our team of experienced astrologers and pandits are committed to guiding you on your journey towards spiritual fulfillment and personal growth. Whether you seek clarity in your life’s path or wish to invoke blessings through sacred rituals, we are here to support you every step of the way. Explore our services and embark on a profound exploration of self-discovery and divine connection with us.',
+                'भारतीय ज्योतिष एवं पूजा सेवाओं को समर्पित हमारे मंच पर आपका हार्दिक स्वागत है! हम वैदिक ज्योतिष के प्राचीन ज्ञान और पूजा-अनुष्ठानों की परिवर्तनकारी शक्ति के माध्यम से प्रामाणिक एवं व्यक्तिगत मार्गदर्शन प्रदान करने के लिए प्रतिबद्ध हैं। हमारे अनुभवी ज्योतिषियों और विद्वान पंडितों का दल आपके आध्यात्मिक विकास और जीवन में सफलता हेतु निरंतर आपका संबल बनने के लिए तत्पर है।'
+              )}&rdquo;
+            </div>
           </div>
         ) : (
           /* Home Page: Compact Section Glimpse Header */

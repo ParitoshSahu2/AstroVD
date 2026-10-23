@@ -194,7 +194,7 @@ export default function ResetPasswordPage() {
   return (
     <div className="relative min-h-screen w-full bg-[#FAF7F2] m-0 p-0 flex flex-col justify-between selection:bg-amber-400">
       <Navbar />
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-8 my-8">
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-8 pt-28 sm:pt-36 my-8">
         <Suspense fallback={<div className="text-stone-500 text-sm">Loading security token...</div>}>
           <ResetPasswordForm />
         </Suspense>

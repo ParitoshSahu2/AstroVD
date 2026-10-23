@@ -1,5 +1,6 @@
 export interface ProductItem {
   id: string;
+  slug?: string;
   name: string;
   nameHi?: string;
   tag: string;
@@ -7,11 +8,15 @@ export interface ProductItem {
   desc: string;
   descHi?: string;
   image: string;
-  category: 'all' | 'wealth' | 'protection' | 'love' | 'healing';
+  images?: string[];
+  category: 'all' | 'wealth' | 'protection' | 'love' | 'healing' | string;
   categoryLabel: string;
   categoryLabelHi?: string;
   price: string;
+  priceFormatted?: string;
   originalPrice: string;
+  originalPriceFormatted?: string;
+  discountPercent?: number;
   planet: string;
   planetHi?: string;
   chakra: string;
@@ -23,6 +28,11 @@ export interface ProductItem {
   beadSizeHi?: string;
   rating: number;
   reviewsCount: number;
+  inStock?: boolean;
+  stock?: number;
+  isFeatured?: boolean;
+  benefits?: string[];
+  benefitsHi?: string[];
 }
 
 export const PRODUCTS_CATALOG: ProductItem[] = [
@@ -390,4 +400,150 @@ export const PRODUCTS_CATALOG: ProductItem[] = [
     rating: 4.8,
     reviewsCount: 157,
   },
+  {
+    id: 'crystal_quartz',
+    name: 'CLEAR QUARTZ CRYSTAL BRACELET',
+    nameHi: 'प्राकृतिक स्फटिक (क्रिस्टल) ब्रेसलेट',
+    tag: 'MASTER HEALER • MENTAL CLARITY',
+    tagHi: 'सर्वसिद्धि स्फटिक • मानसिक शांति व शुद्धि',
+    desc: 'The master healing stone. Dissolves mental fog, cools planetary heat, and amplifies spiritual prayers and concentration.',
+    descHi: 'मन को शांत व निर्मल रखने वाला पावन स्फटिक रत्न। शुक्र एवं चंद्र दोष का शमन कर एकाग्रता व सकारात्मक ऊर्जा का संचार करता है।',
+    image: '/products/prod-moonstone.png',
+    category: 'healing',
+    categoryLabel: 'Healing & Clarity',
+    categoryLabelHi: 'आरोग्य एवं मानसिक शुद्धि',
+    price: '₹1,199',
+    originalPrice: '₹2,199',
+    planet: 'Venus (Shukra) & Moon (Chandra)',
+    planetHi: 'शुक्र एवं चंद्रमा',
+    chakra: 'Crown Chakra (Sahasrara)',
+    chakraHi: 'सहस्रार चक्र (शिरोभाग)',
+    mantra: 'ॐ नमः शिवाय (Om Namah Shivaya)',
+    dayToWear: 'Monday or Friday Morning',
+    dayToWearHi: 'सोमवार अथवा शुक्रवार प्रातः',
+    beadSize: '8mm Natural Sphatik Beads',
+    beadSizeHi: '8 मिमी शुद्ध प्राकृतिक स्फटिक',
+    rating: 4.9,
+    reviewsCount: 268,
+  },
+  {
+    id: 'gold_stone',
+    name: 'GOLD STONE ENERGY BRACELET',
+    nameHi: 'गोल्ड स्टोन दिव्य तेज ब्रेसलेट',
+    tag: 'AMBITION & DRIVE • SOLAR RADIANCE',
+    tagHi: 'लक्ष्य सिद्धि • सौर तेज व आत्मविश्वास',
+    desc: 'A shimmering stone of ambition and vitality. Helps overcome lethargy and instills optimism and drive for success.',
+    descHi: 'लक्ष्य प्राप्ति एवं आत्मविश्वास का अद्भुत प्रेरक रत्न। आलस्य दूर कर जीवन में नवोत्साह एवं धन आकर्षण की क्षमता बढ़ाता है।',
+    image: '/products/prod-carnelian.png',
+    category: 'wealth',
+    categoryLabel: 'Courage & Drive',
+    categoryLabelHi: 'साहस एवं ऊर्जा',
+    price: '₹1,249',
+    originalPrice: '₹2,399',
+    planet: 'Sun (Surya)',
+    planetHi: 'सूर्य देव',
+    chakra: 'Sacral & Solar Plexus',
+    chakraHi: 'स्वाधिष्ठान एवं मणिपूर चक्र',
+    mantra: 'ॐ घृणि सूर्याय नमः (Om Ghrini Suryaya Namaha)',
+    dayToWear: 'Sunday Morning',
+    dayToWearHi: 'रविवार प्रातः',
+    beadSize: '8mm Shimmering Gold Stone',
+    beadSizeHi: '8 मिमी चमकीला गोल्ड स्टोन',
+    rating: 4.8,
+    reviewsCount: 142,
+  },
+  {
+    id: 'seven_chakra_clear_quartz',
+    name: 'SEVEN CHAKRA WITH CLEAR QUARTZ',
+    nameHi: 'सप्त चक्र स्फटिक ऊर्जा ब्रेसलेट',
+    tag: 'COMPLETE BALANCE • 7 CHAKRA HARMONY',
+    tagHi: 'समग्र संतुलन • 7 चक्र शुद्धि व स्फटिक ऊर्जा',
+    desc: 'Features the 7 sacred gemstone beads amplified with clear quartz spacers for total bio-energetic alignment and aura purification.',
+    descHi: 'सात प्रमुख चक्रों के पावन रत्नों के संग स्फटिक का दिव्य संगम। शरीर के संपूर्ण ऊर्जा केंद्रों का संतुलन कर औरा को शुद्ध करता है।',
+    image: '/products/prod-pyrite.png',
+    category: 'healing',
+    categoryLabel: 'Complete Balance',
+    categoryLabelHi: 'समग्र चक्र संतुलन',
+    price: '₹1,499',
+    originalPrice: '₹2,899',
+    planet: 'All 9 Navgrahas (नवग्रह)',
+    planetHi: 'समस्त 9 नवग्रह',
+    chakra: 'All 7 Major Chakras',
+    chakraHi: 'मूलाधार से सहस्रार तक समस्त 7 चक्र',
+    mantra: 'ॐ नवग्रहाय नमः (Om Navagrahaya Namaha)',
+    dayToWear: 'Any Auspicious Morning',
+    dayToWearHi: 'किसी भी शुभ वार को प्रातः',
+    beadSize: '8mm 7-Gemstone & Sphatik',
+    beadSizeHi: '8 मिमी 7-रत्न एवं स्फटिक',
+    rating: 5.0,
+    reviewsCount: 384,
+  },
+  {
+    id: 'seven_chakra',
+    name: 'SEVEN CHAKRA HEALING BRACELET',
+    nameHi: 'सप्त चक्र प्राकृतिक आरोग्य ब्रेसलेट',
+    tag: 'VITALITY & WELLBEING • MULTI-GEMSTONE',
+    tagHi: 'आरोग्य व सामंजस्य • बहु-रत्न संतुलन',
+    desc: 'Combines 7 authentic gemstones corresponding to the 7 bodily energy centers. Relieves emotional blockages and promotes vitality.',
+    descHi: 'शारीरिक व मानसिक शांति हेतु 7 चक्रों के प्राकृतिक रत्नों का दिव्य संयोजन। नकारात्मक ऊर्जा दूर कर जीवन में संतुलन लाता है।',
+    image: '/products/prod-aventurine.png',
+    category: 'healing',
+    categoryLabel: 'Healing & Balance',
+    categoryLabelHi: 'आरोग्य एवं संतुलन',
+    price: '₹1,399',
+    originalPrice: '₹2,599',
+    planet: 'Sun to Ketu (All 9 Planets)',
+    planetHi: 'सूर्य से केतु पर्यंत नवग्रह',
+    chakra: 'All 7 Chakras',
+    chakraHi: 'समस्त 7 चक्र',
+    mantra: 'ॐ गं गणपतये नमः (Om Gam Ganapataye Namaha)',
+    dayToWear: 'Wednesday or Thursday Morning',
+    dayToWearHi: 'बुधवार अथवा गुरुवार प्रातः',
+    beadSize: '8mm 7-Chakra Natural Beads',
+    beadSizeHi: '8 मिमी 7 चक्र प्राकृतिक मनके',
+    rating: 4.9,
+    reviewsCount: 310,
+  },
+  {
+    id: 'red_tiger_eye',
+    name: 'RED TIGER EYE BRACELET',
+    nameHi: 'लाल टाइगर आई शौर्य ब्रेसलेट',
+    tag: 'STRENGTH & FOCUSED ACTION • MARS POWER',
+    tagHi: 'शौर्य व पराक्रम • मंगल का तेज व विजय योग',
+    desc: 'Deep russet-red chatoyant tiger eye. Stimulates physical endurance, overcomes chronic fatigue, and ignites decisive courageous action.',
+    descHi: 'मंगल के शौर्य एवं पराक्रम का महा-रत्न। शारीरिक कमजोरी व आलस्य को मिटाकर दृढ़ संकल्प, साहस और कार्य में सफलता प्रदान करता है।',
+    image: '/products/prod-tiger-eye-macro.jpg',
+    category: 'wealth',
+    categoryLabel: 'Strength & Courage',
+    categoryLabelHi: 'साहस एवं पराक्रम',
+    price: '₹1,349',
+    originalPrice: '₹2,499',
+    planet: 'Mars (Mangal)',
+    planetHi: 'मंगल ग्रह',
+    chakra: 'Root & Solar Plexus',
+    chakraHi: 'मूलाधार एवं मणिपूर चक्र',
+    mantra: 'ॐ भौं भौमाय नमः (Om Bhaum Bhaumaya Namaha)',
+    dayToWear: 'Tuesday Morning',
+    dayToWearHi: 'मंगलवार प्रातः',
+    beadSize: '8mm Red Chatoyant Beads',
+    beadSizeHi: '8 मिमी लाल टाइगर आई मनके',
+    rating: 4.9,
+    reviewsCount: 198,
+  },
 ];
+
+export const getProductById = (id: string): ProductItem | undefined => {
+  return PRODUCTS_CATALOG.find((p) => p.id === id);
+};
+
+export const getRelatedProducts = (currentId: string, limit = 4): ProductItem[] => {
+  const current = getProductById(currentId);
+  if (!current) return PRODUCTS_CATALOG.slice(0, limit);
+  const sameCategory = PRODUCTS_CATALOG.filter(
+    (p) => p.id !== currentId && p.category === current.category
+  );
+  const others = PRODUCTS_CATALOG.filter(
+    (p) => p.id !== currentId && p.category !== current.category
+  );
+  return [...sameCategory, ...others].slice(0, limit);
+};

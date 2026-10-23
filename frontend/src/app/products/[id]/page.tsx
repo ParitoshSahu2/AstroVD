@@ -38,9 +38,12 @@ interface ProductPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function ProductDetailPage({ params }: ProductPageProps) {
+async function ProductDetailWrapper({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  return <ProductDetailClient productId={id} />;
+}
 
+export default function ProductDetailPage({ params }: ProductPageProps) {
   return (
     <Suspense
       fallback={
@@ -49,7 +52,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         </div>
       }
     >
-      <ProductDetailClient productId={id} />
+      <ProductDetailWrapper params={params} />
     </Suspense>
   );
 }
