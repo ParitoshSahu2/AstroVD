@@ -1363,7 +1363,7 @@ export default function AdminPage() {
         ) : (
           <div className="flex-1 flex w-full min-h-screen">
             {/* ===================== DESKTOP SIDEBAR ===================== */}
-            <aside className="hidden md:flex w-64 bg-[#2A0808] text-stone-200 flex-col shrink-0 border-r border-[#3D0F14] select-none fixed top-0 bottom-0 left-0 z-30 h-screen overflow-y-auto">
+            <aside className="hidden md:flex w-64 bg-[#2A0808] text-stone-200 flex-col shrink-0 border-r border-[#3D0F14] select-none fixed top-0 bottom-0 left-0 z-30 h-screen overflow-hidden">
               {/* Top Logo & Title */}
               <div className="p-4 sm:p-5 border-b border-[#3D0F14]/90 flex items-center justify-between">
                 <Link
