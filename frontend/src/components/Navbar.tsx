@@ -3,16 +3,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Search,
   ShoppingCart,
   Menu,
   X,
   ChevronDown,
+  ChevronUp,
   Wallet,
   Sparkles,
   Compass,
+  BookOpen,
+  Image as ImageIcon,
+  Phone,
   LogOut,
   User as UserIcon,
   ShieldCheck,
@@ -20,24 +24,39 @@ import {
 } from 'lucide-react';
 import { AuthModal } from './AuthModal';
 import { useLanguage } from '../context/LanguageContext';
+import { useCart } from '../context/CartContext';
 import { performLogout } from '../lib/auth';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const { language, toggleLanguage, t } = useLanguage();
+  
+  // Cart state
+  let liveCartCount = 1;
+  try {
+    const cart = useCart();
+    liveCartCount = cart.totalCount > 0 ? cart.totalCount : 1;
+  } catch {
+    liveCartCount = 1;
+  }
+
   const [visible, setVisible] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [cartCount, setCartCount] = useState(1);
-  const [cartOpen, setCartOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const profileDropdownRef = useRef<HTMLDivElement>(null);
 
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const aboutDropdownRef = useRef<HTMLDivElement>(null);
+  const aboutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Scroll visibility & glassmorphic state
   useEffect(() => {
     let lastScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
     let ticking = false;
@@ -59,10 +78,8 @@ export const Navbar: React.FC = () => {
           if (currentScrollY < 40) {
             nextVisible = true;
           } else if (currentScrollY > lastScrollY + 12) {
-            // Scrolling DOWN -> hide smoothly
             nextVisible = false;
           } else if (currentScrollY < lastScrollY - 10) {
-            // Scrolling UP -> reveal immediately
             nextVisible = true;
           }
 
@@ -81,6 +98,7 @@ export const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Sync logged in user profile
   useEffect(() => {
     const syncUser = () => {
       const saved = localStorage.getItem('astro_user');
@@ -97,7 +115,9 @@ export const Navbar: React.FC = () => {
       }
 
       if (token) {
-        const backendBase = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
+        const backendBase = (
+          process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
+        ).replace(/\/api\/?$/, '');
         fetch(`${backendBase}/api/auth/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -129,7 +149,7 @@ export const Navbar: React.FC = () => {
     };
   }, []);
 
-  // Close profile dropdown when clicking outside
+  // Close dropdowns on outside click or route change
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -138,25 +158,53 @@ export const Navbar: React.FC = () => {
       ) {
         setProfileDropdownOpen(false);
       }
+      if (
+        aboutDropdownRef.current &&
+        !aboutDropdownRef.current.contains(event.target as Node)
+      ) {
+        setAboutDropdownOpen(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    setAboutDropdownOpen(false);
+    setMobileMenuOpen(false);
+    setProfileDropdownOpen(false);
+    setSearchOpen(false);
+  }, [pathname]);
+
+  const handleAboutMouseEnter = () => {
+    if (aboutTimeoutRef.current) clearTimeout(aboutTimeoutRef.current);
+    setAboutDropdownOpen(true);
+  };
+
+  const handleAboutMouseLeave = () => {
+    aboutTimeoutRef.current = setTimeout(() => {
+      setAboutDropdownOpen(false);
+    }, 180);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
+    }
+  };
+
   const getUserInitials = (u?: any, nameOverride?: string) => {
     const raw = (nameOverride || u?.name || '').trim();
     if (raw) {
       const parts = raw.split(/\s+/).filter(Boolean);
       if (parts.length >= 2) {
-        // Double initials (e.g. "Yash Patidar" -> "YP")
         return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
       }
-      // Single initial (e.g. "Yash" -> "Y")
       return parts[0][0].toUpperCase();
     }
-
-    // Fallback: derive from email (e.g. "yashpatidar862@gmail.com" -> "YP" or "Y")
     if (u?.email) {
       const clean = u.email.split('@')[0].replace(/[0-9]+/g, '');
       const parts = clean.split(/[._-]+/).filter(Boolean);
@@ -167,26 +215,20 @@ export const Navbar: React.FC = () => {
         return parts[0][0].toUpperCase();
       }
     }
-
     if (u?.role === 'ADMIN' || u?.role === 'SUPERADMIN') return 'A';
     return 'Y';
   };
 
-  const getInitials = (name?: string) => {
-    return getUserInitials(user, name);
-  };
+  const getInitials = (name?: string) => getUserInitials(user, name);
 
   const getAvatarBackground = (role?: string) => {
     const r = (role || '').toUpperCase();
     if (r === 'ADMIN' || r === 'SUPERADMIN') {
-      // Royal Imperial Amethyst & Burgundy with Gold Ring
       return 'bg-gradient-to-br from-[#4A044E] via-[#5B0D15] to-[#701A75] border-amber-300 text-amber-200 ring-amber-300/40';
     }
     if (r === 'ASTROLOGER') {
-      // Sacred Emerald & Vedic Ochre
       return 'bg-gradient-to-br from-[#064E3B] via-[#0F766E] to-[#78350F] border-emerald-300 text-emerald-100 ring-emerald-300/40';
     }
-    // Elegant Sacred Royal Maroon & Deep Wine with Warm Golden Accents (Seeker / User / Default)
     return 'bg-gradient-to-br from-[#5B0D15] via-[#7B121C] to-[#3B1E22] border-amber-300/80 text-amber-200 ring-amber-200/50';
   };
 
@@ -196,16 +238,44 @@ export const Navbar: React.FC = () => {
     await performLogout();
   };
 
-  const navLinks = [
+  // Top level navigation links matching reference design
+  const topNavLinks = [
     { name: t('Home', 'होम'), href: '/' },
-    { name: t('About Us', 'हमारे बारे में'), href: '/about' },
     { name: t('Services', 'सेवाएं'), href: '/services' },
     { name: t('Products', 'उत्पाद'), href: '/products' },
     { name: t('Appointment', 'अपॉइंटमेंट'), href: '/appointment' },
-    { name: t('Contact Us', 'संपर्क करें'), href: '/contact' },
-    { name: t('Gallery', 'गैलरी'), href: '/gallery' },
-    { name: t('Blogs', 'ब्लॉग्स'), href: '/blog' },
   ];
+
+  // About Us dropdown items with icons matching reference image
+  const aboutDropdownItems = [
+    {
+      name: t('Who We Are', 'हमारे बारे में'),
+      href: '/about',
+      icon: Compass,
+    },
+    {
+      name: t('Blogs', 'ब्लॉग्स'),
+      href: '/blog',
+      icon: BookOpen,
+    },
+    {
+      name: t('Gallery', 'गैलरी'),
+      href: '/gallery',
+      icon: ImageIcon,
+    },
+    {
+      name: t('Contact Us', 'संपर्क करें'),
+      href: '/contact',
+      icon: Phone,
+    },
+  ];
+
+  const isAboutActive =
+    pathname === '/about' ||
+    pathname === '/blog' ||
+    pathname?.startsWith('/blog/') ||
+    pathname === '/gallery' ||
+    pathname === '/contact';
 
   return (
     <>
@@ -218,7 +288,7 @@ export const Navbar: React.FC = () => {
           {/* Glassmorphic Capsule Nav Bar */}
           <nav
             className={`relative w-full rounded-full nav-glassmorphism ${
-              scrolled ? 'nav-glassmorphism-scrolled py-2 sm:py-2.5' : 'py-2.5 sm:py-3.5'
+              scrolled ? 'nav-glassmorphism-scrolled py-2 sm:py-2.5' : 'py-2.5 sm:py-3'
             } px-4 sm:px-6 md:px-8 flex items-center justify-between transition-all duration-300`}
           >
             {/* Glass Specular Gloss Sheen Reflection */}
@@ -233,17 +303,17 @@ export const Navbar: React.FC = () => {
                 <Image
                   src="/astro-vd-logo.png"
                   alt="AstroVD"
-                  width={160}
-                  height={40}
+                  width={150}
+                  height={38}
                   priority
-                  className="h-8 sm:h-9 md:h-10 w-auto object-contain hover:opacity-95 transition-opacity"
+                  className="h-8 sm:h-9 w-auto object-contain hover:opacity-95 transition-opacity"
                 />
               </Link>
             </div>
 
-            {/* Center: Navigation Links to Dedicated Pages */}
-            <div className="relative z-10 hidden lg:flex items-center gap-6 xl:gap-8 text-[#3B1E22] font-medium text-sm">
-              {navLinks.map((link) => {
+            {/* Center: Clean Navigation Links Matching Reference Design */}
+            <div className="relative z-10 hidden lg:flex items-center gap-7 xl:gap-9 text-[#3B1E22] font-medium text-sm">
+              {topNavLinks.map((link) => {
                 const isActive =
                   pathname === link.href ||
                   (link.href !== '/' && pathname?.startsWith(link.href));
@@ -254,25 +324,88 @@ export const Navbar: React.FC = () => {
                     className={`relative py-1 transition-colors duration-200 hover:text-[#5B0D15] ${
                       isActive
                         ? 'text-[#5B0D15] font-semibold'
-                        : 'text-[#4A262B]'
+                        : 'text-[#3B1E22]'
                     }`}
                   >
-                    {link.name}
-                    {/* Active Underline */}
+                    <span>{link.name}</span>
+                    {/* Active Underline matching reference */}
                     {isActive && (
-                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#5B0D15] rounded-full" />
+                      <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#5B0D15] rounded-full" />
                     )}
                   </Link>
                 );
               })}
+
+              {/* About Us with Interactive Dropdown (Screenshot 2) */}
+              <div
+                ref={aboutDropdownRef}
+                className="relative"
+                onMouseEnter={handleAboutMouseEnter}
+                onMouseLeave={handleAboutMouseLeave}
+              >
+                <button
+                  type="button"
+                  onClick={() => setAboutDropdownOpen((prev) => !prev)}
+                  className={`relative py-1 flex items-center gap-1 transition-colors duration-200 hover:text-[#5B0D15] cursor-pointer ${
+                    isAboutActive || aboutDropdownOpen
+                      ? 'text-[#5B0D15] font-semibold'
+                      : 'text-[#3B1E22]'
+                  }`}
+                  aria-expanded={aboutDropdownOpen}
+                >
+                  <span>{t('About Us', 'हमारे बारे में')}</span>
+                  {aboutDropdownOpen ? (
+                    <ChevronUp className="w-3.5 h-3.5 text-[#5B0D15] transition-transform duration-200" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5 text-stone-500 transition-transform duration-200" />
+                  )}
+                  {isAboutActive && (
+                    <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#5B0D15] rounded-full" />
+                  )}
+                </button>
+
+                {/* About Us Dropdown Menu */}
+                {aboutDropdownOpen && (
+                  <div
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 rounded-2xl bg-white/98 backdrop-blur-2xl border border-amber-200/90 shadow-xl shadow-amber-950/10 p-2 z-50 animate-fadeIn"
+                    style={{
+                      boxShadow: '0 12px 32px -4px rgba(91, 13, 21, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.05)',
+                    }}
+                  >
+                    <div className="space-y-0.5">
+                      {aboutDropdownItems.map((item) => {
+                        const Icon = item.icon;
+                        const isSubActive =
+                          pathname === item.href ||
+                          (item.href !== '/' && pathname?.startsWith(item.href));
+                        return (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            onClick={() => setAboutDropdownOpen(false)}
+                            className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-colors ${
+                              isSubActive
+                                ? 'bg-amber-100/70 text-[#5B0D15] font-semibold'
+                                : 'text-stone-700 hover:text-[#5B0D15] hover:bg-amber-50/80'
+                            }`}
+                          >
+                            <Icon className="w-4 h-4 text-amber-700 shrink-0" />
+                            <span>{item.name}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Right: Language Toggle, Search, Cart Badge & Sign Up Pill */}
-            <div className="relative z-10 flex items-center gap-2.5 sm:gap-3 md:gap-4">
-              {/* Hindi / English Toggle Button */}
+            {/* Right: Language Pill, Search, Cart Badge & Sign Up Pill */}
+            <div className="relative z-10 flex items-center gap-3 sm:gap-3.5 md:gap-4">
+              {/* Hindi / English Language Pill */}
               <button
                 onClick={toggleLanguage}
-                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-white/75 hover:bg-white text-xs font-bold border border-amber-300/80 text-[#3B1E22] hover:text-[#5B0D15] shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50/40 hover:bg-amber-50/80 text-xs font-bold border border-amber-300/90 text-[#3B1E22] hover:text-[#5B0D15] shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer active:scale-95"
                 title={language === 'en' ? 'हिन्दी में पढ़ें' : 'Read in English'}
                 aria-label="Toggle Language"
               >
@@ -286,10 +419,13 @@ export const Navbar: React.FC = () => {
                 </span>
               </button>
 
-              {/* Search Icon / Expandable Input */}
+              {/* Search Icon with Expandable Input */}
               <div className="relative">
                 {searchOpen ? (
-                  <div className="flex items-center bg-white/80 backdrop-blur-md border border-amber-300/80 rounded-full px-3 py-1.5 shadow-sm animate-fadeIn">
+                  <form
+                    onSubmit={handleSearchSubmit}
+                    className="flex items-center bg-white/90 backdrop-blur-md border border-amber-300/90 rounded-full px-3 py-1.5 shadow-sm animate-fadeIn"
+                  >
                     <Search className="w-4 h-4 text-[#4A262B] mr-2 shrink-0" />
                     <input
                       type="text"
@@ -300,16 +436,18 @@ export const Navbar: React.FC = () => {
                       className="bg-transparent text-xs text-[#3B1E22] placeholder-stone-400 focus:outline-none w-28 sm:w-36"
                     />
                     <button
+                      type="button"
                       onClick={() => setSearchOpen(false)}
-                      className="text-stone-400 hover:text-stone-700 ml-1"
+                      className="text-stone-400 hover:text-stone-700 ml-1 cursor-pointer"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
-                  </div>
+                  </form>
                 ) : (
                   <button
+                    type="button"
                     onClick={() => setSearchOpen(true)}
-                    className="p-1.5 text-[#3B1E22] hover:text-[#5B0D15] transition-colors cursor-pointer"
+                    className="p-1.5 text-stone-700 hover:text-[#5B0D15] transition-colors cursor-pointer"
                     aria-label="Search"
                     title={t('Search', 'खोजें')}
                   >
@@ -318,62 +456,28 @@ export const Navbar: React.FC = () => {
                 )}
               </div>
 
-              {/* Shopping Cart Icon with Badge */}
-              <div className="relative">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCartOpen(!cartOpen);
-                    setProfileDropdownOpen(false);
-                    setSearchOpen(false);
-                  }}
-                  className="p-1.5 text-[#3B1E22] hover:text-[#5B0D15] transition-colors relative cursor-pointer"
-                  aria-label="Shopping Cart"
-                  title={t('Cart', 'कार्ट')}
-                >
-                  <ShoppingCart className="w-5 h-5 stroke-[1.8]" />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#5B0D15] text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
-                      {cartCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* Cart Preview Tooltip Dropdown */}
-                {cartOpen && (
-                  <div className="absolute top-full right-0 mt-3 w-64 rounded-2xl bg-white/95 backdrop-blur-2xl border border-amber-200/80 shadow-2xl p-4 animate-fadeIn">
-                    <div className="flex items-center justify-between pb-2 border-b border-stone-200">
-                      <span className="text-xs font-bold text-[#3B1E22]">{t('Your Cart', 'आपकी कार्ट')} ({cartCount})</span>
-                      <button onClick={() => setCartOpen(false)} className="text-stone-400 hover:text-stone-700">
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <div className="py-3 text-xs text-stone-600 flex items-center gap-2.5">
-                      <span className="text-xl">📿</span>
-                      <div>
-                        <div className="font-semibold text-stone-900">{t('Tiger Eye Bracelet', 'टाइगर आई ब्रेसलेट')}</div>
-                        <div className="text-[11px] text-[#5B0D15] font-bold">1 × ₹1,299</div>
-                      </div>
-                    </div>
-                    <Link
-                      href="/products"
-                      onClick={() => setCartOpen(false)}
-                      className="block text-center w-full py-2 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs font-bold transition-colors cursor-pointer"
-                    >
-                      {t('View Cart & Shop', 'कार्ट देखें और खरीदें')}
-                    </Link>
-                  </div>
+              {/* Shopping Cart with Maroon Counter Badge */}
+              <Link
+                href="/cart"
+                className="p-1.5 text-stone-700 hover:text-[#5B0D15] transition-colors relative cursor-pointer"
+                aria-label="Shopping Cart"
+                title={t('Cart', 'कार्ट')}
+              >
+                <ShoppingCart className="w-5 h-5 stroke-[1.8]" />
+                {liveCartCount > 0 && (
+                  <span className="absolute -top-1 -right-1.5 w-4 h-4 rounded-full bg-[#5B0D15] text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
+                    {liveCartCount}
+                  </span>
                 )}
-              </div>
+              </Link>
 
-              {/* User Profile Pill & Dropdown or Sign Up Button */}
+              {/* User Avatar Menu OR Dedicated "Sign Up" Pill Button */}
               {user ? (
                 <div className="relative" ref={profileDropdownRef}>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setProfileDropdownOpen((prev) => !prev);
-                      setCartOpen(false);
                       setSearchOpen(false);
                     }}
                     className="flex items-center justify-center p-0.5 rounded-full border border-amber-300/80 bg-white/85 hover:bg-white text-[#3B1E22] shadow-xs hover:shadow-md transition-all cursor-pointer group active:scale-95"
@@ -381,7 +485,6 @@ export const Navbar: React.FC = () => {
                     aria-expanded={profileDropdownOpen}
                     title={user.name || user.email || 'Account'}
                   >
-                    {/* Royal Elegant Monogram Avatar Circle */}
                     <div
                       className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full ${getAvatarBackground(
                         user.role
@@ -395,7 +498,7 @@ export const Navbar: React.FC = () => {
                     </div>
                   </button>
 
-                  {/* Luxury Frosted Glass Dropdown Menu */}
+                  {/* Profile Menu Dropdown */}
                   {profileDropdownOpen && (
                     <div
                       onClick={(e) => e.stopPropagation()}
@@ -519,7 +622,7 @@ export const Navbar: React.FC = () => {
                       setAuthMode('register');
                       setAuthModalOpen(true);
                     }}
-                    className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs sm:text-sm font-semibold tracking-wide shadow-md shadow-rose-950/25 transition-all transform hover:scale-[1.03] cursor-pointer"
+                    className="px-5 py-2 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs sm:text-sm font-semibold tracking-wide shadow-md shadow-rose-950/20 transition-all transform hover:scale-[1.03] active:scale-[0.98] cursor-pointer"
                   >
                     {t('Sign Up', 'साइन अप')}
                   </button>
@@ -529,7 +632,7 @@ export const Navbar: React.FC = () => {
               {/* Mobile Menu Hamburger */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-1.5 rounded-full text-[#3B1E22] hover:text-[#5B0D15] focus:outline-none"
+                className="lg:hidden p-1.5 rounded-full text-[#3B1E22] hover:text-[#5B0D15] focus:outline-none cursor-pointer"
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -540,14 +643,15 @@ export const Navbar: React.FC = () => {
           {/* Mobile Menu Dropdown */}
           {mobileMenuOpen && (
             <div
-              className="lg:hidden mt-2 rounded-3xl nav-glassmorphism p-4 animate-fadeIn space-y-2"
+              className="lg:hidden mt-2 rounded-3xl nav-glassmorphism p-4 animate-fadeIn space-y-3"
               style={{
                 backdropFilter: 'blur(24px) saturate(190%) contrast(105%)',
                 WebkitBackdropFilter: 'blur(24px) saturate(190%) contrast(105%)',
               }}
             >
+              {/* Primary Links */}
               <div className="grid grid-cols-2 gap-2">
-                {navLinks.map((link) => (
+                {topNavLinks.map((link) => (
                   <Link
                     key={link.name}
                     href={link.href}
@@ -563,12 +667,39 @@ export const Navbar: React.FC = () => {
                 ))}
               </div>
 
+              {/* About Us Sub-sections in Mobile */}
+              <div className="pt-2 border-t border-amber-200/60 space-y-1">
+                <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider block px-2">
+                  {t('About Us', 'हमारे बारे में')}
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  {aboutDropdownItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-2 p-2 rounded-xl text-xs font-medium transition-colors ${
+                          pathname === item.href
+                            ? 'bg-amber-100/70 text-[#5B0D15]'
+                            : 'text-stone-700 hover:bg-stone-50'
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5 text-amber-700" />
+                        <span>{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Mobile Language Toggle */}
-              <div className="pt-2 pb-1 flex items-center justify-between border-t border-amber-200/60">
+              <div className="pt-2 flex items-center justify-between border-t border-amber-200/60">
                 <span className="text-xs font-bold text-stone-600">{t('Select Language', 'भाषा चुनें')}:</span>
                 <button
                   onClick={toggleLanguage}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-amber-300 text-xs font-bold text-[#5B0D15] shadow-xs"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-amber-300 text-xs font-bold text-[#5B0D15] shadow-xs cursor-pointer"
                 >
                   <Globe className="w-3.5 h-3.5 text-amber-700" />
                   <span>{language === 'en' ? 'हिन्दी में बदलें' : 'Switch to English'}</span>
