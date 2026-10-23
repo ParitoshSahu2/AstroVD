@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Reflector } from '@nestjs/core';
-import { ExecutionContext, BadRequestException, NotFoundException } from '@nestjs/common';
+import { ExecutionContext, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { ContentService } from './content.service.js';
 import { ContentController } from './content.controller.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
@@ -57,12 +57,12 @@ describe('Content Management & Authorization Suite', () => {
 
     it('denies access if user is unauthenticated (no user on request)', () => {
       const ctx = createMockContext(undefined);
-      expect(rolesGuard.canActivate(ctx)).toBeFalsy();
+      expect(() => rolesGuard.canActivate(ctx)).toThrow(ForbiddenException);
     });
 
     it('denies access if user is a regular customer', () => {
       const ctx = createMockContext(mockCustomerUser);
-      expect(rolesGuard.canActivate(ctx)).toBeFalsy();
+      expect(() => rolesGuard.canActivate(ctx)).toThrow(ForbiddenException);
     });
 
     it('allows access for ADMIN role', () => {
@@ -226,7 +226,7 @@ describe('Content Management & Authorization Suite', () => {
 
   describe('Admin Activity Audit History', () => {
     it('automatically records all admin actions in activity history', () => {
-      const initialLogs = service.getActivityHistory();
+      const initialLogs = service.getActivityHistory({ limit: 5000 });
       const initialCount = initialLogs.length;
 
       // Perform a blog action
@@ -242,7 +242,7 @@ describe('Content Management & Authorization Suite', () => {
       // Perform publish change
       service.setBlogPostPublishStatus(post.id, false, mockSuperAdminUser);
 
-      const logsAfter = service.getActivityHistory();
+      const logsAfter = service.getActivityHistory({ limit: 5000 });
       expect(logsAfter.length).toBeGreaterThan(initialCount);
 
       // Check most recent log
