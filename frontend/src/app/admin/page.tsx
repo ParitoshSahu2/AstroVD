@@ -1289,7 +1289,7 @@ export default function AdminPage() {
   };
 
   return (
-    <div className={`min-h-screen bg-[#FAF7F2] flex flex-col text-[#3B1E22] ${currentUser && isAdmin ? 'h-screen overflow-hidden' : ''}`}>
+    <div className="min-h-screen bg-[#FAF7F2] flex flex-col text-[#3B1E22]">
       {/* Website Navbar is hidden in the admin panel to provide a clean, dedicated full-viewport dashboard */}
       {false && <Navbar />}
 
@@ -1301,7 +1301,7 @@ export default function AdminPage() {
         />
       )}
 
-      <main className={`flex-1 w-full ${currentUser && isAdmin ? 'p-0 max-w-none flex flex-col h-screen overflow-hidden' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12'}`}>
+      <main className={`flex-1 w-full ${currentUser && isAdmin ? 'p-0 max-w-none flex flex-col min-h-screen' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12'}`}>
         {/* ACCESS CONTROL CHECK */}
         {!currentUser ? (
           <div className="max-w-xl mx-auto my-12 p-8 sm:p-12 text-center rounded-3xl bg-white/80 backdrop-blur-xl border border-amber-200/80 shadow-xl space-y-6">
@@ -1360,9 +1360,9 @@ export default function AdminPage() {
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex overflow-hidden h-screen">
+          <div className="flex-1 flex w-full min-h-screen">
             {/* ===================== DESKTOP SIDEBAR ===================== */}
-            <aside className="hidden md:flex w-64 bg-[#2A0808] text-stone-200 flex-col shrink-0 border-r border-[#3D0F14] select-none relative z-10 h-screen">
+            <aside className="hidden md:flex w-64 bg-[#2A0808] text-stone-200 flex-col shrink-0 border-r border-[#3D0F14] select-none fixed top-0 bottom-0 left-0 z-30 h-screen overflow-y-auto">
               {/* Top Logo & Title */}
               <div className="p-5 flex items-center gap-3 border-b border-[#3D0F14]/90">
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center text-[#2A0808] shadow-md shrink-0">
@@ -1667,7 +1667,7 @@ export default function AdminPage() {
             )}
 
             {/* ===================== MAIN VIEW AREA ===================== */}
-            <div className="flex-1 flex flex-col min-w-0 bg-[#FAF8F5] overflow-y-auto">
+            <div className="flex-1 md:pl-64 flex flex-col min-w-0 bg-[#FAF8F5] min-h-screen w-full">
               {/* Top Navigation Bar */}
               <header className="h-16 px-4 sm:px-8 bg-white border-b border-stone-200/80 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-xs">
                 <div className="flex items-center gap-3">
