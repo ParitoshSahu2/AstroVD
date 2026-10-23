@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Eye, MapPin, Calendar, Sparkles, ArrowRight, X, ChevronLeft, ChevronRight, Flame, Tv, Award, Compass } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -238,11 +239,12 @@ export const GallerySection: React.FC = () => {
             >
               {/* Image Container */}
               <div className="relative aspect-[4/3] w-full overflow-hidden bg-stone-100">
-                <img
+                <Image
                   src={photo.src}
                   alt={language === 'hi' ? photo.titleHi : photo.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
 
                 {/* Gradient Overlay */}

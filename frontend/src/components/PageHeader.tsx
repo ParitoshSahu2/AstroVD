@@ -9,23 +9,31 @@ interface PageHeaderProps {
   breadcrumb: string;
   title: string;
   subtitle: string;
+  compact?: boolean;
 }
 
 export const PageHeader: React.FC<PageHeaderProps> = ({
   breadcrumb,
   title,
   subtitle,
+  compact = false,
 }) => {
   const { t } = useLanguage();
   return (
-    <div className="relative w-full bg-gradient-to-b from-[#1C090C] via-[#2A0E13] to-[#1C090C] text-white pt-28 sm:pt-36 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-12 overflow-hidden border-b border-amber-900/30">
+    <div
+      className={`relative w-full bg-gradient-to-b from-[#1C090C] via-[#2A0E13] to-[#1C090C] text-white ${
+        compact
+          ? 'pt-20 sm:pt-22 pb-4 sm:pb-5 px-4 sm:px-6 lg:px-8'
+          : 'pt-22 sm:pt-26 pb-6 sm:pb-8 px-4 sm:px-6 lg:px-12'
+      } overflow-hidden border-b border-amber-900/30`}
+    >
       
       {/* Subtle Warm Background Glow */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-10 w-72 h-72 bg-rose-700/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header Content */}
-      <div className="max-w-7xl mx-auto relative z-10 space-y-3.5">
+      <div className="max-w-7xl mx-auto relative z-10 space-y-2.5 sm:space-y-3">
         
         {/* Breadcrumb: Home > Current Page */}
         <nav className="flex items-center gap-2 text-xs sm:text-sm font-medium">

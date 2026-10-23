@@ -51,6 +51,8 @@ function AppointmentContent() {
     Array<{ time: string; isAvailable: boolean; reason?: string }>
   >([]);
   const [loadingSlots, setLoadingSlots] = useState<boolean>(false);
+  const [isDateBlocked, setIsDateBlocked] = useState<boolean>(false);
+  const [blockedReason, setBlockedReason] = useState<string | null>(null);
 
   // Form details
   const [name, setName] = useState('');
@@ -63,6 +65,21 @@ function AppointmentContent() {
   const [confirmedBooking, setConfirmedBooking] = useState<any | null>(null);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [serviceSwitchOpen, setServiceSwitchOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
+      setIsLoggedIn(!!token);
+    };
+    checkAuth();
+    window.addEventListener('astro-auth-change', checkAuth);
+    window.addEventListener('storage', checkAuth);
+    return () => {
+      window.removeEventListener('astro-auth-change', checkAuth);
+      window.removeEventListener('storage', checkAuth);
+    };
+  }, []);
 
   const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(
     /\/api\/?$/,
@@ -96,6 +113,8 @@ function AppointmentContent() {
     const fetchSlots = async () => {
       setLoadingSlots(true);
       setErrorMsg(null);
+      setIsDateBlocked(false);
+      setBlockedReason(null);
       try {
         const res = await fetch(
           `${backendUrl}/api/appointments/slots?serviceId=${encodeURIComponent(
@@ -104,16 +123,27 @@ function AppointmentContent() {
         );
         if (res.ok) {
           const data = await res.json();
-          if (!isCancelled && data.slots) {
-            setAvailableSlots(data.slots);
-            // If current timeSlot is not available, default to the first available one
-            const currentSlotAvailable = data.slots.some(
-              (s: any) => s.time === timeSlot && s.isAvailable,
-            );
-            if (!currentSlotAvailable) {
-              const firstAvailable = data.slots.find((s: any) => s.isAvailable);
-              if (firstAvailable) {
-                setTimeSlot(firstAvailable.time);
+          if (!isCancelled) {
+            if (data.isBlocked) {
+              setIsDateBlocked(true);
+              setBlockedReason(data.blockedReason || null);
+              setAvailableSlots([]);
+              setTimeSlot('');
+            } else if (data.slots) {
+              setIsDateBlocked(false);
+              setBlockedReason(null);
+              setAvailableSlots(data.slots);
+              // If current timeSlot is not available, default to the first available one
+              const currentSlotAvailable = data.slots.some(
+                (s: any) => s.time === timeSlot && s.isAvailable,
+              );
+              if (!currentSlotAvailable) {
+                const firstAvailable = data.slots.find((s: any) => s.isAvailable);
+                if (firstAvailable) {
+                  setTimeSlot(firstAvailable.time);
+                } else {
+                  setTimeSlot('');
+                }
               }
             }
           }
@@ -150,7 +180,7 @@ function AppointmentContent() {
 
     const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
     if (!token) {
-      setAuthModalOpen(true);
+      router.push(`/login?redirect=${encodeURIComponent('/appointment?service=' + activeService.id)}`);
       return;
     }
 
@@ -210,7 +240,7 @@ function AppointmentContent() {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#FAF7F2] m-0 p-0 overflow-x-hidden selection:bg-amber-400">
+    <div className="relative min-h-screen w-full bg-[#FAF7F2] m-0 p-0 overflow-x-clip selection:bg-amber-400">
       <Navbar />
 
       <PageHeader
@@ -223,84 +253,141 @@ function AppointmentContent() {
       />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-12 py-8 sm:py-12 space-y-10">
-        {/* CONFIRMATION STATE */}
+        {/* CONFIRMATION STATE - Simple & Elegant Vedic Receipt */}
         {confirmedBooking ? (
-          <div className="max-w-2xl mx-auto rounded-3xl bg-white p-8 sm:p-12 border-2 border-amber-300 shadow-2xl text-center space-y-6 animate-fadeIn">
-            <div className="w-20 h-20 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shadow-inner">
-              <CheckCircle2 className="w-12 h-12" />
+          <div className="relative max-w-xl mx-auto rounded-3xl bg-white border border-stone-200/90 shadow-xl shadow-stone-900/5 overflow-hidden animate-fadeIn">
+            {/* Elegant Top Accent Bar */}
+            <div className="h-1.5 w-full bg-gradient-to-r from-amber-400 via-[#7B121C] to-amber-400" />
+
+            {/* Subtle Celestial Watermark Background */}
+            <div className="absolute -top-12 -right-12 w-48 h-48 opacity-[0.04] pointer-events-none">
+              <img
+                src="/ornaments/clean_mandala.png"
+                alt=""
+                className="w-full h-full object-contain filter invert animate-[spin_90s_linear_infinite]"
+              />
             </div>
 
-            <div className="space-y-2">
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 uppercase tracking-widest inline-block">
-                Reference ID: {confirmedBooking.id.slice(0, 13)}...
-              </span>
-              <h2 className="font-serif font-bold text-2xl sm:text-3xl text-stone-900">
-                {t('Appointment Reserved Successfully!', 'परामर्श सत्र सफलतापूर्वक आरक्षित हुआ!')}
-              </h2>
-              <p className="text-xs sm:text-sm text-stone-600 max-w-lg mx-auto leading-relaxed">
-                {language === 'hi' ? (
-                  <>
-                    आपका <strong>{confirmedBooking.serviceTitle}</strong> सत्र दिनांक{' '}
-                    <strong>{confirmedBooking.scheduledDate}</strong> को{' '}
-                    <strong>{confirmedBooking.scheduledTime}</strong> पर निश्चित हो गया है। हमारे
-                    समन्वयक संपर्क नंबर <strong>{confirmedBooking.contactPhone}</strong> पर
-                    गोपनीय लिंक प्रेषित करेंगे।
-                  </>
-                ) : (
-                  <>
-                    Your <strong>{confirmedBooking.serviceTitle}</strong> session is confirmed for{' '}
-                    <strong>{confirmedBooking.scheduledDate}</strong> at{' '}
-                    <strong>{confirmedBooking.scheduledTime}</strong>. Celestial coordinators will
-                    reach out to <strong>{confirmedBooking.contactPhone}</strong> with session
-                    details.
-                  </>
-                )}
-              </p>
-            </div>
+            <div className="p-8 sm:p-10 text-center space-y-6 relative z-10">
+              {/* Refined Success Icon with Soft Halo */}
+              <div className="relative mx-auto w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200/60 flex items-center justify-center shadow-xs">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shadow-md shadow-emerald-700/20">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+              </div>
 
-            {/* Quick Summary Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/60 border border-amber-200/80 text-left text-xs space-y-2 max-w-lg mx-auto">
-              <div className="flex justify-between items-center py-1 border-b border-amber-200/50">
-                <span className="text-stone-500">{t('Spiritual Service:', 'वैदिक सेवा:')}</span>
-                <span className="font-bold text-[#5B0D15]">{confirmedBooking.serviceTitle}</span>
-              </div>
-              <div className="flex justify-between items-center py-1 border-b border-amber-200/50">
-                <span className="text-stone-500">{t('Spiritual Guide:', 'आचार्य:')}</span>
-                <span className="font-semibold text-stone-800">
-                  {confirmedBooking.astrologer?.name || displayPandit}
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-1 border-b border-amber-200/50">
-                <span className="text-stone-500">{t('Date & Time Slot:', 'दिनांक व समय:')}</span>
-                <span className="font-bold text-stone-900">
-                  {confirmedBooking.scheduledDate} • {confirmedBooking.scheduledTime} IST
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-1">
-                <span className="text-stone-500">{t('Dakshina / Status:', 'दक्षिणा / स्थिति:')}</span>
-                <span className="font-bold text-emerald-800 uppercase tracking-wider">
-                  {confirmedBooking.servicePrice || `₹${confirmedBooking.totalCost}`} •{' '}
-                  {confirmedBooking.status}
-                </span>
-              </div>
-            </div>
+              {/* Header & Reference */}
+              <div className="space-y-2.5">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-50 border border-stone-200 text-stone-600 text-[11px] font-mono">
+                  <span className="text-stone-400 font-sans text-[10px] uppercase tracking-wider font-semibold">
+                    Booking Ref:
+                  </span>
+                  <span className="font-bold text-stone-700">
+                    {confirmedBooking.id.slice(0, 13).toUpperCase()}...
+                  </span>
+                </div>
 
-            <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link
-                href="/dashboard?tab=consultations"
-                className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs font-bold shadow-md shadow-rose-950/20 transition-all flex items-center justify-center gap-1.5"
-              >
-                <span>{t('View in My Consultations →', 'मेरी परामर्श सूची देखें →')}</span>
-              </Link>
-              <button
-                onClick={() => {
-                  setConfirmedBooking(null);
-                  setSelectedServiceId('astrological_consultation');
-                }}
-                className="w-full sm:w-auto px-6 py-3 rounded-full border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 text-xs font-semibold transition-all"
-              >
-                {t('Book Another Service', 'अन्य सेवा बुक करें')}
-              </button>
+                <h2 className="font-serif font-bold text-2xl sm:text-3xl text-[#2A1810] tracking-tight">
+                  {t('Appointment Reserved Successfully!', 'परामर्श सत्र सफलतापूर्वक आरक्षित हुआ!')}
+                </h2>
+
+                <p className="text-xs sm:text-sm text-stone-600 max-w-md mx-auto leading-relaxed">
+                  {language === 'hi' ? (
+                    <>
+                      आपका <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> सत्र दिनांक{' '}
+                      <strong>{confirmedBooking.scheduledDate}</strong> को{' '}
+                      <strong>{confirmedBooking.scheduledTime}</strong> पर आरक्षित हो गया है। हमारे
+                      समन्वयक संपर्क सूत्र <strong>{confirmedBooking.contactPhone}</strong> पर
+                      गोपनीय लिंक प्रेषित करेंगे।
+                    </>
+                  ) : (
+                    <>
+                      Your <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> session is confirmed for{' '}
+                      <strong>{confirmedBooking.scheduledDate}</strong> at{' '}
+                      <strong>{confirmedBooking.scheduledTime}</strong>. Celestial coordinators will
+                      reach out to <strong>{confirmedBooking.contactPhone}</strong> with session details.
+                    </>
+                  )}
+                </p>
+              </div>
+
+              {/* Elegant Reservation Summary Pass / Ticket */}
+              <div className="rounded-2xl bg-[#FAF8F5] border border-stone-200/80 p-5 text-left text-xs space-y-3.5 shadow-2xs">
+                <div className="flex justify-between items-center pb-2.5 border-b border-stone-200/60">
+                  <span className="text-stone-500 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                    <span>{t('Spiritual Service:', 'वैदिक सेवा:')}</span>
+                  </span>
+                  <span className="font-bold text-[#5B0D15] text-right truncate max-w-[240px]">
+                    {confirmedBooking.serviceTitle}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center pb-2.5 border-b border-stone-200/60">
+                  <span className="text-stone-500 flex items-center gap-1.5">
+                    <UserCheck className="w-3.5 h-3.5 text-stone-400" />
+                    <span>{t('Spiritual Guide:', 'आचार्य:')}</span>
+                  </span>
+                  <span className="font-semibold text-stone-800 text-right">
+                    {confirmedBooking.astrologer?.name || displayPandit}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center pb-2.5 border-b border-stone-200/60">
+                  <span className="text-stone-500 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-stone-400" />
+                    <span>{t('Date & Time Slot:', 'दिनांक व समय:')}</span>
+                  </span>
+                  <span className="font-bold text-stone-900 text-right">
+                    {confirmedBooking.scheduledDate} • {confirmedBooking.scheduledTime} IST
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center pt-0.5">
+                  <span className="text-stone-500 flex items-center gap-1.5">
+                    <Shield className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>{t('Dakshina / Status:', 'दक्षिणा / स्थिति:')}</span>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-stone-900">
+                      {confirmedBooking.servicePrice || `₹${confirmedBooking.totalCost}`}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 tracking-wider uppercase">
+                      {confirmedBooking.status || 'CONFIRMED'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quiet Reassurance Banner */}
+              <div className="flex items-center justify-center gap-2 text-[11px] text-stone-500 bg-emerald-50/60 py-2.5 px-3.5 rounded-xl border border-emerald-100/70">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                <span>
+                  {t(
+                    'Private video meeting link will be shared prior to your session.',
+                    'परामर्श का गोपनीय लिंक सत्र से पूर्व प्रेषित किया जाएगा।'
+                  )}
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <Link
+                  href="/dashboard?tab=consultations"
+                  className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs font-bold shadow-md shadow-rose-950/20 transition-all flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <span>{t('View in My Consultations →', 'मेरी परामर्श सूची देखें →')}</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    setConfirmedBooking(null);
+                    setSelectedServiceId('astrological_consultation');
+                  }}
+                  className="w-full sm:w-auto px-6 py-3 rounded-full border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 text-xs font-semibold transition-all hover:border-stone-400"
+                >
+                  {t('Book Another Service', 'अन्य सेवा बुक करें')}
+                </button>
+              </div>
             </div>
           </div>
         ) : (
@@ -467,8 +554,8 @@ function AppointmentContent() {
                 />
               </div>
 
-              {/* Published Slots Grid */}
-              <div className="space-y-2">
+              {/* Published Slots Grid & Availability Banner */}
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-semibold text-stone-700 flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5 text-amber-700" />
@@ -477,50 +564,82 @@ function AppointmentContent() {
                   {loadingSlots && (
                     <span className="text-[11px] text-amber-800 flex items-center gap-1">
                       <RefreshCw className="w-3 h-3 animate-spin" />
-                      {t('Checking registry...', 'जांच की जा रही है...')}
+                      {t('Checking sanctuary registry...', 'आश्रम पंचांग जांचा जा रहा है...')}
                     </span>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {availableSlots.length > 0 ? (
-                    availableSlots.map((slot) => {
-                      const isSelected = timeSlot === slot.time && slot.isAvailable;
-                      return (
-                        <button
-                          key={slot.time}
-                          type="button"
-                          disabled={!slot.isAvailable}
-                          onClick={() => setTimeSlot(slot.time)}
-                          className={`py-3 px-2 rounded-xl text-xs font-semibold transition-all border flex flex-col items-center justify-center gap-0.5 cursor-pointer ${
-                            !slot.isAvailable
-                              ? 'bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed opacity-60'
-                              : isSelected
-                              ? 'bg-[#5B0D15] text-white border-[#5B0D15] shadow-md ring-2 ring-amber-300'
-                              : 'bg-white hover:bg-amber-50 text-stone-800 border-stone-200 hover:border-amber-300'
-                          }`}
-                        >
-                          <span className="font-bold">{slot.time}</span>
-                          <span
-                            className={`text-[9px] uppercase tracking-wider font-extrabold ${
+                {/* Date Blocked Notice */}
+                {isDateBlocked ? (
+                  <div className="p-5 rounded-2xl bg-amber-50/90 border border-amber-300 text-amber-950 flex items-start gap-3 shadow-sm animate-fadeIn">
+                    <AlertCircle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <h4 className="font-serif font-bold text-xs sm:text-sm text-[#5B0D15]">
+                        {t('Consultations Not Accepted on This Date', 'इस दिनांक को कोई परामर्श स्वीकार नहीं किया जाएगा')}
+                      </h4>
+                      <p className="text-xs text-stone-700 leading-relaxed">
+                        {blockedReason ||
+                          t(
+                            'Panditji is observing sacred sanctuary rituals or sanctified observances on this day. Please select another date.',
+                            'पंडित जी इस पावन तिथि को विशेष अनुष्ठान या आश्रम पर्व में लीन हैं। कृपया अन्य दिनांक का चयन करें।'
+                          )}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {availableSlots.length > 0 ? (
+                      availableSlots.map((slot) => {
+                        const isSelected = timeSlot === slot.time && slot.isAvailable;
+                        return (
+                          <button
+                            key={slot.time}
+                            type="button"
+                            disabled={!slot.isAvailable}
+                            onClick={() => setTimeSlot(slot.time)}
+                            className={`py-3 px-2 rounded-xl text-xs font-semibold transition-all border flex flex-col items-center justify-center gap-0.5 cursor-pointer ${
                               !slot.isAvailable
-                                ? 'text-stone-400'
+                                ? 'bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed opacity-60'
                                 : isSelected
-                                ? 'text-amber-300'
-                                : 'text-emerald-700'
+                                ? 'bg-[#5B0D15] text-white border-[#5B0D15] shadow-md ring-2 ring-amber-300'
+                                : 'bg-white hover:bg-amber-50 text-stone-800 border-stone-200 hover:border-amber-300'
                             }`}
                           >
-                            {slot.isAvailable ? t('Available', 'उपलब्ध') : slot.reason || t('Reserved', 'आरक्षित')}
-                          </span>
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <div className="col-span-3 py-6 text-center text-xs text-stone-500">
-                      {t('Loading slots...', 'स्लॉट लोड हो रहे हैं...')}
-                    </div>
-                  )}
-                </div>
+                            <span className="font-bold">{slot.time}</span>
+                            <span
+                              className={`text-[9px] uppercase tracking-wider font-extrabold ${
+                                !slot.isAvailable
+                                  ? 'text-stone-400'
+                                  : isSelected
+                                  ? 'text-amber-300'
+                                  : 'text-emerald-700'
+                              }`}
+                            >
+                              {slot.isAvailable ? t('Available', 'उपलब्ध') : slot.reason || t('Reserved', 'आरक्षित')}
+                            </span>
+                          </button>
+                        );
+                      })
+                    ) : loadingSlots ? (
+                      <div className="col-span-3 py-6 text-center text-xs text-stone-500">
+                        {t('Loading slots...', 'स्लॉट लोड हो रहे हैं...')}
+                      </div>
+                    ) : (
+                      <div className="col-span-3 py-6 px-4 text-center rounded-2xl bg-stone-50 border border-stone-200 space-y-1.5">
+                        <Clock className="w-6 h-6 mx-auto text-stone-400" />
+                        <p className="text-xs font-semibold text-stone-700">
+                          {t('No Consultation Slots Published For This Date', 'इस दिनांक के लिए कोई प्रकाशित स्लॉट उपलब्ध नहीं है')}
+                        </p>
+                        <p className="text-[11px] text-stone-500 max-w-sm mx-auto">
+                          {t(
+                            'Please select an alternate date to inspect available consultation windows.',
+                            'कृपया उपलब्ध परामर्श समय देखने हेतु किसी अन्य दिनांक का चयन करें।'
+                          )}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Seeker Contact Details */}
@@ -577,11 +696,32 @@ function AppointmentContent() {
                 />
               </div>
 
+              {/* Auth Prompt if unauthenticated */}
+              {!isLoggedIn && (
+                <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-300 text-amber-950 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs animate-fadeIn">
+                  <div className="flex items-center gap-2">
+                    <Info className="w-4 h-4 text-amber-700 shrink-0" />
+                    <span>
+                      {t(
+                        'Sign in required to confirm and book this astrological consultation.',
+                        'इस परामर्श सत्र की पुष्टि व आरक्षण के लिए साइन इन आवश्यक है।'
+                      )}
+                    </span>
+                  </div>
+                  <Link
+                    href={`/login?redirect=${encodeURIComponent('/appointment?service=' + activeService.id)}`}
+                    className="px-3.5 py-1.5 rounded-full bg-[#5B0D15] hover:bg-[#72111c] text-white font-bold text-xs shrink-0 transition-transform hover:scale-105 active:scale-95"
+                  >
+                    {t('Sign In First', 'पहले साइन इन करें')} →
+                  </Link>
+                </div>
+              )}
+
               {/* Submit Button */}
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={loading || !timeSlot}
+                  disabled={loading || !timeSlot || isDateBlocked}
                   className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#B8873E] via-[#A67530] to-[#8C5D1F] hover:from-[#c59348] hover:to-[#9a6925] disabled:opacity-50 text-white font-bold text-sm shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   {loading ? (

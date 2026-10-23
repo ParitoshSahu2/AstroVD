@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, ArrowUp, MessageCircle, Award, CheckCircle, ShieldCheck, Sparkles, BookOpen, GraduationCap, Star, Users } from 'lucide-react';
 import { SectionDivider } from './SectionDivider';
 import { useLanguage } from '../context/LanguageContext';
@@ -220,11 +221,12 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                 <div className="rounded-t-[180px] rounded-b-3xl border-2 border-amber-400/90 p-2 sm:p-2.5 shadow-2xl bg-gradient-to-b from-amber-100/50 via-white/70 to-amber-50/60 backdrop-blur-sm">
                   {/* Inner Image Container */}
                   <div className="rounded-t-[170px] rounded-b-2xl overflow-hidden bg-stone-100 shadow-inner">
-                    <img
+                    <Image
                       src="/dr_vishal_dubey.jpg"
                       alt="Dr. Pandit Vishal Dubey (AstroVD)"
-                      loading="lazy"
-                      decoding="async"
+                      width={380}
+                      height={480}
+                      sizes="(max-width: 640px) 100vw, 380px"
                       className="w-full h-auto object-cover object-top hover:scale-102 transition-transform duration-500"
                     />
                   </div>

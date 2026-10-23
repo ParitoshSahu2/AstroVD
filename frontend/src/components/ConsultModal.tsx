@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { fetchAstrologers, bookConsultation } from '../lib/api';
 import {
   PhoneCall,
@@ -30,6 +31,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = ({
   user,
   openAuthModal,
 }) => {
+  const router = useRouter();
   const [astrologers, setAstrologers] = useState<any[]>([]);
   const [selectedAstrologer, setSelectedAstrologer] = useState<any>(null);
   const [consultType, setConsultType] = useState<'chat' | 'call' | 'video'>('call');
@@ -73,7 +75,7 @@ export const ConsultModal: React.FC<ConsultModalProps> = ({
 
     if (!user) {
       onClose();
-      openAuthModal();
+      router.push(`/login?redirect=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname : '/')}`);
       return;
     }
 

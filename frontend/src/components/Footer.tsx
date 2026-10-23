@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Phone, Mail, MapPin, ShieldCheck, Award, Sparkles, Heart } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -25,9 +26,11 @@ export const Footer: React.FC = () => {
           {/* Col 1: Brand & Sanskrit Shloka */}
           <div className="lg:col-span-4 space-y-4">
             <Link href="/" className="inline-block">
-              <img
+              <Image
                 src="/astro-vd-logo.png"
                 alt="AstroVD"
+                width={180}
+                height={48}
                 className="h-10 sm:h-12 w-auto object-contain"
               />
             </Link>

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "../context/LanguageContext";
+import { CartProvider } from "../context/CartContext";
+import { SmoothScroll } from "../components/SmoothScroll";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,13 +29,14 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <head>
         <style dangerouslySetInnerHTML={{
           __html: `
-            /* Eliminate all browser vertical and horizontal scrollbars completely */
-            html, body, *, *::before, *::after {
+            /* Eliminate browser scrollbars cleanly without universal wildcard selector overhead */
+            html, body {
               scrollbar-width: none !important;
               -ms-overflow-style: none !important;
             }
@@ -58,9 +61,12 @@ export default function RootLayout({
           `
         }} />
       </head>
-      <body className="min-h-screen flex flex-col bg-[#FAF7F2] overflow-x-hidden selection:bg-amber-400" suppressHydrationWarning>
+      <body className="min-h-screen flex flex-col bg-[#FAF7F2] overflow-x-clip selection:bg-amber-400" suppressHydrationWarning>
+        <SmoothScroll />
         <LanguageProvider>
-          {children}
+          <CartProvider>
+            {children}
+          </CartProvider>
         </LanguageProvider>
       </body>
     </html>

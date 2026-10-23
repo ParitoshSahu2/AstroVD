@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { fetchAstrologers, bookConsultation } from '../lib/api';
 import {
   PhoneCall,
@@ -23,6 +25,7 @@ interface AstrologersSectionProps {
 }
 
 export const AstrologersSection: React.FC<AstrologersSectionProps> = ({ user, openAuthModal }) => {
+  const router = useRouter();
   const [astrologers, setAstrologers] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [loading, setLoading] = useState(true);
@@ -66,7 +69,7 @@ export const AstrologersSection: React.FC<AstrologersSectionProps> = ({ user, op
   const handleConfirmBooking = async () => {
     if (bookingLoading) return;
     if (!user) {
-      openAuthModal();
+      router.push(`/login?redirect=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname : '/')}`);
       return;
     }
 
@@ -166,9 +169,11 @@ export const AstrologersSection: React.FC<AstrologersSectionProps> = ({ user, op
               {/* Profile Top */}
               <div className="flex items-start gap-4">
                 <div className="relative shrink-0">
-                  <img
+                  <Image
                     src={ast.avatar}
                     alt={ast.name}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-500/40 shadow-lg"
                   />
                   <span className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-slate-950 flex items-center gap-1 shadow ${
@@ -293,9 +298,11 @@ export const AstrologersSection: React.FC<AstrologersSectionProps> = ({ user, op
             ) : (
               <>
                 <div className="flex items-center gap-3 pb-4 border-b border-slate-800">
-                  <img
+                  <Image
                     src={selectedAstrologer.avatar}
                     alt={selectedAstrologer.name}
+                    width={56}
+                    height={56}
                     className="w-14 h-14 rounded-2xl object-cover border border-amber-400"
                   />
                   <div>

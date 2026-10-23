@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   Search,
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 import { AuthModal } from './AuthModal';
 import { useLanguage } from '../context/LanguageContext';
+import { performLogout } from '../lib/auth';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -37,23 +39,31 @@ export const Navbar: React.FC = () => {
   const profileDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let ticking = false;
     let lastScrollY = window.scrollY;
 
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      setScrolled(currentScrollY > 20);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          const isScrolled = currentScrollY > 20;
+          setScrolled((prev) => (prev !== isScrolled ? isScrolled : prev));
 
-      // Always show when near top of the page
-      if (currentScrollY < 40) {
-        setVisible(true);
-      } else if (currentScrollY > lastScrollY + 6) {
-        // Scrolling DOWN -> hide smoothly
-        setVisible(false);
-      } else if (currentScrollY < lastScrollY - 4) {
-        // Scrolling UP -> reveal immediately
-        setVisible(true);
+          // Always show when near top of the page
+          if (currentScrollY < 40) {
+            setVisible((prev) => (!prev ? true : prev));
+          } else if (currentScrollY > lastScrollY + 8) {
+            // Scrolling DOWN -> hide smoothly
+            setVisible((prev) => (prev ? false : prev));
+          } else if (currentScrollY < lastScrollY - 8) {
+            // Scrolling UP -> reveal immediately
+            setVisible((prev) => (!prev ? true : prev));
+          }
+          lastScrollY = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
       }
-      lastScrollY = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -83,12 +93,7 @@ export const Navbar: React.FC = () => {
           .then((res) => {
             if (res.ok) return res.json();
             if (res.status === 401) {
-              localStorage.removeItem('astro_token');
-              localStorage.removeItem('astro_user');
-              setUser(null);
-              if (typeof window !== 'undefined') {
-                window.dispatchEvent(new CustomEvent('astro-auth-change', { detail: null }));
-              }
+              performLogout({ notifyServer: false });
             }
             return null;
           })
@@ -128,23 +133,56 @@ export const Navbar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const getInitials = (name?: string) => {
-    if (!name) return 'U';
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  const getUserInitials = (u?: any, nameOverride?: string) => {
+    const raw = (nameOverride || u?.name || '').trim();
+    if (raw) {
+      const parts = raw.split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) {
+        // Double initials (e.g. "Yash Patidar" -> "YP")
+        return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+      }
+      // Single initial (e.g. "Yash" -> "Y")
+      return parts[0][0].toUpperCase();
     }
-    return parts[0][0].toUpperCase();
+
+    // Fallback: derive from email (e.g. "yashpatidar862@gmail.com" -> "YP" or "Y")
+    if (u?.email) {
+      const clean = u.email.split('@')[0].replace(/[0-9]+/g, '');
+      const parts = clean.split(/[._-]+/).filter(Boolean);
+      if (parts.length >= 2) {
+        return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+      }
+      if (parts.length === 1 && parts[0].length > 0) {
+        return parts[0][0].toUpperCase();
+      }
+    }
+
+    if (u?.role === 'ADMIN' || u?.role === 'SUPERADMIN') return 'A';
+    return 'Y';
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('astro_token');
-    localStorage.removeItem('astro_user');
+  const getInitials = (name?: string) => {
+    return getUserInitials(user, name);
+  };
+
+  const getAvatarBackground = (role?: string) => {
+    const r = (role || '').toUpperCase();
+    if (r === 'ADMIN' || r === 'SUPERADMIN') {
+      // Royal Imperial Amethyst & Burgundy with Gold Ring
+      return 'bg-gradient-to-br from-[#4A044E] via-[#5B0D15] to-[#701A75] border-amber-300 text-amber-200 ring-amber-300/40';
+    }
+    if (r === 'ASTROLOGER') {
+      // Sacred Emerald & Vedic Ochre
+      return 'bg-gradient-to-br from-[#064E3B] via-[#0F766E] to-[#78350F] border-emerald-300 text-emerald-100 ring-emerald-300/40';
+    }
+    // Elegant Sacred Royal Maroon & Deep Wine with Warm Golden Accents (Seeker / User / Default)
+    return 'bg-gradient-to-br from-[#5B0D15] via-[#7B121C] to-[#3B1E22] border-amber-300/80 text-amber-200 ring-amber-200/50';
+  };
+
+  const handleLogout = async () => {
     setUser(null);
     setProfileDropdownOpen(false);
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('astro-auth-change', { detail: null }));
-    }
+    await performLogout();
   };
 
   const navLinks = [
@@ -189,9 +227,12 @@ export const Navbar: React.FC = () => {
             {/* Left: Maroon AstroVD Logo */}
             <div className="relative z-10 flex items-center gap-2 shrink-0">
               <Link href="/" className="flex items-center">
-                <img
+                <Image
                   src="/astro-vd-logo.png"
                   alt="AstroVD"
+                  width={160}
+                  height={40}
+                  priority
                   className="h-8 sm:h-9 md:h-10 w-auto object-contain hover:opacity-95 transition-opacity"
                 />
               </Link>
@@ -332,31 +373,23 @@ export const Navbar: React.FC = () => {
                       setCartOpen(false);
                       setSearchOpen(false);
                     }}
-                    className="flex items-center gap-2 pl-1 pr-2.5 sm:pr-3 py-1 rounded-full border border-amber-300/80 bg-white/80 hover:bg-white text-[#3B1E22] shadow-sm hover:shadow transition-all cursor-pointer group"
+                    className="flex items-center justify-center p-0.5 rounded-full border border-amber-300/80 bg-white/85 hover:bg-white text-[#3B1E22] shadow-xs hover:shadow-md transition-all cursor-pointer group active:scale-95"
                     aria-label="User account menu"
                     aria-expanded={profileDropdownOpen}
+                    title={user.name || user.email || 'Account'}
                   >
-                    {/* Royal Maroon & Gold Gradient Initials Avatar */}
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-[#5B0D15] via-[#7B121C] to-[#3B1E22] text-amber-200 font-bold text-xs flex items-center justify-center shadow-inner border border-amber-300/60 ring-2 ring-amber-100/50">
+                    {/* Royal Elegant Monogram Avatar Circle */}
+                    <div
+                      className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full ${getAvatarBackground(
+                        user.role
+                      )} font-bold flex items-center justify-center shadow-inner border ring-2 ring-amber-100/60 shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                        getInitials(user.name).length > 1
+                          ? 'text-[11px] sm:text-xs tracking-tight'
+                          : 'text-xs sm:text-sm font-extrabold'
+                      }`}
+                    >
                       {getInitials(user.name)}
                     </div>
-
-                    {/* Name & Balance Subtitle */}
-                    <div className="text-left hidden sm:block leading-tight">
-                      <div className="text-xs font-bold text-[#3B1E22] group-hover:text-[#5B0D15] transition-colors truncate max-w-[110px]">
-                        {user.name?.split(' ')[0]}
-                      </div>
-                      <div className="text-[10px] text-amber-800 font-semibold flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
-                        ₹{user.walletBalance ?? 150}
-                      </div>
-                    </div>
-
-                    <ChevronDown
-                      className={`w-3.5 h-3.5 text-stone-500 transition-transform duration-200 ${
-                        profileDropdownOpen ? 'rotate-180 text-[#5B0D15]' : ''
-                      }`}
-                    />
                   </button>
 
                   {/* Luxury Frosted Glass Dropdown Menu */}
@@ -367,7 +400,15 @@ export const Navbar: React.FC = () => {
                     >
                       {/* Identity Card */}
                       <div className="flex items-center gap-3 p-2.5 bg-gradient-to-r from-amber-50/80 via-rose-50/40 to-amber-50/50 rounded-xl border border-amber-200/60 mb-2.5">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#5B0D15] to-[#7B121C] text-amber-200 font-bold text-sm flex items-center justify-center shadow-sm border border-amber-300/80 ring-2 ring-amber-200/50 shrink-0">
+                        <div
+                          className={`w-10 h-10 rounded-full ${getAvatarBackground(
+                            user.role
+                          )} font-bold flex items-center justify-center shadow-sm border ring-2 shrink-0 ${
+                            getInitials(user.name).length > 1
+                              ? 'text-xs tracking-tight'
+                              : 'text-sm font-extrabold'
+                          }`}
+                        >
                           {getInitials(user.name)}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -543,7 +584,15 @@ export const Navbar: React.FC = () => {
               {user ? (
                 <div className="pt-2 border-t border-stone-200 space-y-2">
                   <div className="flex items-center gap-3 p-2.5 bg-white/70 rounded-2xl border border-amber-200/60">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#5B0D15] to-[#7B121C] text-amber-200 font-bold text-xs flex items-center justify-center shrink-0 border border-amber-300/60">
+                    <div
+                      className={`w-9 h-9 rounded-full ${getAvatarBackground(
+                        user.role
+                      )} font-bold flex items-center justify-center shrink-0 border ring-2 ${
+                        getInitials(user.name).length > 1
+                          ? 'text-[10px] tracking-tight'
+                          : 'text-xs font-extrabold'
+                      }`}
+                    >
                       {getInitials(user.name)}
                     </div>
                     <div className="min-w-0 flex-1">

@@ -11,12 +11,13 @@ import {
   Compass,
   Star,
 } from 'lucide-react';
+import { performLogout } from '../lib/auth';
 
 interface HeaderProps {
   openConsultModal: () => void;
   openAuthModal: () => void;
   user: any;
-  onLogout: () => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -25,6 +26,13 @@ export const Header: React.FC<HeaderProps> = ({
   user,
   onLogout,
 }) => {
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    } else {
+      performLogout();
+    }
+  };
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -36,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
         setScrolled(false);
       }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -125,7 +133,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 </div>
                 <button
-                  onClick={onLogout}
+                  onClick={handleLogout}
                   className="text-[11px] text-stone-500 hover:text-rose-600 px-1.5 py-0.5 rounded hover:bg-stone-100 transition-colors cursor-pointer"
                 >
                   Sign Out

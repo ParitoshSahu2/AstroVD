@@ -291,7 +291,7 @@ export default function BlogPage() {
   const featured = allArticles[0];
 
   return (
-    <div className="relative min-h-screen w-full bg-[#FAF7F2] m-0 p-0 overflow-x-hidden selection:bg-amber-400">
+    <div className="relative min-h-screen w-full bg-[#FAF7F2] m-0 p-0 overflow-x-clip selection:bg-amber-400">
       <Navbar />
 
       <PageHeader
