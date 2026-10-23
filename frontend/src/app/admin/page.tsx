@@ -1347,14 +1347,8 @@ export default function AdminPage() {
             </div>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <Link
-                href="/dashboard"
-                className="inline-block px-8 py-3 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white font-semibold text-sm shadow-md transition-all"
-              >
-                Go to Seeker Dashboard
-              </Link>
-              <Link
                 href="/"
-                className="inline-block px-6 py-3 rounded-full border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 font-semibold text-sm transition-all"
+                className="inline-block px-8 py-3 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white font-semibold text-sm shadow-md transition-all"
               >
                 ← Back to Website
               </Link>
@@ -1816,19 +1810,11 @@ export default function AdminPage() {
                             setProfileDropdownOpen(false);
                             handleOpenEditProfile();
                           }}
-                          className="w-full px-4 py-2 hover:bg-stone-50 flex items-center gap-2 text-left"
+                          className="w-full px-4 py-2 hover:bg-stone-50 flex items-center gap-2 text-left cursor-pointer"
                         >
                           <Edit3 className="w-3.5 h-3.5 text-stone-500" />
                           <span>Edit Profile</span>
                         </button>
-                        <Link
-                          href="/dashboard"
-                          onClick={() => setProfileDropdownOpen(false)}
-                          className="w-full px-4 py-2 hover:bg-stone-50 flex items-center gap-2 text-left"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5 text-stone-500" />
-                          <span>Seeker Dashboard</span>
-                        </Link>
                         <div className="my-1 border-t border-stone-100" />
                         <button
                           type="button"
@@ -1836,7 +1822,7 @@ export default function AdminPage() {
                             setProfileDropdownOpen(false);
                             handleLogout();
                           }}
-                          className="w-full px-4 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2 text-left font-medium"
+                          className="w-full px-4 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2 text-left font-medium cursor-pointer"
                         >
                           <LogOut className="w-3.5 h-3.5" />
                           <span>Sign Out</span>
