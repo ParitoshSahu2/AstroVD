@@ -165,7 +165,7 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
                   ))}
                 </div>
                 <span className="font-bold text-stone-800">{product.rating}</span>
-                <span className="text-stone-400">• ({product.reviewsCount} {t('Seeker Reviews', 'भक्त समीक्षाएं')})</span>
+                <span className="text-stone-400">• ({product.reviewsCount} {t('Customer Reviews', 'भक्त समीक्षाएं')})</span>
               </div>
             </div>
 

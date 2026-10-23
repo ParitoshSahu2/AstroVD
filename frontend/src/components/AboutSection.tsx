@@ -322,7 +322,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                   <div className="text-lg sm:text-xl font-bold text-[#5B0D15]">
                     <AnimatedCounter target={50000} suffix="+" />
                   </div>
-                  <div className="text-xs text-stone-600 font-medium mt-0.5">{t('Seekers Guided', 'संतुष्ट जातक')}</div>
+                  <div className="text-xs text-stone-600 font-medium mt-0.5">{t('Devotees Guided', 'संतुष्ट जातक')}</div>
                 </div>
                 <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/60 shadow-sm">
                   <div className="text-lg sm:text-xl font-bold text-[#5B0D15]">

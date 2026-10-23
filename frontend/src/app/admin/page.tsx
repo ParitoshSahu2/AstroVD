@@ -721,7 +721,7 @@ export default function AdminPage() {
 
       setNotification({
         type: 'success',
-        message: `Slot at ${slot.startTime} is now ${!slot.isPublished ? 'published & visible to seekers' : 'unpublished & hidden'}!`,
+        message: `Slot at ${slot.startTime} is now ${!slot.isPublished ? 'published & visible to users' : 'unpublished & hidden'}!`,
       });
       fetchAvailability(availabilityDate);
     } catch (err: any) {
@@ -1194,7 +1194,7 @@ export default function AdminPage() {
 
       <PageHeader
         breadcrumb="Administrative Portal"
-        title="Admin Control & Seeker 360° Inspection"
+        title="Admin Control & User 360° Inspection"
         subtitle="Full oversight into customer orders, booked astrology services, celestial wallet movements, and platform activities."
       />
 
@@ -1237,7 +1237,7 @@ export default function AdminPage() {
               href="/dashboard"
               className="inline-block px-8 py-3 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white font-semibold text-sm shadow-md transition-all"
             >
-              Go to Seeker Dashboard
+              Go to User Dashboard
             </Link>
           </div>
         ) : (
@@ -1322,7 +1322,7 @@ export default function AdminPage() {
                 <button
                   onClick={handleOpenGenerateProfile}
                   className="px-4 py-2.5 rounded-full border border-[#5B0D15] bg-[#5B0D15] hover:bg-[#480a11] text-amber-100 font-semibold text-xs shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer"
-                  title="Generate a new seeker or user profile"
+                  title="Generate a new user profile"
                 >
                   <UserPlus className="w-3.5 h-3.5 text-amber-300" />
                   <span>Generate New Profile</span>
@@ -1383,7 +1383,7 @@ export default function AdminPage() {
                   </span>
                 </div>
                 <div className="text-[10px] sm:text-[11px] text-stone-500 font-medium truncate">
-                  Total seeker accounts
+                  Total user accounts
                 </div>
               </button>
 
@@ -1399,11 +1399,11 @@ export default function AdminPage() {
                     ? 'bg-gradient-to-br from-emerald-50/90 via-white to-amber-50/60 border-emerald-600 shadow-md ring-2 ring-emerald-500/20'
                     : 'bg-white/95 hover:bg-stone-50/90 border-stone-200/80 hover:border-emerald-300 shadow-xs hover:shadow-sm'
                 }`}
-                title="Click to filter by standard Seekers (USER)"
+                title="Click to filter by standard Users (USER)"
               >
                 <div className="flex items-center justify-between gap-2 mb-2 sm:mb-2.5">
                   <span className="text-[11px] sm:text-xs font-bold text-stone-600 tracking-wide truncate">
-                    Seeker Accounts
+                    User Accounts
                   </span>
                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-50 border border-emerald-200/70 text-emerald-700 flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
                     <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -1505,7 +1505,7 @@ export default function AdminPage() {
                 }`}
               >
                 <UserIcon className="w-4 h-4" />
-                <span>Seekers &amp; User Directory ({totalCount})</span>
+                <span>User Directory ({totalCount})</span>
               </button>
 
               <button

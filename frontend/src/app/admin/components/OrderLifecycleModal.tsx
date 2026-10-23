@@ -98,7 +98,7 @@ export default function OrderLifecycleModal({
                 <span className="text-stone-400 block text-[10px]">Customer / Recipient</span>
                 <span className="font-bold text-stone-900 flex items-center gap-1 mt-0.5 text-sm">
                   <UserIcon className="w-3.5 h-3.5 text-stone-500" />
-                  {activeOrder.customer?.name || activeOrder.shippingAddress?.recipient || 'Vedic Seeker'}
+                  {activeOrder.customer?.name || activeOrder.shippingAddress?.recipient || 'Customer'}
                 </span>
                 <span className="text-stone-500 text-[11px] block mt-0.5">{activeOrder.customer?.email || 'N/A'}</span>
                 <span className="text-emerald-700 font-mono font-medium text-[11px] flex items-center gap-1 mt-0.5">
@@ -140,7 +140,7 @@ export default function OrderLifecycleModal({
               </div>
               {activeOrder.shippingAddress?.notes && (
                 <div className="pt-2 border-t border-amber-200/60">
-                  <span className="text-amber-800 text-[10px] block mb-0.5">Seeker Specific Instructions / Intentions:</span>
+                  <span className="text-amber-800 text-[10px] block mb-0.5">Customer Specific Instructions / Intentions:</span>
                   <p className="p-2.5 rounded-lg bg-white/80 border border-amber-200 text-stone-800 text-[11px] font-sans">
                     {activeOrder.shippingAddress.notes}
                   </p>

@@ -430,7 +430,7 @@ function getFallbackHoroscope(sign: string, period: string) {
 function getFallbackKundli(data: any) {
   return {
     birthDetails: {
-      name: data.name || 'Seeker',
+      name: data.name || 'Devotee',
       gender: data.gender || 'male',
       datetime: `${data.dateOfBirth} at ${data.timeOfBirth || '12:00'}`,
       place: data.placeOfBirth || 'Varanasi',
@@ -591,7 +591,7 @@ function getFallbackTarot(type: string) {
 
 function getFallbackNumerology(data: any) {
   return {
-    name: data.fullName || 'Seeker',
+    name: data.fullName || 'Devotee',
     dateOfBirth: data.dateOfBirth || '1995-05-15',
     lifePathNumber: {
       number: 8,
@@ -608,7 +608,7 @@ function getFallbackNumerology(data: any) {
     },
     soulUrgeNumber: {
       number: 7,
-      title: 'Heart\'s Desire 7 - The Sacred Seeker',
+      title: 'Heart\'s Desire 7 - The Sacred Mystic',
       description: 'Deep within, you crave spiritual solitude, profound wisdom, and understanding the mystical mechanics of reality.',
     },
     birthdayNumber: {

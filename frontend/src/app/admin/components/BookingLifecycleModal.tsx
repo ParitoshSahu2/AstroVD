@@ -104,14 +104,14 @@ export default function BookingLifecycleModal({
           {/* Seeker / Customer Contact Details */}
           <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200">
             <span className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block mb-2">
-              Seeker Contact Information
+              Customer Contact Information
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
               <div>
                 <span className="text-stone-400 block text-[10px]">Customer Name</span>
                 <span className="font-semibold text-stone-900 flex items-center gap-1 mt-0.5">
                   <UserIcon className="w-3.5 h-3.5 text-stone-500" />
-                  {activeBooking.user?.name || activeBooking.customer?.name || 'Guest Seeker'}
+                  {activeBooking.user?.name || activeBooking.customer?.name || 'Guest'}
                 </span>
               </div>
               <div>
@@ -152,7 +152,7 @@ export default function BookingLifecycleModal({
             </div>
             {activeBooking.notes && (
               <div className="pt-2 border-t border-stone-200">
-                <span className="text-stone-500 block text-[11px] mb-1">Seeker Remarks / Notes:</span>
+                <span className="text-stone-500 block text-[11px] mb-1">Customer Remarks / Notes:</span>
                 <p className="p-2.5 rounded-lg bg-white border border-stone-200 text-stone-800 font-mono text-[11px]">
                   {activeBooking.notes}
                 </p>

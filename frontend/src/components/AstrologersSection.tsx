@@ -99,7 +99,7 @@ export const AstrologersSection: React.FC<AstrologersSectionProps> = ({ user, op
     try {
       const res = await bookConsultation({
         astrologerId: selectedAstrologer.id,
-        userName: user.name || 'Seeker',
+        userName: user.name || 'Devotee',
         userPhone: normalized,
         consultationType: consultType,
         durationMinutes: duration,

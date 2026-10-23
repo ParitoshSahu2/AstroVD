@@ -79,7 +79,7 @@ export default function GenerateUserModal({
                 Generate New Profile
               </h3>
               <p className="text-[11px] text-stone-300">
-                Create and seed a new seeker or user account
+                Create and seed a new user account
               </p>
             </div>
           </div>
@@ -133,7 +133,7 @@ export default function GenerateUserModal({
                 type="text"
                 value={genPassword}
                 onChange={(e) => setGenPassword(e.target.value)}
-                placeholder="Defaults to Seeker@2026"
+                placeholder="Defaults to User@2026"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
               />
             </div>
@@ -145,13 +145,13 @@ export default function GenerateUserModal({
                   onChange={(e) => setGenRole(e.target.value as any)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
                 >
-                  <option value="USER">USER (Seeker)</option>
+                  <option value="USER">USER</option>
                   <option value="ADMIN">ADMIN (Platform Administrator)</option>
                 </select>
               ) : (
                 <input
                   type="text"
-                  value="USER (Seeker)"
+                  value="USER"
                   disabled
                   className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-100 text-xs text-stone-500 cursor-not-allowed"
                 />

@@ -64,7 +64,7 @@ export default function GalleryPage() {
       locationHi: 'दशाश्वमेध घाट, वाराणसी',
       date: 'Vasant Navratri Muhurta',
       dateHi: 'चैत्र वसंत नवरात्रि मुहूर्त',
-      description: 'Dr. Pandit Vishal Dubey presiding over a consecrated Vedic Havan along with initiated pandits and seeker families.',
+      description: 'Dr. Pandit Vishal Dubey presiding over a consecrated Vedic Havan along with initiated pandits and devotee families.',
       descriptionHi: 'विश्व शांति एवं यजमान कल्याण हेतु 11 दीक्षित वैदिक आचार्यों द्वारा दुर्गा सप्तशती के संपुटित पाठ एवं महाहवन।',
     },
     {
@@ -124,7 +124,7 @@ export default function GalleryPage() {
       locationHi: 'दशाश्वमेध एवं अस्सी घाट, काशी',
       date: 'Dev Deepawali & Ganga Mahotsav',
       dateHi: 'देव दीपावली एवं गंगा महोत्सव',
-      description: 'Divine Ganga Aarti oblations and personalized sankalp conducted for seeker prosperity, health, and liberation from karmic debts.',
+      description: 'Divine Ganga Aarti oblations and personalized sankalp conducted for family prosperity, health, and liberation from karmic debts.',
       descriptionHi: 'पतित पावनी मां गंगा के तट पर जातकों के सुख, शांति व पितृदोष शांति हेतु संपन्न महाआरती एवं संकल्प।',
     },
     {
@@ -169,7 +169,7 @@ export default function GalleryPage() {
       locationHi: 'दशाश्वमेध मंडप, वाराणसी',
       date: 'Chaitra Vasant Navratri',
       dateHi: 'चैत्र वसंत नवरात्रि',
-      description: 'The sanctified sacrificial altar where sacred oblations are offered with Vedic mantras for seeker protection and planetary peace.',
+      description: 'The sanctified sacrificial altar where sacred oblations are offered with Vedic mantras for divine protection and planetary peace.',
       descriptionHi: 'वैदिक मंत्रोच्चार और असीम सकारात्मक ऊर्जा से प्रदीप्त पावन यज्ञवेदी जहां समस्त विघ्नों के निवारण हेतु आहुतियां दी जाती हैं।',
     },
     {
@@ -287,7 +287,7 @@ export default function GalleryPage() {
       image: '/gallery/IMG_2550.jpg',
       location: 'AstroVD Consultation Chambers, Varanasi',
       locationHi: 'AstroVD परामर्श कक्ष, वाराणसी',
-      date: 'Daily Seeker Sessions',
+      date: 'Daily Consultation Sessions',
       dateHi: 'दैनिक जातक परामर्श',
       description: 'Dr. Vishal Dubey meticulously reviewing planetary degrees, Dasha periods, and formulating tailored remedial solutions.',
       descriptionHi: 'ग्रह गोचर, विंशोत्तरी दशा एवं वर्ग कुंडलियों के सूक्ष्म अध्ययन से सटीक मार्गदर्शन एवं समाधान।',
@@ -379,7 +379,7 @@ export default function GalleryPage() {
       locationHi: 'काशी यज्ञ मंडप गर्भगृह',
       date: 'Purnima Shanti Muhurta',
       dateHi: 'पूर्णिमा शांति मुहूर्त',
-      description: 'Seekers performing ceremonial pradakshina around the consecrated sacred fire absorbing cosmic thermal energy.',
+      description: 'Devotees performing ceremonial pradakshina around the consecrated sacred fire absorbing cosmic thermal energy.',
       descriptionHi: 'यज्ञवेदी की परिक्रमा एवं शांति पाठ द्वारा वातावरण में सकारात्मक दैवीय ऊर्जा का विस्तार।',
     },
     {
@@ -409,7 +409,7 @@ export default function GalleryPage() {
       locationHi: 'वाराणसी पावन गर्भगृह',
       date: 'Sandhya Aarti Muhurta',
       dateHi: 'संध्या महाआरती मुहूर्त',
-      description: 'Traditional multi-tiered brass lamp aarti dispelling darkness and inviting prosperity into seekers’ lives.',
+      description: 'Traditional multi-tiered brass lamp aarti dispelling darkness and inviting prosperity into devotees’ lives.',
       descriptionHi: 'पंचप्रदीप आरती एवं वैदिक शंखनाद से समस्त नकारात्मक स्पंदनों का निवारण।',
     },
     {
@@ -422,7 +422,7 @@ export default function GalleryPage() {
       image: '/gallery/WhatsApp-Image-2025-03-20-at-5.48.00-PM-1.jpeg',
       location: 'AstroVD Online & In-Person Studio',
       locationHi: 'AstroVD प्रत्यक्ष एवं ऑनलाइन स्टूडियो',
-      date: 'Seeker Guidance Session',
+      date: 'Personal Guidance Session',
       dateHi: 'जातक मार्गदर्शन सत्र',
       description: 'Navigating karmic transitions, Sade Sati phases, and vocational alignments through Prashna and Natal charts.',
       descriptionHi: 'साढ़ेसाती, ढैय्या एवं करियर के उतार-चढ़ाव में ग्रहों की शांति हेतु व्यक्तिगत परामर्श।',

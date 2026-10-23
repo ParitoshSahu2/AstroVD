@@ -174,7 +174,7 @@ export default function AvailabilityModals({
                   className="rounded text-[#5B0D15] focus:ring-[#5B0D15]"
                 />
                 <label htmlFor="newSlotPublished" className="text-xs font-semibold text-stone-700 cursor-pointer">
-                  Publish immediately (visible to seekers on /appointment)
+                  Publish immediately (visible on /appointment)
                 </label>
               </div>
 
@@ -285,7 +285,7 @@ export default function AvailabilityModals({
                   className="rounded text-[#5B0D15] focus:ring-[#5B0D15]"
                 />
                 <label htmlFor="editSlotPublished" className="text-xs font-semibold text-stone-700 cursor-pointer">
-                  Published (visible to seekers on /appointment)
+                  Published (visible on /appointment)
                 </label>
               </div>
 

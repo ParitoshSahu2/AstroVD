@@ -405,7 +405,7 @@ export default function ForgotPasswordPage() {
                         if (error) setError('');
                       }}
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-900 text-xs focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] shadow-sm disabled:opacity-60"
-                      placeholder="seeker@celestial.com"
+                      placeholder="user@example.com"
                     />
                   </div>
                 </div>

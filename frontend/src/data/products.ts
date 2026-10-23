@@ -276,7 +276,7 @@ export const PRODUCTS_CATALOG: ProductItem[] = [
     nameHi: 'मॉस अगेट प्रकृति समृद्धि ब्रेसलेट',
     tag: 'NEW BEGINNINGS • ABUNDANCE & GROWTH',
     tagHi: 'नवीन आरंभ • सतत समृद्धि व आरोग्य',
-    desc: 'The crystal of organic wealth and steady growth. Balances the masculine and feminine energies and grounds spiritual seekers in nature.',
+    desc: 'The crystal of organic wealth and steady growth. Balances the masculine and feminine energies and grounds individuals in nature.',
     descHi: 'स्थिर धन, व्यापारिक वृद्धि एवं प्राकृतिक ऊर्जा का संतुलन करता है। शिव एवं शक्ति तत्वों को संतुलित करता है।',
     image: '/products/prod-moss-agate.png',
     category: 'healing',

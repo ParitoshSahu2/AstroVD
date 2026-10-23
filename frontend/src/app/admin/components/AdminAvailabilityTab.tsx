@@ -300,7 +300,7 @@ export default function AdminAvailabilityTab({
                         </p>
                       ) : (
                         <p className="text-[11px] text-stone-400">
-                          Standard consultation window open for seeker appointment.
+                          Standard consultation window open for appointment.
                         </p>
                       )}
                     </div>

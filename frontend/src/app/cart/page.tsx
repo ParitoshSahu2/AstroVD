@@ -655,8 +655,8 @@ export default function CartPage() {
                           <Lock className="w-4 h-4 text-amber-700 shrink-0" />
                           <span className="font-medium">
                             {t(
-                              'Please login to link this order with your Seeker Dashboard and track shipment status.',
-                              'कृपया अपने सीकर डैशबोर्ड में ऑर्डर ट्रैक करने के लिए लॉगिन करें।'
+                              'Please login to link this order with your Customer Dashboard and track shipment status.',
+                              'कृपया अपने डैशबोर्ड में ऑर्डर ट्रैक करने के लिए लॉगिन करें।'
                             )}
                           </span>
                         </div>

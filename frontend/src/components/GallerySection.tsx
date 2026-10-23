@@ -35,7 +35,7 @@ export const galleryPhotos: GalleryPhoto[] = [
     locationHi: 'श्री गणेश विद्यापीठ यज्ञशाला, वाराणसी',
     date: 'Auspicious Muhurta 2024',
     dateHi: 'शुभ मुहूर्त 2024',
-    description: 'Dr. Pandit Vishal Dubey presiding over a consecrated Vedic Havan along with initiated pandits and seeker families praying for cosmic balance.',
+    description: 'Dr. Pandit Vishal Dubey presiding over a consecrated Vedic Havan along with initiated pandits and devotee families praying for cosmic balance.',
     descriptionHi: 'डॉ. पंडित विशाल दुबे जी के पावन सानिध्य में यजमान परिवारों के कल्याणार्थ विधि-विधान से संपन्न हुआ वैदिक महाहवन।'
   },
   {
@@ -95,7 +95,7 @@ export const galleryPhotos: GalleryPhoto[] = [
     locationHi: 'दशाश्वमेध एवं अस्सी घाट, काशी',
     date: 'Dev Deepawali & Ganga Mahotsav',
     dateHi: 'देव दीपावली एवं गंगा महोत्सव',
-    description: 'Divine Ganga Aarti oblations and personalized sankalp conducted for seeker prosperity, health, and liberation from karmic debts.',
+    description: 'Divine Ganga Aarti oblations and personalized sankalp conducted for family prosperity, health, and liberation from karmic debts.',
     descriptionHi: 'पतित पावनी मां गंगा के तट पर जातकों के सुख, शांति व पितृदोष शांति हेतु संपन्न महाआरती एवं संकल्प।'
   },
   {
@@ -140,7 +140,7 @@ export const galleryPhotos: GalleryPhoto[] = [
     locationHi: 'दशाश्वमेध मंडप, वाराणसी',
     date: 'Chaitra Vasant Navratri',
     dateHi: 'चैत्र वसंत नवरात्रि',
-    description: 'The sanctified sacrificial altar where sacred oblations are offered with Vedic mantras for seeker protection and planetary peace.',
+    description: 'The sanctified sacrificial altar where sacred oblations are offered with Vedic mantras for divine protection and planetary peace.',
     descriptionHi: 'वैदिक मंत्रोच्चार और असीम सकारात्मक ऊर्जा से प्रदीप्त पावन यज्ञवेदी जहां समस्त विघ्नों के निवारण हेतु आहुतियां दी जाती हैं।'
   }
 ];
@@ -201,7 +201,7 @@ export const GallerySection: React.FC = () => {
           
           <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
             {t(
-              'Witness the authentic divine radiance of sacred Vedic Havans, televised planetary discourses, temple anushthans, and seeker blessings presided over by Dr. Pandit Vishal Dubey Ji.',
+              'Witness the authentic divine radiance of sacred Vedic Havans, televised planetary discourses, temple anushthans, and divine blessings presided over by Dr. Pandit Vishal Dubey Ji.',
               'पूज्य डॉ. पंडित विशाल दुबे जी के पावन सानिध्य में संपन्न हुए शास्त्रोक्त वैदिक महाहवन, राष्ट्रीय टीवी परिचर्चा, काशी विश्वनाथ अनुष्ठान एवं यजमानों के आशीर्वाद के पावन क्षण।'
             )}
           </p>

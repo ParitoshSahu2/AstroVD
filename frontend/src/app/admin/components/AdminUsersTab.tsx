@@ -128,7 +128,7 @@ export default function AdminUsersTab({
         <div className="flex items-center justify-between pb-3 border-b border-stone-100">
           <div>
             <h3 className="font-serif text-lg font-bold text-[#3B1E22]">
-              Seeker Accounts Directory
+              User Accounts Directory
             </h3>
             <p className="text-xs text-stone-500">
               Click &quot;Inspect User 360°&quot; to see what they bought, services clicked, and platform activities.
@@ -153,7 +153,7 @@ export default function AdminUsersTab({
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-stone-200 text-stone-400 uppercase tracking-wider font-semibold">
-                  <th className="py-3 px-3">Seeker</th>
+                  <th className="py-3 px-3">User</th>
                   <th className="py-3 px-3">Role</th>
                   <th className="py-3 px-3">Status</th>
                   <th className="py-3 px-3">Wallet</th>
