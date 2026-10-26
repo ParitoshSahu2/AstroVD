@@ -75,7 +75,7 @@ export default function UserInspectionModal({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-serif text-xl font-bold text-amber-100">
-                  {inspectUser?.name || 'Loading Seeker Profile...'}
+                  {inspectUser?.name || 'Loading User Profile...'}
                 </h3>
                 {inspectUser && (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-amber-950 uppercase">
@@ -98,12 +98,12 @@ export default function UserInspectionModal({
         {inspectLoading || !inspectUser ? (
           <div className="py-24 text-center text-xs text-stone-500 space-y-3">
             <RefreshCw className="w-8 h-8 animate-spin mx-auto text-[#5B0D15]" />
-            <p className="font-semibold text-sm">Aggregating Seeker 360° Activity Trail...</p>
+            <p className="font-semibold text-sm">Aggregating User 360° Activity Trail...</p>
             <p className="text-stone-400">Loading store purchases, booked services, and platform activity.</p>
           </div>
         ) : (
           <>
-            {/* Quick Seeker Action Summary Bar */}
+            {/* Quick User Action Summary Bar */}
             <div className="bg-amber-50/90 border-b border-amber-200/80 px-6 py-3 flex flex-wrap items-center justify-between text-xs gap-3 shrink-0">
               <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
                 <div className="flex items-center gap-1.5 font-semibold text-[#3B1E22]">
@@ -219,7 +219,7 @@ export default function UserInspectionModal({
                     <div className="p-8 rounded-2xl bg-stone-50 text-center text-xs text-stone-500 space-y-2">
                       <ShoppingCart className="w-8 h-8 mx-auto text-stone-400" />
                       <p className="font-semibold">No store orders recorded yet.</p>
-                      <p className="text-stone-400">This seeker has not purchased products from the Astro store.</p>
+                      <p className="text-stone-400">This user has not purchased products from the Astro store.</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -238,7 +238,7 @@ export default function UserInspectionModal({
                                   Order Placed
                                 </span>
                                 <span className="font-bold text-[#3B1E22]">
-                                  Seeker placed order for{' '}
+                                  User placed order for{' '}
                                   <span className="text-[#5B0D15]">
                                     {order.items?.map((i) => i.product?.name).filter(Boolean).join(' + ') || 'Spiritual Item'}
                                   </span>
@@ -368,7 +368,7 @@ export default function UserInspectionModal({
                     <div className="p-8 rounded-2xl bg-stone-50 text-center text-xs text-stone-500 space-y-2">
                       <Compass className="w-8 h-8 mx-auto text-stone-400" />
                       <p className="font-semibold">No astrology consultations booked yet.</p>
-                      <p className="text-stone-400">This seeker has not scheduled personalized consultations.</p>
+                      <p className="text-stone-400">This user has not scheduled personalized consultations.</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -389,7 +389,7 @@ export default function UserInspectionModal({
                                   Service Requested
                                 </span>
                                 <span className="font-bold text-[#3B1E22]">
-                                  Seeker selected{' '}
+                                  User selected{' '}
                                   <span className="text-[#5B0D15]">
                                     {booking.serviceType} Consultation with {booking.astrologer?.name || 'Dr. Pandit Vishal Dubey'}
                                   </span>
@@ -519,7 +519,7 @@ export default function UserInspectionModal({
                     <div className="flex items-center justify-between">
                       <h4 className="font-serif text-sm font-bold text-[#3B1E22] flex items-center gap-2">
                         <Activity className="w-4 h-4 text-[#5B0D15]" />
-                        <span>Unified Seeker Action Timeline (What They Did on Platform)</span>
+                        <span>Unified User Action Timeline (What They Did on Platform)</span>
                       </h4>
                       <span className="text-xs text-stone-500 font-semibold">
                         Full Chronological Trail
@@ -540,7 +540,7 @@ export default function UserInspectionModal({
                               </div>
                               <div>
                                 <div className="font-bold text-[#3B1E22]">
-                                  Seeker Placed Order: {o.items?.map((i) => i.product?.name).filter(Boolean).join(', ') || 'Spiritual Item'}
+                                  User Placed Order: {o.items?.map((i) => i.product?.name).filter(Boolean).join(', ') || 'Spiritual Item'}
                                 </div>
                                 <div className="text-[11px] text-stone-500">
                                   Total Amount: ₹{o.totalAmount.toFixed(2)} • Destination: {o.shippingAddress?.city || 'India'}
@@ -581,7 +581,7 @@ export default function UserInspectionModal({
                               </div>
                               <div>
                                 <div className="font-bold text-[#3B1E22]">
-                                  Seeker Clicked &amp; Booked: {b.serviceType} Consultation with {b.astrologer?.name}
+                                  User Clicked &amp; Booked: {b.serviceType} Consultation with {b.astrologer?.name}
                                 </div>
                                 <div className="text-[11px] text-stone-500">
                                   Fee: ₹{b.totalCost.toFixed(2)} • Scheduled: {b.scheduledDate} at {b.scheduledTime} ({b.durationMinutes} mins)
@@ -726,7 +726,7 @@ export default function UserInspectionModal({
                 <div className="space-y-6">
                   <div>
                     <h4 className="font-serif text-lg font-bold text-[#3B1E22]">
-                      Seeker Celestial Coordinates &amp; Account Parameters
+                      User Celestial Coordinates &amp; Account Parameters
                     </h4>
                     <p className="text-xs text-stone-500">
                       Primary birth parameters used for astrological predictions and account security governance.
@@ -877,7 +877,7 @@ export default function UserInspectionModal({
             {/* Footer Modal Controls */}
             <div className="px-6 py-4 bg-stone-50 border-t border-stone-200 flex items-center justify-between shrink-0">
               <div className="text-[11px] text-stone-500">
-                Seeker UUID: <code className="text-[#5B0D15]">{inspectUser.id}</code>
+                User UUID: <code className="text-[#5B0D15]">{inspectUser.id}</code>
               </div>
               <button
                 onClick={onClose}

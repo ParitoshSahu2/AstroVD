@@ -88,7 +88,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ openConsultModal, open
             <div className="pt-6 border-t border-amber-200/80 grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="bg-white/70 backdrop-blur-sm p-3.5 rounded-2xl border border-amber-200/60 shadow-sm">
                 <div className="text-2xl font-extrabold text-amber-700 font-mono">50,000+</div>
-                <div className="text-xs text-stone-600 font-medium mt-0.5">{t('Seekers Guided', 'संतुष्ट जातक')}</div>
+                <div className="text-xs text-stone-600 font-medium mt-0.5">{t('Devotees Guided', 'संतुष्ट जातक')}</div>
               </div>
               <div className="bg-white/70 backdrop-blur-sm p-3.5 rounded-2xl border border-amber-200/60 shadow-sm">
                 <div className="text-2xl font-extrabold text-amber-700 font-mono flex items-center gap-1">

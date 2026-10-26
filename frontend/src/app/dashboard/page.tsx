@@ -487,7 +487,7 @@ export default function DashboardPage() {
 
       <PageHeader
         breadcrumb="Customer Dashboard"
-        title="Seeker Sanctuary & Account"
+        title="User Account & Sanctuary"
         subtitle="Manage your Vedic birth chart information, review spiritual wallet credits, and inspect ledger transactions."
         compact={true}
       />
@@ -528,7 +528,7 @@ export default function DashboardPage() {
           <div className="space-y-4 sm:space-y-5">
             {/* Top Identity & Welcome Banner */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-stretch">
-              {/* Seeker Identity Card */}
+              {/* User Identity Card */}
               <div className="lg:col-span-5 relative overflow-hidden rounded-2xl bg-gradient-to-r from-white/95 via-[#FAF7F2] to-amber-50/60 backdrop-blur-xl border border-amber-200/80 p-3.5 sm:p-4 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
                 <div className="flex items-center gap-3">
                   {/* Avatar Initial Circle */}
@@ -559,7 +559,7 @@ export default function DashboardPage() {
                     </div>
                     <p className="text-xs text-stone-500 truncate">{profile.email}</p>
                     <p className="text-[10.5px] text-amber-800 font-medium">
-                      Seeker since {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Vedic Member'}
+                      Member since {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Vedic Member'}
                     </p>
                   </div>
                 </div>

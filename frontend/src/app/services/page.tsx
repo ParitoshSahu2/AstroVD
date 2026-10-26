@@ -29,6 +29,17 @@ export default function ServicesPage() {
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
 
+  // Sync search query from URL (?search=... or ?q=...)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('search') || params.get('q');
+    if (q) {
+      setSearchQuery(q);
+      setVisibleCount(SERVICES_BATCH_SIZE);
+    }
+  }, []);
+
   // Infinite Scrolling State (Batches of 9)
   const [visibleCount, setVisibleCount] = useState<number>(SERVICES_BATCH_SIZE);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);

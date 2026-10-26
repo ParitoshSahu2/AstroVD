@@ -757,7 +757,7 @@ export default function AdminPage() {
 
       setNotification({
         type: 'success',
-        message: `Slot at ${slot.startTime} is now ${!slot.isPublished ? 'published & visible to seekers' : 'unpublished & hidden'}!`,
+        message: `Slot at ${slot.startTime} is now ${!slot.isPublished ? 'published & visible to users' : 'unpublished & hidden'}!`,
       });
       fetchAvailability(availabilityDate);
     } catch (err: any) {
@@ -1294,6 +1294,7 @@ export default function AdminPage() {
       {/* Website Navbar is hidden in the admin panel to provide a clean, dedicated full-viewport dashboard */}
       {false && <Navbar />}
 
+<<<<<<< HEAD
       {(!currentUser || !isAdmin) && (
         <PageHeader
           breadcrumb="Administrative Portal"
@@ -1301,6 +1302,13 @@ export default function AdminPage() {
           subtitle="Full oversight into customer orders, booked astrology services, celestial wallet movements, and platform activities."
         />
       )}
+=======
+      <PageHeader
+        breadcrumb="Administrative Portal"
+        title="Admin Control & User 360° Inspection"
+        subtitle="Full oversight into customer orders, booked astrology services, celestial wallet movements, and platform activities."
+      />
+>>>>>>> origin/main
 
       <main className={`flex-1 w-full ${currentUser && isAdmin ? 'p-0 max-w-none flex flex-col min-h-screen' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12'}`}>
         {/* ACCESS CONTROL CHECK */}
@@ -1861,6 +1869,298 @@ export default function AdminPage() {
               </div>
             )}
 
+<<<<<<< HEAD
+=======
+            {/* Admin Header Banner */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-white/95 via-[#FAF7F2] to-amber-50/80 backdrop-blur-xl border border-amber-200/80 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="flex items-center gap-4 sm:gap-6">
+                <div
+                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full ${getAvatarBackground(
+                    currentUser.role
+                  )} font-bold flex items-center justify-center shadow-lg border ring-4 shrink-0 ${
+                    getInitials(currentUser.name).length > 1
+                      ? 'text-xl sm:text-2xl tracking-tight'
+                      : 'text-2xl sm:text-3xl font-extrabold'
+                  }`}
+                >
+                  {getInitials(currentUser.name)}
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#3B1E22]">
+                      {currentUser.name}
+                    </h2>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${
+                        isSuperadmin
+                          ? 'bg-purple-100 text-purple-900 border-purple-300'
+                          : 'bg-amber-100 text-amber-900 border-amber-300'
+                      }`}
+                    >
+                      👑 {currentUser.role}
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase tracking-wider">
+                      ● Active Admin Session
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-stone-500">{currentUser.email}</p>
+                  <p className="text-[11px] text-amber-800 font-medium">
+                    {isSuperadmin
+                      ? 'Platform Owner: Full authority over user inspection, status, and role administration.'
+                      : 'Platform Administrator: Authorized for user 360° inspection and account status control.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 flex-wrap">
+                <button
+                  onClick={handleOpenEditProfile}
+                  className="px-4 py-2.5 rounded-full border border-amber-300/90 bg-white hover:bg-amber-50 text-[#5B0D15] font-semibold text-xs shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer"
+                  title="Edit your profile details"
+                >
+                  <Edit3 className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Edit Profile</span>
+                </button>
+
+                <button
+                  onClick={handleOpenGenerateProfile}
+                  className="px-4 py-2.5 rounded-full border border-[#5B0D15] bg-[#5B0D15] hover:bg-[#480a11] text-amber-100 font-semibold text-xs shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer"
+                  title="Generate a new user profile"
+                >
+                  <UserPlus className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Generate New Profile</span>
+                </button>
+
+                {isSuperadmin && (
+                  <button
+                    onClick={handleOpenAddAdmin}
+                    className="px-4 py-2.5 rounded-full border border-purple-400 bg-purple-800 hover:bg-purple-900 text-white font-semibold text-xs shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer"
+                    title="Add a new platform administrator"
+                  >
+                    <Crown className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Add New Admin</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => fetchUsers(page)}
+                  title="Reload Directory"
+                  className="px-3.5 py-2.5 rounded-full border border-stone-200 bg-white/90 hover:bg-stone-50 text-stone-600 font-medium text-xs shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Refresh</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Elegant Quick Metrics Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+              {/* Card 1: Registered Accounts / Total */}
+              <button
+                type="button"
+                onClick={() => {
+                  setRoleFilter('');
+                  setPage(1);
+                }}
+                className={`relative text-left w-full overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-4.5 md:p-5 transition-all duration-300 group cursor-pointer border ${
+                  roleFilter === ''
+                    ? 'bg-gradient-to-br from-rose-50/90 via-white to-amber-50/60 border-[#5B0D15] shadow-md ring-2 ring-[#5B0D15]/20'
+                    : 'bg-white/95 hover:bg-stone-50/90 border-stone-200/80 hover:border-amber-300 shadow-xs hover:shadow-sm'
+                }`}
+                title="Click to view all registered platform accounts"
+              >
+                <div className="flex items-center justify-between gap-2 mb-2 sm:mb-2.5">
+                  <span className="text-[11px] sm:text-xs font-bold text-stone-600 tracking-wide truncate">
+                    Registered Users
+                  </span>
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-rose-50 border border-rose-200/70 text-[#5B0D15] flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                    <UserIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-xl sm:text-2xl md:text-3xl font-serif font-black text-[#3B1E22] tracking-tight">
+                    {roleCounts.TOTAL || totalCount}
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-rose-800 bg-rose-100/70 px-2 py-0.5 rounded-full shrink-0">
+                    Directory
+                  </span>
+                </div>
+                <div className="text-[10px] sm:text-[11px] text-stone-500 font-medium truncate">
+                  Total user accounts
+                </div>
+              </button>
+
+              {/* Card 2: Seeker Accounts (USER) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setRoleFilter(roleFilter === 'USER' ? '' : 'USER');
+                  setPage(1);
+                }}
+                className={`relative text-left w-full overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-4.5 md:p-5 transition-all duration-300 group cursor-pointer border ${
+                  roleFilter === 'USER'
+                    ? 'bg-gradient-to-br from-emerald-50/90 via-white to-amber-50/60 border-emerald-600 shadow-md ring-2 ring-emerald-500/20'
+                    : 'bg-white/95 hover:bg-stone-50/90 border-stone-200/80 hover:border-emerald-300 shadow-xs hover:shadow-sm'
+                }`}
+                title="Click to filter by standard Users (USER)"
+              >
+                <div className="flex items-center justify-between gap-2 mb-2 sm:mb-2.5">
+                  <span className="text-[11px] sm:text-xs font-bold text-stone-600 tracking-wide truncate">
+                    User Accounts
+                  </span>
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-50 border border-emerald-200/70 text-emerald-700 flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-xl sm:text-2xl md:text-3xl font-serif font-black text-emerald-800 tracking-tight">
+                    {roleCounts.USER || users.filter((u) => u.role === 'USER').length || 0}
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-full shrink-0">
+                    Role: USER
+                  </span>
+                </div>
+                <div className="text-[10px] sm:text-[11px] text-stone-500 font-medium truncate">
+                  Orders, bookings, clicks
+                </div>
+              </button>
+
+              {/* Card 3: Platform Admins (ADMIN) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setRoleFilter(roleFilter === 'ADMIN' ? '' : 'ADMIN');
+                  setPage(1);
+                }}
+                className={`relative text-left w-full overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-4.5 md:p-5 transition-all duration-300 group cursor-pointer border ${
+                  roleFilter === 'ADMIN'
+                    ? 'bg-gradient-to-br from-amber-50/90 via-white to-amber-100/60 border-amber-600 shadow-md ring-2 ring-amber-500/20'
+                    : 'bg-white/95 hover:bg-stone-50/90 border-stone-200/80 hover:border-amber-300 shadow-xs hover:shadow-sm'
+                }`}
+                title="Click to filter by Platform Administrators (ADMIN)"
+              >
+                <div className="flex items-center justify-between gap-2 mb-2 sm:mb-2.5">
+                  <span className="text-[11px] sm:text-xs font-bold text-stone-600 tracking-wide truncate">
+                    Platform Admins
+                  </span>
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-50 border border-amber-200/70 text-amber-700 flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                    <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-xl sm:text-2xl md:text-3xl font-serif font-black text-amber-800 tracking-tight">
+                    {roleCounts.ADMIN || users.filter((u) => u.role === 'ADMIN').length || 0}
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-amber-800 bg-amber-100/70 px-2 py-0.5 rounded-full shrink-0">
+                    Role: ADMIN
+                  </span>
+                </div>
+                <div className="text-[10px] sm:text-[11px] text-stone-500 font-medium truncate">
+                  Video, Audio, Chat Services
+                </div>
+              </button>
+
+              {/* Card 4: Platform Owner (SUPERADMIN) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setRoleFilter(roleFilter === 'SUPERADMIN' ? '' : 'SUPERADMIN');
+                  setPage(1);
+                }}
+                className={`relative text-left w-full overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-4.5 md:p-5 transition-all duration-300 group cursor-pointer border ${
+                  roleFilter === 'SUPERADMIN'
+                    ? 'bg-gradient-to-br from-purple-50/90 via-white to-amber-50/60 border-purple-600 shadow-md ring-2 ring-purple-500/20'
+                    : 'bg-white/95 hover:bg-stone-50/90 border-stone-200/80 hover:border-purple-300 shadow-xs hover:shadow-sm'
+                }`}
+                title="Click to filter by Platform Owner (SUPERADMIN)"
+              >
+                <div className="flex items-center justify-between gap-2 mb-2 sm:mb-2.5">
+                  <span className="text-[11px] sm:text-xs font-bold text-stone-600 tracking-wide truncate">
+                    Superadmin Owner
+                  </span>
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-50 border border-purple-200/70 text-purple-700 flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                    <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </div>
+                </div>
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-xl sm:text-2xl md:text-3xl font-serif font-black text-purple-900 tracking-tight">
+                    {roleCounts.SUPERADMIN || users.filter((u) => u.role === 'SUPERADMIN').length || 0}
+                  </span>
+                  <span className="text-[9px] sm:text-[10px] font-semibold text-purple-900 bg-purple-100/70 px-2 py-0.5 rounded-full shrink-0">
+                    SUPERADMIN
+                  </span>
+                </div>
+                <div className="text-[10px] sm:text-[11px] text-stone-500 font-medium truncate">
+                  Master Store &amp; Platform Root
+                </div>
+              </button>
+            </div>
+
+            {/* Top Level Section Switcher */}
+            <div className="flex items-center gap-3 border-b border-stone-200/80 pb-3 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setAdminTab('users')}
+                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
+                  adminTab === 'users'
+                    ? 'bg-[#5B0D15] text-white shadow-md'
+                    : 'bg-white hover:bg-stone-50 text-stone-700 border border-stone-200'
+                }`}
+              >
+                <UserIcon className="w-4 h-4" />
+                <span>User Directory ({totalCount})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAdminTab('bookings');
+                  fetchBookingsList(1);
+                }}
+                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
+                  adminTab === 'bookings'
+                    ? 'bg-[#5B0D15] text-white shadow-md'
+                    : 'bg-white hover:bg-stone-50 text-stone-700 border border-stone-200'
+                }`}
+              >
+                <Compass className="w-4 h-4 text-amber-500" />
+                <span>Customer Appointments &amp; Service Bookings ({bookingTotalCount})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAdminTab('orders');
+                  fetchOrdersList(1);
+                }}
+                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
+                  adminTab === 'orders'
+                    ? 'bg-[#5B0D15] text-white shadow-md'
+                    : 'bg-white hover:bg-stone-50 text-stone-700 border border-stone-200'
+                }`}
+              >
+                <Package className="w-4 h-4 text-amber-500" />
+                <span>Customer Shopping Orders ({orderTotalCount})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAdminTab('availability');
+                  fetchAvailability(availabilityDate);
+                }}
+                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
+                  adminTab === 'availability'
+                    ? 'bg-[#5B0D15] text-white shadow-md'
+                    : 'bg-white hover:bg-stone-50 text-stone-700 border border-stone-200'
+                }`}
+              >
+                <Calendar className="w-4 h-4 text-amber-500" />
+                <span>Panditji Availability &amp; Slots</span>
+              </button>
+            </div>
+
+>>>>>>> origin/main
             {/* TAB PANELS */}
             {adminTab === 'overview' && (
               <AdminOverviewTab

@@ -201,7 +201,7 @@ export default function ContactPage() {
                   {language === 'hi' ? (
                     <>धन्यवाद, {name || 'जातक'}। डॉ. पंडित विशाल दुबे जी की टीम को आपका विवरण प्राप्त हो गया है और शीघ्र ही {phone || email} पर संपर्क किया जाएगा।</>
                   ) : (
-                    <>Thank you, {name || 'Seeker'}. Dr. Pandit Vishal Dubey Ji’s team has received your details and will get in touch shortly on {phone || email}.</>
+                    <>Thank you, {name || 'Devotee'}. Dr. Pandit Vishal Dubey Ji’s team has received your details and will get in touch shortly on {phone || email}.</>
                   )}
                 </p>
                 <button

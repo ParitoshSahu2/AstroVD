@@ -128,7 +128,7 @@ export const FeedbackSection: React.FC = () => {
         <div className="text-center space-y-3 max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-1 text-amber-700 text-xs font-bold uppercase tracking-widest">
             <Quote className="w-3.5 h-3.5 fill-current" />
-            <span>{t('SEEKER TESTIMONIALS & EXPERIENCES', 'संतुष्ट जातकों के अनुभव व आशीर्वचन')}</span>
+            <span>{t('DEVOTEE TESTIMONIALS & EXPERIENCES', 'संतुष्ट जातकों के अनुभव व आशीर्वचन')}</span>
           </div>
 
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#4A151B] leading-tight">

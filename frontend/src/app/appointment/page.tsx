@@ -646,7 +646,7 @@ function AppointmentContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    {t('Seeker Full Name', 'पूरा नाम')}
+                    {t('Full Name', 'पूरा नाम')}
                   </label>
                   <input
                     type="text"

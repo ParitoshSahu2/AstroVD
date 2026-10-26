@@ -7,10 +7,20 @@ export class RegisterDto {
   @IsNotEmpty()
   name!: string;
 
-  @ApiProperty({ example: 'aarav@example.com', description: 'Unique email address' })
-  @IsEmail()
-  @IsNotEmpty()
-  email!: string;
+  @ApiPropertyOptional({ example: 'aarav@example.com', description: 'Unique email address' })
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @ApiPropertyOptional({ example: '+919876543210', description: 'Unique mobile phone number' })
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @ApiPropertyOptional({ example: 'EMAIL', description: 'Registration channel: EMAIL or PHONE' })
+  @IsOptional()
+  @IsString()
+  channel?: string;
 
   @ApiPropertyOptional({ example: '+919876543210', description: 'Phone number' })
   @IsString()

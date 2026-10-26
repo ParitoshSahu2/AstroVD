@@ -203,7 +203,7 @@ export default function AdminBookingsTab({
 
                       <td className="py-3.5 px-3">
                         <span className="font-bold text-[#3B1E22] block">
-                          {b.customer?.name || 'Vedic Seeker'}
+                          {b.customer?.name || 'Customer'}
                         </span>
                         <span className="text-stone-500 text-[11px] block">{b.customer?.email}</span>
                         <span className="text-amber-800 font-medium text-[11px] flex items-center gap-1">

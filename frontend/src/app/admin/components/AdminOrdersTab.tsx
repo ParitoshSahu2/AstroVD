@@ -184,7 +184,7 @@ export default function AdminOrdersTab({
 
                       <td className="py-3.5 px-3">
                         <span className="font-bold text-[#3B1E22] block">
-                          {o.customer?.name || o.shippingAddress?.recipient || 'Vedic Seeker'}
+                          {o.customer?.name || o.shippingAddress?.recipient || 'Customer'}
                         </span>
                         <span className="text-stone-500 text-[11px] block">{o.customer?.email || 'Guest Checkout'}</span>
                         <span className="text-amber-800 font-medium text-[11px] flex items-center gap-1">

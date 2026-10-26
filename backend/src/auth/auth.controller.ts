@@ -95,7 +95,8 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Logout and terminate active session' })
-  logout() {
+  @ApiResponse({ status: 200, description: 'Logged out successfully' })
+  async logout() {
     return { message: 'Logged out successfully' };
   }
 }

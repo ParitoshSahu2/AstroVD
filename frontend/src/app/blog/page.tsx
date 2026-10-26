@@ -81,7 +81,7 @@ const allArticles: BlogPost[] = [
       'इस दुर्लभ ग्रहीय सामंजस्य का लाभ उठाने हेतु गुरुवार को गुरु बीज मंत्र (ॐ ग्रां ग्रीं ग्रौं सः गुरवे नमः) एवं शनिवार को शनि तैलभिषेक अत्यंत फलदायी है।',
     ],
     keyTakeaways: [
-      'Jupiter in Cancer blesses genuine spiritual seekers and family expansion.',
+      'Jupiter in Cancer blesses genuine spiritual devotees and family expansion.',
       'Saturn in Pisces dissolves rigid ego structures, calling for surrender and patience.',
       'Wearing natural Yellow Sapphire (Pukhraj) or Blue Sapphire should only follow birth chart verification.',
     ],

@@ -69,6 +69,35 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
   const [loadError, setLoadError] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
+  // Sync search query from URL (?search=... or ?q=...) & custom search events
+  useEffect(() => {
+    const syncFromUrl = () => {
+      if (typeof window === 'undefined') return;
+      const params = new URLSearchParams(window.location.search);
+      const urlQuery = params.get('search') || params.get('q');
+      if (urlQuery !== null && urlQuery !== undefined) {
+        setSearchQuery(urlQuery);
+        setVisibleCount(limit || PRODUCTS_BATCH_SIZE);
+      }
+    };
+
+    syncFromUrl();
+
+    const handleSearchEvent = (e: any) => {
+      const q = e?.detail ?? '';
+      setSearchQuery(q);
+      setVisibleCount(limit || PRODUCTS_BATCH_SIZE);
+    };
+
+    window.addEventListener('popstate', syncFromUrl);
+    window.addEventListener('astro-search-change', handleSearchEvent);
+
+    return () => {
+      window.removeEventListener('popstate', syncFromUrl);
+      window.removeEventListener('astro-search-change', handleSearchEvent);
+    };
+  }, [limit]);
+
   const filterCategories = [
     {
       id: 'all',
@@ -165,6 +194,16 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
     resetPagination();
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (query.trim()) {
+        url.searchParams.set('search', query.trim());
+      } else {
+        url.searchParams.delete('search');
+        url.searchParams.delete('q');
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
   };
 
   const handleSortChange = (newSort: 'featured' | 'price-low' | 'price-high' | 'rating') => {
@@ -334,6 +373,56 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
           </div>
         )}
 
+        {/* Search Results Banner */}
+        {searchQuery.trim() && (
+          <div className="flex items-center justify-between bg-amber-50/90 border border-amber-300/80 rounded-2xl p-3 sm:px-4 max-w-5xl mx-auto shadow-2xs">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-[#3B1E22]">
+              <Sparkles className="w-4 h-4 text-amber-700 shrink-0" />
+              <span>
+                {t('Results for', 'इसके लिए परिणाम:')}{' '}
+                <strong className="text-[#5B0D15]">"{searchQuery}"</strong>
+                <span className="text-stone-500 ml-1.5 font-normal">
+                  ({filteredProducts.length} {t('products found', 'उत्पाद मिले')})
+                </span>
+              </span>
+            </div>
+            <button
+              onClick={() => handleSearchChange('')}
+              className="text-xs font-bold text-[#800000] hover:text-[#5B0D15] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <span>{t('Clear search', 'हटाएं')}</span>
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* Empty State when no products match */}
+        {filteredProducts.length === 0 && (
+          <div className="text-center py-12 px-4 max-w-md mx-auto space-y-4">
+            <div className="w-14 h-14 rounded-full bg-amber-100/70 border border-amber-300 text-amber-800 flex items-center justify-center mx-auto">
+              <Search className="w-6 h-6" />
+            </div>
+            <h3 className="font-serif font-bold text-base text-[#3B1E22]">
+              {t('No Products Found', 'कोई उत्पाद नहीं मिला')}
+            </h3>
+            <p className="text-xs text-stone-600 leading-relaxed">
+              {t(
+                `We couldn't find any products matching "${searchQuery}". Try searching for bracelets like "Tiger Eye", "Rudraksha", "Pyrite", or "Seven Chakra".`,
+                `"${searchQuery}" से मेल खाने वाला कोई उत्पाद नहीं मिला। कृपया "Tiger Eye", "Rudraksha", या "Pyrite" खोजें।`
+              )}
+            </p>
+            <button
+              onClick={() => {
+                handleSearchChange('');
+                setActiveCategory('all');
+              }}
+              className="px-4 py-2 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs font-semibold shadow-md transition-all cursor-pointer"
+            >
+              {t('View All Products', 'सभी उत्पाद देखें')}
+            </button>
+          </div>
+        )}
+
         {/* Product Cards Grid: Featuring the exact Tiger Eye card design with Default & Hover states */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-7 items-stretch justify-center" id="products-grid">
           
@@ -345,22 +434,14 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
             return (
               <div
                 key={item.id}
-                onClick={() => setSelectedProduct(item)}
-                className="relative rounded-3xl overflow-hidden shadow-xl border-2 border-amber-300/80 bg-stone-900 group cursor-pointer transition-all duration-500 hover:shadow-2xl hover:shadow-amber-900/25 hover:-translate-y-1.5 flex flex-col"
+                onClick={() => {
+                  setModalQty(1);
+                  setSelectedProduct(item);
+                }}
+                className="group relative rounded-3xl overflow-hidden bg-white border-2 border-amber-300 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col"
               >
-                {/* Outer Golden Corner Ornaments */}
-                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-amber-400/90 z-20 pointer-events-none" />
-                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-amber-400/90 z-20 pointer-events-none" />
-                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-amber-400/90 z-20 pointer-events-none" />
-                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-amber-400/90 z-20 pointer-events-none" />
-
-                {/* Price Tag Badge Top-Right */}
-                <div className="absolute top-4 right-4 z-20 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-amber-400/60 text-amber-200 font-serif font-bold text-xs shadow-md">
-                  {item.price}
-                </div>
-
-                {/* Base Product Image */}
-                <div className="relative h-[380px] sm:h-[420px] w-full overflow-hidden bg-stone-950">
+                {/* 1. Base Product Image Area */}
+                <div className="relative w-full aspect-[4/3] overflow-hidden bg-stone-100">
                   <Image
                     src={item.image}
                     alt={prodName}
@@ -369,90 +450,48 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                     className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
 
-                  {/* Subtle dark gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20 pointer-events-none" />
-                </div>
-
-                {/* ================= 1. DEFAULT STATE: Floating Bottom Pill ================= */}
-                <div className="absolute inset-x-0 bottom-5 flex justify-center z-20 transition-all duration-300 group-hover:opacity-0 group-hover:pointer-events-none group-hover:translate-y-4 px-3">
-                  <div className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-[#1F1916]/90 backdrop-blur-md border border-amber-400/70 shadow-xl text-center max-w-[90%]">
-                    <span className="text-amber-400 text-xs">✦</span>
-                    <span className="font-serif font-bold text-xs sm:text-sm text-amber-100 tracking-wider truncate">
-                      {prodName}
+                  {/* Floating Price Pill at Top Right */}
+                  <div className="absolute top-3.5 right-3.5 z-10 px-3.5 py-1.5 rounded-full bg-[#2C231C]/90 backdrop-blur-md border border-amber-400/50 shadow-md">
+                    <span className="font-serif font-bold text-xs sm:text-sm text-amber-300 tracking-wide">
+                      {item.price}
                     </span>
-                    <span className="text-amber-400 text-xs">✦</span>
                   </div>
                 </div>
 
-                {/* ================= 2. HOVER STATE: Expanding Details Overlay ================= */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1412]/98 via-[#1A1412]/90 to-transparent flex flex-col justify-end p-5 sm:p-6 text-center opacity-0 group-hover:opacity-100 transition-all duration-400 ease-out translate-y-3 group-hover:translate-y-0 z-30">
-                  
-                  {/* Decorative Sparkle at Bottom Right */}
-                  <span className="absolute bottom-5 right-5 text-amber-300/80 text-xl pointer-events-none">
-                    ✦
-                  </span>
-
-                  <div className="space-y-2.5">
-                    <span className="text-[10px] font-bold tracking-[0.2em] text-amber-300 uppercase block">
+                {/* 2. White Card Content Area */}
+                <div className="p-4 sm:p-5 flex flex-col justify-between flex-1 bg-white">
+                  <div className="space-y-1.5">
+                    {/* Category / Energy Subtitle Tag in Deep Maroon */}
+                    <span className="text-[11px] sm:text-xs font-bold text-[#800000] uppercase tracking-wider block">
                       {prodTag}
                     </span>
 
-                    <h3 className="font-serif font-bold text-lg sm:text-xl text-white tracking-wide">
+                    {/* Product Name in Bold Navy/Midnight Serif */}
+                    <h3 className="font-serif font-bold text-base sm:text-lg text-[#0F1E36] tracking-wide uppercase line-clamp-1 group-hover:text-[#800000] transition-colors">
                       {prodName}
                     </h3>
+                  </div>
 
-                    <div className="flex items-center justify-center gap-2 text-xs">
-                      <span className="text-amber-200 font-bold">{item.price}</span>
-                      <span className="text-stone-400 line-through text-[11px]">{item.originalPrice}</span>
-                      <span className="text-emerald-400 text-[10px] font-semibold bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/40">
-                        {t('Lab Certified', 'लैब प्रमाणित')}
+                  {/* Subtle Divider Line */}
+                  <hr className="my-3.5 border-stone-200/80" />
+
+                  {/* Bottom Row: Rating & Details Link */}
+                  <div className="flex items-center justify-between">
+                    {/* Rating & Review Count */}
+                    <div className="flex items-center gap-1.5 text-xs text-stone-500 font-medium">
+                      <span className="text-stone-400 text-sm">★</span>
+                      <span>
+                        {item.rating || 4.9} ({item.reviewsCount || 342})
                       </span>
                     </div>
 
-                    <p className="text-[11px] sm:text-xs text-stone-300 leading-relaxed line-clamp-3">
-                      {prodDesc}
-                    </p>
-
-                    <div className="pt-2 flex items-center justify-center gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddToCart(item, 1);
-                        }}
-                        className={`px-4 py-2 rounded-full border text-xs font-bold shadow-lg hover:scale-105 transition-all flex items-center gap-1.5 cursor-pointer ${
-                          addedProductId === item.id
-                            ? 'bg-emerald-700 border-emerald-400 text-white'
-                            : 'bg-[#5B0D15] hover:bg-[#72111c] border-amber-400/80 text-amber-100'
-                        }`}
-                      >
-                        {addedProductId === item.id ? (
-                          <>
-                            <Check className="w-3.5 h-3.5 text-emerald-200" />
-                            <span>{t('Added ✓', 'जुड़ गया ✓')}</span>
-                          </>
-                        ) : (
-                          <>
-                            <ShoppingCart className="w-3.5 h-3.5 text-amber-300" />
-                            <span>{t('Add to Cart', 'कार्ट में जोड़ें')}</span>
-                          </>
-                        )}
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setModalQty(1);
-                          setSelectedProduct(item);
-                        }}
-                        className="p-2 rounded-full bg-stone-800/80 hover:bg-stone-700 text-stone-200 border border-stone-600 transition-colors cursor-pointer"
-                        title="Quick View Details"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                    {/* Details Link with Right Arrow */}
+                    <span className="text-xs sm:text-sm font-serif font-bold text-[#800000] group-hover:text-[#5B0D15] flex items-center gap-1 group-hover:gap-1.5 transition-all">
+                      <span>{t('Details', 'विवरण')}</span>
+                      <span className="text-base font-sans">→</span>
+                    </span>
                   </div>
-
                 </div>
-
               </div>
             );
           })}

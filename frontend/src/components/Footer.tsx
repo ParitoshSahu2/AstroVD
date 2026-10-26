@@ -37,7 +37,7 @@ export const Footer: React.FC = () => {
 
             <p className="text-xs sm:text-[13px] text-stone-600 leading-relaxed max-w-sm">
               {t(
-                'Empowering seekers globally with authentic Vedic Jyotish calculations, consecrated rituals by certified Varanasi Acharyas, and intuitive spiritual counseling led by Dr. Pandit Vishal Dubey.',
+                'Empowering devotees globally with authentic Vedic Jyotish calculations, consecrated rituals by certified Varanasi Acharyas, and intuitive spiritual counseling led by Dr. Pandit Vishal Dubey.',
                 'पूज्य डॉ. पंडित विशाल दुबे के पावन मार्गदर्शन में प्रामाणिक वैदिक ज्योतिष गणना, काशी के सिद्ध आचार्यों द्वारा अनुष्ठान एवं संपूर्ण आध्यात्मिक परामर्श।'
               )}
             </p>
