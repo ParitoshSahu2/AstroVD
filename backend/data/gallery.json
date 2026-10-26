@@ -1,5 +1,117 @@
 [
   {
+    "id": "gal-mvklg24x-xw16",
+    "title": "Updated Sacred Ritual Title",
+    "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+    "category": "Vedic Rituals",
+    "categoryLabel": "Sacred Gallery",
+    "categoryLabelHi": "पावन दर्शन",
+    "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+    "location": "Kedarnath Valley, Uttarakhand",
+    "locationHi": "दशाश्वमेध घाट, वाराणसी",
+    "date": "Vedic Muhurta",
+    "dateHi": "शुभ मुहूर्त",
+    "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+    "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+    "isPublished": true,
+    "createdAt": "2026-10-23T06:33:27.249Z",
+    "updatedAt": "2026-10-23T06:33:27.256Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "gal-mvklez0i-9jw0",
+    "title": "Updated Sacred Ritual Title",
+    "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+    "category": "Vedic Rituals",
+    "categoryLabel": "Sacred Gallery",
+    "categoryLabelHi": "पावन दर्शन",
+    "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+    "location": "Kedarnath Valley, Uttarakhand",
+    "locationHi": "दशाश्वमेध घाट, वाराणसी",
+    "date": "Vedic Muhurta",
+    "dateHi": "शुभ मुहूर्त",
+    "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+    "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+    "isPublished": true,
+    "createdAt": "2026-10-23T06:32:36.546Z",
+    "updatedAt": "2026-10-23T06:32:36.551Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "gal-mvkleb02-j4eh",
+    "title": "Updated Sacred Ritual Title",
+    "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+    "category": "Vedic Rituals",
+    "categoryLabel": "Sacred Gallery",
+    "categoryLabelHi": "पावन दर्शन",
+    "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+    "location": "Kedarnath Valley, Uttarakhand",
+    "locationHi": "दशाश्वमेध घाट, वाराणसी",
+    "date": "Vedic Muhurta",
+    "dateHi": "शुभ मुहूर्त",
+    "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+    "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+    "isPublished": true,
+    "createdAt": "2026-10-23T06:32:05.426Z",
+    "updatedAt": "2026-10-23T06:32:05.437Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "gal-mvkldsf8-bxp8",
+    "title": "Updated Sacred Ritual Title",
+    "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+    "category": "Vedic Rituals",
+    "categoryLabel": "Sacred Gallery",
+    "categoryLabelHi": "पावन दर्शन",
+    "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+    "location": "Kedarnath Valley, Uttarakhand",
+    "locationHi": "दशाश्वमेध घाट, वाराणसी",
+    "date": "Vedic Muhurta",
+    "dateHi": "शुभ मुहूर्त",
+    "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+    "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+    "isPublished": true,
+    "createdAt": "2026-10-23T06:31:41.348Z",
+    "updatedAt": "2026-10-23T06:31:41.351Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
     "id": "gal-mvkkyim1-qdk9",
     "title": "Updated Sacred Ritual Title",
     "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
