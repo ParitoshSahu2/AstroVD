@@ -80,10 +80,10 @@ export default function AdminOverviewTab({
   }, []);
 
   // Compute live counts with intelligent defaults matching mock
-  const registeredUsersCount = roleCounts.USER || users.filter((u) => u.role === 'USER').length || 124;
-  const activeAstrologersCount = roleCounts.ADMIN || users.filter((u) => u.role === 'ADMIN').length || 8;
+  const registeredUsersCount = roleCounts.USER || users.filter((u) => u.role === 'USER').length || 4;
+  const activeAstrologersCount = roleCounts.ADMIN || users.filter((u) => u.role === 'ADMIN').length || 1;
   const pendingApprovalsCount = 3;
-  const totalOrdersCount = orderTotalCount || ordersList.length || 18;
+  const totalOrdersCount = orderTotalCount || ordersList.length || 12;
 
   // Recent Orders matching the design image with live fallback
   const recentOrders = [
@@ -262,28 +262,28 @@ export default function AdminOverviewTab({
       </div>
 
       {/* 2. FOUR KEY METRIC CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5">
         {/* Card 1: Registered Users */}
         <div
           onClick={() => onNavigateTab('seekers')}
-          className="bg-white rounded-2xl p-5 border border-stone-200/70 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-purple-300"
+          className="bg-white rounded-xl sm:rounded-2xl p-3.5 sm:p-4 border border-stone-200/70 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-purple-300"
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
-                <Users className="w-5 h-5" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
               </div>
-              <span className="text-xs font-bold text-stone-700">
+              <span className="text-[11px] sm:text-xs font-bold text-stone-700 truncate">
                 Registered Users
               </span>
             </div>
-            <ChevronRight className="w-4 h-4 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
           </div>
-          <div className="mt-4">
-            <div className="text-3xl font-bold font-sans text-[#1E293B] tracking-tight">
+          <div className="mt-2.5 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold font-sans text-[#1E293B] tracking-tight">
               {registeredUsersCount}
             </div>
-            <div className="mt-2 text-xs font-semibold text-emerald-600 flex items-center gap-1">
+            <div className="mt-1 text-[10.5px] sm:text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
               <span>↗</span>
               <span>+12% this month</span>
             </div>
@@ -293,24 +293,24 @@ export default function AdminOverviewTab({
         {/* Card 2: Active Astrologers */}
         <div
           onClick={() => onNavigateTab('pandits')}
-          className="bg-white rounded-2xl p-5 border border-stone-200/70 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-emerald-300"
+          className="bg-white rounded-xl sm:rounded-2xl p-3.5 sm:p-4 border border-stone-200/70 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-emerald-300"
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center shrink-0">
-                <UserCheck className="w-5 h-5" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center shrink-0">
+                <UserCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
               </div>
-              <span className="text-xs font-bold text-stone-700">
+              <span className="text-[11px] sm:text-xs font-bold text-stone-700 truncate">
                 Active Astrologers
               </span>
             </div>
-            <ChevronRight className="w-4 h-4 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
           </div>
-          <div className="mt-4">
-            <div className="text-3xl font-bold font-sans text-[#1E293B] tracking-tight">
+          <div className="mt-2.5 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold font-sans text-[#1E293B] tracking-tight">
               {activeAstrologersCount}
             </div>
-            <div className="mt-2 text-xs font-semibold text-emerald-600 flex items-center gap-1">
+            <div className="mt-1 text-[10.5px] sm:text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
               <span>↗</span>
               <span>+2% this month</span>
             </div>
@@ -320,24 +320,24 @@ export default function AdminOverviewTab({
         {/* Card 3: Pending Approvals */}
         <div
           onClick={() => onNavigateTab('appointments')}
-          className="bg-white rounded-2xl p-5 border border-stone-200/70 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-amber-300"
+          className="bg-white rounded-xl sm:rounded-2xl p-3.5 sm:p-4 border border-stone-200/70 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-amber-300"
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-[#FFF7ED] text-[#EA580C] flex items-center justify-center shrink-0">
-                <Clock className="w-5 h-5" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#FFF7ED] text-[#EA580C] flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
               </div>
-              <span className="text-xs font-bold text-stone-700">
+              <span className="text-[11px] sm:text-xs font-bold text-stone-700 truncate">
                 Pending Approvals
               </span>
             </div>
-            <ChevronRight className="w-4 h-4 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
           </div>
-          <div className="mt-4">
-            <div className="text-3xl font-bold font-sans text-[#1E293B] tracking-tight">
+          <div className="mt-2.5 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold font-sans text-[#1E293B] tracking-tight">
               {pendingApprovalsCount}
             </div>
-            <div className="mt-2 text-xs font-semibold text-[#EA580C]">
+            <div className="mt-1 text-[10.5px] sm:text-[11px] font-semibold text-[#EA580C]">
               Needs attention
             </div>
           </div>
@@ -346,24 +346,24 @@ export default function AdminOverviewTab({
         {/* Card 4: Total Orders */}
         <div
           onClick={() => onNavigateTab('orders')}
-          className="bg-white rounded-2xl p-5 border border-stone-200/70 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-blue-300"
+          className="bg-white rounded-xl sm:rounded-2xl p-3.5 sm:p-4 border border-stone-200/70 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-blue-300"
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0">
-                <Package className="w-5 h-5" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0">
+                <Package className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
               </div>
-              <span className="text-xs font-bold text-stone-700">
+              <span className="text-[11px] sm:text-xs font-bold text-stone-700 truncate">
                 Total Orders
               </span>
             </div>
-            <ChevronRight className="w-4 h-4 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-transform" />
+            <ChevronRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
           </div>
-          <div className="mt-4">
-            <div className="text-3xl font-bold font-sans text-[#1E293B] tracking-tight">
+          <div className="mt-2.5 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold font-sans text-[#1E293B] tracking-tight">
               {totalOrdersCount}
             </div>
-            <div className="mt-2 text-xs font-semibold text-emerald-600 flex items-center gap-1">
+            <div className="mt-1 text-[10.5px] sm:text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
               <span>↗</span>
               <span>+5% this month</span>
             </div>
