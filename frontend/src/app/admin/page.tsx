@@ -1378,16 +1378,16 @@ export default function AdminPage() {
                 <Link
                   href="/"
                   title="Return to AstroVD Homepage"
-                  className="flex items-center gap-2 group"
+                  className="flex items-center group transition-all"
                 >
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8B1D2C]">
-                    <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current">
-                      <path d="M12 3c-1.2 2.5-3 5-3 7 0 1.66 1.34 3 3 3s3-1.34 3-3c0-2-1.8-4.5-3-7zm-4.5 5.5c-.8 1.8-1.5 3.8-1.5 5.5 0 2.21 1.79 4 4 4 .7 0 1.35-.18 1.93-.5-1.42-.8-2.43-2.28-2.43-4 0-1.85.9-3.45 2.1-4.4-.7-.4-2.5-.9-4.1-.6zm9 0c-1.6-.3-3.4.2-4.1.6 1.2.95 2.1 2.55 2.1 4.4 0 1.72-1.01 3.2-2.43 4 .58.32 1.23.5 1.93.5 2.21 0 4-1.79 4-4 0-1.7-.7-3.7-1.5-5.5zM6.5 16.5c-1.5 0-2.5 1-2.5 2 0 1.1 1.4 2 3 2 1.5 0 2.5-.5 3-1-.5-.5-1.5-1-2.5-1-.4 0-.8.05-1 .1.2-.5.5-.9 1-1.2-.4-.6-.8-.9-1-.9zm11 0c-.2 0-.6.3-1 .9.5.3.8.7 1 1.2-.2-.05-.6-.1-1-.1-1 0-2 .5-2.5 1 .5.5 1.5 1 3 1 1.6 0 3-.9 3-2 0-1-1-2-2.5-2z"/>
-                    </svg>
-                  </div>
-                  <span className="font-serif text-2xl font-black tracking-tight text-[#1E293B]">
-                    Astr<span className="text-[#8B1D2C]">VD</span>
-                  </span>
+                  <Image
+                    src="/astro-vd-logo.png"
+                    alt="AstroVD"
+                    width={150}
+                    height={38}
+                    priority
+                    className="h-8 sm:h-9 w-auto object-contain hover:opacity-95 transition-opacity"
+                  />
                 </Link>
               </div>
 
@@ -1652,16 +1652,16 @@ export default function AdminPage() {
                       href="/"
                       onClick={() => setMobileSidebarOpen(false)}
                       title="Return to AstroVD Homepage"
-                      className="flex items-center gap-2"
+                      className="flex items-center group transition-all"
                     >
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[#8B1D2C]">
-                        <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-                          <path d="M12 3c-1.2 2.5-3 5-3 7 0 1.66 1.34 3 3 3s3-1.34 3-3c0-2-1.8-4.5-3-7zm-4.5 5.5c-.8 1.8-1.5 3.8-1.5 5.5 0 2.21 1.79 4 4 4 .7 0 1.35-.18 1.93-.5-1.42-.8-2.43-2.28-2.43-4 0-1.85.9-3.45 2.1-4.4-.7-.4-2.5-.9-4.1-.6zm9 0c-1.6-.3-3.4.2-4.1.6 1.2.95 2.1 2.55 2.1 4.4 0 1.72-1.01 3.2-2.43 4 .58.32 1.23.5 1.93.5 2.21 0 4-1.79 4-4 0-1.7-.7-3.7-1.5-5.5zM6.5 16.5c-1.5 0-2.5 1-2.5 2 0 1.1 1.4 2 3 2 1.5 0 2.5-.5 3-1-.5-.5-1.5-1-2.5-1-.4 0-.8.05-1 .1.2-.5.5-.9 1-1.2-.4-.6-.8-.9-1-.9zm11 0c-.2 0-.6.3-1 .9.5.3.8.7 1 1.2-.2-.05-.6-.1-1-.1-1 0-2 .5-2.5 1 .5.5 1.5 1 3 1 1.6 0 3-.9 3-2 0-1-1-2-2.5-2z"/>
-                        </svg>
-                      </div>
-                      <span className="font-serif text-xl font-bold tracking-tight text-[#1E293B]">
-                        Astr<span className="text-[#8B1D2C]">VD</span>
-                      </span>
+                      <Image
+                        src="/astro-vd-logo.png"
+                        alt="AstroVD"
+                        width={140}
+                        height={36}
+                        priority
+                        className="h-8 w-auto object-contain hover:opacity-95 transition-opacity"
+                      />
                     </Link>
                     <button
                       type="button"
