@@ -247,18 +247,26 @@ export default function AdminBookingsTab({
 
                       <td className="py-3.5 px-3 text-center">
                         <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border truncate max-w-full ${
-                            isConfirmed
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                              : isCompleted
-                              ? 'bg-purple-50 text-purple-800 border-purple-300'
-                              : isCancelled
-                              ? 'bg-rose-50 text-rose-800 border-rose-300'
-                              : 'bg-amber-50 text-amber-800 border-amber-300'
+                          className={`inline-block px-2 py-0.5 rounded-full text-[10.5px] font-semibold truncate max-w-full text-center ${
+                            isCancelled
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200/60'
+                              : isConfirmed || isCompleted
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                              : 'bg-amber-50 text-amber-700 border border-amber-200/60'
                           }`}
-                          title={b.status}
+                          title={
+                            isCancelled
+                              ? 'Cancelled'
+                              : isConfirmed || isCompleted
+                              ? 'Paid'
+                              : 'Pending'
+                          }
                         >
-                          ● {b.status}
+                          {isCancelled
+                            ? 'Cancelled'
+                            : isConfirmed || isCompleted
+                            ? 'Paid'
+                            : 'Pending'}
                         </span>
                       </td>
 

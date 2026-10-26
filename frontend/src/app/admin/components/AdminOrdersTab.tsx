@@ -240,29 +240,34 @@ export default function AdminOrdersTab({
                       </td>
 
                       <td className="py-3.5 px-3 text-center">
-                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border bg-emerald-50 text-emerald-800 border-emerald-300 truncate max-w-full" title={o.paymentStatus || 'PAID'}>
-                          ● {o.paymentStatus || 'PAID'}
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded-full text-[10.5px] font-semibold truncate max-w-full text-center ${
+                            isPending || (!o.paymentStatus && o.status === 'PENDING')
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                          }`}
+                          title={isPending || (!o.paymentStatus && o.status === 'PENDING') ? 'Pending' : 'Paid'}
+                        >
+                          {isPending || (!o.paymentStatus && o.status === 'PENDING') ? 'Pending' : 'Paid'}
                         </span>
                       </td>
 
                       <td className="py-3.5 px-3 text-center">
                         <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border truncate max-w-full ${
+                          className={`inline-block px-2 py-0.5 rounded-full text-[10.5px] font-semibold truncate max-w-full text-center ${
                             isDelivered
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
                               : isShipped
-                              ? 'bg-purple-50 text-purple-800 border-purple-300'
+                              ? 'bg-purple-50 text-purple-700 border border-purple-200/60'
                               : isProcessing
-                              ? 'bg-blue-50 text-blue-800 border-blue-300'
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200/60'
                               : isCancelled
-                              ? 'bg-rose-50 text-rose-800 border-rose-300'
-                              : isPending
-                              ? 'bg-amber-50 text-amber-800 border-amber-300'
-                              : 'bg-amber-50 text-amber-800 border-amber-300'
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200/60'
+                              : 'bg-amber-50 text-amber-700 border border-amber-200/60'
                           }`}
-                          title={o.status}
+                          title={o.status || 'Pending'}
                         >
-                          ● {o.status}
+                          {o.status ? o.status.charAt(0) + o.status.slice(1).toLowerCase() : 'Pending'}
                         </span>
                       </td>
 

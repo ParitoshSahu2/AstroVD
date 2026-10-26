@@ -94,7 +94,7 @@ export default function AdminOverviewTab({
       avatarBg: 'bg-purple-100 text-purple-700',
       product: 'Online Consultation',
       amount: '₹499',
-      status: 'Completed',
+      status: 'Paid',
       statusClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
       date: 'Oct 26, 2025',
     },
@@ -116,7 +116,7 @@ export default function AdminOverviewTab({
       avatarBg: 'bg-teal-100 text-teal-700',
       product: 'Gemstone',
       amount: '₹2,499',
-      status: 'Completed',
+      status: 'Paid',
       statusClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
       date: 'Oct 25, 2025',
     },
@@ -170,10 +170,10 @@ export default function AdminOverviewTab({
           ord.items?.[0]?.product?.name ||
           (ord.serviceType ? `${ord.serviceType} Consultation` : 'Astrology Service');
         const formattedAmount = `₹${(ord.totalAmount || 0).toLocaleString('en-IN')}`;
-        const rawStatus = (ord.status || 'Completed').toUpperCase();
-        let status = 'Completed';
+        const rawStatus = (ord.status || 'Paid').toString().toUpperCase();
+        let status = 'Paid';
         let statusClass = 'bg-emerald-50 text-emerald-700 border border-emerald-200/60';
-        if (rawStatus.includes('PENDING')) {
+        if (!ord.status || typeof ord.status !== 'string' || ord.status.trim() === '' || rawStatus.includes('PENDING')) {
           status = 'Pending';
           statusClass = 'bg-amber-50 text-amber-700 border border-amber-200/60';
         } else if (rawStatus.includes('CANCEL')) {
@@ -182,6 +182,9 @@ export default function AdminOverviewTab({
         } else if (rawStatus.includes('PROCESS')) {
           status = 'Processing';
           statusClass = 'bg-blue-50 text-blue-700 border border-blue-200/60';
+        } else {
+          status = 'Paid';
+          statusClass = 'bg-emerald-50 text-emerald-700 border border-emerald-200/60';
         }
         const date = ord.createdAt
           ? new Date(ord.createdAt).toLocaleDateString('en-US', {
