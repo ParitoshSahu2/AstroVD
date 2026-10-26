@@ -149,43 +149,44 @@ export default function AdminUsersTab({
             No users found matching your filters.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <div className="w-full min-w-0 overflow-x-auto">
+            <table className="w-full table-fixed text-left text-xs">
               <thead>
                 <tr className="border-b border-stone-200 text-stone-400 uppercase tracking-wider font-semibold">
-                  <th className="py-3 px-3">User</th>
-                  <th className="py-3 px-3">Role</th>
-                  <th className="py-3 px-3">Status</th>
-                  <th className="py-3 px-3">Wallet</th>
-                  <th className="py-3 px-3 text-center">Orders</th>
-                  <th className="py-3 px-3 text-center">Bookings</th>
-                  <th className="py-3 px-3 text-right">Actions</th>
+                  <th className="py-3 px-3 w-[28%] font-medium">User</th>
+                  <th className="py-3 px-3 w-[10%] font-medium">Role</th>
+                  <th className="py-3 px-3 w-[12%] font-medium">Status</th>
+                  <th className="py-3 px-3 w-[12%] font-medium">Wallet</th>
+                  <th className="py-3 px-3 text-center w-[8%] font-medium">Orders</th>
+                  <th className="py-3 px-3 text-center w-[8%] font-medium">Bookings</th>
+                  <th className="py-3 px-3 text-right w-[22%] font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {users.map((u) => (
                   <tr key={u.id} className="hover:bg-amber-50/40 transition-colors">
                     <td className="py-3.5 px-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#5B0D15] to-[#7B121C] text-amber-200 font-bold text-xs flex items-center justify-center shrink-0 border border-amber-300/50">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#5B0D15] to-[#7B121C] text-amber-200 font-bold text-xs flex items-center justify-center shrink-0 border border-amber-300/50">
                           {getInitials(u.name)}
                         </div>
-                        <div className="min-w-0">
-                          <div className="font-bold text-[#3B1E22] truncate">{u.name}</div>
-                          <div className="text-[11px] text-stone-500 truncate">{u.email}</div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-[#3B1E22] truncate" title={u.name}>{u.name}</div>
+                          <div className="text-[11px] text-stone-500 truncate" title={u.email}>{u.email}</div>
                         </div>
                       </div>
                     </td>
 
                     <td className="py-3.5 px-3">
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider truncate max-w-full ${
                           u.role === 'SUPERADMIN'
                             ? 'bg-purple-100 text-purple-900 border border-purple-200'
                             : u.role === 'ADMIN'
                             ? 'bg-amber-100 text-amber-900 border border-amber-200'
                             : 'bg-stone-100 text-stone-700 border border-stone-200'
                         }`}
+                        title={u.role}
                       >
                         {u.role}
                       </span>
@@ -193,39 +194,40 @@ export default function AdminUsersTab({
 
                     <td className="py-3.5 px-3">
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 w-fit ${
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider truncate max-w-full ${
                           u.status === 'ACTIVE'
                             ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                             : 'bg-rose-100 text-rose-800 border border-rose-200'
                         }`}
+                        title={u.status}
                       >
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
+                          className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                             u.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-rose-500'
                           }`}
                         />
-                        {u.status}
+                        <span className="truncate">{u.status}</span>
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-3 font-semibold text-[#5B0D15]">
+                    <td className="py-3.5 px-3 font-semibold text-[#5B0D15] truncate" title={`₹${u.walletBalance.toFixed(2)}`}>
                       ₹{u.walletBalance.toFixed(2)}
                     </td>
 
                     <td className="py-3.5 px-3 text-center">
-                      <span className="px-2 py-1 rounded-lg bg-blue-50 text-blue-900 font-bold text-[11px] border border-blue-200">
+                      <span className="inline-block px-2 py-1 rounded-lg bg-blue-50 text-blue-900 font-bold text-[11px] border border-blue-200 truncate max-w-full" title={`Orders: ${u._count?.orders ?? 0}`}>
                         🛒 {u._count?.orders ?? 0}
                       </span>
                     </td>
 
                     <td className="py-3.5 px-3 text-center">
-                      <span className="px-2 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold text-[11px] border border-amber-200">
+                      <span className="inline-block px-2 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold text-[11px] border border-amber-200 truncate max-w-full" title={`Bookings: ${u._count?.bookings ?? 0}`}>
                         🕉️ {u._count?.bookings ?? 0}
                       </span>
                     </td>
 
                     <td className="py-3.5 px-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                      <div className="flex items-center justify-end gap-1.5 flex-nowrap">
                         {/* INSPECT 360 BUTTON */}
                         <button
                           onClick={() => onInspectUser(u.id)}

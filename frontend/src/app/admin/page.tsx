@@ -1877,7 +1877,7 @@ export default function AdminPage() {
               </header>
 
               {/* Main Content Body */}
-              <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
+              <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto min-w-0">
                 {/* Global Notification Toast */}
             {notification && (
               <div
