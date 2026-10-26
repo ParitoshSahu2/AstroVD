@@ -44,6 +44,10 @@ import {
   UserCheck,
   Download,
   Printer,
+  LayoutGrid,
+  Wallet,
+  CreditCard,
+  MessageSquare,
 } from 'lucide-react';
 import {
   UserSummary,
@@ -1243,14 +1247,14 @@ export default function AdminPage() {
 
   const handleSidebarTabClick = (tabKey: string) => {
     setMobileSidebarOpen(false);
-    if (tabKey === 'overview') {
+    if (tabKey === 'overview' || tabKey === 'dashboard') {
       setAdminTab('overview');
-    } else if (tabKey === 'seekers') {
+    } else if (tabKey === 'seekers' || tabKey === 'users') {
       setRoleFilter('USER');
       setAdminTab('users');
       setPage(1);
       fetchUsers(1);
-    } else if (tabKey === 'pandits') {
+    } else if (tabKey === 'pandits' || tabKey === 'astrologers') {
       setRoleFilter('ADMIN');
       setAdminTab('users');
       setPage(1);
@@ -1260,7 +1264,7 @@ export default function AdminPage() {
       setAdminTab('users');
       setPage(1);
       fetchUsers(1);
-    } else if (tabKey === 'appointments') {
+    } else if (tabKey === 'appointments' || tabKey === 'consultations' || tabKey === 'bookings') {
       setAdminTab('bookings');
       setBookingServiceFilter('ALL');
       fetchBookingsList(1);
@@ -1276,7 +1280,18 @@ export default function AdminPage() {
     } else if (tabKey === 'gallery') {
       router.push('/gallery');
     } else if (tabKey === 'products') {
-      router.push('/store');
+      router.push('/products');
+    } else if (tabKey === 'categories') {
+      router.push('/services');
+    } else if (tabKey === 'wallet' || tabKey === 'ledger') {
+      setAdminTab('activity');
+    } else if (tabKey === 'payments') {
+      setAdminTab('orders');
+    } else if (tabKey === 'pooja') {
+      setAdminTab('availability');
+      fetchAvailability(availabilityDate);
+    } else if (tabKey === 'messages' || tabKey === 'notifications') {
+      setNotificationsOpen(true);
     } else if (tabKey === 'settings') {
       handleOpenEditProfile();
     } else if (tabKey === 'activity') {
@@ -1357,242 +1372,270 @@ export default function AdminPage() {
         ) : (
           <div className="flex-1 flex w-full min-h-screen">
             {/* ===================== DESKTOP SIDEBAR ===================== */}
-            <aside className="hidden md:flex w-64 bg-[#2A0808] text-stone-200 flex-col shrink-0 border-r border-[#3D0F14] select-none fixed top-0 bottom-0 left-0 z-30 h-screen overflow-hidden">
+            <aside className="hidden md:flex w-64 bg-white text-stone-700 flex-col shrink-0 border-r border-stone-200/80 select-none fixed top-0 bottom-0 left-0 z-30 h-screen overflow-hidden">
               {/* Top Logo & Title */}
-              <div className="p-4 sm:p-5 border-b border-[#3D0F14]/90 flex items-center justify-between">
+              <div className="p-4 sm:p-5 border-b border-stone-150 flex items-center justify-between">
                 <Link
                   href="/"
                   title="Return to AstroVD Homepage"
-                  className="flex items-center group transition-all"
+                  className="flex items-center gap-2 group"
                 >
-                  <Image
-                    src="/astro-vd-logo.png"
-                    alt="AstroVD"
-                    width={160}
-                    height={42}
-                    priority
-                    className="h-8 sm:h-9 w-auto object-contain brightness-0 invert opacity-95 group-hover:opacity-100 transition-opacity"
-                  />
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8B1D2C]">
+                    <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current">
+                      <path d="M12 3c-1.2 2.5-3 5-3 7 0 1.66 1.34 3 3 3s3-1.34 3-3c0-2-1.8-4.5-3-7zm-4.5 5.5c-.8 1.8-1.5 3.8-1.5 5.5 0 2.21 1.79 4 4 4 .7 0 1.35-.18 1.93-.5-1.42-.8-2.43-2.28-2.43-4 0-1.85.9-3.45 2.1-4.4-.7-.4-2.5-.9-4.1-.6zm9 0c-1.6-.3-3.4.2-4.1.6 1.2.95 2.1 2.55 2.1 4.4 0 1.72-1.01 3.2-2.43 4 .58.32 1.23.5 1.93.5 2.21 0 4-1.79 4-4 0-1.7-.7-3.7-1.5-5.5zM6.5 16.5c-1.5 0-2.5 1-2.5 2 0 1.1 1.4 2 3 2 1.5 0 2.5-.5 3-1-.5-.5-1.5-1-2.5-1-.4 0-.8.05-1 .1.2-.5.5-.9 1-1.2-.4-.6-.8-.9-1-.9zm11 0c-.2 0-.6.3-1 .9.5.3.8.7 1 1.2-.2-.05-.6-.1-1-.1-1 0-2 .5-2.5 1 .5.5 1.5 1 3 1 1.6 0 3-.9 3-2 0-1-1-2-2.5-2z"/>
+                    </svg>
+                  </div>
+                  <span className="font-serif text-2xl font-black tracking-tight text-[#1E293B]">
+                    Astr<span className="text-[#8B1D2C]">VD</span>
+                  </span>
                 </Link>
               </div>
 
               {/* Nav Groups Container */}
-              <div className="flex-1 overflow-y-auto p-3.5 space-y-6">
-                {/* Group 1: OVERVIEW */}
+              <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
+                {/* Active Top Navigation: Dashboard */}
                 <div>
-                  <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-[#A87E84] uppercase">
-                    Overview
-                  </div>
                   <button
                     type="button"
                     onClick={() => handleSidebarTabClick('overview')}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       adminTab === 'overview'
-                        ? 'bg-gradient-to-r from-[#945826] to-[#733F17] text-white shadow-md border border-amber-500/30'
-                        : 'text-[#C4A5A8] hover:text-white hover:bg-white/5'
+                        ? 'bg-[#FDF2F4] text-[#8B1D2C]'
+                        : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                     }`}
                   >
-                    <Home className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>Overview</span>
+                    <Home className="w-4 h-4 text-[#8B1D2C] shrink-0" />
+                    <span>Dashboard</span>
                   </button>
                 </div>
 
-                {/* Group 2: USER MANAGEMENT */}
+                {/* Group 1: USER MANAGEMENT */}
                 <div>
-                  <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-[#A87E84] uppercase">
+                  <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
                     User Management
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('seekers')}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                         adminTab === 'users' && roleFilter === 'USER'
-                          ? 'bg-gradient-to-r from-[#945826] to-[#733F17] text-white shadow-md border border-amber-500/30'
-                          : 'text-[#C4A5A8] hover:text-white hover:bg-white/5'
+                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <Users className="w-4 h-4 text-amber-400 shrink-0" />
-                        <span>Seekers</span>
-                      </div>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-amber-200">
-                        {roleCounts.USER || users.filter((u) => u.role === 'USER').length || 6}
-                      </span>
+                      <Users className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Users</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('pandits')}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                         adminTab === 'users' && roleFilter === 'ADMIN'
-                          ? 'bg-gradient-to-r from-[#945826] to-[#733F17] text-white shadow-md border border-amber-500/30'
-                          : 'text-[#C4A5A8] hover:text-white hover:bg-white/5'
+                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
-                        <span>Pandits</span>
-                      </div>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-amber-200">
-                        {roleCounts.ADMIN || 4}
-                      </span>
+                      <Sparkles className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Astrologers</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => handleSidebarTabClick('admins')}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        adminTab === 'users' && roleFilter === 'SUPERADMIN'
-                          ? 'bg-gradient-to-r from-[#945826] to-[#733F17] text-white shadow-md border border-amber-500/30'
-                          : 'text-[#C4A5A8] hover:text-white hover:bg-white/5'
+                      onClick={() => handleSidebarTabClick('appointments')}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                        adminTab === 'bookings' && bookingServiceFilter !== 'INSPECTION'
+                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
-                        <span>Admins</span>
-                      </div>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-amber-200">
-                        {roleCounts.SUPERADMIN || 1}
-                      </span>
+                      <UserCheck className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Consultations</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Group 3: OPERATIONS */}
+                {/* Group 2: OPERATIONS */}
                 <div>
-                  <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-[#A87E84] uppercase">
+                  <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
                     Operations
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('appointments')}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        adminTab === 'bookings' && bookingServiceFilter !== 'INSPECTION'
-                          ? 'bg-gradient-to-r from-[#945826] to-[#733F17] text-white shadow-md border border-amber-500/30'
-                          : 'text-[#C4A5A8] hover:text-white hover:bg-white/5'
-                      }`}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
                     >
-                      <div className="flex items-center gap-3">
-                        <Calendar className="w-4 h-4 text-amber-400 shrink-0" />
-                        <span>Appointments</span>
-                      </div>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-amber-200">
-                        {bookingTotalCount || 11}
-                      </span>
+                      <Calendar className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Bookings</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('orders')}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                         adminTab === 'orders'
-                          ? 'bg-gradient-to-r from-[#945826] to-[#733F17] text-white shadow-md border border-amber-500/30'
-                          : 'text-[#C4A5A8] hover:text-white hover:bg-white/5'
+                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <Package className="w-4 h-4 text-amber-400 shrink-0" />
-                        <span>Orders</span>
-                      </div>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/10 text-amber-200">
-                        {orderTotalCount || 12}
-                      </span>
+                      <Package className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Orders</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => handleSidebarTabClick('inspections')}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        adminTab === 'bookings' && bookingServiceFilter === 'INSPECTION'
-                          ? 'bg-gradient-to-r from-[#945826] to-[#733F17] text-white shadow-md border border-amber-500/30'
-                          : 'text-[#C4A5A8] hover:text-white hover:bg-white/5'
+                      onClick={() => handleSidebarTabClick('products')}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
+                    >
+                      <ShoppingBag className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Products</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSidebarTabClick('categories')}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
+                    >
+                      <LayoutGrid className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Categories</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Group 3: FINANCE */}
+                <div>
+                  <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
+                    Finance
+                  </div>
+                  <div className="space-y-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleSidebarTabClick('wallet')}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
+                    >
+                      <Wallet className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Wallet &amp; Ledger</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSidebarTabClick('payments')}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
+                    >
+                      <CreditCard className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Payments</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSidebarTabClick('pooja')}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                        adminTab === 'availability'
+                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                       }`}
                     >
-                      <Compass className="w-4 h-4 text-amber-400 shrink-0" />
-                      <span>Inspections</span>
+                      <Sparkles className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Pooja Services</span>
                     </button>
                   </div>
                 </div>
 
                 {/* Group 4: CONTENT */}
                 <div>
-                  <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-[#A87E84] uppercase">
+                  <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
                     Content
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('blogs')}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#C4A5A8] hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
                     >
-                      <FileText className="w-4 h-4 text-amber-400 shrink-0" />
+                      <FileText className="w-4 h-4 text-stone-400 shrink-0" />
                       <span>Blogs</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('gallery')}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#C4A5A8] hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
                     >
-                      <ImageIcon className="w-4 h-4 text-amber-400 shrink-0" />
+                      <ImageIcon className="w-4 h-4 text-stone-400 shrink-0" />
                       <span>Gallery</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSidebarTabClick('products')}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#C4A5A8] hover:text-white hover:bg-white/5 transition-all cursor-pointer"
-                    >
-                      <ShoppingBag className="w-4 h-4 text-amber-400 shrink-0" />
-                      <span>Products</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Group 5: SETTINGS & AUDIT */}
+                {/* Group 5: COMMUNICATION */}
                 <div>
-                  <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-[#A87E84] uppercase">
+                  <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
+                    Communication
+                  </div>
+                  <div className="space-y-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleSidebarTabClick('messages')}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
+                    >
+                      <MessageSquare className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Messages</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSidebarTabClick('notifications')}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
+                    >
+                      <Bell className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Notifications</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Group 6: SETTINGS & AUDIT */}
+                <div>
+                  <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
                     Settings
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('settings')}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#C4A5A8] hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
                     >
-                      <Settings className="w-4 h-4 text-amber-400 shrink-0" />
+                      <Settings className="w-4 h-4 text-stone-400 shrink-0" />
                       <span>Settings</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setAdminTab('activity')}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                         adminTab === 'activity'
-                          ? 'bg-gradient-to-r from-[#945826] to-[#733F17] text-white shadow-md border border-amber-500/30'
-                          : 'text-[#C4A5A8] hover:text-white hover:bg-white/5'
+                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                       }`}
                     >
-                      <History className="w-4 h-4 text-amber-400 shrink-0" />
+                      <History className="w-4 h-4 text-stone-400 shrink-0" />
                       <span>Audit Activity</span>
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Sacred Mandala Outline Watermark */}
-              <div className="absolute -bottom-12 -left-12 w-48 h-48 pointer-events-none opacity-10 text-amber-300">
-                <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" strokeWidth="1.2">
-                  <circle cx="100" cy="100" r="85" />
-                  <circle cx="100" cy="100" r="65" />
-                  <circle cx="100" cy="100" r="45" />
-                  <circle cx="100" cy="100" r="25" />
-                  <path d="M 100 15 L 100 185 M 15 100 L 185 100" />
-                  <polygon points="100,15 185,100 100,185 15,100" />
-                  <polygon points="160,40 160,160 40,160 40,40" />
-                </svg>
+              {/* Sidebar Footer with Subtle Lotus and Quote */}
+              <div className="p-4 border-t border-stone-150 flex flex-col items-center justify-center text-center bg-stone-50/40">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-amber-500/70 mb-1">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                    <path d="M12 3c-1.2 2.5-3 5-3 7 0 1.66 1.34 3 3 3s3-1.34 3-3c0-2-1.8-4.5-3-7zm-4.5 5.5c-.8 1.8-1.5 3.8-1.5 5.5 0 2.21 1.79 4 4 4 .7 0 1.35-.18 1.93-.5-1.42-.8-2.43-2.28-2.43-4 0-1.85.9-3.45 2.1-4.4-.7-.4-2.5-.9-4.1-.6zm9 0c-1.6-.3-3.4.2-4.1.6 1.2.95 2.1 2.55 2.1 4.4 0 1.72-1.01 3.2-2.43 4 .58.32 1.23.5 1.93.5 2.21 0 4-1.79 4-4 0-1.7-.7-3.7-1.5-5.5zM6.5 16.5c-1.5 0-2.5 1-2.5 2 0 1.1 1.4 2 3 2 1.5 0 2.5-.5 3-1-.5-.5-1.5-1-2.5-1-.4 0-.8.05-1 .1.2-.5.5-.9 1-1.2-.4-.6-.8-.9-1-.9zm11 0c-.2 0-.6.3-1 .9.5.3.8.7 1 1.2-.2-.05-.6-.1-1-.1-1 0-2 .5-2.5 1 .5.5 1.5 1 3 1 1.6 0 3-.9 3-2 0-1-1-2-2.5-2z"/>
+                  </svg>
+                </div>
+                <p className="text-[11px] text-stone-400 font-serif leading-tight">
+                  Spiritual Solutions<br />for a Better Tomorrow
+                </p>
               </div>
             </aside>
 
@@ -1601,72 +1644,73 @@ export default function AdminPage() {
               <div className="fixed inset-0 z-50 md:hidden flex">
                 <div
                   onClick={() => setMobileSidebarOpen(false)}
-                  className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs"
+                  className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs"
                 />
-                <div className="relative w-64 max-w-[80vw] bg-[#2A0808] text-stone-200 flex flex-col h-full shadow-2xl z-10">
-                  <div className="p-4 flex items-center justify-between border-b border-[#3D0F14]">
+                <div className="relative w-64 max-w-[80vw] bg-white text-stone-700 flex flex-col h-full shadow-2xl z-10">
+                  <div className="p-4 flex items-center justify-between border-b border-stone-200">
                     <Link
                       href="/"
                       onClick={() => setMobileSidebarOpen(false)}
                       title="Return to AstroVD Homepage"
-                      className="flex items-center group"
+                      className="flex items-center gap-2"
                     >
-                      <Image
-                        src="/astro-vd-logo.png"
-                        alt="AstroVD"
-                        width={140}
-                        height={38}
-                        className="h-8 w-auto object-contain brightness-0 invert opacity-95 group-hover:opacity-100 transition-opacity"
-                      />
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[#8B1D2C]">
+                        <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                          <path d="M12 3c-1.2 2.5-3 5-3 7 0 1.66 1.34 3 3 3s3-1.34 3-3c0-2-1.8-4.5-3-7zm-4.5 5.5c-.8 1.8-1.5 3.8-1.5 5.5 0 2.21 1.79 4 4 4 .7 0 1.35-.18 1.93-.5-1.42-.8-2.43-2.28-2.43-4 0-1.85.9-3.45 2.1-4.4-.7-.4-2.5-.9-4.1-.6zm9 0c-1.6-.3-3.4.2-4.1.6 1.2.95 2.1 2.55 2.1 4.4 0 1.72-1.01 3.2-2.43 4 .58.32 1.23.5 1.93.5 2.21 0 4-1.79 4-4 0-1.7-.7-3.7-1.5-5.5zM6.5 16.5c-1.5 0-2.5 1-2.5 2 0 1.1 1.4 2 3 2 1.5 0 2.5-.5 3-1-.5-.5-1.5-1-2.5-1-.4 0-.8.05-1 .1.2-.5.5-.9 1-1.2-.4-.6-.8-.9-1-.9zm11 0c-.2 0-.6.3-1 .9.5.3.8.7 1 1.2-.2-.05-.6-.1-1-.1-1 0-2 .5-2.5 1 .5.5 1.5 1 3 1 1.6 0 3-.9 3-2 0-1-1-2-2.5-2z"/>
+                        </svg>
+                      </div>
+                      <span className="font-serif text-xl font-bold tracking-tight text-[#1E293B]">
+                        Astr<span className="text-[#8B1D2C]">VD</span>
+                      </span>
                     </Link>
                     <button
                       type="button"
                       onClick={() => setMobileSidebarOpen(false)}
-                      className="p-1 text-stone-400 hover:text-white cursor-pointer"
+                      className="p-1 text-stone-400 hover:text-stone-800 cursor-pointer"
                     >
                       <X className="w-5 h-5" />
                     </button>
                   </div>
-                  <div className="flex-1 overflow-y-auto p-3 space-y-4">
+                  <div className="flex-1 overflow-y-auto p-3 space-y-2">
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('overview')}
-                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-amber-200"
+                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-[#8B1D2C] bg-[#FDF2F4]"
                     >
-                      Overview
+                      Dashboard
                     </button>
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('seekers')}
-                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-stone-300"
+                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-stone-600 hover:bg-stone-50"
                     >
-                      Seekers
+                      Users
                     </button>
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('pandits')}
-                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-stone-300"
+                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-stone-600 hover:bg-stone-50"
                     >
-                      Pandits
+                      Astrologers
                     </button>
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('appointments')}
-                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-stone-300"
+                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-stone-600 hover:bg-stone-50"
                     >
-                      Appointments
+                      Consultations
                     </button>
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('orders')}
-                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-stone-300"
+                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-stone-600 hover:bg-stone-50"
                     >
                       Orders
                     </button>
                     <button
                       type="button"
                       onClick={() => setAdminTab('activity')}
-                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-stone-300"
+                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-stone-600 hover:bg-stone-50"
                     >
                       Audit Activity
                     </button>
@@ -1676,9 +1720,9 @@ export default function AdminPage() {
             )}
 
             {/* ===================== MAIN VIEW AREA ===================== */}
-            <div className="flex-1 md:pl-64 flex flex-col min-w-0 bg-[#FAF8F5] min-h-screen w-full">
+            <div className="flex-1 md:pl-64 flex flex-col min-w-0 bg-[#F8F9FA] min-h-screen w-full">
               {/* Top Navigation Bar */}
-              <header className="h-16 px-4 sm:px-8 bg-white border-b border-stone-200/80 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-xs">
+              <header className="h-16 sm:h-20 px-4 sm:px-8 bg-white border-b border-stone-200/80 flex items-center justify-between gap-4 sticky top-0 z-20 shadow-2xs">
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
@@ -1687,20 +1731,14 @@ export default function AdminPage() {
                   >
                     <Menu className="w-5 h-5" />
                   </button>
-
-                  <div className="flex items-center gap-2 text-xs font-medium text-stone-500">
-                    <span className="text-stone-400">Admin</span>
-                    <span className="text-stone-300">/</span>
-                    <span className="text-stone-900 font-semibold">{getBreadcrumbTitle()}</span>
-                  </div>
                 </div>
 
-                {/* Global Search Bar */}
-                <div className="flex-1 max-w-md mx-4 hidden sm:block relative">
-                  <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                {/* Global Search Bar (Pill style matching image) */}
+                <div className="flex-1 max-w-xl mx-2 sm:mx-6 relative">
+                  <Search className="w-4 h-4 text-stone-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="text"
-                    placeholder="Search seekers, pandits, orders, inspections..."
+                    placeholder="Search users, astrologers, orders, etc..."
                     value={globalSearch}
                     onChange={(e) => {
                       setGlobalSearch(e.target.value);
@@ -1714,34 +1752,31 @@ export default function AdminPage() {
                         fetchUsers(1);
                       }
                     }}
-                    className="w-full pl-9 pr-14 py-2 text-xs rounded-xl bg-stone-50 border border-stone-200 focus:border-amber-500 focus:bg-white outline-none transition-all placeholder:text-stone-400"
+                    className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl bg-[#F4F5F7] border border-stone-200/60 focus:border-amber-400 focus:bg-white outline-none transition-all placeholder:text-stone-400"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-stone-400 bg-stone-200/70 px-1.5 py-0.5 rounded border border-stone-300 pointer-events-none">
-                    Ctrl + K
-                  </span>
                 </div>
 
-                {/* Right Items */}
-                <div className="flex items-center gap-3">
-                  {/* Notification Bell */}
+                {/* Right Header Items: Notifications & Admin Profile */}
+                <div className="flex items-center gap-4">
+                  {/* Notification Bell with Red Badge "3" */}
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => setNotificationsOpen(!notificationsOpen)}
-                      className="w-9 h-9 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-600 relative cursor-pointer"
+                      className="w-10 h-10 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-600 relative cursor-pointer transition-colors"
                       title="Platform notifications"
                     >
-                      <Bell className="w-4 h-4" />
-                      <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-xs">
+                      <Bell className="w-5 h-5" />
+                      <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#E11D48] text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-xs">
                         3
                       </span>
                     </button>
 
                     {notificationsOpen && (
-                      <div className="absolute right-0 top-11 w-80 bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-30 space-y-3 animate-fadeIn">
+                      <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-30 space-y-3 animate-fadeIn">
                         <div className="flex items-center justify-between pb-2 border-b border-stone-100">
-                          <span className="text-xs font-bold text-stone-900">Urgent Notifications</span>
-                          <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
+                          <span className="text-xs font-bold text-stone-900">Notifications</span>
+                          <span className="text-[10px] font-bold text-[#E11D48] bg-rose-50 px-2 py-0.5 rounded-full">
                             3 new
                           </span>
                         </div>
@@ -1753,8 +1788,8 @@ export default function AdminPage() {
                             }}
                             className="p-2.5 rounded-xl hover:bg-stone-50 cursor-pointer border border-transparent hover:border-stone-150 transition-all"
                           >
-                            <div className="font-bold text-stone-900">Pending pandit approval</div>
-                            <div className="text-[11px] text-stone-500">1 pandit is awaiting your approval.</div>
+                            <div className="font-bold text-stone-900">Pending astrologer approval</div>
+                            <div className="text-[11px] text-stone-500">1 astrologer is awaiting approval.</div>
                           </div>
                           <div
                             onClick={() => {
@@ -1763,8 +1798,8 @@ export default function AdminPage() {
                             }}
                             className="p-2.5 rounded-xl hover:bg-stone-50 cursor-pointer border border-transparent hover:border-stone-150 transition-all"
                           >
-                            <div className="font-bold text-stone-900">Upcoming inspection</div>
-                            <div className="text-[11px] text-stone-500">Inspection scheduled for Oct 25, 2026.</div>
+                            <div className="font-bold text-stone-900">Upcoming consultation</div>
+                            <div className="text-[11px] text-stone-500">Scheduled for today at 2:00 PM.</div>
                           </div>
                           <div
                             onClick={() => {
@@ -1773,37 +1808,45 @@ export default function AdminPage() {
                             }}
                             className="p-2.5 rounded-xl hover:bg-stone-50 cursor-pointer border border-transparent hover:border-stone-150 transition-all"
                           >
-                            <div className="font-bold text-stone-900">Unread support request</div>
-                            <div className="text-[11px] text-stone-500">You have 1 unread support message.</div>
+                            <div className="font-bold text-stone-900">New system activity</div>
+                            <div className="text-[11px] text-stone-500">Audit logs recorded 4 new events.</div>
                           </div>
                         </div>
                       </div>
                     )}
                   </div>
 
-                  {/* Profile Pill */}
+                  {/* Profile Badge (Initials AD in dark maroon, Admin / Administrator) */}
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                      className="flex items-center gap-2.5 pl-2 pr-1.5 py-1 rounded-full hover:bg-stone-100 transition-all cursor-pointer"
+                      className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-full hover:bg-stone-50 transition-all cursor-pointer"
                     >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 text-amber-100 font-bold flex items-center justify-center text-xs shadow-xs border border-amber-500/40 shrink-0">
-                        {currentUser?.name ? currentUser.name[0].toUpperCase() : 'V'}
+                      <div className="w-9 h-9 rounded-full bg-[#5B0D15] text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
+                        AD
                       </div>
-                      <div className="text-left hidden sm:block">
-                        <div className="text-xs font-bold text-stone-900 leading-tight">
-                          {currentUser?.name || 'Pandit Vishal'}
+                      <div className="text-left hidden sm:block leading-tight">
+                        <div className="text-xs font-bold text-stone-900">
+                          Admin
                         </div>
-                        <div className="text-[10px] font-medium text-stone-500 leading-none">
-                          {currentUser?.role === 'SUPERADMIN' ? 'Superadmin' : 'Admin'}
+                        <div className="text-[10px] text-stone-400 font-normal">
+                          Administrator
                         </div>
                       </div>
                       <ChevronDown className="w-3.5 h-3.5 text-stone-400" />
                     </button>
 
                     {profileDropdownOpen && (
-                      <div className="absolute right-0 top-11 w-48 bg-white rounded-2xl shadow-xl border border-stone-200 py-1.5 z-30 text-xs text-stone-700 animate-fadeIn">
+                      <div className="absolute right-0 top-12 w-48 bg-white rounded-2xl shadow-xl border border-stone-200 py-1.5 z-30 text-xs text-stone-700 animate-fadeIn">
+                        <div className="px-4 py-2 border-b border-stone-100">
+                          <div className="font-bold text-stone-900 truncate">
+                            {currentUser?.name || 'Dr. Pandit Vishal Dubey'}
+                          </div>
+                          <div className="text-[10px] text-stone-400 truncate">
+                            {currentUser?.email || 'admin@astrovd.com'}
+                          </div>
+                        </div>
                         <button
                           type="button"
                           onClick={() => {

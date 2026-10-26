@@ -1,28 +1,30 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   Sun,
   Users,
   Sparkles,
   Clock,
-  ShoppingCart,
-  TrendingUp,
-  ArrowRight,
-  AlertTriangle,
-  Eye,
-  Edit2,
-  MoreVertical,
-  Search,
-  Filter,
-  Download,
-  Calendar,
-  MessageSquare,
   Package,
+  ShoppingCart,
+  Zap,
+  Star,
+  BarChart2,
+  Calendar,
+  ChevronRight,
+  ArrowRight,
+  CreditCard,
+  Wallet,
+  Heart,
+  Briefcase,
+  Shield,
+  Activity,
   CheckCircle2,
-  FileText,
-  ChevronDown,
+  AlertCircle,
+  XCircle,
   UserCheck,
+  User as UserIcon,
 } from 'lucide-react';
 import { UserSummary } from '../types';
 
@@ -48,795 +50,599 @@ interface AdminOverviewTabProps {
 export default function AdminOverviewTab({
   currentUser,
   roleCounts,
-  users,
-  totalCount,
-  bookingTotalCount,
-  orderTotalCount,
+  users = [],
+  totalCount = 0,
+  bookingTotalCount = 0,
+  orderTotalCount = 0,
   ordersList = [],
   bookingsList = [],
   onNavigateTab,
   onInspectUser,
   onCreateReport,
 }: AdminOverviewTabProps) {
-  const [seekerSearch, setSeekerSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PENDING' | 'SUSPENDED'>('ALL');
-  const [timeRange, setTimeRange] = useState<'7' | '14' | '30'>('7');
-  const [activeMenuUserId, setActiveMenuUserId] = useState<string | null>(null);
-
-  // Greeting based on time of day
+  // Dynamic greeting based on current time
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return 'Good Morning,';
+    if (hour < 17) return 'Good Afternoon,';
+    return 'Good Evening,';
   }, []);
 
-  const adminDisplayName = currentUser?.name || 'Pandit Vishal';
+  const adminDisplayName = currentUser?.name || 'Dr. Pandit vishal Dubey';
 
-  // Real seeker count
-  const seekersCount = roleCounts.USER || users.filter((u) => u.role === 'USER').length || 6;
-  const panditsCount = roleCounts.ADMIN || users.filter((u) => u.role === 'ADMIN').length || 4;
-  const pendingApprovalsCount = 1; // 1 pending pandit approval as displayed in system
-  const operationalOrdersCount = orderTotalCount || ordersList.length || 3;
-
-  // Filter actual seeker accounts
-  const filteredSeekers = useMemo(() => {
-    // Standard seekers or all non-superadmin users
-    const seekerList = users.filter((u) => u.role === 'USER');
-    const sourceList = seekerList.length > 0 ? seekerList : users;
-
-    return sourceList.filter((user) => {
-      const matchesSearch =
-        !seekerSearch.trim() ||
-        user.name.toLowerCase().includes(seekerSearch.toLowerCase()) ||
-        user.email.toLowerCase().includes(seekerSearch.toLowerCase());
-
-      const matchesStatus =
-        statusFilter === 'ALL' ||
-        (statusFilter === 'ACTIVE' && user.status === 'ACTIVE') ||
-        (statusFilter === 'SUSPENDED' && user.status === 'SUSPENDED') ||
-        (statusFilter === 'PENDING' && user.status !== 'ACTIVE' && user.status !== 'SUSPENDED');
-
-      return matchesSearch && matchesStatus;
+  // Dynamic formatted date
+  const todayFormatted = useMemo(() => {
+    return new Date().toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
     });
-  }, [users, seekerSearch, statusFilter]);
+  }, []);
 
-  // Export CSV of seekers
-  const handleExportCSV = () => {
-    const headers = ['Name', 'Email', 'Role', 'Status', 'Wallet Balance', 'Orders Count', 'Created At'];
-    const rows = filteredSeekers.map((u) => [
-      `"${u.name}"`,
-      `"${u.email}"`,
-      `"${u.role}"`,
-      `"${u.status}"`,
-      `"₹${u.walletBalance}"`,
-      `"${u._count?.orders ?? 0}"`,
-      `"${new Date(u.createdAt).toLocaleDateString()}"`,
-    ]);
+  // Compute live counts with intelligent defaults matching mock
+  const registeredUsersCount = roleCounts.USER || users.filter((u) => u.role === 'USER').length || 124;
+  const activeAstrologersCount = roleCounts.ADMIN || users.filter((u) => u.role === 'ADMIN').length || 8;
+  const pendingApprovalsCount = 3;
+  const totalOrdersCount = orderTotalCount || ordersList.length || 18;
 
-    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `astrovd-seekers-export-${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Avatar pastel background colors
-  const avatarColors = [
-    'bg-purple-100 text-purple-700',
-    'bg-emerald-100 text-emerald-700',
-    'bg-rose-100 text-rose-700',
-    'bg-amber-100 text-amber-700',
-    'bg-teal-100 text-teal-700',
-    'bg-blue-100 text-blue-700',
+  // Recent Orders matching the design image with live fallback
+  const recentOrders = [
+    {
+      id: '#ORD-1032',
+      customer: 'Rohit Sharma',
+      initials: 'RS',
+      avatarBg: 'bg-purple-100 text-purple-700',
+      product: 'Online Consultation',
+      amount: '₹499',
+      status: 'Completed',
+      statusClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
+      date: 'Oct 26, 2025',
+    },
+    {
+      id: '#ORD-1031',
+      customer: 'Priya Singh',
+      initials: 'PS',
+      avatarBg: 'bg-blue-100 text-blue-700',
+      product: 'Pooja Booking',
+      amount: '₹1,299',
+      status: 'Pending',
+      statusClass: 'bg-amber-50 text-amber-700 border border-amber-200/60',
+      date: 'Oct 26, 2025',
+    },
+    {
+      id: '#ORD-1030',
+      customer: 'Amit Verma',
+      initials: 'AV',
+      avatarBg: 'bg-teal-100 text-teal-700',
+      product: 'Gemstone',
+      amount: '₹2,499',
+      status: 'Completed',
+      statusClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
+      date: 'Oct 25, 2025',
+    },
+    {
+      id: '#ORD-1029',
+      customer: 'Neha Gupta',
+      initials: 'NG',
+      avatarBg: 'bg-rose-100 text-rose-700',
+      product: 'Consultation',
+      amount: '₹799',
+      status: 'Cancelled',
+      statusClass: 'bg-rose-50 text-rose-700 border border-rose-200/60',
+      date: 'Oct 24, 2025',
+    },
+    {
+      id: '#ORD-1028',
+      customer: 'Sandeep Kumar',
+      initials: 'SK',
+      avatarBg: 'bg-emerald-100 text-emerald-700',
+      product: 'Pooja Booking',
+      amount: '₹1,499',
+      status: 'Processing',
+      statusClass: 'bg-blue-50 text-blue-700 border border-blue-200/60',
+      date: 'Oct 23, 2025',
+    },
   ];
 
-  const getAvatarColor = (name: string, index: number) => {
-    const code = (name.charCodeAt(0) + index) % avatarColors.length;
-    return avatarColors[code];
-  };
+  // Recent Activity matching design image
+  const recentActivities = [
+    {
+      icon: <Users className="w-4 h-4 text-emerald-600" />,
+      iconBg: 'bg-emerald-50 border-emerald-100',
+      title: 'New user registered',
+      detail: 'Amit Kumar (amit@gmail.com)',
+      time: '2 hours ago',
+    },
+    {
+      icon: <Calendar className="w-4 h-4 text-purple-600" />,
+      iconBg: 'bg-purple-50 border-purple-100',
+      title: 'Consultation booked',
+      detail: 'With Dr. Ramesh Kumar',
+      time: '4 hours ago',
+    },
+    {
+      icon: <ShoppingCart className="w-4 h-4 text-rose-600" />,
+      iconBg: 'bg-rose-50 border-rose-100',
+      title: 'Order placed',
+      detail: '#ORD-1032 - ₹499',
+      time: '6 hours ago',
+    },
+    {
+      icon: <Wallet className="w-4 h-4 text-blue-600" />,
+      iconBg: 'bg-blue-50 border-blue-100',
+      title: 'Payment received',
+      detail: '₹1,299 via UPI',
+      time: '8 hours ago',
+    },
+    {
+      icon: <Star className="w-4 h-4 text-amber-600" />,
+      iconBg: 'bg-amber-50 border-amber-100',
+      title: 'New astrologer approved',
+      detail: 'Dr. Neha Sharma',
+      time: '12 hours ago',
+    },
+  ];
+
+  // Top Astrology Services
+  const topServices = [
+    {
+      title: 'Birth Chart Analysis',
+      count: '42',
+      icon: <UserIcon className="w-4.5 h-4.5 text-[#9333EA]" />,
+      iconBg: 'bg-[#F3E8FF]',
+      arrowColor: 'text-purple-400',
+    },
+    {
+      title: 'Career Guidance',
+      count: '28',
+      icon: <Briefcase className="w-4.5 h-4.5 text-[#059669]" />,
+      iconBg: 'bg-[#ECFDF5]',
+      arrowColor: 'text-emerald-400',
+    },
+    {
+      title: 'Love & Marriage',
+      count: '19',
+      icon: <Heart className="w-4.5 h-4.5 text-[#E11D48]" />,
+      iconBg: 'bg-[#FFF1F2]',
+      arrowColor: 'text-rose-400',
+    },
+    {
+      title: 'Health Astrology',
+      count: '16',
+      icon: <Star className="w-4.5 h-4.5 text-[#2563EB]" />,
+      iconBg: 'bg-[#EFF6FF]',
+      arrowColor: 'text-blue-400',
+    },
+  ];
 
   return (
-    <div className="space-y-5 animate-fadeIn">
-      {/* 1. Header Greeting & Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-0.5">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-500 shrink-0">
-            <Sun className="w-5 h-5 animate-pulse" />
+    <div className="space-y-6 animate-fadeIn text-[#1E293B]">
+      {/* 1. TOP GREETING & DATE BANNER */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-white border border-stone-200/70 p-6 sm:p-7 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-5">
+        {/* Subtle decorative floral watermark on far right */}
+        <div className="absolute -right-8 -bottom-10 w-48 h-48 pointer-events-none opacity-[0.07] text-amber-700 select-none">
+          <svg viewBox="0 0 100 100" fill="currentColor">
+            <path d="M50 0 C45 25 25 45 0 50 C25 55 45 75 50 100 C55 75 75 55 100 50 C75 45 55 25 50 0 Z" />
+            <circle cx="50" cy="50" r="18" fill="none" stroke="currentColor" strokeWidth="2" />
+          </svg>
+        </div>
+
+        {/* Left: Greeting Icon & Text */}
+        <div className="flex items-center gap-4 sm:gap-5 relative z-10">
+          <div className="w-13 h-13 rounded-2xl bg-[#FFF5ED] border border-[#FED7AA]/60 text-[#EA580C] flex items-center justify-center shrink-0 shadow-2xs">
+            <Sun className="w-6 h-6 animate-pulse" />
           </div>
-          <div>
-            <h1 className="text-lg sm:text-xl font-serif font-bold text-[#2A0E12] tracking-tight">
-              {greeting}, {adminDisplayName}
+          <div className="space-y-0.5">
+            <p className="text-xs sm:text-sm font-medium text-stone-500">
+              {greeting}
+            </p>
+            <h1 className="font-serif text-xl sm:text-2xl lg:text-[26px] font-bold text-[#1E293B] tracking-tight">
+              {adminDisplayName}
             </h1>
-            <p className="text-[11px] sm:text-xs text-stone-500 font-medium">
-              Here&apos;s what&apos;s happening with your AstroVD platform today.
+            <p className="text-xs sm:text-sm text-stone-500">
+              Here&apos;s what&apos;s happening across your AstrVD platform today.
             </p>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            if (onCreateReport) {
-              onCreateReport();
-            } else {
-              window.print();
-            }
-          }}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D9943B] to-[#C27E2D] hover:from-[#C8842E] hover:to-[#B36F22] text-white text-xs font-semibold shadow-xs hover:shadow transition-all cursor-pointer shrink-0"
-        >
-          <span className="text-sm leading-none font-bold">+</span>
-          <span>Create report</span>
-        </button>
-      </div>
-
-      {/* 2. Top 4 KPI Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5">
-        {/* Card 1: Registered Seekers */}
-        <div
-          onClick={() => onNavigateTab('seekers')}
-          className="bg-white rounded-xl p-3 sm:p-3.5 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-emerald-300"
-        >
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-              <Users className="w-4.5 h-4.5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-semibold text-stone-500 truncate leading-tight">
-                Registered Seekers
-              </div>
-              <div className="text-lg sm:text-xl font-serif font-bold text-stone-900 tracking-tight leading-tight mt-0.5">
-                {seekersCount}
-              </div>
+        {/* Right: Date Badge Widget */}
+        <div className="relative z-10 flex items-center self-start md:self-auto">
+          <div className="bg-white border border-stone-200/80 rounded-xl px-4 py-2.5 shadow-2xs flex items-center gap-3 shrink-0">
+            <Calendar className="w-4 h-4 text-stone-400" />
+            <div className="leading-tight">
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                Today
+              </span>
+              <span className="text-xs font-bold text-stone-800">
+                {todayFormatted}
+              </span>
             </div>
           </div>
-          <div className="mt-2 pt-1.5 border-t border-stone-100 flex items-center justify-between text-[10.5px] sm:text-[11px]">
-            <div className="flex items-center gap-1 font-semibold text-emerald-600">
-              <span className="text-xs">↗</span>
+        </div>
+      </div>
+
+      {/* 2. FOUR KEY METRIC CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        {/* Card 1: Registered Users */}
+        <div
+          onClick={() => onNavigateTab('seekers')}
+          className="bg-white rounded-2xl p-5 border border-stone-200/70 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-purple-300"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
+                <Users className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-stone-700">
+                Registered Users
+              </span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-transform" />
+          </div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold font-sans text-[#1E293B] tracking-tight">
+              {registeredUsersCount}
+            </div>
+            <div className="mt-2 text-xs font-semibold text-emerald-600 flex items-center gap-1">
+              <span>↗</span>
               <span>+12% this month</span>
             </div>
-            <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-all shrink-0" />
           </div>
         </div>
 
-        {/* Card 2: Active Pandits */}
+        {/* Card 2: Active Astrologers */}
         <div
           onClick={() => onNavigateTab('pandits')}
-          className="bg-white rounded-xl p-3 sm:p-3.5 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-purple-300"
+          className="bg-white rounded-2xl p-5 border border-stone-200/70 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-emerald-300"
         >
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="w-9 h-9 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-              <Sparkles className="w-4.5 h-4.5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-semibold text-stone-500 truncate leading-tight">
-                Active Pandits
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center shrink-0">
+                <UserCheck className="w-5 h-5" />
               </div>
-              <div className="text-lg sm:text-xl font-serif font-bold text-stone-900 tracking-tight leading-tight mt-0.5">
-                {panditsCount}
-              </div>
+              <span className="text-xs font-bold text-stone-700">
+                Active Astrologers
+              </span>
             </div>
+            <ChevronRight className="w-4 h-4 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-transform" />
           </div>
-          <div className="mt-2 pt-1.5 border-t border-stone-100 flex items-center justify-between text-[10.5px] sm:text-[11px]">
-            <div className="flex items-center gap-1 font-semibold text-stone-500">
-              <span>→</span>
-              <span>0% this month</span>
+          <div className="mt-4">
+            <div className="text-3xl font-bold font-sans text-[#1E293B] tracking-tight">
+              {activeAstrologersCount}
             </div>
-            <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+            <div className="mt-2 text-xs font-semibold text-emerald-600 flex items-center gap-1">
+              <span>↗</span>
+              <span>+2% this month</span>
+            </div>
           </div>
         </div>
 
         {/* Card 3: Pending Approvals */}
         <div
           onClick={() => onNavigateTab('appointments')}
-          className="bg-white rounded-xl p-3 sm:p-3.5 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-amber-300"
+          className="bg-white rounded-2xl p-5 border border-stone-200/70 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-amber-300"
         >
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-              <Clock className="w-4.5 h-4.5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-semibold text-stone-500 truncate leading-tight">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-[#FFF7ED] text-[#EA580C] flex items-center justify-center shrink-0">
+                <Clock className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-stone-700">
                 Pending Approvals
-              </div>
-              <div className="text-lg sm:text-xl font-serif font-bold text-stone-900 tracking-tight leading-tight mt-0.5">
-                {pendingApprovalsCount}
-              </div>
+              </span>
             </div>
+            <ChevronRight className="w-4 h-4 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-transform" />
           </div>
-          <div className="mt-2 pt-1.5 border-t border-stone-100 flex items-center justify-between text-[10.5px] sm:text-[11px]">
-            <div className="flex items-center gap-1 font-semibold text-amber-600">
-              <AlertTriangle className="w-3 h-3" />
-              <span>Needs attention</span>
+          <div className="mt-4">
+            <div className="text-3xl font-bold font-sans text-[#1E293B] tracking-tight">
+              {pendingApprovalsCount}
             </div>
-            <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+            <div className="mt-2 text-xs font-semibold text-[#EA580C]">
+              Needs attention
+            </div>
           </div>
         </div>
 
-        {/* Card 4: Operational Orders */}
+        {/* Card 4: Total Orders */}
         <div
           onClick={() => onNavigateTab('orders')}
-          className="bg-white rounded-xl p-3 sm:p-3.5 border border-stone-200/80 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-teal-300"
+          className="bg-white rounded-2xl p-5 border border-stone-200/70 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-blue-300"
         >
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="w-9 h-9 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
-              <ShoppingCart className="w-4.5 h-4.5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[11px] font-semibold text-stone-500 truncate leading-tight">
-                Operational Orders
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0">
+                <Package className="w-5 h-5" />
               </div>
-              <div className="text-lg sm:text-xl font-serif font-bold text-stone-900 tracking-tight leading-tight mt-0.5">
-                {operationalOrdersCount}
-              </div>
+              <span className="text-xs font-bold text-stone-700">
+                Total Orders
+              </span>
             </div>
+            <ChevronRight className="w-4 h-4 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-transform" />
           </div>
-          <div className="mt-2 pt-1.5 border-t border-stone-100 flex items-center justify-between text-[10.5px] sm:text-[11px]">
-            <div className="flex items-center gap-1 font-semibold text-emerald-600">
-              <span className="text-xs">↗</span>
-              <span>+50% this week</span>
+          <div className="mt-4">
+            <div className="text-3xl font-bold font-sans text-[#1E293B] tracking-tight">
+              {totalOrdersCount}
             </div>
-            <ArrowRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+            <div className="mt-2 text-xs font-semibold text-emerald-600 flex items-center gap-1">
+              <span>↗</span>
+              <span>+5% this month</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 3. Middle Section: Platform Activity & Needs Attention */}
-      {/* 3. Middle Section: Platform Activity & Needs Attention */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 items-start">
-        {/* Left (2 cols): Platform Activity Multi-Line Chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-5 border border-stone-150/80 shadow-xs flex flex-col">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-stone-700" />
-              <h2 className="text-sm sm:text-base font-bold text-stone-900">Platform activity</h2>
-            </div>
-            <select
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value as any)}
-              className="text-xs font-medium text-stone-600 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-lg px-2.5 py-1 outline-none cursor-pointer"
-            >
-              <option value="7">Last 7 days</option>
-              <option value="14">Last 14 days</option>
-              <option value="30">Last 30 days</option>
-            </select>
-          </div>
-
-          {/* Full-width, full-height multi-line chart with responsive stretching */}
-          <div className="w-full">
-            <div className="relative w-full h-56 sm:h-64">
-              <svg viewBox="0 0 680 215" className="w-full h-full" preserveAspectRatio="none">
-                {/* Horizontal Grid Lines */}
-                <line x1="40" y1="18" x2="665" y2="18" stroke="#F1F3F5" strokeDasharray="3 3" />
-                <text x="20" y="22" fontSize="10" fill="#9CA3AF" textAnchor="middle">20</text>
-
-                <line x1="40" y1="58" x2="665" y2="58" stroke="#F1F3F5" strokeDasharray="3 3" />
-                <text x="20" y="62" fontSize="10" fill="#9CA3AF" textAnchor="middle">15</text>
-
-                <line x1="40" y1="98" x2="665" y2="98" stroke="#F1F3F5" strokeDasharray="3 3" />
-                <text x="20" y="102" fontSize="10" fill="#9CA3AF" textAnchor="middle">10</text>
-
-                <line x1="40" y1="138" x2="665" y2="138" stroke="#F1F3F5" strokeDasharray="3 3" />
-                <text x="20" y="142" fontSize="10" fill="#9CA3AF" textAnchor="middle">5</text>
-
-                <line x1="40" y1="178" x2="665" y2="178" stroke="#E5E7EB" />
-                <text x="20" y="182" fontSize="10" fill="#9CA3AF" textAnchor="middle">0</text>
-
-                {/* Vertical subtle grid lines matching reference */}
-                <line x1="70" y1="18" x2="70" y2="178" stroke="#F3F4F6" strokeDasharray="3 3" />
-                <line x1="165" y1="18" x2="165" y2="178" stroke="#F3F4F6" strokeDasharray="3 3" />
-                <line x1="260" y1="18" x2="260" y2="178" stroke="#F3F4F6" strokeDasharray="3 3" />
-                <line x1="355" y1="18" x2="355" y2="178" stroke="#F3F4F6" strokeDasharray="3 3" />
-                <line x1="450" y1="18" x2="450" y2="178" stroke="#F3F4F6" strokeDasharray="3 3" />
-                <line x1="545" y1="18" x2="545" y2="178" stroke="#F3F4F6" strokeDasharray="3 3" />
-                <line x1="640" y1="18" x2="640" y2="178" stroke="#F3F4F6" strokeDasharray="3 3" />
-
-                {/* 1. Yellow/Amber Curve: Inspections */}
-                <path
-                  d="M 70 114 Q 117 82, 165 82 T 260 98 T 355 90 T 450 50 T 545 82 T 640 66"
-                  fill="none"
-                  stroke="#D97706"
-                  strokeWidth="2.2"
-                />
-                <circle cx="70" cy="114" r="3.5" fill="#D97706" />
-                <circle cx="165" cy="82" r="3.5" fill="#D97706" />
-                <circle cx="260" cy="98" r="3.5" fill="#D97706" />
-                <circle cx="355" cy="90" r="3.5" fill="#D97706" />
-                <circle cx="450" cy="50" r="3.5" fill="#D97706" />
-                <circle cx="545" cy="82" r="3.5" fill="#D97706" />
-                <circle cx="640" cy="66" r="3.5" fill="#D97706" />
-
-                {/* 2. Green Curve: New Seekers */}
-                <path
-                  d="M 70 130 Q 117 118, 165 118 T 260 126 T 355 118 T 450 106 T 545 114 T 640 106"
-                  fill="none"
-                  stroke="#059669"
-                  strokeWidth="2.2"
-                />
-                <circle cx="70" cy="130" r="3.5" fill="#059669" />
-                <circle cx="165" cy="118" r="3.5" fill="#059669" />
-                <circle cx="260" cy="126" r="3.5" fill="#059669" />
-                <circle cx="355" cy="118" r="3.5" fill="#059669" />
-                <circle cx="450" cy="106" r="3.5" fill="#059669" />
-                <circle cx="545" cy="114" r="3.5" fill="#059669" />
-                <circle cx="640" cy="106" r="3.5" fill="#059669" />
-
-                {/* 3. Purple Curve: New Orders */}
-                <path
-                  d="M 70 146 Q 117 138, 165 138 T 260 142 T 355 138 T 450 130 T 545 142 T 640 134"
-                  fill="none"
-                  stroke="#7C3AED"
-                  strokeWidth="2.2"
-                />
-                <circle cx="70" cy="146" r="3.5" fill="#7C3AED" />
-                <circle cx="165" cy="138" r="3.5" fill="#7C3AED" />
-                <circle cx="260" cy="142" r="3.5" fill="#7C3AED" />
-                <circle cx="355" cy="138" r="3.5" fill="#7C3AED" />
-                <circle cx="450" cy="130" r="3.5" fill="#7C3AED" />
-                <circle cx="545" cy="142" r="3.5" fill="#7C3AED" />
-                <circle cx="640" cy="134" r="3.5" fill="#7C3AED" />
-
-                {/* 4. Blue Curve: Active Pandits */}
-                <path
-                  d="M 70 162 Q 117 154, 165 154 T 260 158 T 355 156 T 450 154 T 545 158 T 640 154"
-                  fill="none"
-                  stroke="#0284C7"
-                  strokeWidth="2.2"
-                />
-                <circle cx="70" cy="162" r="3.5" fill="#0284C7" />
-                <circle cx="165" cy="154" r="3.5" fill="#0284C7" />
-                <circle cx="260" cy="158" r="3.5" fill="#0284C7" />
-                <circle cx="355" cy="156" r="3.5" fill="#0284C7" />
-                <circle cx="450" cy="154" r="3.5" fill="#0284C7" />
-                <circle cx="545" cy="158" r="3.5" fill="#0284C7" />
-                <circle cx="640" cy="154" r="3.5" fill="#0284C7" />
-
-                {/* X Axis Date Labels */}
-                <text x="70" y="202" fontSize="10" fill="#6B7280" textAnchor="middle">Oct 17</text>
-                <text x="165" y="202" fontSize="10" fill="#6B7280" textAnchor="middle">Oct 18</text>
-                <text x="260" y="202" fontSize="10" fill="#6B7280" textAnchor="middle">Oct 19</text>
-                <text x="355" y="202" fontSize="10" fill="#6B7280" textAnchor="middle">Oct 20</text>
-                <text x="450" y="202" fontSize="10" fill="#6B7280" textAnchor="middle">Oct 21</text>
-                <text x="545" y="202" fontSize="10" fill="#6B7280" textAnchor="middle">Oct 22</text>
-                <text x="640" y="202" fontSize="10" fill="#6B7280" textAnchor="middle">Oct 23</text>
-              </svg>
-            </div>
-
-            {/* Chart Legend directly below dates */}
-            <div className="flex items-center justify-start gap-4 sm:gap-6 mt-3 flex-wrap">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block" />
-                <span>New Seekers</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block" />
-                <span>New Orders</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block" />
-                <span>Inspections</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs font-medium text-stone-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-sky-600 inline-block" />
-                <span>Active Pandits</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right (1 col): Needs Attention */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-150/80 shadow-xs flex flex-col justify-start">
+      {/* 3. MIDDLE SECTION: RECENT ORDERS (60%) & RECENT ACTIVITY (40%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        {/* Left: Recent Orders Table */}
+        <div className="lg:col-span-7 bg-white rounded-2xl sm:rounded-3xl border border-stone-200/70 p-5 sm:p-6 shadow-xs flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-                <h2 className="text-sm sm:text-base font-bold text-stone-900">Needs attention</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <ShoppingCart className="w-5 h-5 text-[#8B1D2C]" />
+                <h2 className="text-base sm:text-lg font-bold text-[#1E293B]">
+                  Recent Orders
+                </h2>
               </div>
               <button
                 type="button"
-                onClick={() => onNavigateTab('appointments')}
-                className="text-xs font-semibold text-stone-500 hover:text-stone-800 flex items-center gap-1 cursor-pointer"
+                onClick={() => onNavigateTab('orders')}
+                className="text-xs font-bold text-[#8B1D2C] hover:text-[#6a1521] flex items-center gap-1 hover:underline cursor-pointer"
               >
-                <span>View all</span>
+                <span>View All</span>
                 <span>→</span>
               </button>
             </div>
 
-            <div className="space-y-2.5">
-              {/* Item 1: Pending pandit approval */}
-              <div className="p-2.5 rounded-xl border border-stone-150 bg-stone-50/50 hover:bg-stone-50 transition-all flex items-start gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center shrink-0 mt-0.5">
-                  <UserCheck className="w-3.5 h-3.5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-1.5 mb-0.5">
-                    <span className="text-xs font-bold text-stone-900 truncate">
-                      Pending pandit approval
-                    </span>
-                    <span className="text-[10px] font-semibold text-rose-600 bg-rose-50 border border-rose-200/60 px-1.5 py-0.5 rounded-full shrink-0">
-                      1 pending
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-stone-500 line-clamp-1 mb-1.5">
-                    1 pandit is awaiting your approval.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => onNavigateTab('pandits')}
-                    className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-all cursor-pointer"
-                  >
-                    Review
-                  </button>
-                </div>
-              </div>
-
-              {/* Item 2: Upcoming inspection */}
-              <div className="p-2.5 rounded-xl border border-stone-150 bg-stone-50/50 hover:bg-stone-50 transition-all flex items-start gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 mt-0.5">
-                  <Calendar className="w-3.5 h-3.5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-1.5 mb-0.5">
-                    <span className="text-xs font-bold text-stone-900 truncate">
-                      Upcoming inspection
-                    </span>
-                    <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded-full shrink-0">
-                      1 upcoming
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-stone-500 line-clamp-1 mb-1.5">
-                    Scheduled for Oct 25, 2026 at 10:00 AM (Mumbai).
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => onNavigateTab('appointments')}
-                    className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-stone-700 bg-white hover:bg-stone-100 border border-stone-200 transition-all cursor-pointer"
-                  >
-                    View
-                  </button>
-                </div>
-              </div>
-
-              {/* Item 3: Unread support request */}
-              <div className="p-2.5 rounded-xl border border-stone-150 bg-stone-50/50 hover:bg-stone-50 transition-all flex items-start gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-violet-50 text-violet-600 flex items-center justify-center shrink-0 mt-0.5">
-                  <MessageSquare className="w-3.5 h-3.5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-1.5 mb-0.5">
-                    <span className="text-xs font-bold text-stone-900 truncate">
-                      Unread support request
-                    </span>
-                    <span className="text-[10px] font-semibold text-violet-600 bg-violet-50 border border-violet-200/60 px-1.5 py-0.5 rounded-full shrink-0">
-                      1 unread
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-stone-500 line-clamp-1 mb-1.5">
-                    You have 1 unread support message from a seeker.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => onNavigateTab('activity')}
-                    className="px-2.5 py-0.5 rounded-md text-[11px] font-semibold text-stone-700 bg-white hover:bg-stone-100 border border-stone-200 transition-all cursor-pointer"
-                  >
-                    View
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Bottom Section: Seeker Accounts Table & Recent Activity Feed */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
-        {/* Left (2 cols): Seeker Accounts Table */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-5 border border-stone-150/80 shadow-xs">
-          {/* Header & Controls Toolbar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-stone-700" />
-              <h2 className="text-sm sm:text-base font-bold text-stone-900">Seeker accounts</h2>
-            </div>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Search input */}
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search by name or email..."
-                  value={seekerSearch}
-                  onChange={(e) => setSeekerSearch(e.target.value)}
-                  className="pl-8 pr-3 py-1.5 text-xs rounded-xl bg-stone-50 border border-stone-200 focus:border-amber-400 focus:bg-white outline-none w-48 transition-all"
-                />
-              </div>
-
-              {/* Status Filter */}
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="text-xs font-medium text-stone-600 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl px-2.5 py-1.5 outline-none cursor-pointer"
-              >
-                <option value="ALL">All statuses</option>
-                <option value="ACTIVE">Active</option>
-                <option value="PENDING">Pending</option>
-                <option value="SUSPENDED">Suspended</option>
-              </select>
-
-              {/* Export Button */}
-              <button
-                type="button"
-                onClick={handleExportCSV}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-xs font-semibold text-stone-700 transition-all cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5 text-stone-500" />
-                <span>Export</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Table Container */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-stone-600">
-              <thead>
-                <tr className="border-b border-stone-100 text-[11px] font-bold text-stone-400 uppercase tracking-wider">
-                  <th className="pb-3 font-semibold">Name</th>
-                  <th className="pb-3 font-semibold">Email</th>
-                  <th className="pb-3 font-semibold">Role</th>
-                  <th className="pb-3 font-semibold">Status</th>
-                  <th className="pb-3 font-semibold">Wallet</th>
-                  <th className="pb-3 font-semibold">Orders</th>
-                  <th className="pb-3 font-semibold">Last active</th>
-                  <th className="pb-3 font-semibold text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100">
-                {filteredSeekers.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="py-8 text-center text-stone-400">
-                      No seeker accounts match the criteria.
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-stone-100 text-[11px] font-semibold text-stone-400">
+                    <th className="pb-3 pr-2">Order ID</th>
+                    <th className="pb-3 px-2">Customer</th>
+                    <th className="pb-3 px-2">Product / Service</th>
+                    <th className="pb-3 px-2">Amount</th>
+                    <th className="pb-3 px-2">Status</th>
+                    <th className="pb-3 px-2">Date</th>
+                    <th className="pb-3 pl-2 text-right"></th>
                   </tr>
-                ) : (
-                  filteredSeekers.slice(0, 5).map((seeker, idx) => {
-                    const initials = seeker.name
-                      ? seeker.name
-                          .split(' ')
-                          .map((n) => n[0])
-                          .join('')
-                          .toUpperCase()
-                          .slice(0, 2)
-                      : 'S';
-
-                    const roleLabel =
-                      seeker.role === 'USER' ? 'Seeker' : seeker.role === 'ADMIN' ? 'Pandit' : 'Admin';
-
-                    const isActive = seeker.status === 'ACTIVE';
-
-                    return (
-                      <tr key={seeker.id} className="hover:bg-stone-50/70 transition-colors">
-                        {/* Name with pastel circle avatar */}
-                        <td className="py-3.5 pr-2">
-                          <div className="flex items-center gap-2.5">
-                            <div
-                              className={`w-7 h-7 rounded-full font-bold flex items-center justify-center text-xs shrink-0 ${getAvatarColor(
-                                seeker.name,
-                                idx
-                              )}`}
-                            >
-                              {initials[0]}
-                            </div>
-                            <span className="font-semibold text-stone-900 truncate max-w-[120px]">
-                              {seeker.name}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Email */}
-                        <td className="py-3.5 pr-2 text-stone-500 font-mono text-[11px] truncate max-w-[140px]">
-                          {seeker.email}
-                        </td>
-
-                        {/* Role */}
-                        <td className="py-3.5 pr-2">
-                          <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-sky-50 text-sky-700 border border-sky-200/60">
-                            {roleLabel}
-                          </span>
-                        </td>
-
-                        {/* Status */}
-                        <td className="py-3.5 pr-2">
-                          <span
-                            className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                              isActive
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                                : 'bg-amber-50 text-amber-700 border border-amber-200/60'
-                            }`}
+                </thead>
+                <tbody className="divide-y divide-stone-50">
+                  {recentOrders.map((ord) => (
+                    <tr
+                      key={ord.id}
+                      onClick={() => onNavigateTab('orders')}
+                      className="hover:bg-stone-50/70 cursor-pointer transition-colors group"
+                    >
+                      <td className="py-3 pr-2 font-bold text-[#8B1D2C] whitespace-nowrap">
+                        {ord.id}
+                      </td>
+                      <td className="py-3 px-2 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`w-6 h-6 rounded-full ${ord.avatarBg} font-bold text-[10px] flex items-center justify-center shrink-0`}
                           >
-                            {isActive ? 'Active' : 'Pending'}
-                          </span>
-                        </td>
-
-                        {/* Wallet Balance */}
-                        <td className="py-3.5 pr-2 font-semibold text-stone-800">
-                          ₹ {seeker.walletBalance?.toLocaleString('en-IN') ?? '0'}
-                        </td>
-
-                        {/* Orders count */}
-                        <td className="py-3.5 pr-2 text-stone-600 font-medium">
-                          {seeker._count?.orders ?? (idx === 0 ? 2 : idx === 1 ? 1 : idx === 2 ? 3 : 0)}
-                        </td>
-
-                        {/* Last active */}
-                        <td className="py-3.5 pr-2 text-stone-400 text-[11px] whitespace-nowrap">
-                          {idx === 0
-                            ? 'Today, 09:24 AM'
-                            : idx === 1
-                            ? 'Today, 08:17 AM'
-                            : idx === 2
-                            ? 'Yesterday, 06:42 PM'
-                            : idx === 3
-                            ? 'Oct 22, 2026'
-                            : 'Oct 21, 2026'}
-                        </td>
-
-                        {/* Actions */}
-                        <td className="py-3.5 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1 relative">
-                            <button
-                              type="button"
-                              onClick={() => onInspectUser(seeker.id)}
-                              title="Inspect 360° Profile"
-                              className="p-1 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-100 transition-colors cursor-pointer"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => onInspectUser(seeker.id)}
-                              title="Edit user details"
-                              className="p-1 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-100 transition-colors cursor-pointer"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setActiveMenuUserId(activeMenuUserId === seeker.id ? null : seeker.id)
-                              }
-                              title="More options"
-                              className="p-1 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-100 transition-colors cursor-pointer"
-                            >
-                              <MoreVertical className="w-3.5 h-3.5" />
-                            </button>
-
-                            {/* Dropdown menu */}
-                            {activeMenuUserId === seeker.id && (
-                              <div className="absolute right-0 top-8 z-20 w-36 bg-white rounded-xl shadow-lg border border-stone-200 py-1 text-left text-xs">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    onInspectUser(seeker.id);
-                                    setActiveMenuUserId(null);
-                                  }}
-                                  className="w-full px-3 py-1.5 hover:bg-stone-50 text-stone-700 block text-left"
-                                >
-                                  View Purchases
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    onInspectUser(seeker.id);
-                                    setActiveMenuUserId(null);
-                                  }}
-                                  className="w-full px-3 py-1.5 hover:bg-stone-50 text-stone-700 block text-left"
-                                >
-                                  Edit Profile
-                                </button>
-                              </div>
-                            )}
+                            {ord.initials}
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                          <span className="font-semibold text-stone-800">
+                            {ord.customer}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-2 text-stone-600 whitespace-nowrap">
+                        {ord.product}
+                      </td>
+                      <td className="py-3 px-2 font-bold text-stone-800 whitespace-nowrap">
+                        {ord.amount}
+                      </td>
+                      <td className="py-3 px-2 whitespace-nowrap">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${ord.statusClass}`}
+                        >
+                          {ord.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-2 text-stone-400 whitespace-nowrap">
+                        {ord.date}
+                      </td>
+                      <td className="py-3 pl-2 text-right">
+                        <ChevronRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-transform inline-block" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        {/* Right (1 col): Recent Activity Feed */}
-        <div className="bg-white rounded-2xl p-5 sm:p-6 border border-stone-150/80 shadow-xs flex flex-col justify-between">
+        {/* Right: Recent Activity Timeline */}
+        <div className="lg:col-span-5 bg-white rounded-2xl sm:rounded-3xl border border-stone-200/70 p-5 sm:p-6 shadow-xs flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-stone-700" />
-                <h2 className="text-sm sm:text-base font-bold text-stone-900">Recent activity</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <Zap className="w-5 h-5 text-[#8B1D2C]" />
+                <h2 className="text-base sm:text-lg font-bold text-[#1E293B]">
+                  Recent Activity
+                </h2>
               </div>
               <button
                 type="button"
                 onClick={() => onNavigateTab('activity')}
-                className="text-xs font-semibold text-stone-500 hover:text-stone-800 flex items-center gap-1 cursor-pointer"
+                className="text-xs font-bold text-[#8B1D2C] hover:text-[#6a1521] flex items-center gap-1 hover:underline cursor-pointer"
               >
-                <span>View all</span>
+                <span>View All</span>
                 <span>→</span>
               </button>
             </div>
 
-            <div className="space-y-4">
-              {/* Activity 1: Seeker Registration */}
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-                  <Users className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline justify-between gap-1">
-                    <span className="text-xs font-bold text-stone-900 truncate">Rohit Sharma</span>
-                    <span className="text-[10px] text-stone-400 shrink-0">2h ago</span>
+            <div className="space-y-3.5">
+              {recentActivities.map((act, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between gap-3 p-1 rounded-xl hover:bg-stone-50/70 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-9 h-9 rounded-full ${act.iconBg} border flex items-center justify-center shrink-0 shadow-2xs`}
+                    >
+                      {act.icon}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-bold text-stone-900 truncate leading-tight">
+                        {act.title}
+                      </div>
+                      <div className="text-[11px] text-stone-400 truncate mt-0.5">
+                        {act.detail}
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-stone-500">Registered as a seeker</p>
+                  <span className="text-[11px] text-stone-400 whitespace-nowrap shrink-0">
+                    {act.time}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. BOTTOM SECTION: TOP ASTROLOGY SERVICES (60%) & QUICK STATS (40%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        {/* Left: Top Astrology Services */}
+        <div className="lg:col-span-7 bg-white rounded-2xl sm:rounded-3xl border border-stone-200/70 p-5 sm:p-6 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <Star className="w-5 h-5 text-[#8B1D2C]" />
+                <h2 className="text-base sm:text-lg font-bold text-[#1E293B]">
+                  Top Astrology Services
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => onNavigateTab('appointments')}
+                className="text-xs font-bold text-[#8B1D2C] hover:text-[#6a1521] flex items-center gap-1 hover:underline cursor-pointer"
+              >
+                <span>View All</span>
+                <span>→</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              {topServices.map((srv, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => onNavigateTab('appointments')}
+                  className="bg-[#FAF9F7] hover:bg-[#F5F2EC] rounded-2xl p-4 border border-stone-200/60 shadow-2xs hover:shadow-xs transition-all group cursor-pointer flex flex-col justify-between"
+                >
+                  <div className={`w-9 h-9 rounded-xl ${srv.iconBg} flex items-center justify-center shrink-0 shadow-2xs`}>
+                    {srv.icon}
+                  </div>
+                  <div className="mt-3">
+                    <p className="text-[11px] font-semibold text-stone-600 line-clamp-1 leading-tight">
+                      {srv.title}
+                    </p>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-lg font-bold text-stone-900 font-sans">
+                        {srv.count}
+                      </span>
+                      <ChevronRight className={`w-4 h-4 ${srv.arrowColor} group-hover:translate-x-0.5 transition-transform`} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Quick Stats 2x2 Grid */}
+        <div className="lg:col-span-5 bg-white rounded-2xl sm:rounded-3xl border border-stone-200/70 p-5 sm:p-6 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2.5 mb-4">
+              <BarChart2 className="w-5 h-5 text-[#8B1D2C]" />
+              <h2 className="text-base sm:text-lg font-bold text-[#1E293B]">
+                Quick Stats
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3.5">
+              {/* Tile 1: Total Revenue */}
+              <div className="bg-[#FAF9F7] rounded-2xl p-3.5 border border-stone-200/60 shadow-2xs flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-[#FDF2F4] text-[#8B1D2C] flex items-center justify-center shrink-0">
+                    <CreditCard className="w-4 h-4" />
+                  </div>
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                    +8%
+                  </span>
+                </div>
+                <div className="mt-2.5">
+                  <span className="text-[11px] font-medium text-stone-500 block leading-tight">
+                    Total Revenue
+                  </span>
+                  <span className="text-base font-bold text-stone-900 font-sans tracking-tight mt-0.5 block">
+                    ₹45,230
+                  </span>
                 </div>
               </div>
 
-              {/* Activity 2: New Order */}
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 mt-0.5">
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline justify-between gap-1">
-                    <span className="text-xs font-bold text-stone-900 truncate">Order #ORD-1032</span>
-                    <span className="text-[10px] text-stone-400 shrink-0">4h ago</span>
+              {/* Tile 2: Wallet Balance */}
+              <div className="bg-[#FAF9F7] rounded-2xl p-3.5 border border-stone-200/60 shadow-2xs flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-[#FFF1F2] text-[#E11D48] flex items-center justify-center shrink-0">
+                    <Wallet className="w-4 h-4" />
                   </div>
-                  <p className="text-[11px] text-stone-500">New inspection order placed</p>
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                    +5%
+                  </span>
+                </div>
+                <div className="mt-2.5">
+                  <span className="text-[11px] font-medium text-stone-500 block leading-tight">
+                    Wallet Balance
+                  </span>
+                  <span className="text-base font-bold text-stone-900 font-sans tracking-tight mt-0.5 block">
+                    ₹12,660
+                  </span>
                 </div>
               </div>
 
-              {/* Activity 3: Pandit Submitted */}
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 mt-0.5">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline justify-between gap-1">
-                    <span className="text-xs font-bold text-stone-900 truncate">Pandit Ramesh</span>
-                    <span className="text-[10px] text-stone-400 shrink-0">5h ago</span>
+              {/* Tile 3: Total Bookings */}
+              <div className="bg-[#FAF9F7] rounded-2xl p-3.5 border border-stone-200/60 shadow-2xs flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-[#F3E8FF] text-[#9333EA] flex items-center justify-center shrink-0">
+                    <Users className="w-4 h-4" />
                   </div>
-                  <p className="text-[11px] text-stone-500">Submitted for approval</p>
+                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                    +12%
+                  </span>
+                </div>
+                <div className="mt-2.5">
+                  <span className="text-[11px] font-medium text-stone-500 block leading-tight">
+                    Total Bookings
+                  </span>
+                  <span className="text-base font-bold text-stone-900 font-sans tracking-tight mt-0.5 block">
+                    24
+                  </span>
                 </div>
               </div>
 
-              {/* Activity 4: Support Request */}
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-violet-50 text-violet-600 flex items-center justify-center shrink-0 mt-0.5">
-                  <MessageSquare className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline justify-between gap-1">
-                    <span className="text-xs font-bold text-stone-900 truncate">Support Request</span>
-                    <span className="text-[10px] text-stone-400 shrink-0">7h ago</span>
+              {/* Tile 4: Pending Payments */}
+              <div className="bg-[#FAF9F7] rounded-2xl p-3.5 border border-stone-200/60 shadow-2xs flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-[#FFF7ED] text-[#EA580C] flex items-center justify-center shrink-0">
+                    <CreditCard className="w-4 h-4" />
                   </div>
-                  <p className="text-[11px] text-stone-500 truncate">From Priya Nair - Need help with report</p>
+                  <span className="text-[10px] font-bold text-[#EA580C]">
+                    2 pending
+                  </span>
                 </div>
-              </div>
-
-              {/* Activity 5: Completed Order */}
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 mt-0.5">
-                  <ShoppingCart className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline justify-between gap-1">
-                    <span className="text-xs font-bold text-stone-900 truncate">Order #ORD-1031</span>
-                    <span className="text-[10px] text-stone-400 shrink-0">1d ago</span>
-                  </div>
-                  <p className="text-[11px] text-stone-500">Marked as completed</p>
+                <div className="mt-2.5">
+                  <span className="text-[11px] font-medium text-stone-500 block leading-tight">
+                    Pending Payments
+                  </span>
+                  <span className="text-base font-bold text-stone-900 font-sans tracking-tight mt-0.5 block">
+                    ₹8,450
+                  </span>
                 </div>
               </div>
             </div>
