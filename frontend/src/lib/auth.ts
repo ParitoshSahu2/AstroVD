@@ -140,12 +140,15 @@ export async function performLogout(options: LogoutOptions = {}): Promise<void> 
 
     // 4. Handle Redirection
     const currentPath = window.location.pathname;
-    const shouldRedirect = Boolean(options.redirectUrl) || isProtectedPath(currentPath);
+    const isCartOrCheckout = currentPath === '/cart' || currentPath.startsWith('/cart');
+    const shouldRedirect = Boolean(options.redirectUrl) || isProtectedPath(currentPath) || isCartOrCheckout;
 
     if (shouldRedirect) {
       const targetUrl =
         options.redirectUrl ||
-        `/login?redirect=${encodeURIComponent(currentPath)}&loggedOut=true`;
+        (isCartOrCheckout
+          ? '/'
+          : `/login?redirect=${encodeURIComponent(currentPath)}&loggedOut=true`);
       
       // Use window.location.replace so browser history does not retain protected page
       window.location.replace(targetUrl);

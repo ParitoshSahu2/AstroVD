@@ -35,6 +35,16 @@ export interface ProductItem {
   benefitsHi?: string[];
 }
 
+export function formatTitleCase(str: string): string {
+  if (!str) return '';
+  if (/[\u0900-\u097F]/.test(str)) return str;
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 export const PRODUCTS_CATALOG: ProductItem[] = [
   {
     id: 'tiger_eye',

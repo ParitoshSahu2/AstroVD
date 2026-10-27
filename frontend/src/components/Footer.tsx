@@ -59,37 +59,37 @@ export const Footer: React.FC = () => {
             </h4>
             <ul className="space-y-2 text-xs font-medium">
               <li>
-                <Link href="/" className="hover:text-[#800000] transition-colors">
+                <Link href="/" prefetch={true} className="hover:text-[#800000] transition-colors">
                   {t('Home', 'होम')}
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="hover:text-[#800000] transition-colors">
+                <Link href="/about" prefetch={true} className="hover:text-[#800000] transition-colors">
                   {t('About Us & Guides', 'परिचय व गुरु परंपरा')}
                 </Link>
               </li>
               <li>
-                <Link href="/services" className="hover:text-[#800000] transition-colors">
+                <Link href="/services" prefetch={true} className="hover:text-[#800000] transition-colors">
                   {t('Services (29 Rituals)', 'सेवाएं (29 अनुष्ठान)')}
                 </Link>
               </li>
               <li>
-                <Link href="/products" className="hover:text-[#800000] transition-colors">
+                <Link href="/products" prefetch={true} className="hover:text-[#800000] transition-colors">
                   {t('Products & Talismans', 'सिद्ध उत्पाद व रत्न')}
                 </Link>
               </li>
               <li>
-                <Link href="/gallery" className="hover:text-[#800000] transition-colors">
+                <Link href="/gallery" prefetch={true} className="hover:text-[#800000] transition-colors">
                   {t('Sacred Gallery', 'पवित्र चित्र दीर्घा')}
                 </Link>
               </li>
               <li>
-                <Link href="/blog" className="hover:text-[#800000] transition-colors">
+                <Link href="/blog" prefetch={true} className="hover:text-[#800000] transition-colors">
                   {t('Blogs & Wisdom', 'ब्लॉग एवं विचार')}
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-[#800000] transition-colors">
+                <Link href="/contact" prefetch={true} className="hover:text-[#800000] transition-colors">
                   {t('Contact Us', 'संपर्क करें')}
                 </Link>
               </li>

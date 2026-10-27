@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { PageHeader } from '../../components/PageHeader';
-import { Phone, Mail, MapPin, MessageCircle, Send, CheckCircle2, Clock, Globe, ShieldCheck } from 'lucide-react';
+import { Phone, Mail, MapPin, Calendar, Send, CheckCircle2, Clock, Globe, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function ContactPage() {
@@ -21,12 +22,8 @@ export default function ContactPage() {
     setSubmitted(true);
   };
 
-  const openWhatsApp = () => {
-    window.open('https://wa.me/919826012345?text=Hello%20AstroVD,%20I%20have%20an%20inquiry%20regarding%20consultations.', '_blank');
-  };
-
   return (
-    <div className="relative min-h-screen w-full bg-[#FAF7F2] m-0 p-0 overflow-x-clip selection:bg-amber-400">
+    <div className="relative min-h-screen w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
       <Navbar />
 
       <PageHeader
@@ -62,7 +59,7 @@ export default function ContactPage() {
                   </a>
                 </p>
                 <p>
-                  <strong>{t('Desk & WhatsApp:', 'कार्यालय एवं व्हाट्सएप:')}</strong>{' '}
+                  <strong>{t('Ashram Desk:', 'कार्यालय हेल्पलाइन:')}</strong>{' '}
                   <a href="tel:+918889977665" className="text-[#5B0D15] font-semibold hover:underline">
                     +91 88899 77665
                   </a>
@@ -109,27 +106,27 @@ export default function ContactPage() {
               </div>
             </div>
 
-            {/* WhatsApp Direct Card */}
-            <div
-              onClick={openWhatsApp}
-              className="p-6 rounded-3xl bg-gradient-to-br from-[#25D366]/15 via-white to-emerald-50/60 border border-emerald-300 shadow-md space-y-2 cursor-pointer hover:shadow-lg transition-all"
+            {/* Online Vedic Consultation Card */}
+            <Link
+              href="/appointment"
+              className="p-6 rounded-3xl bg-gradient-to-br from-amber-500/15 via-white to-amber-50/60 border border-amber-300 shadow-md space-y-2 cursor-pointer hover:shadow-lg transition-all block"
             >
-              <div className="w-10 h-10 rounded-2xl bg-[#25D366] text-white flex items-center justify-center">
-                <MessageCircle className="w-5 h-5 fill-current" />
+              <div className="w-10 h-10 rounded-2xl bg-[#5B0D15] text-amber-200 flex items-center justify-center">
+                <Calendar className="w-5 h-5" />
               </div>
-              <h3 className="font-serif font-bold text-base text-emerald-950">
-                {t('Instant WhatsApp Chat (Dr. Vishal Dubey)', 'त्वरित व्हाट्सएप संपर्क (डॉ. विशाल दुबे)')}
+              <h3 className="font-serif font-bold text-base text-[#2A1810]">
+                {t('Online Vedic Consultation (Dr. Vishal Dubey)', 'ऑनलाइन परामर्श सत्र (डॉ. विशाल दुबे)')}
               </h3>
               <p className="text-xs text-stone-600">
                 {t(
-                  'Connect directly with AstroVD Acharyas for instant slot availability, Kundli sharing, and priority booking.',
-                  'कुंडली साझा करने, स्लॉट उपलब्धता एवं तत्काल परामर्श हेतु सीधे व्हाट्सएप पर संवाद करें।'
+                  'Book directly with AstroVD Acharyas for instant slot availability, Kundli analysis, and priority booking.',
+                  'कुंडली विश्लेषण, स्लॉट उपलब्धता एवं तत्काल परामर्श हेतु सीधे ऑनलाइन अपॉइंटमेंट बुक करें।'
                 )}
               </p>
-              <span className="text-xs font-bold text-emerald-700 underline block pt-1">
-                {t('Chat on WhatsApp (+91 98260 12345) →', 'व्हाट्सएप पर चैट करें (+91 98260 12345) →')}
+              <span className="text-xs font-bold text-[#5B0D15] underline block pt-1">
+                {t('Reserve Appointment Slot →', 'अपॉइंटमेंट स्लॉट आरक्षित करें →')}
               </span>
-            </div>
+            </Link>
 
             {/* Spiritual Centers & Vidyapiths */}
             <div className="p-6 rounded-3xl bg-white border border-amber-200/90 shadow-md space-y-2.5">

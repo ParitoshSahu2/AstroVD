@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { ArrowRight, Flame, Sparkles, Shield, Heart } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -115,13 +116,13 @@ export const PoojaServicesSection: React.FC = () => {
 
           {/* Right Action Button */}
           <div className="shrink-0 w-full sm:w-auto">
-            <button
-              onClick={openWhatsAppClaim}
+            <Link
+              href="/appointment?service=free_kundli"
               className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-[#A2671A] hover:bg-[#8B5612] text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>{t('Claim Free Kundli', 'निःशुल्क कुंडली प्राप्त करें')}</span>
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </Link>
           </div>
 
         </div>
@@ -156,13 +157,13 @@ export const PoojaServicesSection: React.FC = () => {
                 <span className="text-[11px] font-semibold text-amber-800">
                   {t('Vedic Vidhi & Samagri Included', 'शास्त्रोक्त विधि व पूजन सामग्री सहित')}
                 </span>
-                <button
-                  onClick={() => openWhatsAppClaim()}
+                <Link
+                  href="/appointment?service=general_puja"
                   className="text-xs font-bold text-[#800000] hover:text-[#500000] flex items-center gap-1 group-hover:translate-x-1 transition-transform cursor-pointer"
                 >
                   <span>{t('Book Sankalp', 'संकल्प लें')}</span>
                   <span>→</span>
-                </button>
+                </Link>
               </div>
             </div>
           ))}

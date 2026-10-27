@@ -141,6 +141,17 @@ export class ContentService {
   // --- BLOG OPERATIONS ---
 
   getBlogPosts(includeUnpublished = false): BlogPost[] {
+    if (fs.existsSync(this.blogFilePath)) {
+      try {
+        const raw = fs.readFileSync(this.blogFilePath, 'utf-8');
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.blogPosts = parsed;
+        }
+      } catch (err) {
+        this.logger.error('Failed to parse blog.json', err);
+      }
+    }
     if (includeUnpublished) {
       return [...this.blogPosts];
     }
@@ -302,6 +313,17 @@ export class ContentService {
   // --- GALLERY OPERATIONS ---
 
   getGalleryItems(includeUnpublished = false): GalleryItem[] {
+    if (fs.existsSync(this.galleryFilePath)) {
+      try {
+        const raw = fs.readFileSync(this.galleryFilePath, 'utf-8');
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.galleryItems = parsed;
+        }
+      } catch (err) {
+        this.logger.error('Failed to parse gallery.json', err);
+      }
+    }
     if (includeUnpublished) {
       return [...this.galleryItems];
     }

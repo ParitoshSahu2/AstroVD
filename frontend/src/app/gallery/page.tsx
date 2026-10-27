@@ -25,24 +25,11 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { getStoredUser, getAuthToken, AUTH_CHANGE_EVENT } from '../../lib/auth';
-import GalleryManageModal, { GalleryItemData } from './components/GalleryManageModal';
+import dynamic from 'next/dynamic';
+import type { GalleryItemData } from './components/GalleryManageModal';
+const GalleryManageModal = dynamic(() => import('./components/GalleryManageModal'), { ssr: false });
+import { GalleryItem, INITIAL_GALLERY_ITEMS } from './data/gallery-items';
 
-interface GalleryItem {
-  id: string;
-  title: string;
-  titleHi: string;
-  category: 'pooja' | 'consultation' | 'yantra' | 'awards' | 'kashi';
-  categoryLabel: string;
-  categoryLabelHi: string;
-  image: string;
-  location: string;
-  locationHi: string;
-  date: string;
-  dateHi: string;
-  description: string;
-  descriptionHi: string;
-  isPublished?: boolean;
-}
 
 const BATCH_SIZE = 9;
 
@@ -57,413 +44,7 @@ export default function GalleryPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const initialGalleryItems: GalleryItem[] = [
-    {
-      id: '1',
-      title: 'Grand Shat Chandi Maha Yagya & Sacred Havan',
-      titleHi: 'काशी विश्वनाथ में भव्य शतचंडी महायज्ञ एवं पावन हवन',
-      category: 'pooja',
-      categoryLabel: 'Sacred Poojas & Havan',
-      categoryLabelHi: 'वैदिक पूजा व महाहवन',
-      image: '/gallery/IMG_2542.jpg',
-      location: 'Dashashwamedh Sanctum, Varanasi',
-      locationHi: 'दशाश्वमेध घाट, वाराणसी',
-      date: 'Vasant Navratri Muhurta',
-      dateHi: 'चैत्र वसंत नवरात्रि मुहूर्त',
-      description: 'Dr. Pandit Vishal Dubey presiding over a consecrated Vedic Havan along with initiated pandits and devotee families.',
-      descriptionHi: 'विश्व शांति एवं यजमान कल्याण हेतु 11 दीक्षित वैदिक आचार्यों द्वारा दुर्गा सप्तशती के संपुटित पाठ एवं महाहवन।',
-    },
-    {
-      id: '2',
-      title: 'National Media & TV Discourses (ETV Bharat & Hindustan Mail)',
-      titleHi: 'राष्ट्रीय समाचार चैनलों पर डॉ. विशाल दुबे जी की ज्योतिष परिचर्चा',
-      category: 'consultation',
-      categoryLabel: 'Vedic Consultations',
-      categoryLabelHi: 'वैदिक ज्योतिष परामर्श',
-      image: '/gallery/IMG_2537.jpg',
-      location: 'National Broadcast Studios (ETV Bharat & Prime Talk)',
-      locationHi: 'राष्ट्रीय प्रसारण स्टूडियो (ईटीवी भारत एवं प्राइम टॉक)',
-      date: 'Televised Special Series',
-      dateHi: 'विशेष टीवी प्रसारण श्रृंखला',
-      description: 'Gold Medalist Dr. Pandit Vishal Dubey (AstroVD) unraveling horoscope configurations and prescribing targeted planetary remedies on national television.',
-      descriptionHi: 'स्वर्ण पदक विजेता डॉ. पंडित विशाल दुबे (AstroVD) द्वारा कुंडली विश्लेषण एवं शास्त्रोक्त सटीक उपायों का प्रत्यक्ष निरूपण।',
-    },
-    {
-      id: '3',
-      title: 'Grand Temple Anushthan at Sacred Kashi Vishwanath Sanctum',
-      titleHi: 'श्री काशी विश्वनाथ पावन परिक्षेत्र में भव्य वैदिक अनुष्ठान',
-      category: 'kashi',
-      categoryLabel: 'Temple Anushthan & Varanasi',
-      categoryLabelHi: 'काशी अनुष्ठान व देवालय',
-      image: '/gallery/WhatsApp-Image-2024-09-30-at-5.31.21-PM-2-1024x682.jpeg',
-      location: 'Kashi Vishwanath Corridor, Varanasi',
-      locationHi: 'श्री काशी विश्वनाथ कॉरिडोर, वाराणसी',
-      date: 'Mahashivratri & Navratri Mahotsav',
-      dateHi: 'महाशिवरात्रि एवं नवरात्र महोत्सव',
-      description: 'Sacred Rudrabhishek oblations and high-energy Vedic peace mantras in the holy corridor of Varanasi.',
-      descriptionHi: 'द्वादश ज्योतिर्लिंग काशी विश्वनाथ की पुण्यधरा पर रुद्राभिषेक एवं नवग्रह शांति का दिव्य शास्त्रीय अनुष्ठान।',
-    },
-    {
-      id: '4',
-      title: 'Honored with Jyotishacharya National Title & Accreditations',
-      titleHi: 'अखिल भारतीय स्तर पर \'ज्योतिषाचार्य\' मानद उपाधि से अलंकृत',
-      category: 'awards',
-      categoryLabel: 'Honors & Certifications',
-      categoryLabelHi: 'राष्ट्रीय सम्मान एवं पुरस्कार',
-      image: '/gallery/WhatsApp-Image-2024-02-01-at-2.28.35-PM-1024x768.jpeg',
-      location: 'National Convention of Astrological Sciences',
-      locationHi: 'राष्ट्रीय ज्योतिष विज्ञान महाधिवेशन',
-      date: 'Annual Convocation Honor',
-      dateHi: 'वार्षिक दीक्षांत समारोह',
-      description: 'Conferral of the prestigious Jyotishacharya title recognizing Dr. Vishal Dubey’s groundbreaking predictive research and doctorate.',
-      descriptionHi: 'चिकित्सा ज्योतिष एवं भविष्यसूचक फलित में अप्रतिम शोध हेतु डॉ. विशाल दुबे जी को सर्वोच्च ज्योतिषाचार्य उपाधि प्रदान की गई।',
-    },
-    {
-      id: '5',
-      title: 'Holy Ganga Ghats Maha Aarti & Vedic Consecration',
-      titleHi: 'दशाश्वमेध पावन गंगा तट पर महाआरती एवं वैदिक संकल्प',
-      category: 'kashi',
-      categoryLabel: 'Temple Anushthan & Varanasi',
-      categoryLabelHi: 'काशी अनुष्ठान व देवालय',
-      image: '/gallery/WhatsApp-Image-2024-03-07-at-2.31.04-PM-1024x768.jpeg',
-      location: 'Dashashwamedh & Assi Ghats, Kashi',
-      locationHi: 'दशाश्वमेध एवं अस्सी घाट, काशी',
-      date: 'Dev Deepawali & Ganga Mahotsav',
-      dateHi: 'देव दीपावली एवं गंगा महोत्सव',
-      description: 'Divine Ganga Aarti oblations and personalized sankalp conducted for family prosperity, health, and liberation from karmic debts.',
-      descriptionHi: 'पतित पावनी मां गंगा के तट पर जातकों के सुख, शांति व पितृदोष शांति हेतु संपन्न महाआरती एवं संकल्प।',
-    },
-    {
-      id: '6',
-      title: 'Navgrah Shanti Havan & Vedic Purnahuti Ahuti',
-      titleHi: 'नवग्रह शांति महायज्ञ एवं पूर्णाहूति आहुतियां',
-      category: 'pooja',
-      categoryLabel: 'Sacred Poojas & Havan',
-      categoryLabelHi: 'वैदिक पूजा व महाहवन',
-      image: '/gallery/IMG_2546.jpg',
-      location: 'Vedic Yagyashala Mandap, Varanasi',
-      locationHi: 'वैदिक यज्ञशाला मंडप, वाराणसी',
-      date: 'Navgrah Parva Muhurta',
-      dateHi: 'नवग्रह पर्व मुहूर्त',
-      description: 'Offering the supreme final oblation (Purnahuti) to the sacred fire invoking blessings of Surya, Chandra, Mangal, and all nine cosmic forces.',
-      descriptionHi: 'समस्त नवग्रहों की अनुकूलता हेतु विधि-सम्मत समिधा एवं शुद्ध घृत के साथ पवित्र अग्नि में पूर्णाहूति अर्पण।',
-    },
-    {
-      id: '7',
-      title: 'Assembly of Eminent Vedic Scholars & Astrologers',
-      titleHi: 'विद्वत वैदिक आचार्यों एवं ज्योतिषाचार्यों का विशिष्ट समागम',
-      category: 'awards',
-      categoryLabel: 'Honors & Certifications',
-      categoryLabelHi: 'राष्ट्रीय सम्मान एवं पुरस्कार',
-      image: '/gallery/WhatsApp-Image-2024-02-08-at-3.31.41-PM-2-1024x768.jpeg',
-      location: 'Shree Kashi Vidwat Parishad',
-      locationHi: 'श्री काशी विद्वत परिषद, वाराणसी',
-      date: 'Vedic Wisdom Symposium',
-      dateHi: 'वैदिक ज्ञान विचार संगोष्ठी',
-      description: 'Scholarly discourse with respected Acharyas and Vedic scholars discussing authentic horoscope calculations and Siddhanta Jyotish.',
-      descriptionHi: 'सिद्धांत ज्योतिष, मुहूर्तमार्तण्ड एवं पंचांग गणना पर वरिष्ठ ज्योतिषाचार्यों के साथ गहन विचार-विमर्श एवं मंथन।',
-    },
-    {
-      id: '8',
-      title: 'Grand Shat Chandi & Rudrabhishek Yagya Mandap',
-      titleHi: 'भव्य शतचंडी एवं रुद्राभिषेक महायज्ञ मंडप दर्शन',
-      category: 'pooja',
-      categoryLabel: 'Sacred Poojas & Havan',
-      categoryLabelHi: 'वैदिक पूजा व महाहवन',
-      image: '/gallery/IMG_2547.jpg',
-      location: 'Dashashwamedh Mandap, Varanasi',
-      locationHi: 'दशाश्वमेध मंडप, वाराणसी',
-      date: 'Chaitra Vasant Navratri',
-      dateHi: 'चैत्र वसंत नवरात्रि',
-      description: 'The sanctified sacrificial altar where sacred oblations are offered with Vedic mantras for divine protection and planetary peace.',
-      descriptionHi: 'वैदिक मंत्रोच्चार और असीम सकारात्मक ऊर्जा से प्रदीप्त पावन यज्ञवेदी जहां समस्त विघ्नों के निवारण हेतु आहुतियां दी जाती हैं।',
-    },
-    {
-      id: '9',
-      title: 'Consecration of Sacred Yantras & Gemstones',
-      titleHi: 'सिद्ध श्री यंत्र एवं नवग्रह रत्नों का प्राण-प्रतिष्ठा पूजन',
-      category: 'yantra',
-      categoryLabel: 'Yantras & Gemstones',
-      categoryLabelHi: 'सिद्ध यंत्र एवं रत्न',
-      image: '/gallery/IMG_2545.jpg',
-      location: 'Vedic Yagyashala Altar, Kashi',
-      locationHi: 'वैदिक यज्ञशाला वेदी, काशी',
-      date: 'Akshaya Tritiya Muhurta',
-      dateHi: 'अक्षय तृतीया पावन मुहूर्त',
-      description: 'Pran Pratishtha oblations and Beej Mantras infusing celestial energy into sacred geometric Shree Yantras and certified gemstones.',
-      descriptionHi: 'वैदिक सूक्तों एवं बीज मंत्रों द्वारा श्री यंत्रों एवं रत्नों में सकारात्मक दैवीय ऊर्जा का संचार।',
-    },
-    {
-      id: '10',
-      title: 'Vedic Rituals on the Holy Banks of the Ganges',
-      titleHi: 'काशी में गंगा तट पर वैदिक मंत्रोच्चार व अनुष्ठान',
-      category: 'kashi',
-      categoryLabel: 'Temple Anushthan & Varanasi',
-      categoryLabelHi: 'काशी अनुष्ठान व देवालय',
-      image: '/gallery/WhatsApp-Image-2024-03-07-at-2.31.00-PM-1-1024x768.jpeg',
-      location: 'Kashi Vishwanath Ghats',
-      locationHi: 'काशी विश्वनाथ घाट',
-      date: 'Pavitra Snan Muhurta',
-      dateHi: 'पवित्र स्नान व अर्घ्य मुहूर्त',
-      description: 'Devotee sankalp and Vedic oblations performed at the water’s edge in Varanasi for generational karma healing.',
-      descriptionHi: 'काशी के पावन घाटों पर पितृ शांति, कुल दोष निवारण एवं नवग्रह अनुकूलता हेतु संकल्प।',
-    },
-    {
-      id: '11',
-      title: 'Scholarly Jyotish Conclave & Research Felicitation',
-      titleHi: 'राष्ट्रीय फलित ज्योतिष शोध संगोष्ठी एवं प्रशस्ति पत्र',
-      category: 'awards',
-      categoryLabel: 'Honors & Certifications',
-      categoryLabelHi: 'राष्ट्रीय सम्मान एवं पुरस्कार',
-      image: '/gallery/WhatsApp-Image-2024-02-01-at-2.28.52-PM-1-1024x768.jpeg',
-      location: 'Maharishi Vedic Institute Altar',
-      locationHi: 'महर्षि वैदिक शोध संस्थान',
-      date: 'National Astrology Summit',
-      dateHi: 'राष्ट्रीय ज्योतिष शिखर सम्मेलन',
-      description: 'Accreditation ceremony honoring Dr. Vishal Dubey’s contribution to Vedic astrology literature and research.',
-      descriptionHi: 'वैदिक ज्योतिष के पुनरुद्धार एवं वैज्ञानिक व्याख्या हेतु विशिष्ट प्रशस्ति पत्र प्रदान।',
-    },
-    {
-      id: '12',
-      title: 'Holy Yagyashala Agnihotra & Purnahuti Consecration',
-      titleHi: 'नित्य अग्निहोत्र एवं महायज्ञ पूर्णाहुति वेदी दर्शन',
-      category: 'pooja',
-      categoryLabel: 'Sacred Poojas & Havan',
-      categoryLabelHi: 'वैदिक पूजा व महाहवन',
-      image: '/gallery/WhatsApp-Image-2024-09-30-at-5.32.28-PM-1024x576.jpeg',
-      location: 'Shree Ganesh Vidyapith Sanctum',
-      locationHi: 'श्री गणेश विद्यापीठ, काशी',
-      date: 'Daily Bramha Muhurta',
-      dateHi: 'नित्य ब्रह्म मुहूर्त',
-      description: 'Continuous sacred sacrificial fire purifying the atmospheric ether with sacred samidha, herbs, and cow ghee offerings.',
-      descriptionHi: 'शुद्ध गौघृत, समिधा एवं दुर्लभ औषधियों से वातावरण की नकारात्मक ऊर्जा का शमन करने वाली पावन यज्ञ अग्नि।',
-    },
-    {
-      id: '13',
-      title: 'Grand Maha Rudrabhishek & Vedic Bilva Patra Archana',
-      titleHi: 'भव्य महारुद्राभिषेक एवं वैदिक बिल्वपत्र अर्चन',
-      category: 'pooja',
-      categoryLabel: 'Sacred Poojas & Havan',
-      categoryLabelHi: 'वैदिक पूजा व महाहवन',
-      image: '/gallery/IMG_2543.jpg',
-      location: 'Kashi Vishwanath Jyotirlinga Dham',
-      locationHi: 'काशी विश्वनाथ ज्योतिर्लिंग धाम',
-      date: 'Shravan Somwar Muhurta',
-      dateHi: 'श्रावण सोमवार पावन मुहूर्त',
-      description: 'Consecrated Panchamrit snan and Vedic Rudri path performed with intense spiritual focus for peace and prosperity.',
-      descriptionHi: 'पंचामृत स्नान, गंगाजल एवं रुद्री पाठ के साथ देवाधिदेव महादेव का विधिपूर्वक पावन अभिषेक।',
-    },
-    {
-      id: '14',
-      title: 'Sacred Navgrah Yantra & Sphatik Shivalinga Prana Pratishtha',
-      titleHi: 'सिद्ध नवग्रह यंत्र एवं स्फटिक शिवलिंग प्राण-प्रतिष्ठा',
-      category: 'yantra',
-      categoryLabel: 'Yantras & Gemstones',
-      categoryLabelHi: 'सिद्ध यंत्र एवं रत्न',
-      image: '/gallery/IMG_2544.jpg',
-      location: 'AstroVD Vedic Sansthan Altar',
-      locationHi: 'AstroVD वैदिक संस्थान वेदी',
-      date: 'Guru Pushya Nakshatra',
-      dateHi: 'गुरु पुष्य नक्षत्र मुहूर्त',
-      description: 'Authentic consecration ritual awakening divine energetic currents within geometry-based cosmic yantras.',
-      descriptionHi: 'यंत्रराज के वैदिक प्राण-प्रतिष्ठा अनुष्ठान द्वारा ग्रहों की सकारात्मक रश्मियों का संचयन।',
-    },
-    {
-      id: '15',
-      title: 'Chandi Path Sampoorna Ahuti & Vedic Brahmin Bhojan',
-      titleHi: 'चंडी पाठ संपूर्ण आहुति एवं वैदिक विप्र भोजन',
-      category: 'pooja',
-      categoryLabel: 'Sacred Poojas & Havan',
-      categoryLabelHi: 'वैदिक पूजा व महाहवन',
-      image: '/gallery/IMG_2549.jpg',
-      location: 'Shree Durga Mandir Sanctum, Kashi',
-      locationHi: 'श्री दुर्गा मंदिर परिक्षेत्र, काशी',
-      date: 'Sharadiya Navratri Maha Ashtami',
-      dateHi: 'शारदीय नवरात्रि महाष्टमी',
-      description: 'Holy completion of Durga Saptashati yagya followed by traditional dakshina and satvik anna seva.',
-      descriptionHi: 'दुर्गा सप्तशती के संपुटित आहुतियों की पूर्णता के उपरांत वैदिक विद्वानों का सत्कार एवं विप्र भोजन।',
-    },
-    {
-      id: '16',
-      title: 'One-on-One Kundli Analysis & Kundli Milan Session',
-      titleHi: 'व्यक्तिगत जन्मपत्रिका विश्लेषण एवं कुंडली मिलान',
-      category: 'consultation',
-      categoryLabel: 'Vedic Consultations',
-      categoryLabelHi: 'वैदिक ज्योतिष परामर्श',
-      image: '/gallery/IMG_2550.jpg',
-      location: 'AstroVD Consultation Chambers, Varanasi',
-      locationHi: 'AstroVD परामर्श कक्ष, वाराणसी',
-      date: 'Daily Consultation Sessions',
-      dateHi: 'दैनिक जातक परामर्श',
-      description: 'Dr. Vishal Dubey meticulously reviewing planetary degrees, Dasha periods, and formulating tailored remedial solutions.',
-      descriptionHi: 'ग्रह गोचर, विंशोत्तरी दशा एवं वर्ग कुंडलियों के सूक्ष्म अध्ययन से सटीक मार्गदर्शन एवं समाधान।',
-    },
-    {
-      id: '17',
-      title: 'In-Depth Astro Vastu & Planetary Consultation',
-      titleHi: 'गहन वास्तु ज्योतिष एवं नवग्रह संतुलन विमर्श',
-      category: 'consultation',
-      categoryLabel: 'Vedic Consultations',
-      categoryLabelHi: 'वैदिक ज्योतिष परामर्श',
-      image: '/gallery/IMG_2551.jpg',
-      location: 'AstroVD Corporate Guidance Suite',
-      locationHi: 'AstroVD कॉर्पोरेट विमर्श कक्ष',
-      date: 'Shubh Muhurta Consultation',
-      dateHi: 'शुभ मुहूर्त परामर्श',
-      description: 'Integrating ancient Vastu Shastra principles with birth charts to harmonize residential and business energies.',
-      descriptionHi: 'वास्तु दोष निवारण एवं व्यापारिक प्रगति हेतु जन्मपत्रिका आधारित शास्त्रोक्त वास्तु सुधार।',
-    },
-    {
-      id: '18',
-      title: 'Gold Medalist & Jyotish Shiromani Honor Convocations',
-      titleHi: 'स्वर्ण पदक एवं ज्योतिष शिरोमणि राष्ट्रीय अलंकरण',
-      category: 'awards',
-      categoryLabel: 'Honors & Certifications',
-      categoryLabelHi: 'राष्ट्रीय सम्मान एवं पुरस्कार',
-      image: '/gallery/IMG_2283-scaled.jpg',
-      location: 'Rashtriya Sanskrit Sansthan Auditorium',
-      locationHi: 'राष्ट्रीय संस्कृत संस्थान सभागार',
-      date: 'Grand Convocation Ceremony',
-      dateHi: 'भव्य दीक्षांत समारोह',
-      description: 'Conferral of gold medals in Vedic astrology and lifetime excellence awards by veteran spiritual leaders.',
-      descriptionHi: 'वैदिक ज्योतिष के गूढ़ रहस्यों के फलित अनुसंधान हेतु शीर्ष पीठ द्वारा स्वर्ण पदक से सम्मानित।',
-    },
-    {
-      id: '19',
-      title: 'All India Astrological Conference Keynote & Felicitations',
-      titleHi: 'अखिल भारतीय ज्योतिष महासम्मेलन मुख्य वक्तव्य एवं अभिनंदन',
-      category: 'awards',
-      categoryLabel: 'Honors & Certifications',
-      categoryLabelHi: 'राष्ट्रीय सम्मान एवं पुरस्कार',
-      image: '/gallery/WhatsApp-Image-2024-02-08-at-3.31.35-PM-3-1024x473.jpeg',
-      location: 'National Vedic Heritage Pavilion',
-      locationHi: 'राष्ट्रीय वैदिक धरोहर मंडप',
-      date: 'National Research Summit',
-      dateHi: 'राष्ट्रीय शोध सम्मेलन',
-      description: 'Presenting research on planetary transits and medical astrology to an esteemed panel of researchers.',
-      descriptionHi: 'गोचर एवं चिकित्सीय फलित पर शोध पत्र प्रस्तुति तथा विद्वानों द्वारा विशिष्ट सम्मान अर्पण।',
-    },
-    {
-      id: '20',
-      title: 'Sacred Manikarnika & Harishchandra Ghat Sankalp',
-      titleHi: 'मणिकर्णिका एवं हरिश्चंद्र तीर्थ संकल्प अनुष्ठान',
-      category: 'kashi',
-      categoryLabel: 'Temple Anushthan & Varanasi',
-      categoryLabelHi: 'काशी अनुष्ठान व देवालय',
-      image: '/gallery/WhatsApp-Image-2024-03-07-at-2.30.56-PM-1-1024x568.jpeg',
-      location: 'Manikarnika Sacred Tirtha, Kashi',
-      locationHi: 'मणिकर्णिका पावन तीर्थ, काशी',
-      date: 'Moksha Saptami Muhurta',
-      dateHi: 'मोक्ष सप्तमी मुहूर्त',
-      description: 'Special prayers and spiritual offerings performed at the sacred threshold of liberation in Varanasi.',
-      descriptionHi: 'काशी के मोक्ष तीर्थ पर पितरों के उद्धार एवं आध्यात्मिक उन्नति हेतु शास्त्रोक्त संकल्प।',
-    },
-    {
-      id: '21',
-      title: 'Divine Shivalinga Abhishek at Kashi Ghats',
-      titleHi: 'काशी के पावन तट पर नर्मदेश्वर शिवलिंग अभिषेक',
-      category: 'kashi',
-      categoryLabel: 'Temple Anushthan & Varanasi',
-      categoryLabelHi: 'काशी अनुष्ठान व देवालय',
-      image: '/gallery/WhatsApp-Image-2024-03-07-at-2.31.01-PM-2-1024x578.jpeg',
-      location: 'Panchganga Ghat, Varanasi',
-      locationHi: 'पंचगंगा घाट, वाराणसी',
-      date: 'Pradosh Vrat Muhurta',
-      dateHi: 'प्रदोष व्रत पावन मुहूर्त',
-      description: 'Reciting Shri Rudram while anointing sacred Shivalingam with holy Gangajal, cow milk, and honey.',
-      descriptionHi: 'पवित्र गंगाजल, दुग्ध एवं मधु से नर्मदेश्वर शिवलिंग पर श्रीरुद्रपाठ सहित महाअभिषेक।',
-    },
-    {
-      id: '22',
-      title: 'Vedic Hawan Agni Pradakshina & Shanti Path',
-      titleHi: 'हवन अग्नि प्रदक्षिणा एवं शांति पाठ अनुष्ठान',
-      category: 'pooja',
-      categoryLabel: 'Sacred Poojas & Havan',
-      categoryLabelHi: 'वैदिक पूजा व महाहवन',
-      image: '/gallery/WhatsApp-Image-2024-09-30-at-5.32.27-PM-768x1024.jpeg',
-      location: 'Kashi Yagya Mandap Sanctum',
-      locationHi: 'काशी यज्ञ मंडप गर्भगृह',
-      date: 'Purnima Shanti Muhurta',
-      dateHi: 'पूर्णिमा शांति मुहूर्त',
-      description: 'Devotees performing ceremonial pradakshina around the consecrated sacred fire absorbing cosmic thermal energy.',
-      descriptionHi: 'यज्ञवेदी की परिक्रमा एवं शांति पाठ द्वारा वातावरण में सकारात्मक दैवीय ऊर्जा का विस्तार।',
-    },
-    {
-      id: '23',
-      title: 'Holy Navratri Durga Saptashati Havan Altar',
-      titleHi: 'शारदीय नवरात्रि दुर्गा सप्तशती महायज्ञ वेदी',
-      category: 'pooja',
-      categoryLabel: 'Sacred Poojas & Havan',
-      categoryLabelHi: 'वैदिक पूजा व महाहवन',
-      image: '/gallery/WhatsApp-Image-2024-09-30-at-5.32.33-PM-1-1024x683.jpeg',
-      location: 'Shree Kashi Annapurna Sthali',
-      locationHi: 'श्री काशी अन्नपूर्णा स्थली',
-      date: 'Maha Navami Muhurta',
-      dateHi: 'महानवमी सिद्धि मुहूर्त',
-      description: 'Consecration of the 9 sacred devis with traditional samidha, red flowers, and scented oblations.',
-      descriptionHi: 'मां भगवती के नव रूपों की आराधना एवं महायज्ञ में सुख-समृद्धि हेतु वैदिक आहुतियां।',
-    },
-    {
-      id: '24',
-      title: 'Deep Aradhana & Mangal Aarti at Sanctum',
-      titleHi: 'दीप आराधना एवं मंगल महाआरती दर्शन',
-      category: 'pooja',
-      categoryLabel: 'Sacred Poojas & Havan',
-      categoryLabelHi: 'वैदिक पूजा व महाहवन',
-      image: '/gallery/WhatsApp-Image-2024-09-30-at-5.32.34-PM-1024x683.jpeg',
-      location: 'Varanasi Sanctum Altar',
-      locationHi: 'वाराणसी पावन गर्भगृह',
-      date: 'Sandhya Aarti Muhurta',
-      dateHi: 'संध्या महाआरती मुहूर्त',
-      description: 'Traditional multi-tiered brass lamp aarti dispelling darkness and inviting prosperity into devotees’ lives.',
-      descriptionHi: 'पंचप्रदीप आरती एवं वैदिक शंखनाद से समस्त नकारात्मक स्पंदनों का निवारण।',
-    },
-    {
-      id: '25',
-      title: 'Vedic Life Path & Career Horoscope Guidance',
-      titleHi: 'कैरियर एवं जीवन पथ वैदिक मार्गदर्शन विमर्श',
-      category: 'consultation',
-      categoryLabel: 'Vedic Consultations',
-      categoryLabelHi: 'वैदिक ज्योतिष परामर्श',
-      image: '/gallery/WhatsApp-Image-2025-03-20-at-5.48.00-PM-1.jpeg',
-      location: 'AstroVD Online & In-Person Studio',
-      locationHi: 'AstroVD प्रत्यक्ष एवं ऑनलाइन स्टूडियो',
-      date: 'Personal Guidance Session',
-      dateHi: 'जातक मार्गदर्शन सत्र',
-      description: 'Navigating karmic transitions, Sade Sati phases, and vocational alignments through Prashna and Natal charts.',
-      descriptionHi: 'साढ़ेसाती, ढैय्या एवं करियर के उतार-चढ़ाव में ग्रहों की शांति हेतु व्यक्तिगत परामर्श।',
-    },
-    {
-      id: '26',
-      title: 'Consecrated Kuber Yantra & Parad Gutika Puja',
-      titleHi: 'सिद्ध कुबेर धनवर्धक यंत्र एवं पारद गुटिका पूजन',
-      category: 'yantra',
-      categoryLabel: 'Yantras & Gemstones',
-      categoryLabelHi: 'सिद्ध यंत्र एवं रत्न',
-      image: '/gallery/WhatsApp-Image-2025-03-20-at-5.48.02-PM-1-776x1024.jpeg',
-      location: 'Vedic Yagyashala Mandir Altar',
-      locationHi: 'वैदिक यज्ञशाला मंदिर वेदी',
-      date: 'Dhanteras & Diwali Muhurta',
-      dateHi: 'धनतेरस एवं दीपावली मुहूर्त',
-      description: 'Energizing high-frequency copper and gold-plated yantras to stabilize household financial harmony.',
-      descriptionHi: 'धन-धान्य एवं लक्ष्मी कृपा प्राप्ति हेतु कुबेर यंत्र का विधि-विधान पूर्वक वैदिक अभिमंत्रण।',
-    },
-    {
-      id: '27',
-      title: 'Sacred Ganga Jal Tarpan & Pitru Shanti Anushthan',
-      titleHi: 'पवित्र गंगाजल तर्पण एवं पितृदोष शांति अनुष्ठान',
-      category: 'kashi',
-      categoryLabel: 'Temple Anushthan & Varanasi',
-      categoryLabelHi: 'काशी अनुष्ठान व देवालय',
-      image: '/gallery/WhatsApp-Image-2025-03-20-at-5.48.03-PM-2-776x1024.jpeg',
-      location: 'Kedar Ghat Holy Confluence, Varanasi',
-      locationHi: 'केदार घाट, काशी तीर्थ',
-      date: 'Pitru Paksha Amavasya',
-      dateHi: 'पितृ पक्ष सर्वपितृ अमावस्या',
-      description: 'Performing traditional sesame, kusha, and holy water oblations honoring ancestors along the divine Ganga.',
-      descriptionHi: 'तिल, कुश एवं गंगाजल से पितृ तर्पण एवं कुल-वृद्धि हेतु वैदिक शांति अनुष्ठान।',
-    },
-  ];
+  const initialGalleryItems: GalleryItem[] = INITIAL_GALLERY_ITEMS;
 
   // Dynamic Content & Admin Management State
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(initialGalleryItems);
@@ -477,6 +58,20 @@ export default function GalleryPage() {
     process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
   ).replace(/\/api\/?$/, '');
 
+  const resolveImageUrl = useCallback(
+    (imgUrl?: string) => {
+      if (!imgUrl) return '/gallery/IMG_2542.jpg';
+      if (imgUrl.startsWith('http://') || imgUrl.startsWith('https://') || imgUrl.startsWith('data:')) {
+        return imgUrl;
+      }
+      if (imgUrl.startsWith('/api')) {
+        return `${backendUrl}${imgUrl}`;
+      }
+      return imgUrl;
+    },
+    [backendUrl]
+  );
+
   const fetchGalleryItems = useCallback(async () => {
     try {
       const queryParam = isAdmin ? '?includeUnpublished=true' : '';
@@ -484,7 +79,14 @@ export default function GalleryPage() {
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
-          setGalleryItems(data);
+          if (data.length < initialGalleryItems.length) {
+            const idMap = new Map<string, GalleryItem>();
+            initialGalleryItems.forEach((item) => idMap.set(item.id, item));
+            data.forEach((item: GalleryItem) => idMap.set(item.id, item));
+            setGalleryItems(Array.from(idMap.values()));
+          } else {
+            setGalleryItems(data);
+          }
         }
       }
     } catch (err) {
@@ -511,6 +113,15 @@ export default function GalleryPage() {
     fetchGalleryItems();
   }, [fetchGalleryItems]);
 
+  // Auto-dismiss action feedback toast after 4 seconds
+  useEffect(() => {
+    if (!actionToast) return;
+    const timer = setTimeout(() => {
+      setActionToast(null);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [actionToast]);
+
   const handleDeleteItem = async (item: GalleryItem, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!confirm(`Are you sure you want to permanently delete "${item.title}"?`)) {
@@ -519,6 +130,9 @@ export default function GalleryPage() {
 
     const token = getAuthToken();
     if (!token) return;
+
+    // Optimistically remove from state immediately
+    setGalleryItems((prev) => prev.filter((i) => i.id !== item.id));
 
     setActionLoading(true);
     try {
@@ -541,16 +155,34 @@ export default function GalleryPage() {
       fetchGalleryItems();
     } catch (err: any) {
       setActionToast({ type: 'error', message: err.message || 'Error deleting photo.' });
+      fetchGalleryItems();
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleItemSaved = () => {
+  const handleItemSaved = (savedItem?: any) => {
     setActionToast({
       type: 'success',
-      message: 'Photo entry saved successfully!',
+      message: 'Photo published successfully! Visible immediately in gallery.',
     });
+
+    if (savedItem && savedItem.id) {
+      setGalleryItems((prev) => {
+        const existingIdx = prev.findIndex((i) => i.id === savedItem.id);
+        if (existingIdx !== -1) {
+          const updated = [...prev];
+          updated[existingIdx] = { ...updated[existingIdx], ...savedItem };
+          return updated;
+        }
+        // Insert new photo right at index 0 so it's immediately visible at the top
+        return [savedItem, ...prev];
+      });
+      // Switch active category to 'all' so new item is not hidden
+      setActiveCategory('all');
+      setVisibleCount(BATCH_SIZE);
+    }
+
     fetchGalleryItems();
   };
 
@@ -631,7 +263,7 @@ export default function GalleryPage() {
         );
         setIsLoadingMore(false);
       }
-    }, 380);
+    }, 120);
 
     return () => clearTimeout(timer);
   }, [isLoadingMore, hasMore, filtered.length, language]);
@@ -650,8 +282,8 @@ export default function GalleryPage() {
       },
       {
         root: null,
-        rootMargin: '200px', // trigger before reaching bottom for smooth continuous reading
-        threshold: 0.1,
+        rootMargin: '400px',
+        threshold: 0,
       }
     );
 
@@ -701,85 +333,103 @@ export default function GalleryPage() {
   }, [selectedImage, currentModalIndex, visibleItems]);
 
   return (
-    <div className="relative min-h-screen w-full bg-[#FAF7F2] m-0 p-0 overflow-x-clip selection:bg-amber-400">
+    <div className="relative min-h-screen w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
       <Navbar />
 
-      <PageHeader
-        breadcrumb={t('Sacred Gallery', 'पावन छायाचित्र दीर्घा')}
-        title={t('Celestial Gallery & Sacred Memories', 'पावन वैदिक अनुष्ठान एवं छायाचित्र दीर्घा')}
-        subtitle={t(
-          'Visual glimpses of holy yagyas, temple consecrations, Vedic awards, and consultations presided over by Dr. Pandit Vishal Dubey (AstroVD).',
-          'पूज्य डॉ. पंडित विशाल दुबे (AstroVD) के सानिध्य में संपन्न हुए पावन यज्ञों, प्राण-प्रतिष्ठा, राष्ट्रीय पुरस्कारों एवं परामर्शों की दिव्य झलकियां।'
-        )}
-      />
+      {/* HERO BANNER SECTION (Panoramic full-bleed backdrop matching reference design) */}
+      <section className="relative w-full bg-[#36170A] overflow-hidden pt-24 sm:pt-28 md:pt-30 pb-9 sm:pb-11 px-4 sm:px-6 lg:px-12 min-h-[220px] sm:min-h-[250px] flex items-center">
+        {/* Background ambient gradient matching reference tone */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#36170A] via-[#36170A] to-[#2B0E06]" />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-16 space-y-10">
-        {/* Action Feedback Toast */}
+        {/* Full-bleed Ultra-HD panoramic backdrop (2400x768): Varanasi Ganga Aarti, Hawan, Diya & Chakra */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none select-none">
+          <Image
+            src="/gallery/gallery_hero_panoramic_hd.png"
+            alt="Sacred Vedic Ceremonies and Ganga Aarti"
+            fill
+            priority
+            quality={100}
+            className="object-cover object-[right_center] md:object-[right_55%]"
+          />
+          {/* Confined left gradient vignette: protects text readability on left while leaving items 100% luminous with zero haze */}
+          <div className="absolute inset-y-0 left-0 w-full sm:w-[65%] md:w-[54%] lg:w-[48%] bg-gradient-to-r from-[#36170A] via-[#36170A]/92 to-transparent" />
+        </div>
+
+        {/* Content container - Left Text Information (Clear, readable, with zero obstruction) */}
+        <div className="relative max-w-7xl mx-auto w-full z-10">
+          <div className="max-w-xl text-left space-y-2">
+            <div className="tracking-[0.2em] text-[10px] sm:text-[11px] font-bold text-[#D8B28A] uppercase drop-shadow-sm">
+              {t('DIVINE DARSHAN • SACRED CEREMONIES • CELESTIAL BLESSINGS', 'दिव्य दर्शन • पावन अनुष्ठान • दैवीय कृपा')}
+            </div>
+            <h1 className="font-serif text-2xl sm:text-3xl md:text-[34px] lg:text-[38px] font-bold text-[#FFFDFB] tracking-wide leading-tight drop-shadow-md">
+              {t('Celestial Gallery & Sacred Memories', 'पावन वैदिक अनुष्ठान एवं छायाचित्र दीर्घा')}
+            </h1>
+            <p className="text-[#D7C4BD] text-xs sm:text-[13px] leading-relaxed max-w-lg font-normal drop-shadow-sm">
+              {t(
+                'Visual glimpses of holy yagyas, temple consecrations, Vedic awards, and divine ceremonies presided over by Dr. Pandit Vishal Dubey (AstroVD).',
+                'पूज्य डॉ. पंडित विशाल दुबे (AstroVD) के सानिध्य में संपन्न हुए पावन यज्ञों, प्राण-प्रतिष्ठा, राष्ट्रीय पुरस्कारों एवं दिव्य अनुष्ठानों की पावन झलकियां।'
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Subtle curved bottom wave divider matching reference design */}
+        <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-none pointer-events-none z-10">
+          <svg
+            className="relative block w-full h-4 sm:h-5 md:h-6"
+            viewBox="0 0 1200 40"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0,14 C350,26 700,32 950,22 C1080,16 1160,8 1200,6"
+              fill="none"
+              stroke="#D8A868"
+              strokeWidth="1.2"
+              strokeOpacity="0.45"
+            />
+            <path
+              d="M0,14 C350,26 700,32 950,22 C1080,16 1160,8 1200,6 L1200,40 L0,40 Z"
+              fill="#FCF8ED"
+            />
+          </svg>
+        </div>
+      </section>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-6 sm:py-10 space-y-6 sm:space-y-8">
+        {/* Action Feedback Floating Toast */}
         {actionToast && (
           <div
-            className={`p-4 rounded-2xl text-xs sm:text-sm font-semibold flex items-center justify-between shadow-sm animate-fadeIn ${
-              actionToast.type === 'success'
-                ? 'bg-emerald-50 text-emerald-900 border border-emerald-200'
-                : 'bg-rose-50 text-rose-900 border border-rose-200'
-            }`}
+            role="status"
+            aria-live="polite"
+            className="fixed bottom-6 right-6 z-50 max-w-sm sm:max-w-md w-auto animate-fadeIn transition-all duration-300"
           >
-            <div className="flex items-center gap-2">
-              {actionToast.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              ) : (
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-              )}
-              <span>{actionToast.message}</span>
-            </div>
-            <button
-              onClick={() => setActionToast(null)}
-              className="text-stone-400 hover:text-stone-700 font-bold ml-4 cursor-pointer"
+            <div
+              className={`px-4 py-3 rounded-2xl text-xs sm:text-sm font-medium flex items-center gap-3 shadow-2xl backdrop-blur-md border ${
+                actionToast.type === 'success'
+                  ? 'bg-[#1C2820]/95 text-emerald-100 border-emerald-500/50 shadow-emerald-950/30'
+                  : 'bg-[#2D1217]/95 text-rose-100 border-rose-500/50 shadow-rose-950/30'
+              }`}
             >
-              ✕
-            </button>
-          </div>
-        )}
-
-        {/* Admin Control Bar - ONLY VISIBLE TO AUTHENTICATED ADMINS */}
-        {isAdmin && (
-          <div className="rounded-3xl bg-gradient-to-r from-amber-50 via-white to-amber-50/80 border-2 border-amber-300 p-5 sm:p-6 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#5B0D15] text-amber-200 flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
-                👑
-              </div>
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-serif font-bold text-base text-[#3B1E22]">
-                    Admin Gallery Controls
-                  </h3>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 uppercase tracking-wider">
-                    Gallery Management
-                  </span>
-                </div>
-                <p className="text-xs text-stone-600 mt-0.5">
-                  Upload photos, edit titles/descriptions, or delete entries directly from this public gallery.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
+              {actionToast.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              )}
+              <span className="leading-snug flex-1">{actionToast.message}</span>
               <button
                 type="button"
-                onClick={() => {
-                  setItemToEdit(null);
-                  setManageModalOpen(true);
-                }}
-                className="px-5 py-2.5 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-amber-100 text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+                onClick={() => setActionToast(null)}
+                className="text-stone-400 hover:text-white font-bold p-1 hover:bg-white/10 rounded-full transition-colors cursor-pointer shrink-0"
+                aria-label="Dismiss notification"
               >
-                <Plus className="w-4 h-4 text-amber-300" />
-                <span>Add New Photo</span>
+                ✕
               </button>
             </div>
           </div>
         )}
 
-        {/* Category Filter Pills */}
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3" role="tablist" aria-label="Gallery Categories">
+        {/* Category Filter Pills (Matching Mockup Design System) */}
+        <div className="flex items-center gap-2.5 overflow-x-auto pb-1.5 pt-0.5 no-scrollbar scroll-smooth justify-start sm:justify-center" role="tablist" aria-label="Gallery Categories">
           {categories.map((cat) => {
             const label = language === 'hi' ? `${cat.labelHi} (${cat.count})` : `${cat.labelEn} (${cat.count})`;
             const isSelected = activeCategory === cat.id;
@@ -790,10 +440,10 @@ export default function GalleryPage() {
                 onClick={() => handleCategoryChange(cat.id)}
                 role="tab"
                 aria-selected={isSelected}
-                className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 cursor-pointer shadow-sm ${
+                className={`rounded-full px-4 py-2 text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${
                   isSelected
-                    ? 'bg-[#5B0D15] text-white shadow-md shadow-rose-950/20 scale-105 ring-2 ring-amber-400/50'
-                    : 'bg-white hover:bg-amber-50 text-stone-700 border border-stone-200 hover:border-amber-300'
+                    ? 'bg-[#522311] text-white shadow-xs border border-[#522311]'
+                    : 'bg-white hover:bg-[#FAF6ED] text-[#4A3B32] border border-[#EAE0D0] shadow-2xs hover:border-[#D6C4AD]'
                 }`}
               >
                 {label}
@@ -802,21 +452,41 @@ export default function GalleryPage() {
           })}
         </div>
 
-        {/* Gallery Items Count Header */}
-        <div className="flex items-center justify-between text-xs sm:text-sm text-stone-600 border-b border-stone-200/80 pb-3">
-          <div className="flex items-center gap-2 font-serif font-medium text-stone-800">
-            <Sparkles className="w-4 h-4 text-amber-700" />
+        {/* Gallery Items Count Header & Admin Action */}
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-[#706256] border-b border-[#EAE0D0] pb-3">
+          <div className="flex items-center gap-2 font-serif font-medium text-[#2D1408]">
+            <Sparkles className="w-4 h-4 text-[#DCA258] shrink-0" />
             <span>
               {t('Showing', 'प्रदर्शित')}:{' '}
-              <strong className="text-[#5B0D15] font-bold">{visibleItems.length}</strong> {t('of', 'कुल')}{' '}
-              <strong className="text-stone-900">{filtered.length}</strong> {t('sacred moments', 'पावन छायाचित्र')}
+              <strong className="text-[#522311] font-bold">{visibleItems.length}</strong> {t('of', 'कुल')}{' '}
+              <strong className="text-[#2D1408]">{filtered.length}</strong> {t('sacred moments', 'पावन छायाचित्र')}
             </span>
           </div>
-          {hasMore && (
-            <span className="text-xs text-amber-800 bg-amber-100/70 px-3 py-1 rounded-full font-medium hidden sm:inline-block">
-              {t('Scroll down to load more', 'और देखने के लिए नीचे स्क्रॉल करें')} ↓
-            </span>
-          )}
+
+          <div className="flex items-center gap-2.5">
+            {isAdmin && (
+              <div aria-label="Admin Gallery Controls" className="inline-flex items-center">
+                <button
+                  type="button"
+                  title="Admin Gallery Controls - Add New Photo"
+                  onClick={() => {
+                    setItemToEdit(null);
+                    setManageModalOpen(true);
+                  }}
+                  className="px-4 py-1.5 rounded-lg bg-[#522311] hover:bg-[#3D1A0D] text-white text-xs font-semibold shadow-xs hover:shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5 text-[#F5C77E]" />
+                  <span>{t('Add New Photo', 'नई फोटो जोड़ें')}</span>
+                </button>
+              </div>
+            )}
+
+            {hasMore && (
+              <span className="text-xs text-[#522311] bg-[#FAF6ED] border border-[#EAE0D0] px-3 py-1 rounded-full font-medium hidden sm:inline-block">
+                {t('Scroll down to load more', 'और देखने के लिए नीचे स्क्रॉल करें')} ↓
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Gallery Grid (Initial 9, then +9 per scroll batch) */}
@@ -832,7 +502,7 @@ export default function GalleryPage() {
               <article
                 key={item.id}
                 onClick={() => setSelectedImage(item)}
-                className="group relative rounded-3xl overflow-hidden bg-white border border-stone-200/90 shadow-md hover:shadow-2xl hover:border-amber-400 transition-all duration-500 cursor-pointer flex flex-col justify-between"
+                className="group relative rounded-2xl overflow-hidden bg-white border border-[#EAE0D0] shadow-xs hover:border-[#D6C4AD] hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col justify-between"
                 tabIndex={0}
                 role="button"
                 aria-label={`View photo: ${title}`}
@@ -846,13 +516,18 @@ export default function GalleryPage() {
                 {/* Image Container with fixed aspect ratio to prevent Layout Shift */}
                 <div className="relative h-60 sm:h-64 w-full overflow-hidden bg-stone-100">
                   <Image
-                    src={item.image}
+                    src={resolveImageUrl(item.image)}
                     alt={title}
                     fill
                     unoptimized
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     priority={index < 3}
-                    className="object-cover object-center group-hover:scale-108 transition-transform duration-700 ease-out"
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
+                    onError={(e: any) => {
+                      if (e?.target) {
+                        e.target.src = '/gallery/IMG_2542.jpg';
+                      }
+                    }}
                   />
 
                   {/* Gradient Overlay on Hover */}
@@ -863,7 +538,7 @@ export default function GalleryPage() {
                   </div>
 
                   {/* Top Category Tag */}
-                  <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-amber-300/60 text-amber-300 text-[10px] font-bold uppercase tracking-wider">
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-md border border-[#DCA258]/35 text-[#F5C77E] text-[10px] font-semibold uppercase tracking-wider">
                     ✦ {catLabel}
                   </div>
 
@@ -900,22 +575,22 @@ export default function GalleryPage() {
                 </div>
 
                 {/* Bottom Card Information */}
-                <div className="p-5 sm:p-6 space-y-2.5 bg-white">
-                  <h3 className="font-serif font-bold text-base sm:text-lg text-[#2A1810] group-hover:text-[#5B0D15] transition-colors leading-snug">
+                <div className="p-5 space-y-2 bg-white">
+                  <h3 className="font-serif font-bold text-base sm:text-lg text-[#2D1408] group-hover:text-[#522311] transition-colors leading-snug">
                     {title}
                   </h3>
 
-                  <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-[#706256] line-clamp-2 leading-relaxed">
                     {desc}
                   </p>
 
-                  <div className="pt-2 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
+                  <div className="pt-2.5 border-t border-[#F2ECE1] flex items-center justify-between text-[11px] text-[#8C7E72]">
                     <div className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                      <MapPin className="w-3.5 h-3.5 text-[#DCA258] shrink-0" />
                       <span className="truncate max-w-[140px]">{location}</span>
                     </div>
                     <div className="flex items-center gap-1 font-medium">
-                      <Calendar className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                      <Calendar className="w-3.5 h-3.5 text-[#A39588] shrink-0" />
                       <span>{date}</span>
                     </div>
                   </div>
@@ -927,14 +602,14 @@ export default function GalleryPage() {
 
         {/* Empty State if filter yields zero items */}
         {filtered.length === 0 && (
-          <div className="py-16 text-center space-y-3 bg-white rounded-3xl border border-stone-200 p-8">
+          <div className="py-16 text-center space-y-3 bg-white rounded-2xl border border-[#EAE0D0] p-8 max-w-lg mx-auto shadow-xs">
             <Filter className="w-10 h-10 text-stone-300 mx-auto" />
-            <h3 className="font-serif font-semibold text-lg text-stone-700">
+            <h3 className="font-serif font-bold text-base text-[#2D1408]">
               {t('No moments found in this category', 'इस श्रेणी में कोई छायाचित्र नहीं मिला')}
             </h3>
             <button
               onClick={() => handleCategoryChange('all')}
-              className="px-5 py-2 rounded-full bg-[#5B0D15] text-white text-xs font-semibold hover:bg-rose-950 transition-colors"
+              className="px-5 py-2 rounded-full bg-[#522311] hover:bg-[#3D1A0D] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
             >
               {t('View All Moments', 'सभी छायाचित्र देखें')}
             </button>
@@ -944,7 +619,7 @@ export default function GalleryPage() {
         {/* Infinite Scroll Sentinel & Controls */}
         <div
           ref={sentinelRef}
-          className="w-full py-6 flex flex-col items-center justify-center space-y-4"
+          className="w-full min-h-[50px] py-6 flex flex-col items-center justify-center space-y-4"
           aria-live="polite"
         >
           {/* Loading Indicator */}
@@ -1061,9 +736,12 @@ export default function GalleryPage() {
             {/* Modal Image */}
             <div className="relative w-full h-80 sm:h-96 bg-stone-900 overflow-hidden">
               <img
-                src={selectedImage.image}
+                src={resolveImageUrl(selectedImage.image)}
                 alt={language === 'hi' ? selectedImage.titleHi : selectedImage.title}
                 className="w-full h-full object-cover object-center"
+                onError={(e: any) => {
+                  e.target.src = '/gallery/IMG_2542.jpg';
+                }}
               />
               <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#5B0D15] text-amber-200 text-xs font-bold tracking-wide">
                 ✦ {language === 'hi' ? selectedImage.categoryLabelHi : selectedImage.categoryLabel}

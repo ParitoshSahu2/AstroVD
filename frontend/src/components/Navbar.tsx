@@ -23,7 +23,8 @@ import {
   ShieldCheck,
   Globe,
 } from 'lucide-react';
-import { AuthModal } from './AuthModal';
+import dynamic from 'next/dynamic';
+const AuthModal = dynamic(() => import('./AuthModal').then((mod) => mod.AuthModal), { ssr: false });
 import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
 import { performLogout } from '../lib/auth';
@@ -35,11 +36,11 @@ export const Navbar: React.FC = () => {
   const router = useRouter();
   const { language, toggleLanguage, t } = useLanguage();
   
-  // Cart state
+  // Cart state - accurately reflects 0 items when empty or logged out
   let liveCartCount = 0;
   try {
     const cart = useCart();
-    liveCartCount = cart.totalCount || 0;
+    liveCartCount = cart?.totalCount || 0;
   } catch {
     liveCartCount = 0;
   }
@@ -109,6 +110,21 @@ export const Navbar: React.FC = () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Speculatively warm up primary navigation routes during browser idle time for instant transitions
+  useEffect(() => {
+    const warmRoutes = ['/services', '/products', '/appointment', '/blog', '/gallery', '/about', '/contact'];
+    const timer = setTimeout(() => {
+      warmRoutes.forEach((route) => {
+        try {
+          router.prefetch(route);
+        } catch {
+          // ignore
+        }
+      });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [router]);
 
   // Sync logged in user profile
   useEffect(() => {
@@ -352,7 +368,7 @@ export const Navbar: React.FC = () => {
 
             {/* Left: Maroon AstroVD Logo */}
             <div className="relative z-10 flex items-center gap-2 shrink-0">
-              <Link href="/" className="flex items-center">
+              <Link href="/" prefetch={true} className="flex items-center">
                 <Image
                   src="/astro-vd-logo.png"
                   alt="AstroVD"
@@ -374,6 +390,12 @@ export const Navbar: React.FC = () => {
                   <Link
                     key={link.name}
                     href={link.href}
+                    prefetch={true}
+                    onMouseEnter={() => {
+                      try {
+                        router.prefetch(link.href);
+                      } catch {}
+                    }}
                     className={`relative py-1 transition-colors duration-200 hover:text-[#5B0D15] ${
                       isActive
                         ? 'text-[#5B0D15] font-semibold'
@@ -438,6 +460,12 @@ export const Navbar: React.FC = () => {
                             <Link
                               key={item.name}
                               href={item.href}
+                              prefetch={true}
+                              onMouseEnter={() => {
+                                try {
+                                  router.prefetch(item.href);
+                                } catch {}
+                              }}
                               onClick={() => setAboutDropdownOpen(false)}
                               className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-colors ${
                                 isSubActive
@@ -727,6 +755,7 @@ export const Navbar: React.FC = () => {
                     <div className="pt-2 border-t border-stone-200/80 text-center">
                       <Link
                         href="/dashboard"
+                        prefetch={true}
                         onClick={() => setNotificationOpen(false)}
                         className="text-[11px] font-bold text-[#5B0D15] hover:text-[#3B1E22] hover:underline"
                       >
@@ -740,6 +769,12 @@ export const Navbar: React.FC = () => {
               {/* Shopping Cart with Maroon Counter Badge */}
               <Link
                 href="/cart"
+                prefetch={true}
+                onMouseEnter={() => {
+                  try {
+                    router.prefetch('/cart');
+                  } catch {}
+                }}
                 className="p-1.5 text-stone-700 hover:text-[#5B0D15] transition-colors relative cursor-pointer"
                 aria-label="Shopping Cart"
                 title={t('Cart', 'कार्ट')}
@@ -836,6 +871,7 @@ export const Navbar: React.FC = () => {
                         {(user.role === 'ADMIN' || user.role === 'SUPERADMIN') && (
                           <Link
                             href="/admin"
+                            prefetch={true}
                             onClick={() => setProfileDropdownOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-purple-50 text-purple-900 border border-purple-200 font-bold hover:bg-purple-100 transition-colors mb-1"
                           >
@@ -846,6 +882,7 @@ export const Navbar: React.FC = () => {
                         {user.role !== 'ADMIN' && user.role !== 'SUPERADMIN' && (
                           <Link
                             href="/dashboard"
+                            prefetch={true}
                             onClick={() => {
                               setProfileDropdownOpen(false);
                               if (typeof window !== 'undefined') {
@@ -860,6 +897,7 @@ export const Navbar: React.FC = () => {
                         )}
                         <Link
                           href="/dashboard?tab=consultations"
+                          prefetch={true}
                           onClick={() => {
                             setProfileDropdownOpen(false);
                             if (typeof window !== 'undefined') {
@@ -873,6 +911,7 @@ export const Navbar: React.FC = () => {
                         </Link>
                         <Link
                           href="/dashboard?tab=orders"
+                          prefetch={true}
                           onClick={() => setProfileDropdownOpen(false)}
                           className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-stone-100/80 transition-colors"
                         >
@@ -971,6 +1010,7 @@ export const Navbar: React.FC = () => {
                   <Link
                     key={link.name}
                     href={link.href}
+                    prefetch={true}
                     onClick={() => setMobileMenuOpen(false)}
                     className={`p-2.5 rounded-xl text-xs font-semibold transition-colors ${
                       pathname === link.href
@@ -995,6 +1035,7 @@ export const Navbar: React.FC = () => {
                       <Link
                         key={item.name}
                         href={item.href}
+                        prefetch={true}
                         onClick={() => setMobileMenuOpen(false)}
                         className={`flex items-center gap-2 p-2 rounded-xl text-xs font-medium transition-colors ${
                           pathname === item.href
