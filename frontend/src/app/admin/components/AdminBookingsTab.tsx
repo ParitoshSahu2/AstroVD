@@ -7,8 +7,31 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
+  Video,
 } from 'lucide-react';
 import { SERVICES_CATALOGUE } from '../../../data/servicesData';
+
+function formatGoogleMeetLink(bookingId: string): string {
+  if (bookingId && bookingId.startsWith('https://meet.google.com/')) {
+    return bookingId;
+  }
+  const sanitized = (bookingId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const numToLetter: Record<string, string> = {
+    '0': 'a', '1': 'b', '2': 'c', '3': 'd', '4': 'e',
+    '5': 'f', '6': 'g', '7': 'h', '8': 'i', '9': 'j',
+  };
+  let letters = sanitized
+    .split('')
+    .map((ch) => numToLetter[ch] || ch)
+    .join('');
+  while (letters.length < 10) {
+    letters += 'avd';
+  }
+  const p1 = letters.slice(0, 3);
+  const p2 = letters.slice(3, 7);
+  const p3 = letters.slice(7, 10);
+  return `https://meet.google.com/${p1}-${p2}-${p3}`;
+}
 
 interface AdminBookingsTabProps {
   bookingSearch: string;
@@ -271,13 +294,26 @@ export default function AdminBookingsTab({
                       </td>
 
                       <td className="py-3.5 px-3 text-right">
-                        <button
-                          onClick={() => onSelectBooking(b)}
-                          className="px-2.5 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-[#5B0D15] font-semibold text-xs shadow-sm transition-colors cursor-pointer shrink-0 truncate max-w-full"
-                          title="Inspect & Manage"
-                        >
-                          Manage
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <a
+                            href={b.meetLink && b.meetLink.includes('meet.google.com') ? b.meetLink : formatGoogleMeetLink(b.id)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs transition-colors flex items-center gap-1 shrink-0"
+                            title="Start Google Meet with Devotee"
+                          >
+                            <Video className="w-3.5 h-3.5" />
+                            <span>Start Meet</span>
+                          </a>
+
+                          <button
+                            onClick={() => onSelectBooking(b)}
+                            className="px-2.5 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-[#5B0D15] font-semibold text-xs shadow-sm transition-colors cursor-pointer shrink-0 truncate max-w-full"
+                            title="Inspect & Manage"
+                          >
+                            Manage
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

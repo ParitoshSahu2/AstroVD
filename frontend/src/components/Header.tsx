@@ -129,7 +129,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="text-right">
                   <div className="text-xs font-bold text-stone-900">{user.name}</div>
                   <div className="text-[10px] text-amber-700 font-semibold font-mono">
-                    🪙 {user.walletBalance || 150} Pts
+                    ✦ Seeker
                   </div>
                 </div>
                 <button

@@ -285,9 +285,6 @@ export class AuthService {
         }
       }
     }
-        }
-      }
-    }
 
     if (!user) {
       throw new UnauthorizedException('Invalid email or password.');

@@ -275,7 +275,7 @@ export default function ServicesPage() {
         </div>
 
         {/* Services Cards Grid (Initial 9, then +9 per scroll batch) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-6 lg:gap-7" id="services-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-6 lg:gap-7 items-stretch" id="services-grid">
           {visibleServices.map((item) => {
             const tr = language === 'hi' ? SERVICES_TRANSLATIONS[item.id] : null;
             const displayTitle = tr ? tr.titleHi : item.title;

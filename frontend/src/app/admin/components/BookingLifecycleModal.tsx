@@ -8,6 +8,7 @@ import {
   AlertCircle,
   X,
   RefreshCw,
+  Video,
 } from 'lucide-react';
 
 interface BookingLifecycleModalProps {
@@ -18,6 +19,28 @@ interface BookingLifecycleModalProps {
   updatingStatus: boolean;
   onTransitionStatus: (status: string) => void;
   onClose: () => void;
+}
+
+function formatGoogleMeetLink(bookingId: string): string {
+  if (bookingId && bookingId.startsWith('https://meet.google.com/')) {
+    return bookingId;
+  }
+  const sanitized = (bookingId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const numToLetter: Record<string, string> = {
+    '0': 'a', '1': 'b', '2': 'c', '3': 'd', '4': 'e',
+    '5': 'f', '6': 'g', '7': 'h', '8': 'i', '9': 'j',
+  };
+  let letters = sanitized
+    .split('')
+    .map((ch) => numToLetter[ch] || ch)
+    .join('');
+  while (letters.length < 10) {
+    letters += 'avd';
+  }
+  const p1 = letters.slice(0, 3);
+  const p2 = letters.slice(3, 7);
+  const p3 = letters.slice(7, 10);
+  return `https://meet.google.com/${p1}-${p2}-${p3}`;
 }
 
 export default function BookingLifecycleModal({
@@ -158,6 +181,31 @@ export default function BookingLifecycleModal({
                 </p>
               </div>
             )}
+          </div>
+
+          {/* Live Video Consultation Room Box */}
+          <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Video className="w-4 h-4 text-emerald-700" />
+                Live Google Meet Room
+              </span>
+              <p className="text-xs text-emerald-950 font-mono break-all font-semibold">
+                {activeBooking.meetLink && activeBooking.meetLink.includes('meet.google.com') ? activeBooking.meetLink : formatGoogleMeetLink(activeBooking.id)}
+              </p>
+              <p className="text-[11px] text-emerald-800">
+                Extension Rate: ₹50/minute after scheduled 30 mins.
+              </p>
+            </div>
+            <a
+              href={activeBooking.meetLink && activeBooking.meetLink.includes('meet.google.com') ? activeBooking.meetLink : formatGoogleMeetLink(activeBooking.id)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2.5 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-md shadow-emerald-900/20 flex items-center justify-center gap-1.5 shrink-0 transition-all hover:scale-105 active:scale-95"
+            >
+              <Video className="w-4 h-4" />
+              <span>Start Google Meet</span>
+            </a>
           </div>
 
           {/* Current Status & Transitions */}

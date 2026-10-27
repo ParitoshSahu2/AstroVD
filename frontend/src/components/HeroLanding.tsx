@@ -22,21 +22,20 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ openConsultModal, open
   const { t } = useLanguage();
   return (
     <section className="relative w-full min-h-[105vh] lg:min-h-[112vh] flex items-center overflow-hidden m-0 p-0">
-      {/* Background Image: homepage_orig.png expanded to generously cover bottom and sides */}
+      {/* Background Image: homepage_orig.png shifted to the right so text and buttons sit cleanly on the lighter parchment section */}
       <div
-        className="absolute inset-0 w-full h-full bg-cover bg-no-repeat bg-[72%_bottom] sm:bg-[68%_bottom] lg:bg-[right_bottom] z-0 scale-105 origin-bottom"
+        className="absolute inset-0 w-full h-full bg-cover bg-no-repeat hero-bg-position z-0"
         style={{
           backgroundImage: "url('/homepage_orig.png')",
           backgroundSize: 'cover',
-          backgroundPosition: 'right bottom',
           backgroundRepeat: 'no-repeat',
           transform: 'translateZ(0)',
           backfaceVisibility: 'hidden',
         }}
       />
 
-      {/* Soft Left Side Gradient Overlay for text readability without washing out Guruji's photo */}
-      <div className="absolute inset-y-0 left-0 w-full lg:w-3/5 bg-gradient-to-r from-[#FAF7F2]/95 via-[#FAF7F2]/65 to-transparent lg:from-[#FAF7F2]/45 lg:via-transparent pointer-events-none z-0"></div>
+      {/* Soft Left Side Gradient Overlay for text readability without washing out the sacred mandala */}
+      <div className="absolute inset-y-0 left-0 w-full lg:w-3/5 bg-gradient-to-r from-[#FAF7F2]/90 via-[#FAF7F2]/50 to-transparent lg:from-[#FAF7F2]/25 lg:via-transparent pointer-events-none z-0"></div>
 
       {/* Hero Content Container */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-28 sm:pt-36 pb-20">

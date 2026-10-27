@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   Upload,
@@ -134,6 +134,39 @@ export default function BlogManageModal({
     setFormError(null);
     setUploadError(null);
   }, [postToEdit, isOpen]);
+
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const handleFormWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
+    if (
+      formRef.current &&
+      e.target !== formRef.current &&
+      !formRef.current.contains(e.target as Node)
+    ) {
+      formRef.current.scrollTop += e.deltaY;
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+      if (typeof window !== 'undefined' && (window as any).__lenis) {
+        (window as any).__lenis.stop();
+      }
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+      if (typeof window !== 'undefined' && (window as any).__lenis) {
+        (window as any).__lenis.start();
+      }
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -283,10 +316,19 @@ export default function BlogManageModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-md overflow-y-auto">
-      <div className="relative w-full max-w-3xl my-8 rounded-3xl bg-white border border-stone-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div
+      data-lenis-prevent="true"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-md animate-fadeIn"
+      onClick={onClose}
+    >
+      <div
+        data-lenis-prevent="true"
+        onWheel={handleFormWheel}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-3xl my-8 rounded-3xl bg-white border border-stone-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+      >
         {/* Header */}
-        <div className="px-6 py-5 bg-gradient-to-r from-[#2A0E13] via-[#3B1218] to-[#2A0E13] text-white flex items-center justify-between border-b border-amber-500/30">
+        <div className="shrink-0 px-6 py-5 bg-gradient-to-r from-[#2A0E13] via-[#3B1218] to-[#2A0E13] text-white flex items-center justify-between border-b border-amber-500/30">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center">
               <FileText className="w-5 h-5" />
@@ -309,7 +351,13 @@ export default function BlogManageModal({
         </div>
 
         {/* Scrollable Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-6 flex-1">
+        <form
+          ref={formRef}
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          onSubmit={handleSubmit}
+          className="p-6 overflow-y-auto overscroll-contain modal-scrollbar space-y-6 flex-1 pr-4 sm:pr-6"
+        >
           {formError && (
             <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />

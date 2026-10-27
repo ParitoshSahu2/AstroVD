@@ -26,6 +26,7 @@ interface CartContextType {
   updateQuantity: (productId: string, quantity: number) => void;
   removeItem: (productId: string) => void;
   clearCart: () => void;
+  isInitialized: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -241,6 +242,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         updateQuantity,
         removeItem,
         clearCart,
+        isInitialized,
       }}
     >
       {children}

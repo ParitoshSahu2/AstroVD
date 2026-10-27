@@ -438,7 +438,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                   setModalQty(1);
                   setSelectedProduct(item);
                 }}
-                className="group relative rounded-3xl overflow-hidden bg-white border-2 border-amber-300 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col"
+                className="group relative rounded-3xl overflow-hidden bg-white border-2 border-amber-300 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col h-full"
               >
                 {/* 1. Base Product Image Area */}
                 <div className="relative w-full aspect-[4/3] overflow-hidden bg-stone-100">
@@ -805,17 +805,6 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                       <span>{t('Go to Cart', 'कार्ट देखें')}</span>
                       <ArrowRight className="w-3.5 h-3.5 text-amber-300" />
                     </Link>
-                  </div>
-
-                  {/* Secondary WhatsApp option */}
-                  <div className="text-center pt-1">
-                    <button
-                      type="button"
-                      onClick={() => openWhatsAppInquiry(selectedProduct)}
-                      className="text-[11px] text-stone-500 hover:text-emerald-700 underline font-medium cursor-pointer inline-flex items-center gap-1"
-                    >
-                      <span>{t('Prefer WhatsApp? Order via WhatsApp inquiry', 'WhatsApp पसंद है? WhatsApp पर ऑर्डर करें')}</span>
-                    </button>
                   </div>
                 </div>
               </div>

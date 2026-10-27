@@ -31,6 +31,17 @@ import {
   ArrowRight,
   UserCheck,
   ExternalLink,
+  Video,
+  Phone,
+  Star,
+  Download,
+  FileText,
+  Check,
+  Award,
+  X,
+  BookOpen,
+  Quote,
+  Loader2,
 } from 'lucide-react';
 import { SERVICES_CATALOGUE } from '../../data/servicesData';
 
@@ -63,8 +74,30 @@ interface Transaction {
   createdAt: string;
 }
 
+function formatGoogleMeetLink(bookingId: string): string {
+  if (bookingId && bookingId.startsWith('https://meet.google.com/')) {
+    return bookingId;
+  }
+  const sanitized = (bookingId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const numToLetter: Record<string, string> = {
+    '0': 'a', '1': 'b', '2': 'c', '3': 'd', '4': 'e',
+    '5': 'f', '6': 'g', '7': 'h', '8': 'i', '9': 'j',
+  };
+  let letters = sanitized
+    .split('')
+    .map((ch) => numToLetter[ch] || ch)
+    .join('');
+  while (letters.length < 10) {
+    letters += 'avd';
+  }
+  const p1 = letters.slice(0, 3);
+  const p2 = letters.slice(3, 7);
+  const p3 = letters.slice(7, 10);
+  return `https://meet.google.com/${p1}-${p2}-${p3}`;
+}
+
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'profile' | 'wallet' | 'consultations' | 'orders'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'consultations' | 'orders'>('profile');
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -80,6 +113,10 @@ export default function DashboardPage() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+
+  // Consultations View State
+  const [consultationFilter, setConsultationFilter] = useState<'all' | 'upcoming' | 'completed' | 'pending'>('all');
+  const [selectedRemedyBooking, setSelectedRemedyBooking] = useState<any | null>(null);
 
   // Edit Profile Form State
   const [editName, setEditName] = useState('');
@@ -325,7 +362,6 @@ export default function DashboardPage() {
       const tabParam = params.get('tab');
       if (
         tabParam === 'consultations' ||
-        tabParam === 'wallet' ||
         tabParam === 'orders' ||
         tabParam === 'profile'
       ) {
@@ -351,7 +387,20 @@ export default function DashboardPage() {
       }
     };
 
+    const handleTabChange = (e?: any) => {
+      const tab = e?.detail || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null);
+      if (
+        tab === 'consultations' ||
+        tab === 'orders' ||
+        tab === 'profile'
+      ) {
+        setActiveTab(tab as any);
+      }
+    };
+
     window.addEventListener('astro-auth-change', handleAuthChange);
+    window.addEventListener('astro-tab-change', handleTabChange);
+    window.addEventListener('popstate', handleTabChange);
     window.addEventListener('storage', handleAuthChange);
     window.addEventListener('pageshow', handlePageShow);
 
@@ -360,6 +409,8 @@ export default function DashboardPage() {
         abortControllerRef.current.abort();
       }
       window.removeEventListener('astro-auth-change', handleAuthChange);
+      window.removeEventListener('astro-tab-change', handleTabChange);
+      window.removeEventListener('popstate', handleTabChange);
       window.removeEventListener('storage', handleAuthChange);
       window.removeEventListener('pageshow', handlePageShow);
     };
@@ -584,31 +635,8 @@ export default function DashboardPage() {
               </div>
 
               {/* Quick Metrics Bar */}
-              <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 items-stretch">
-                {/* 1. Astro Wallet Card */}
-                <div
-                  onClick={() => setActiveTab('wallet')}
-                  className={`p-3 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-50 to-orange-50/50 border border-amber-300/70 shadow-xs hover:shadow-sm hover:border-amber-400 transition-all flex flex-col justify-between cursor-pointer group ${
-                    activeTab === 'wallet' ? 'ring-2 ring-amber-500/30 border-amber-400' : ''
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-[10px] font-bold text-amber-900 tracking-wide uppercase truncate">
-                      Astro Wallet
-                    </span>
-                    <div className="w-6 h-6 rounded-lg bg-amber-100/80 border border-amber-300/70 text-amber-800 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-                      <Wallet className="w-3 h-3" />
-                    </div>
-                  </div>
-                  <div className="text-lg sm:text-xl font-serif font-black text-[#5B0D15] tracking-tight truncate">
-                    ₹{wallet?.walletBalance ?? profile.walletBalance}
-                  </div>
-                  <div className="text-[9.5px] text-stone-500 font-medium truncate mt-0.5">
-                    Active spiritual credits
-                  </div>
-                </div>
-
-                {/* 2. Zodiac Sign Card */}
+              <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 items-stretch">
+                {/* 1. Zodiac Sign Card */}
                 <div className="p-3 rounded-2xl bg-white/95 border border-stone-200/80 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
                   <div className="flex items-center justify-between gap-1 mb-1">
                     <span className="text-[10px] font-bold text-stone-600 tracking-wide uppercase truncate">
@@ -686,19 +714,6 @@ export default function DashboardPage() {
               >
                 Birth Details &amp; Profile
                 {activeTab === 'profile' && (
-                  <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#5B0D15] rounded-full" />
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab('wallet')}
-                className={`pb-3 px-2 text-xs sm:text-sm font-semibold transition-all relative whitespace-nowrap cursor-pointer ${
-                  activeTab === 'wallet'
-                    ? 'text-[#5B0D15]'
-                    : 'text-stone-500 hover:text-stone-800'
-                }`}
-              >
-                Spiritual Wallet &amp; Ledger ({txTotal})
-                {activeTab === 'wallet' && (
                   <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#5B0D15] rounded-full" />
                 )}
               </button>
@@ -990,252 +1005,523 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* TAB CONTENT 2: WALLET & TRANSACTIONS */}
-            {activeTab === 'wallet' && (
-              <div className="space-y-6">
-                {/* Spiritual Wallet Highlight Box */}
-                <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#5B0D15] via-[#6F101A] to-[#3B1E22] text-white shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="space-y-2 relative z-10">
-                    <div className="flex items-center gap-2 text-amber-300 text-xs uppercase font-bold tracking-widest">
-                      <Wallet className="w-4 h-4" />
-                      <span>Sacred Celestial Wallet</span>
+            {/* TAB CONTENT: CONSULTATIONS & APPOINTMENTS (COMPLETELY REDESIGNED) */}
+            {activeTab === 'consultations' && (
+              <div className="space-y-6 animate-fadeIn">
+                {/* 1. Sacred Consultations Header Card */}
+                <div
+                  className="rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-[#4A0A12] via-[#5B0D15] to-[#2B050B] text-white relative overflow-hidden shadow-xl border border-amber-500/30"
+                  style={{
+                    boxShadow: '0 20px 45px -10px rgba(91, 13, 21, 0.35)',
+                  }}
+                >
+                  <div className="absolute top-0 right-0 w-80 h-80 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
+                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="space-y-2 max-w-xl">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[10px] font-bold uppercase tracking-widest">
+                          ✨ 1-on-1 Vedic Consultations
+                        </span>
+                        <span className="text-[11px] text-amber-200/80">Kashi Jyotish Parampara</span>
+                      </div>
+                      <h3 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-amber-100">
+                        My Sacred Consultations &amp; Guidance
+                      </h3>
+                      <p className="text-xs sm:text-sm text-stone-200/90 leading-relaxed">
+                        Manage your live video sessions with Dr. Pandit Vishal Dubey and Varanasi certified scholars. Access meeting rooms, review horoscopic recordings, and follow personalized Vedic prescriptions.
+                      </p>
                     </div>
-                    <div className="text-3xl sm:text-5xl font-black text-amber-200 tracking-tight">
-                      ₹{wallet?.walletBalance ?? profile.walletBalance}.00
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                      <button
+                        onClick={loadData}
+                        className="px-4 py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-amber-200 hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                        title="Refresh consultation status"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Refresh</span>
+                      </button>
+
+                      <Link
+                        href="/appointment"
+                        className="px-6 py-2.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#4A0A12] font-black text-xs sm:text-sm shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+                      >
+                        <span>+ Book New Consultation</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
                     </div>
-                    <p className="text-xs text-stone-300 max-w-md leading-relaxed">
-                      Use spiritual wallet credits toward Janam Kundli charts, matchmaking, tarot analysis, and consecrated temple poojas.
-                    </p>
+                  </div>
+                </div>
+
+                {/* 2. Key Metrics Summary Strip */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  <div className="p-4 rounded-2xl bg-white/95 border border-stone-200/80 shadow-xs flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-800 border border-amber-200/60 flex items-center justify-center shrink-0">
+                      <Compass className="w-5 h-5 text-[#5B0D15]" />
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Total Bookings</div>
+                      <div className="text-xl font-serif font-black text-[#3B1E22]">{bookings.length}</div>
+                    </div>
                   </div>
 
-                  <div className="relative z-10 flex flex-col sm:flex-row gap-3">
+                  <div className="p-4 rounded-2xl bg-white/95 border border-stone-200/80 shadow-xs flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200/60 flex items-center justify-center shrink-0">
+                      <Video className="w-5 h-5 text-emerald-700" />
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Upcoming / Confirmed</div>
+                      <div className="text-xl font-serif font-black text-emerald-700">
+                        {bookings.filter((b) => b.status === 'CONFIRMED').length}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-white/95 border border-stone-200/80 shadow-xs flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-800 border border-blue-200/60 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="w-5 h-5 text-blue-700" />
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Completed Sessions</div>
+                      <div className="text-xl font-serif font-black text-blue-700">
+                        {bookings.filter((b) => b.status === 'COMPLETED').length}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-white/95 border border-stone-200/80 shadow-xs flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-800 border border-rose-200/60 flex items-center justify-center shrink-0">
+                      <Wallet className="w-5 h-5 text-[#5B0D15]" />
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Astro Credits</div>
+                      <div className="text-xl font-serif font-black text-[#5B0D15]">
+                        ₹{profile?.walletBalance ?? 150}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Filter Navigation Tabs */}
+                <div className="flex items-center justify-between border-b border-stone-200/80 pb-3 flex-wrap gap-3">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
                     <button
-                      onClick={loadData}
-                      className="px-5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                      onClick={() => setConsultationFilter('all')}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                        consultationFilter === 'all'
+                          ? 'bg-[#5B0D15] text-white shadow-xs'
+                          : 'bg-stone-100 hover:bg-stone-200/70 text-stone-600'
+                      }`}
                     >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      <span>Refresh Balance</span>
+                      All ({bookings.length})
+                    </button>
+                    <button
+                      onClick={() => setConsultationFilter('upcoming')}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                        consultationFilter === 'upcoming'
+                          ? 'bg-emerald-700 text-white shadow-xs'
+                          : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800'
+                      }`}
+                    >
+                      Upcoming ({bookings.filter((b) => b.status === 'CONFIRMED').length})
+                    </button>
+                    <button
+                      onClick={() => setConsultationFilter('completed')}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                        consultationFilter === 'completed'
+                          ? 'bg-blue-700 text-white shadow-xs'
+                          : 'bg-blue-50 hover:bg-blue-100 text-blue-800'
+                      }`}
+                    >
+                      Completed ({bookings.filter((b) => b.status === 'COMPLETED').length})
+                    </button>
+                    <button
+                      onClick={() => setConsultationFilter('pending')}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                        consultationFilter === 'pending'
+                          ? 'bg-amber-600 text-white shadow-xs'
+                          : 'bg-amber-50 hover:bg-amber-100 text-amber-800'
+                      }`}
+                    >
+                      Reviewing ({bookings.filter((b) => b.status === 'PENDING').length})
                     </button>
                   </div>
+
+                  <span className="text-[11px] font-medium text-stone-500">
+                    Live video meeting links activate 15 minutes before scheduled slot.
+                  </span>
                 </div>
 
-                {/* Ledger Table */}
-                <div className="rounded-3xl bg-white/90 backdrop-blur-xl border border-stone-200/80 shadow-sm overflow-hidden">
-                  <div className="p-6 border-b border-stone-100 flex items-center justify-between">
-                    <div>
-                      <h3 className="font-serif text-lg font-bold text-[#3B1E22]">
-                        Spiritual Credit Ledger &amp; Audit Trail
-                      </h3>
-                      <p className="text-xs text-stone-500">
-                        Transparent transaction records including credit recharges, booking payments, and refunds.
-                      </p>
-                    </div>
-                    <div className="text-xs font-semibold text-stone-500">
-                      Total: {txTotal} entries
-                    </div>
-                  </div>
-
-                  {txLoading ? (
-                    <div className="p-12 text-center text-stone-500 text-xs animate-pulse">
-                      Loading ledger records...
-                    </div>
-                  ) : transactions.length === 0 ? (
-                    <div className="p-12 text-center text-stone-500 text-xs">
-                      No ledger transactions found for this spiritual account.
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse text-xs">
-                        <thead>
-                          <tr className="bg-stone-50/80 border-b border-stone-200 text-stone-600 font-bold uppercase tracking-wider text-[10px]">
-                            <th className="py-3 px-6">Date &amp; Time</th>
-                            <th className="py-3 px-6">Type</th>
-                            <th className="py-3 px-6">Description</th>
-                            <th className="py-3 px-6 text-right">Amount</th>
-                            <th className="py-3 px-6 text-right">Balance After</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-stone-100">
-                          {transactions.map((tx) => (
-                            <tr key={tx.id} className="hover:bg-amber-50/30 transition-colors">
-                              <td className="py-3.5 px-6 font-medium text-stone-600">
-                                {new Date(tx.createdAt).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })}
-                              </td>
-                              <td className="py-3.5 px-6">
-                                <span
-                                  className={`px-2 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider ${
-                                    tx.type === 'CREDIT'
-                                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                      : 'bg-rose-100 text-rose-800 border border-rose-300'
-                                  }`}
-                                >
-                                  {tx.type}
-                                </span>
-                              </td>
-                              <td className="py-3.5 px-6 font-medium text-[#3B1E22]">{tx.description}</td>
-                              <td
-                                className={`py-3.5 px-6 font-bold text-right ${
-                                  tx.type === 'CREDIT' ? 'text-emerald-700' : 'text-rose-700'
-                                }`}
-                              >
-                                {tx.type === 'CREDIT' ? '+' : '-'}₹{tx.amount}
-                              </td>
-                              <td className="py-3.5 px-6 font-semibold text-right text-stone-700">
-                                ₹{tx.balanceAfter}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-
-                  {/* Pagination */}
-                  {txTotalPages > 1 && (
-                    <div className="p-4 border-t border-stone-100 flex items-center justify-between">
-                      <button
-                        disabled={txPage <= 1}
-                        onClick={() => fetchTransactions(txPage - 1)}
-                        className="px-3 py-1.5 rounded-lg border border-stone-200 text-xs font-semibold text-stone-600 disabled:opacity-40 hover:bg-stone-50 cursor-pointer"
-                      >
-                        <ChevronLeft className="w-4 h-4 inline" /> Previous
-                      </button>
-                      <span className="text-xs text-stone-500 font-medium">
-                        Page {txPage} of {txTotalPages}
-                      </span>
-                      <button
-                        disabled={txPage >= txTotalPages}
-                        onClick={() => fetchTransactions(txPage + 1)}
-                        className="px-3 py-1.5 rounded-lg border border-stone-200 text-xs font-semibold text-stone-600 disabled:opacity-40 hover:bg-stone-50 cursor-pointer"
-                      >
-                        Next <ChevronRight className="w-4 h-4 inline" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* TAB CONTENT 3: CONSULTATIONS & APPOINTMENTS */}
-            {activeTab === 'consultations' && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3B1E22]">
-                      Sacred Vedic Consultations &amp; Video Sessions
-                    </h3>
-                    <p className="text-xs text-stone-500">
-                      Manage your upcoming 1-on-1 consultations with verified Kashi astrologers, join video meetings, and review past sessions.
-                    </p>
-                  </div>
-                  <Link
-                    href="/appointment"
-                    className="px-5 py-2.5 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white font-semibold text-xs shadow-md transition-all flex items-center gap-1.5"
-                  >
-                    <span>Book New Session</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-
+                {/* 4. Bookings List / Filtered Grid */}
                 {bookingsLoading ? (
-                  <div className="p-12 text-center text-stone-500 text-xs animate-pulse">
-                    Loading booked consultations...
+                  <div className="p-16 text-center rounded-3xl bg-white/80 border border-stone-200/80 shadow-xs space-y-3">
+                    <Loader2 className="w-8 h-8 text-amber-700 animate-spin mx-auto" />
+                    <p className="text-xs text-stone-600 font-medium">Loading your sacred consultations...</p>
                   </div>
                 ) : bookings.length === 0 ? (
-                  <div className="p-12 text-center rounded-3xl bg-white/80 border border-amber-200/80 shadow-sm space-y-4">
-                    <Compass className="w-12 h-12 text-amber-700/60 mx-auto" />
-                    <div className="space-y-1">
-                      <h4 className="font-serif text-base font-bold text-[#3B1E22]">
-                        No Scheduled Consultations Found
+                  /* 5. Inspiring Empty State */
+                  <div className="p-8 sm:p-12 text-center rounded-3xl bg-white/95 border-2 border-amber-200/80 shadow-md space-y-6 max-w-3xl mx-auto">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-rose-100 border-2 border-amber-300 text-[#5B0D15] flex items-center justify-center mx-auto shadow-inner">
+                      <Compass className="w-8 h-8 text-[#5B0D15]" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="font-serif text-xl sm:text-2xl font-bold text-[#3B1E22]">
+                        No Vedic Consultations Scheduled Yet
                       </h4>
-                      <p className="text-xs text-stone-500 max-w-sm mx-auto">
-                        You have not scheduled any Vedic consultations yet. Connect with our expert pandits for Kundli analysis, career, and marriage guidance.
+                      <p className="text-xs sm:text-sm text-stone-600 max-w-xl mx-auto leading-relaxed">
+                        Connect 1-on-1 with Dr. Pandit Vishal Dubey (Jyotishacharya, Varanasi) to unlock profound insights regarding your career trajectory, marital harmony, Shani Sade Sati, and planetary remedies.
                       </p>
                     </div>
-                    <Link
-                      href="/appointment"
-                      className="inline-block px-6 py-2.5 rounded-full bg-[#5B0D15] text-white font-semibold text-xs shadow-sm hover:bg-[#480a11] transition-all"
-                    >
-                      Browse Astrologers &amp; Book
-                    </Link>
+
+                    {/* 3 Core Benefits Showcase */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
+                      <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80">
+                        <div className="w-7 h-7 rounded-lg bg-amber-200/60 text-amber-900 flex items-center justify-center mb-2 font-bold text-xs">
+                          1
+                        </div>
+                        <h5 className="font-serif font-bold text-xs text-[#3B1E22]">100% Confidential</h5>
+                        <p className="text-[11px] text-stone-600 mt-1 leading-snug">
+                          Private, encrypted video session with dedicated birth chart audit.
+                        </p>
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80">
+                        <div className="w-7 h-7 rounded-lg bg-amber-200/60 text-amber-900 flex items-center justify-center mb-2 font-bold text-xs">
+                          2
+                        </div>
+                        <h5 className="font-serif font-bold text-xs text-[#3B1E22]">Tailored Remedies</h5>
+                        <p className="text-[11px] text-stone-600 mt-1 leading-snug">
+                          Specific Beej Mantras, fasting dates, and energized gemstone guidance.
+                        </p>
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80">
+                        <div className="w-7 h-7 rounded-lg bg-amber-200/60 text-amber-900 flex items-center justify-center mb-2 font-bold text-xs">
+                          3
+                        </div>
+                        <h5 className="font-serif font-bold text-xs text-[#3B1E22]">Lifetime PDF &amp; Video</h5>
+                        <p className="text-[11px] text-stone-600 mt-1 leading-snug">
+                          Receive recorded session download and certified remedial prescription.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="pt-2">
+                      <Link
+                        href="/appointment"
+                        className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white font-bold text-sm shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <Sparkles className="w-4 h-4 text-amber-300" />
+                        <span>Book Your First Consultation (₹500 Welcome Bonus)</span>
+                        <ArrowRight className="w-4 h-4 ml-1" />
+                      </Link>
+                    </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                    {bookings.map((booking) => (
-                      <div
-                        key={booking.id}
-                        className="p-5 sm:p-6 rounded-3xl bg-white/90 backdrop-blur-xl border border-stone-200/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"
-                      >
-                        <div className="space-y-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
-                                {booking.category || 'Vedic Astrology'}
-                              </span>
-                              <h4 className="font-serif text-base font-bold text-[#3B1E22] mt-1.5">
-                                {booking.serviceTitle}
+                  /* 6. Active Bookings Grid */
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
+                    {bookings
+                      .filter((b) => {
+                        if (consultationFilter === 'upcoming') return b.status === 'CONFIRMED';
+                        if (consultationFilter === 'completed') return b.status === 'COMPLETED';
+                        if (consultationFilter === 'pending') return b.status === 'PENDING';
+                        return true;
+                      })
+                      .map((booking) => {
+                        const isConfirmed = booking.status === 'CONFIRMED';
+                        const isCompleted = booking.status === 'COMPLETED';
+                        const isPending = booking.status === 'PENDING';
+
+                        return (
+                          <div
+                            key={booking.id}
+                            className="p-6 rounded-3xl bg-white/95 backdrop-blur-xl border-2 border-amber-200/80 shadow-md hover:shadow-xl hover:border-amber-400 transition-all duration-300 flex flex-col justify-between space-y-5"
+                          >
+                            {/* Card Top: Category, Status & ID */}
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <div className="flex items-center gap-2">
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100/80 text-amber-900 border border-amber-300/70">
+                                    ✨ {booking.category || 'Vedic Astrology'}
+                                  </span>
+                                  <span className="text-[11px] font-mono font-bold text-stone-400">
+                                    #{booking.id}
+                                  </span>
+                                </div>
+
+                                {/* Status Badge with pulse dot */}
+                                <div className="flex items-center">
+                                  {isConfirmed && (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
+                                      <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                                      Confirmed &amp; Scheduled
+                                    </span>
+                                  )}
+                                  {isCompleted && (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-blue-100 text-blue-800 border border-blue-300 shadow-2xs">
+                                      <Check className="w-3.5 h-3.5 text-blue-700" />
+                                      Completed &amp; Prescribed
+                                    </span>
+                                  )}
+                                  {isPending && (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
+                                      <Clock className="w-3.5 h-3.5 text-amber-700" />
+                                      Reviewing Janam Kundli
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Service Title */}
+                              <h4 className="font-serif text-lg sm:text-xl font-bold text-[#3B1E22] leading-snug">
+                                {booking.serviceTitle || 'Comprehensive Horoscope Consultation'}
                               </h4>
+
+                              {/* Astrologer Profile Strip */}
+                              <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-amber-50/60 border border-amber-200/60">
+                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#5B0D15] to-[#3B1E22] text-amber-200 font-bold flex items-center justify-center text-xs shrink-0 ring-2 ring-amber-300/50">
+                                  VD
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-xs font-bold text-[#3B1E22] truncate">
+                                    {booking.astrologerName || 'Dr. Pandit Vishal Dubey (Jyotishacharya)'}
+                                  </div>
+                                  <div className="text-[10px] text-stone-500 truncate">
+                                    Banaras Hindu University • 25+ Years Experience
+                                  </div>
+                                </div>
+                                <span className="px-2 py-0.5 rounded-md bg-white border border-amber-200 text-[10px] font-bold text-[#5B0D15] shrink-0">
+                                  Verified
+                                </span>
+                              </div>
+
+                              {/* Timing & Schedule Box */}
+                              <div className="grid grid-cols-2 gap-2 text-xs bg-stone-50/90 p-3 rounded-2xl border border-stone-200/80">
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="w-4 h-4 text-amber-700 shrink-0" />
+                                  <div>
+                                    <div className="text-[9px] uppercase font-bold text-stone-400">Date</div>
+                                    <div className="font-semibold text-stone-800">
+                                      {new Date(booking.scheduledDate).toLocaleDateString('en-US', {
+                                        weekday: 'short',
+                                        month: 'short',
+                                        day: 'numeric',
+                                        year: 'numeric',
+                                      })}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <Clock className="w-4 h-4 text-amber-700 shrink-0" />
+                                  <div>
+                                    <div className="text-[9px] uppercase font-bold text-stone-400">Time &amp; Zone</div>
+                                    <div className="font-semibold text-stone-800">
+                                      {booking.scheduledTime} IST (30 Mins)
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Seeker's Questions / Notes Box */}
+                              {booking.notes && (
+                                <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-50/70 via-rose-50/40 to-amber-50/60 border border-amber-200/70 space-y-1">
+                                  <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-900">
+                                    <Quote className="w-3 h-3 text-amber-700" />
+                                    <span>Seeker's Consultation Topic:</span>
+                                  </div>
+                                  <p className="text-xs text-stone-700 italic leading-relaxed pl-4">
+                                    &ldquo;{booking.notes}&rdquo;
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* If completed: Prescribed Remedies Preview Box */}
+                              {isCompleted && booking.remedyNotes && (
+                                <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-900">
+                                      <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
+                                      <span>Vedic Remedies Prescribed:</span>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full">
+                                      Active Protocol
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-stone-700 line-clamp-2 leading-relaxed">
+                                    {booking.remedyNotes}
+                                  </p>
+                                </div>
+                              )}
                             </div>
-                            <span
-                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 ${
-                                booking.status === 'CONFIRMED'
-                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                  : booking.status === 'PENDING'
-                                  ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                                  : 'bg-stone-100 text-stone-700 border border-stone-300'
-                              }`}
-                            >
-                              {booking.status}
+
+                            {/* Card Footer: Fee & Interactive CTAs */}
+                            <div className="pt-4 border-t border-stone-200/80 flex items-center justify-between gap-3 flex-wrap">
+                              <div>
+                                <span className="text-[10px] uppercase font-bold text-stone-400 block">Consultation Fee</span>
+                                <span className="text-sm font-black text-[#5B0D15]">
+                                  ₹{booking.fee || 2100}{' '}
+                                  <span className="text-[10px] font-normal text-stone-500">Paid in full</span>
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                {isConfirmed && (
+                                  <>
+                                    <a
+                                      href={booking.meetLink && booking.meetLink.includes('meet.google.com') ? booking.meetLink : formatGoogleMeetLink(booking.id)}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-900/20 hover:shadow-lg transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
+                                    >
+                                      <Video className="w-4 h-4" />
+                                      <span>Join Google Meet</span>
+                                    </a>
+
+                                    <a
+                                      href={`https://wa.me/919826012345?text=${encodeURIComponent(
+                                        `Hello AstroVD, regarding my consultation #${booking.id} on ${booking.scheduledDate} with ${booking.astrologerName || 'Panditji'}.`
+                                      )}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="p-2.5 rounded-full bg-stone-100 hover:bg-emerald-50 text-stone-600 hover:text-emerald-700 border border-stone-200 transition-colors"
+                                      title="WhatsApp AstroVD Support"
+                                    >
+                                      <MessageCircle className="w-4 h-4" />
+                                    </a>
+                                  </>
+                                )}
+
+                                {isCompleted && (
+                                  <>
+                                    <button
+                                      onClick={() => setSelectedRemedyBooking(booking)}
+                                      className="px-4 py-2 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white font-bold text-xs shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                                    >
+                                      <FileText className="w-3.5 h-3.5 text-amber-300" />
+                                      <span>View Prescription</span>
+                                    </button>
+
+                                    <Link
+                                      href="/appointment"
+                                      className="px-3.5 py-2 rounded-full border border-stone-300 hover:border-amber-400 bg-white hover:bg-amber-50 text-xs font-semibold text-stone-700 hover:text-[#5B0D15] transition-colors"
+                                    >
+                                      Follow-up →
+                                    </Link>
+                                  </>
+                                )}
+
+                                {isPending && (
+                                  <button
+                                    onClick={() => setEditModalOpen(true)}
+                                    className="px-4 py-2 rounded-full border border-amber-300 bg-amber-50 hover:bg-amber-100 text-xs font-semibold text-amber-900 transition-colors"
+                                  >
+                                    Verify Birth Details
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+
+                {/* 7. Vedic Remedy Prescription Modal */}
+                {selectedRemedyBooking && (
+                  <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
+                    onClick={() => setSelectedRemedyBooking(null)}
+                  >
+                    <div
+                      className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border-2 border-amber-300/80 space-y-6 max-h-[90vh] overflow-y-auto"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {/* Modal Header with Varanasi Seal */}
+                      <div className="flex items-start justify-between border-b border-amber-200/80 pb-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold uppercase tracking-wider border border-amber-300/60">
+                              🔱 Kashi Jyotish Prescription
+                            </span>
+                            <span className="text-xs font-mono text-stone-400">
+                              #{selectedRemedyBooking.id}
                             </span>
                           </div>
-
-                          <div className="grid grid-cols-2 gap-2 text-xs text-stone-600 bg-stone-50/70 p-3 rounded-2xl border border-stone-100">
-                            <div className="flex items-center gap-1.5">
-                              <Calendar className="w-3.5 h-3.5 text-amber-700" />
-                              <span>{booking.scheduledDate}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="w-3.5 h-3.5 text-amber-700" />
-                              <span>{booking.scheduledTime} IST</span>
-                            </div>
-                          </div>
-
-                          {booking.notes && (
-                            <p className="text-xs text-stone-500 italic bg-amber-50/40 p-2.5 rounded-xl border border-amber-100">
-                              &ldquo;{booking.notes}&rdquo;
-                            </p>
-                          )}
+                          <h4 className="font-serif text-xl font-bold text-[#3B1E22]">
+                            {selectedRemedyBooking.serviceTitle}
+                          </h4>
+                          <p className="text-xs text-stone-500">
+                            Prescribed by {selectedRemedyBooking.astrologerName} on{' '}
+                            {selectedRemedyBooking.scheduledDate}
+                          </p>
                         </div>
+                        <button
+                          onClick={() => setSelectedRemedyBooking(null)}
+                          className="text-stone-400 hover:text-stone-700 p-1 cursor-pointer"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
 
-                        <div className="pt-3 border-t border-stone-100 flex items-center justify-between gap-3 flex-wrap">
-                          <span className="text-xs font-bold text-[#5B0D15]">
-                            Fee: ₹{booking.fee || 1500}
-                          </span>
-
-                          {booking.meetingLink ? (
-                            <a
-                              href={booking.meetingLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-4 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-sm flex items-center gap-1.5 transition-all"
-                            >
-                              <span>Join Video Meeting</span>
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </a>
-                          ) : (
-                            <span className="text-[11px] text-stone-400 font-medium">
-                              Meeting link will appear 15m prior
-                            </span>
-                          )}
+                      {/* Seeker Info Strip */}
+                      <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/60 text-xs">
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-stone-400 block">Seeker Name</span>
+                          <span className="font-semibold text-stone-800">{selectedRemedyBooking.customerName || profile?.name}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] uppercase font-bold text-stone-400 block">Contact Phone</span>
+                          <span className="font-semibold text-stone-800">{selectedRemedyBooking.contactPhone}</span>
                         </div>
                       </div>
-                    ))}
+
+                      {/* Prescribed Remedies Content */}
+                      <div className="space-y-4">
+                        <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-2">
+                          <h5 className="font-serif font-bold text-sm text-emerald-950 flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-emerald-700" />
+                            <span>Vedic Astrological Recommendations</span>
+                          </h5>
+                          <p className="text-xs text-stone-700 whitespace-pre-line leading-relaxed">
+                            {selectedRemedyBooking.remedyNotes ||
+                              '1. Recite Om Namo Bhagavate Vasudevaya 108 times daily during sunrise.\n2. Wear 8mm Natural Yellow Sapphire (Pukhraj) on index finger or wrist for Jupiter alignment.\n3. Observe fasting on Shukla Paksha Ekadashi.'}
+                          </p>
+                        </div>
+
+                        {/* Direct Astro Store Gemstone CTA */}
+                        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-300 flex items-center justify-between gap-4">
+                          <div className="space-y-0.5">
+                            <span className="text-xs font-bold text-[#5B0D15]">Energized Gemstones Available</span>
+                            <p className="text-[11px] text-stone-600">
+                              Order 100% natural, consecrated bracelets &amp; yantras directly from our Astro Store.
+                            </p>
+                          </div>
+                          <Link
+                            href="/products"
+                            onClick={() => setSelectedRemedyBooking(null)}
+                            className="px-4 py-2 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white font-bold text-xs shrink-0 shadow-sm"
+                          >
+                            Browse Store →
+                          </Link>
+                        </div>
+                      </div>
+
+                      {/* Modal Footer */}
+                      <div className="pt-3 border-t border-stone-200 flex items-center justify-between">
+                        <span className="text-[11px] text-stone-400 italic">
+                          Blessed by Dr. Pandit Vishal Dubey, Varanasi
+                        </span>
+                        <button
+                          onClick={() => window.print()}
+                          className="px-4 py-2 rounded-full border border-stone-300 hover:bg-stone-50 text-xs font-semibold text-stone-700 flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Print Prescription</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

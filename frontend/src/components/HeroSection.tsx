@@ -11,23 +11,22 @@ export const HeroSection: React.FC = () => {
   return (
     <section className="relative w-full min-h-[105vh] lg:min-h-[112vh] flex items-center overflow-hidden m-0 p-0">
       
-      {/* Background Image: homepage_orig.png expanded to generously cover bottom and sides */}
+      {/* Background Image: homepage_orig.png shifted to the right so text and buttons sit cleanly on the lighter parchment section */}
       <div
-        className="absolute inset-0 w-full h-full bg-cover bg-no-repeat bg-[72%_bottom] sm:bg-[68%_bottom] lg:bg-[right_bottom] z-0 scale-105 origin-bottom"
+        className="absolute inset-0 w-full h-full bg-cover bg-no-repeat hero-bg-position z-0"
         style={{
           backgroundImage: "url('/homepage_orig.png')",
           backgroundSize: 'cover',
-          backgroundPosition: 'right bottom',
           backgroundRepeat: 'no-repeat',
-          filter: 'contrast(1.08) saturate(1.14) brightness(1.02)',
+          filter: 'contrast(1.06) saturate(1.12) brightness(1.02)',
           transform: 'translateZ(0)',
           willChange: 'transform',
           backfaceVisibility: 'hidden',
         }}
       />
 
-      {/* Left-side subtle parchment gradient for text contrast on mobile/small screens without washing out portrait */}
-      <div className="absolute inset-y-0 left-0 w-full lg:w-3/5 bg-gradient-to-r from-[#FAF7F2]/95 via-[#FAF7F2]/60 to-transparent lg:from-[#FAF7F2]/40 lg:via-transparent pointer-events-none z-0" />
+      {/* Left-side subtle parchment gradient for seamless text contrast while showcasing the sacred mandala */}
+      <div className="absolute inset-y-0 left-0 w-full lg:w-3/5 bg-gradient-to-r from-[#FAF7F2]/90 via-[#FAF7F2]/50 to-transparent lg:from-[#FAF7F2]/25 lg:via-transparent pointer-events-none z-0" />
 
       {/* Hero Content shifted gracefully to the left side */}
       <div className="relative z-10 w-full pl-6 sm:pl-10 md:pl-14 lg:pl-16 xl:pl-24 pr-6 pt-28 sm:pt-32 lg:pt-24 pb-16 flex items-center justify-start">

@@ -126,9 +126,9 @@ export default function UserInspectionModal({
                 </div>
 
                 <div className="flex items-center gap-1.5 font-semibold text-[#3B1E22]">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Kundli Charts:</span>
-                  <strong className="text-[#5B0D15]">{inspectUser.savedKundlis?.length || 0}</strong>
+                  <Compass className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Consultations:</span>
+                  <strong className="text-[#5B0D15]">{inspectUser.bookings?.length || 0}</strong>
                 </div>
               </div>
 
@@ -173,7 +173,7 @@ export default function UserInspectionModal({
                 }`}
               >
                 <Activity className="w-4 h-4" />
-                <span>Action Timeline &amp; Kundli</span>
+                <span>Action Timeline</span>
                 {inspectTab === 'activity' && (
                   <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#5B0D15] rounded-full" />
                 )}

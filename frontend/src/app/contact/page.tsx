@@ -30,8 +30,8 @@ export default function ContactPage() {
       <Navbar />
 
       <PageHeader
-        breadcrumb={t('Contact & Ashram', 'संपर्क एवं आश्रम')}
-        title={t('Connect with AstroVD Sanctum', 'AstroVD आश्रम एवं परामर्श केंद्र से जुड़ें')}
+        breadcrumb={t('Contact Us', 'संपर्क करें')}
+        title={t('Connect with AstroVD Sanctum', 'AstroVD मुख्य परामर्श केंद्र से जुड़ें')}
         subtitle={t(
           "Reach out to Dr. Pandit Vishal Dubey's spiritual desks in Varanasi, Indore, New Delhi, and Dubai for astrology consultations, yagyas, and appointments.",
           'काशी, इंदौर, नई दिल्ली एवं दुबई स्थित डॉ. पंडित विशाल दुबे जी के आध्यात्मिक केंद्रों से परामर्श, यज्ञ एवं अपॉइंटमेंट हेतु संपर्क करें।'
@@ -131,17 +131,17 @@ export default function ContactPage() {
               </span>
             </div>
 
-            {/* Sacred Ashrams & Centers */}
+            {/* Spiritual Centers & Vidyapiths */}
             <div className="p-6 rounded-3xl bg-white border border-amber-200/90 shadow-md space-y-2.5">
               <div className="w-10 h-10 rounded-2xl bg-amber-100 text-[#5B0D15] flex items-center justify-center">
                 <MapPin className="w-5 h-5" />
               </div>
               <h3 className="font-serif font-bold text-base text-[#2A1810]">
-                {t('Spiritual Centers & Vidyapiths', 'आश्रम एवं प्रमुख आध्यात्मिक केंद्र')}
+                {t('Spiritual Centers & Vidyapiths', 'प्रमुख आध्यात्मिक व ज्योतिष केंद्र')}
               </h3>
               <div className="space-y-2 text-xs text-stone-600 leading-relaxed">
                 <p>
-                  <strong className="text-stone-900">{t('Varanasi (Main Ashram):', 'वाराणसी (मुख्य आश्रम):')}</strong><br />
+                  <strong className="text-stone-900">{t('Varanasi (Head Center):', 'वाराणसी (मुख्य केंद्र):')}</strong><br />
                   {t(
                     'Shree Ganesh Vidyapith Astrological Center, Near Kashi Vishwanath Corridor, Dashashwamedh, Varanasi, Uttar Pradesh - 221001.',
                     'श्री गणेश विद्यापीठ ज्योतिष केंद्र, श्री काशी विश्वनाथ कॉरिडोर के समीप, दशाश्वमेध घाट, वाराणसी, उत्तर प्रदेश - 221001।'

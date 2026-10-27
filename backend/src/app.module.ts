@@ -13,6 +13,7 @@ import { OrdersModule } from './orders/orders.module.js';
 import { AdminModule } from './admin/admin.module.js';
 import { AuditModule } from './audit/audit.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { EmailModule } from './email/email.module.js';
 import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
@@ -38,6 +39,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     AdminModule,
     AuditModule,
     ContentModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

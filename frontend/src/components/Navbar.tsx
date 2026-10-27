@@ -36,12 +36,12 @@ export const Navbar: React.FC = () => {
   const { language, toggleLanguage, t } = useLanguage();
   
   // Cart state
-  let liveCartCount = 1;
+  let liveCartCount = 0;
   try {
     const cart = useCart();
-    liveCartCount = cart.totalCount > 0 ? cart.totalCount : 1;
+    liveCartCount = cart.totalCount || 0;
   } catch {
-    liveCartCount = 1;
+    liveCartCount = 0;
   }
 
   const [visible, setVisible] = useState(true);
@@ -56,6 +56,11 @@ export const Navbar: React.FC = () => {
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const aboutDropdownRef = useRef<HTMLDivElement>(null);
@@ -740,15 +745,15 @@ export const Navbar: React.FC = () => {
                 title={t('Cart', 'कार्ट')}
               >
                 <ShoppingCart className="w-5 h-5 stroke-[1.8]" />
-                {liveCartCount > 0 && (
-                  <span className="absolute -top-1 -right-1.5 w-4 h-4 rounded-full bg-[#5B0D15] text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
+                {mounted && liveCartCount > 0 && (
+                  <span className="absolute -top-1 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-[#5B0D15] text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
                     {liveCartCount}
                   </span>
                 )}
               </Link>
 
               {/* User Avatar Menu OR Dedicated "Sign Up" Pill Button */}
-              {user ? (
+              {mounted && user ? (
                 <div className="relative" ref={profileDropdownRef}>
                   <button
                     onClick={(e) => {
@@ -804,25 +809,25 @@ export const Navbar: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Astro Wallet Highlight Card */}
+                      {/* Quick Consultation Status */}
                       <div className="px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-300/60 flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-900 flex items-center justify-center">
-                            <Wallet className="w-4 h-4" />
+                            <Sparkles className="w-4 h-4" />
                           </div>
                           <div>
-                            <div className="text-[10px] uppercase font-bold text-amber-800 tracking-wider">Astro Balance</div>
-                            <div className="text-xs font-black text-[#5B0D15]">
-                              ₹{user.walletBalance ?? 150} <span className="text-[10px] font-normal text-stone-500">Credits</span>
+                            <div className="text-[10px] uppercase font-bold text-amber-800 tracking-wider">Consultations</div>
+                            <div className="text-xs font-bold text-[#5B0D15]">
+                              Active Sessions
                             </div>
                           </div>
                         </div>
                         <Link
-                          href="/appointment"
+                          href="/dashboard?tab=consultations"
                           onClick={() => setProfileDropdownOpen(false)}
                           className="text-[10px] font-bold text-[#5B0D15] hover:text-[#3B1E22] hover:underline"
                         >
-                          Book Now →
+                          View →
                         </Link>
                       </div>
 
@@ -854,16 +859,13 @@ export const Navbar: React.FC = () => {
                           </Link>
                         )}
                         <Link
-                          href="/services"
-                          onClick={() => setProfileDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-stone-100/80 transition-colors"
-                        >
-                          <Sparkles className="w-4 h-4 text-amber-600" />
-                          <span>{t('My Kundli & Vedic Reports', 'मेरी कुंडली और वैदिक रिपोर्ट')}</span>
-                        </Link>
-                        <Link
-                          href="/appointment"
-                          onClick={() => setProfileDropdownOpen(false)}
+                          href="/dashboard?tab=consultations"
+                          onClick={() => {
+                            setProfileDropdownOpen(false);
+                            if (typeof window !== 'undefined') {
+                              window.dispatchEvent(new CustomEvent('astro-tab-change', { detail: 'consultations' }));
+                            }
+                          }}
                           className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-stone-100/80 transition-colors"
                         >
                           <Compass className="w-4 h-4 text-[#5B0D15]" />
@@ -1020,7 +1022,7 @@ export const Navbar: React.FC = () => {
                 </button>
               </div>
 
-              {user ? (
+              {mounted && user ? (
                 <div className="pt-2 border-t border-stone-200 space-y-2">
                   <div className="flex items-center gap-3 p-2.5 bg-white/70 rounded-2xl border border-amber-200/60">
                     <div
@@ -1036,7 +1038,7 @@ export const Navbar: React.FC = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="text-xs font-bold text-[#3B1E22] truncate">{user.name}</div>
-                      <div className="text-[11px] text-[#5B0D15] font-semibold">🪙 ₹{user.walletBalance ?? 150} Balance</div>
+                      <div className="text-[11px] text-stone-500 font-medium truncate">{user.email || 'Verified Seeker'}</div>
                     </div>
                   </div>
                   {(user.role === 'ADMIN' || user.role === 'SUPERADMIN') && (

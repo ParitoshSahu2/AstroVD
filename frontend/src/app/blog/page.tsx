@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { PageHeader } from '../../components/PageHeader';
@@ -219,7 +219,7 @@ const allArticles: BlogPost[] = [
     dateHi: '19 सितंबर, 2026',
     readTime: '6 min read',
     readTimeHi: '6 मिनट पठन',
-    image: '/products/prod-pyrite.png',
+    image: '/services/puja.jpg',
     excerpt: 'Why the 9 interlocking triangles of the Sri Chakra generate an electromagnetic vortex of Lakshmi energy in homes, offices, and temples.',
     excerptHi: 'श्री चक्र के 9 परस्पर जुड़े त्रिकोण किस प्रकार घर और व्यापार स्थल पर महालक्ष्मी ऊर्जा का विद्युत-चुंबकीय आभामंडल निर्मित करते हैं।',
     content: [
@@ -249,10 +249,10 @@ const allArticles: BlogPost[] = [
     titleHi: 'औरा स्कैनिंग एवं चक्र संतुलन: रोग प्रकट होने से पूर्व सूक्ष्म ऊर्जा का शोधन',
     category: 'Occult & Healing',
     categoryHi: 'ऊर्जा एवं गूढ़ विद्या',
-    author: 'Dr. Pandit Vishal Dubey',
-    authorHi: 'डॉ. पंडित विशाल दुबे',
-    authorRole: 'Certified Hypnotherapist & Rog Specialist',
-    authorRoleHi: 'प्रमाणित हिप्नोथेरेपिस्ट व रोग विशेषज्ञ',
+    author: 'Biofield Research',
+    authorHi: 'बायोफील्ड शोध',
+    authorRole: 'Pranic Science',
+    authorRoleHi: 'प्राणिक विज्ञान',
     date: 'Sep 12, 2026',
     dateHi: '12 सितंबर, 2026',
     readTime: '7 min read',
@@ -281,6 +281,70 @@ const allArticles: BlogPost[] = [
       'नित्य ध्यान, सेंधा नमक स्नान एवं वैदिक मंत्र जप से औरा का सुरक्षा कवच सुदृढ़ होता है।',
     ],
   },
+  {
+    id: 'rudraksha-consecration-science',
+    title: 'The Science of Prana Pratishtha: How Natural Rudraksha Beads Are Energized in Kashi',
+    titleHi: 'प्राण-प्रतिष्ठा का शास्त्रीय विज्ञान: काशी में रुद्राक्ष एवं वैदिक रत्नों का दिव्य सिद्धिकरण',
+    category: 'Spiritual Remedies',
+    categoryHi: 'आध्यात्मिक उपाय',
+    author: 'Kashi Peeth',
+    authorHi: 'काशी पीठ',
+    authorRole: 'Karmakand Sanctum',
+    authorRoleHi: 'कर्मकांड पीठ',
+    date: 'Sep 05, 2026',
+    dateHi: '05 सितंबर, 2026',
+    readTime: '7 min read',
+    readTimeHi: '7 मिनट पठन',
+    image: '/blog/rudraksha-pratishtha.jpg',
+    excerpt: 'Step-by-step exposition of Panchamrit snan, Beej mantra nyasa, and Agni Havanam performed to align mineral electromagnetic vibrations with the seeker’s biofield.',
+    excerptHi: 'पंचामृत स्नान, न्यास, और बीज मंत्र आहुतियों द्वारा रुद्राक्ष व रत्नों की सूक्ष्म ऊर्जा को जाग्रत करने की प्रामाणिक वैदिक पद्धति।',
+    content: [
+      'A sacred bead or gemstone unaligned with personal planetary frequencies remains physically beautiful yet energetically dormant. In the sanctified ghats of Kashi, our Acharyas conduct rigorous 108-cycle Prana Pratishtha according to the Shukla Yajurveda Samhita.',
+      'The ritual commences at Brahma Muhurta with Shodashopachara pujan, followed by infusion of the specific planetary Gayatri and Beej Mantras.',
+    ],
+    contentHi: [
+      'बिना प्राण-प्रतिष्ठा के धारण किया गया रत्न अथवा रुद्राक्ष केवल एक आभूषण मात्र रहता है। काशी के पावन तट पर यजुर्वेदीय पद्धति से 108 बार वैदिक मंत्रों की आहुति देकर रत्न में प्राण-ऊर्जा संचरित की जाती है।',
+    ],
+    keyTakeaways: [
+      'Prana Pratishtha aligns the natural electromagnetic frequency of organic rudraksha with the wearer.',
+      'Consecration includes personal Sankalp reciting your Gotra and Nakshatra.',
+    ],
+    keyTakeawaysHi: [
+      'प्राण-प्रतिष्ठा रुद्राक्ष की चुंबकीय ऊर्जा को धारक के औरा से जोड़ती है।',
+    ],
+  },
+  {
+    id: 'solar-eclipse-2026-remedial-rituals',
+    title: 'Solar & Lunar Eclipse Sadhana: Sacred Mantras & Charity for Cosmic Balance',
+    titleHi: 'सूर्य एवं चंद्र ग्रहण साधना: सूतक काल में मंत्र जप, शुद्धि एवं दान का महत्व',
+    category: 'Rituals & Upay',
+    categoryHi: 'अनुष्ठान एवं उपाय',
+    author: 'Vedic Parva Peeth',
+    authorHi: 'वैदिक पर्व पीठ',
+    authorRole: 'Puranic Rites',
+    authorRoleHi: 'पौराणिक विधान',
+    date: 'Aug 28, 2026',
+    dateHi: '28 अगस्त, 2026',
+    readTime: '9 min read',
+    readTimeHi: '9 मिनट पठन',
+    image: '/blog/eclipse-sadhana.jpg',
+    excerpt: 'Comprehensive guidance on spiritual chanting, Kusha grass purification, and post-grahan snan charity during astronomical eclipses.',
+    excerptHi: 'ग्रहण काल में मंत्र सिद्धि, कुश घास द्वारा शुद्धि, एवं मोक्ष उपरांत गंगा स्नान व महादान की शास्त्रीय विधि।',
+    content: [
+      'During Grahan (solar or lunar eclipse), the Sun or Moon is subjected to Rahu and Ketu shadow intersections. In ancient scriptures, this is considered a gateway of intense cosmic energy where any mantra japa performed is multiplied thousand-fold in efficacy.',
+      'One should avoid heavy food consumption during the Sutak period, keep tulsi leaves in water storage vessels, and focus on Shiva or Gayatri Japa.',
+    ],
+    contentHi: [
+      'ग्रहण काल में राहु और केतु की छाया से सूर्य व चंद्रमा प्रभावित होते हैं। शास्त्रों के अनुसार यह काल मंत्र सिद्धि हेतु अत्यंत शक्तिशाली माना जाता है।',
+    ],
+    keyTakeaways: [
+      'Mantra japa during eclipse yields tenfold the merits of regular recitation.',
+      'Post-eclipse charity of white sesame, clothes, and grains dissolves Rahu-Ketu dosha.',
+    ],
+    keyTakeawaysHi: [
+      'ग्रहण के समय किया गया जप सामान्य दिनों की तुलना में सहस्त्र गुना फलदायी होता है।',
+    ],
+  },
 ];
 
 export default function BlogPage() {
@@ -297,6 +361,55 @@ export default function BlogPage() {
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionToast, setActionToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const blogContentRef = useRef<HTMLDivElement>(null);
+
+  const handleBlogWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
+    if (
+      blogContentRef.current &&
+      e.target !== blogContentRef.current &&
+      !blogContentRef.current.contains(e.target as Node)
+    ) {
+      blogContentRef.current.scrollTop += e.deltaY;
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setReadingArticle(null);
+    };
+    if (readingArticle) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+      if (typeof window !== 'undefined' && (window as any).__lenis) {
+        (window as any).__lenis.stop();
+      }
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+      if (typeof window !== 'undefined' && (window as any).__lenis) {
+        (window as any).__lenis.start();
+      }
+    };
+  }, [readingArticle]);
+
+  // Support direct linking via ?id=article-id or ?article=article-id
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const articleId = urlParams.get('id') || urlParams.get('article');
+      if (articleId) {
+        const found =
+          articles.find((a) => a.id === articleId) ||
+          allArticles.find((a) => a.id === articleId);
+        if (found) {
+          setReadingArticle(found);
+        }
+      }
+    }
+  }, [articles]);
 
   const backendUrl = (
     process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
@@ -725,13 +838,6 @@ export default function BlogPage() {
                   </div>
 
                   <div className="p-6 space-y-3">
-                    <div className="flex items-center gap-2 text-[11px] text-stone-500">
-                      <Calendar className="w-3.5 h-3.5 text-amber-700" />
-                      <span>{date}</span>
-                      <span>•</span>
-                      <span className="font-semibold text-stone-700">{author}</span>
-                    </div>
-
                     <h3 className="font-serif font-bold text-lg sm:text-xl text-[#2A1810] group-hover:text-[#5B0D15] transition-colors leading-snug">
                       {title}
                     </h3>
@@ -742,17 +848,18 @@ export default function BlogPage() {
                   </div>
                 </div>
 
-                <div className="px-6 pb-6 pt-3 border-t border-stone-100 flex items-center justify-between bg-stone-50/50">
-                  <span className="text-[11px] font-semibold text-amber-800">
-                    {authorRole}
+                <div className="px-6 pb-5 pt-3.5 border-t border-stone-100 flex items-center justify-between bg-stone-50/50">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-500">
+                    <Clock className="w-3.5 h-3.5 text-amber-700" />
+                    <span>{readTime}</span>
                   </span>
 
                   <button
                     onClick={() => setReadingArticle(post)}
-                    className="px-4 py-1.5 rounded-full bg-white hover:bg-[#5B0D15] text-[#5B0D15] hover:text-white border border-[#5B0D15] text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                    className="px-5 py-2 rounded-full bg-[#5B0D15] hover:bg-[#78121d] text-white text-xs font-bold transition-all shadow-xs hover:shadow-md flex items-center gap-1.5 cursor-pointer hover:gap-2 group/btn"
                   >
-                    <span>{t('Read Discourse', 'विस्तार से पढ़ें')}</span>
-                    <ArrowRight className="w-3 h-3" />
+                    <span>{t('Read Full Article', 'सम्पूर्ण लेख पढ़ें')}</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" />
                   </button>
                 </div>
               </article>
@@ -765,45 +872,59 @@ export default function BlogPage() {
       {/* Reading Modal */}
       {readingArticle && (
         <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fadeIn"
+          data-lenis-prevent="true"
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fadeIn"
           onClick={() => setReadingArticle(null)}
         >
           <div
-            className="relative max-w-3xl w-full bg-[#FAF7F2] rounded-3xl overflow-hidden border-2 border-amber-300 shadow-2xl my-8"
+            data-lenis-prevent="true"
+            onWheel={handleBlogWheel}
+            className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-3xl bg-[#FAF7F2] text-[#2A1810] border-2 border-amber-300/90 shadow-2xl transition-all duration-300 flex flex-col"
             onClick={(e) => e.stopPropagation()}
+            style={{
+              boxShadow: '0 25px 60px -15px rgba(42, 24, 16, 0.3), 0 0 35px rgba(245, 158, 11, 0.25)',
+            }}
           >
-            {/* Header Image */}
-            <div className="relative h-64 sm:h-72 w-full bg-stone-900">
-              <img
-                src={readingArticle.image}
-                alt={language === 'hi' ? readingArticle.titleHi : readingArticle.title}
-                className="w-full h-full object-cover"
-              />
-              <button
-                onClick={() => setReadingArticle(null)}
-                className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs text-white">
-                <span className="px-3 py-1 rounded-full bg-[#5B0D15] font-bold">
+            {/* Top Fixed Header with Badges and Close button */}
+            <div className="shrink-0 flex items-center justify-between px-6 py-4 bg-white/95 backdrop-blur-md border-b border-amber-200/80 z-20">
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-[#5B0D15] text-white text-xs font-bold uppercase tracking-wider shadow-xs">
                   {language === 'hi' ? readingArticle.categoryHi : readingArticle.category}
                 </span>
-                <span className="bg-black/60 px-3 py-1 rounded-full backdrop-blur-sm">
+                <span className="px-3 py-1 rounded-full bg-amber-100/90 border border-amber-300/80 text-amber-900 text-xs font-semibold">
                   {language === 'hi' ? readingArticle.readTimeHi : readingArticle.readTime}
                 </span>
               </div>
+              <button
+                onClick={() => setReadingArticle(null)}
+                className="w-9 h-9 rounded-full bg-stone-100 hover:bg-stone-200 border border-stone-200 text-stone-600 hover:text-stone-900 flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            {/* Body */}
-            <div className="p-6 sm:p-10 space-y-6 max-h-[70vh] overflow-y-auto">
+            {/* Scrollable Body - Scrollbar is fully contained inside and styled in sacred crimson maroon */}
+            <div
+              ref={blogContentRef}
+              data-lenis-prevent="true"
+              onWheel={(e) => e.stopPropagation()}
+              className="p-6 sm:p-10 space-y-6 flex-1 overflow-y-auto overscroll-contain modal-scrollbar pr-4 sm:pr-8"
+            >
+              {/* Media Banner */}
+              <div className="relative h-60 sm:h-72 w-full rounded-2xl overflow-hidden border border-amber-300/80 shadow-md bg-stone-900 shrink-0">
+                <img
+                  src={readingArticle.image}
+                  alt={language === 'hi' ? readingArticle.titleHi : readingArticle.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Title & Header */}
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-amber-800 font-semibold">
-                  <span>{language === 'hi' ? readingArticle.authorHi : readingArticle.author}</span>
-                  <span>•</span>
-                  <span>{language === 'hi' ? readingArticle.authorRoleHi : readingArticle.authorRole}</span>
-                  <span>•</span>
-                  <span>{language === 'hi' ? readingArticle.dateHi : readingArticle.date}</span>
+                <div className="inline-flex items-center gap-1.5 text-xs text-amber-800 font-semibold">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  <span>{t('Vedic Guidance & Spiritual Wisdom', 'वैदिक मार्गदर्शन एवं आध्यात्मिक ज्ञान')}</span>
                 </div>
                 <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#4A151B] leading-snug">
                   {language === 'hi' ? readingArticle.titleHi : readingArticle.title}
@@ -813,7 +934,7 @@ export default function BlogPage() {
               {/* Key Takeaways Box */}
               <div className="p-4 sm:p-5 rounded-2xl bg-amber-50 border border-amber-200/80 space-y-2">
                 <h4 className="font-serif font-bold text-xs uppercase tracking-wider text-[#800000] flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                   <span>{t('Key Astrological Takeaways', 'मुख्य ज्योतिषीय निष्कर्ष')}</span>
                 </h4>
                 <ul className="text-xs text-stone-700 space-y-1.5 list-disc pl-4 leading-relaxed">
@@ -831,7 +952,7 @@ export default function BlogPage() {
               </div>
 
               {/* Consultation CTA Banner at end of Discourse */}
-              <div className="p-5 rounded-2xl bg-gradient-to-r from-[#5B0D15] to-[#7E1420] text-white flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-[#5B0D15] to-[#7E1420] text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
                 <div className="space-y-1 text-center sm:text-left">
                   <h4 className="font-serif font-bold text-base">
                     {t('Want Personal Guidance on This Subject?', 'क्या आप इस विषय पर व्यक्तिगत मार्गदर्शन चाहते हैं?')}

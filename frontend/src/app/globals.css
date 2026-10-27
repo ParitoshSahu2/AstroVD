@@ -115,3 +115,69 @@ body::-webkit-scrollbar {
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out forwards;
 }
+
+/* Premium Vedic Modal Scrollbar */
+.modal-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #8B1D2C rgba(217, 119, 6, 0.12);
+}
+
+.modal-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-scrollbar::-webkit-scrollbar-track {
+  background: rgba(217, 119, 6, 0.08);
+  border-radius: 9999px;
+  margin: 8px 0;
+}
+
+.modal-scrollbar::-webkit-scrollbar-thumb {
+  background: #8B1D2C;
+  border-radius: 9999px;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+.modal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #5B0D15;
+  border-color: rgba(251, 191, 36, 0.8);
+}
+
+/* Responsive Hero Background Positioning:
+   Shifts homepage_orig.png horizontally so text and buttons rest cleanly on the lighter parchment section,
+   while Panditji sits majestically on the right side of the screen on desktop. */
+.hero-bg-position {
+  background-position: 68% bottom;
+}
+
+@media (min-width: 640px) {
+  .hero-bg-position {
+    background-position: 56% bottom;
+  }
+}
+
+@media (min-width: 768px) {
+  .hero-bg-position {
+    background-position: 48% bottom;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-bg-position {
+    background-position: 44% bottom;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-bg-position {
+    background-position: 42% bottom;
+  }
+}
+
+@media (min-width: 1536px) {
+  .hero-bg-position {
+    background-position: 38% bottom;
+  }
+}
+
+

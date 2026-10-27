@@ -32,25 +32,6 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
-      <head>
-        <style dangerouslySetInnerHTML={{
-          __html: `
-            /* Eliminate root browser scrollbars cleanly without layout thrashing or universal selector overhead */
-            html, body {
-              scrollbar-width: none !important;
-              -ms-overflow-style: none !important;
-            }
-            html::-webkit-scrollbar,
-            body::-webkit-scrollbar {
-              display: none !important;
-              width: 0px !important;
-              height: 0px !important;
-              opacity: 0 !important;
-              background: transparent !important;
-            }
-          `
-        }} />
-      </head>
       <body className="min-h-screen flex flex-col bg-[#FAF7F2] overflow-x-clip selection:bg-amber-400" suppressHydrationWarning>
         <SmoothScroll />
         <LanguageProvider>

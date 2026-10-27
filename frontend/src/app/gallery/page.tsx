@@ -232,7 +232,7 @@ export default function GalleryPage() {
       categoryLabelHi: 'वैदिक पूजा व महाहवन',
       image: '/gallery/WhatsApp-Image-2024-09-30-at-5.32.28-PM-1024x576.jpeg',
       location: 'Shree Ganesh Vidyapith Sanctum',
-      locationHi: 'श्री गणेश विद्यापीठ आश्रम, काशी',
+      locationHi: 'श्री गणेश विद्यापीठ, काशी',
       date: 'Daily Bramha Muhurta',
       dateHi: 'नित्य ब्रह्म मुहूर्त',
       description: 'Continuous sacred sacrificial fire purifying the atmospheric ether with sacred samidha, herbs, and cow ghee offerings.',

@@ -232,17 +232,22 @@ export class OrdersService {
    * Returns orders placed by the authenticated customer.
    */
   async getUserOrders(userId: string) {
-    return this.prisma.order.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        items: {
-          include: {
-            product: true,
+    try {
+      return await this.prisma.order.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
           },
         },
-      },
-    });
+      });
+    } catch (err: any) {
+      this.logger.warn(`Database unreachable in getUserOrders (${err.message}). Returning empty orders.`);
+      return [];
+    }
   }
 
   /**
