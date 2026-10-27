@@ -204,7 +204,6 @@ export const SpatialServiceModal: React.FC<SpatialServiceModalProps> = ({
               <ArrowRight className="w-4 h-4 text-amber-300" />
             </Link>
           </div>
-          </div>
         </div>
       </div>
     </div>

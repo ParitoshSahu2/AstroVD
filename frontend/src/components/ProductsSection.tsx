@@ -891,11 +891,6 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                       <ArrowRight className="w-3.5 h-3.5 text-amber-300" />
                     </Link>
                   </div>
-<<<<<<< HEAD
-=======
-
-
->>>>>>> backup-local-work
                 </div>
               </div>
             </div>
