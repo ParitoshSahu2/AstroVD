@@ -844,16 +844,16 @@ export const Navbar: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Quick Consultation Status */}
+                      {/* Astro Wallet Highlight Card */}
                       <div className="px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-300/60 flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-900 flex items-center justify-center">
-                            <Sparkles className="w-4 h-4" />
+                            <Wallet className="w-4 h-4" />
                           </div>
                           <div>
-                            <div className="text-[10px] uppercase font-bold text-amber-800 tracking-wider">Consultations</div>
-                            <div className="text-xs font-bold text-[#5B0D15]">
-                              Active Sessions
+                            <div className="text-[10px] uppercase font-bold text-amber-800 tracking-wider">Astro Balance</div>
+                            <div className="text-xs font-black text-[#5B0D15]">
+                              ₹{user.walletBalance ?? 150} <span className="text-[10px] font-normal text-stone-500">Credits</span>
                             </div>
                           </div>
                         </div>
@@ -862,7 +862,7 @@ export const Navbar: React.FC = () => {
                           onClick={() => setProfileDropdownOpen(false)}
                           className="text-[10px] font-bold text-[#5B0D15] hover:text-[#3B1E22] hover:underline"
                         >
-                          View →
+                          Book Now →
                         </Link>
                       </div>
 
