@@ -36,9 +36,9 @@ export default function Home() {
       {/* Divider after About Us */}
       <SectionDivider />
 
-      {/* 3. Products Section (Showing 8 cards on home page with explore more) */}
+      {/* 3. Products Section (Showing 8 cards on home page with explore more, no checkout bar) */}
       <div id="shop">
-        <ProductsSection limit={8} showExploreMore={true} />
+        <ProductsSection limit={8} showExploreMore={true} showCheckoutBar={false} />
       </div>
 
       {/* Divider after Products */}

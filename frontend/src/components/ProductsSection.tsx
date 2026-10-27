@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   Sparkles,
   ArrowRight,
@@ -37,12 +37,14 @@ interface ProductsSectionProps {
   limit?: number;
   showExploreMore?: boolean;
   showHeader?: boolean;
+  showCheckoutBar?: boolean;
 }
 
 export const ProductsSection: React.FC<ProductsSectionProps> = ({
   limit,
   showExploreMore = false,
   showHeader = limit !== undefined,
+  showCheckoutBar,
 }) => {
   const { t, language } = useLanguage();
   const { addItem, updateQuantity, removeItem, items, totalCount, subtotal } = useCart();
@@ -55,6 +57,12 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
   const [addedProductId, setAddedProductId] = useState<string | null>(null);
   const [modalQty, setModalQty] = useState<number>(1);
   const router = useRouter();
+  const pathname = usePathname();
+
+  // The checkout bar should only ever be visible on dedicated product pages, never on the homepage
+  const isProductPage = Boolean(pathname?.startsWith('/products') || pathname?.startsWith('/shop'));
+  const isHomePage = pathname === '/' || pathname === '' || limit !== undefined;
+  const allowCheckoutBar = showCheckoutBar !== undefined ? showCheckoutBar : (isProductPage && !isHomePage);
 
   const handleAddToCart = (item: ProductItem, qty: number = 1) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
@@ -898,8 +906,8 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
         </div>
       )}
 
-      {/* Floating Bottom Cart Bar for quick access */}
-      {totalCount > 0 && (
+      {/* Floating Bottom Cart Bar for quick access - only on product page, never on homepage */}
+      {allowCheckoutBar && totalCount > 0 && (
         <aside aria-label="Shopping Cart Bar" className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-lg bg-[#2A0E13]/95 backdrop-blur-md border border-amber-400/80 rounded-full px-5 py-3 shadow-2xl flex items-center justify-between text-amber-100 animate-slideUp">
           <div className="flex items-center gap-3">
             <div className="relative">

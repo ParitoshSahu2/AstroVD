@@ -43,6 +43,7 @@ export default function GalleryPage() {
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const isLoadingMoreRef = useRef(false);
 
   const initialGalleryItems: GalleryItem[] = INITIAL_GALLERY_ITEMS;
 
@@ -243,35 +244,35 @@ export default function GalleryPage() {
     setIsLoadingMore(false);
   };
 
-  // Safe batch loader: loads the next 9 items, preventing concurrent / duplicate requests
+  // Safe batch loader: loads the next 9 items smoothly without hanging the scroll
   const loadNextBatch = useCallback(() => {
-    if (isLoadingMore || !hasMore) return;
+    if (isLoadingMoreRef.current || !hasMore) return;
 
+    isLoadingMoreRef.current = true;
     setIsLoadingMore(true);
     setLoadError(null);
 
-    // Subtle 380ms delay provides smooth visual feedback and prevents UI stutter
-    const timer = setTimeout(() => {
+    // Using requestAnimationFrame smoothly batches new item rendering without hanging scroll
+    requestAnimationFrame(() => {
       try {
         setVisibleCount((prev) => Math.min(prev + BATCH_SIZE, filtered.length));
-        setIsLoadingMore(false);
       } catch (err) {
         setLoadError(
           language === 'hi'
             ? 'छायाचित्र लोड करने में समस्या आई। कृपया पुनः प्रयास करें।'
             : 'Failed to load additional moments. Please try again.'
         );
+      } finally {
+        isLoadingMoreRef.current = false;
         setIsLoadingMore(false);
       }
-    }, 120);
-
-    return () => clearTimeout(timer);
-  }, [isLoadingMore, hasMore, filtered.length, language]);
+    });
+  }, [hasMore, filtered.length, language]);
 
   // IntersectionObserver for automated infinite scroll
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel || !hasMore || isLoadingMore) return;
+    if (!sentinel || !hasMore) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -282,7 +283,7 @@ export default function GalleryPage() {
       },
       {
         root: null,
-        rootMargin: '400px',
+        rootMargin: '300px',
         threshold: 0,
       }
     );
@@ -293,7 +294,7 @@ export default function GalleryPage() {
       observer.unobserve(sentinel);
       observer.disconnect();
     };
-  }, [hasMore, isLoadingMore, loadNextBatch]);
+  }, [hasMore, loadNextBatch]);
 
   // Lightbox Modal Navigation helpers
   const currentModalIndex = selectedImage
@@ -502,7 +503,11 @@ export default function GalleryPage() {
               <article
                 key={item.id}
                 onClick={() => setSelectedImage(item)}
-                className="group relative rounded-2xl overflow-hidden bg-white border border-[#EAE0D0] shadow-xs hover:border-[#D6C4AD] hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col justify-between"
+                style={{
+                  contentVisibility: 'auto',
+                  containIntrinsicSize: '360px 420px',
+                }}
+                className="group relative rounded-2xl overflow-hidden bg-white border border-[#EAE0D0] shadow-xs hover:border-[#D6C4AD] hover:shadow-md transition-shadow duration-300 cursor-pointer flex flex-col justify-between will-change-transform"
                 tabIndex={0}
                 role="button"
                 aria-label={`View photo: ${title}`}
@@ -519,9 +524,9 @@ export default function GalleryPage() {
                     src={resolveImageUrl(item.image)}
                     alt={title}
                     fill
-                    unoptimized
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     priority={index < 3}
+                    loading={index < 6 ? 'eager' : 'lazy'}
                     className="object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
                     onError={(e: any) => {
                       if (e?.target) {
@@ -691,6 +696,7 @@ export default function GalleryPage() {
       {/* Lightbox Modal with Next/Previous Navigation */}
       {selectedImage && (
         <div
+          data-lenis-prevent
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-lg flex items-center justify-center p-3 sm:p-6 animate-fadeIn"
           onClick={() => setSelectedImage(null)}
           role="dialog"
