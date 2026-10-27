@@ -22,11 +22,6 @@ export class RegisterDto {
   @IsString()
   channel?: string;
 
-  @ApiPropertyOptional({ example: '+919876543210', description: 'Phone number' })
-  @IsString()
-  @IsOptional()
-  phone?: string;
-
   @ApiProperty({ example: 'cosmicPass123!', description: 'Password (min 6 characters)' })
   @IsString()
   @MinLength(6)

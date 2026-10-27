@@ -135,6 +135,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setItems([]);
         localStorage.removeItem('astro_cart_guest');
         localStorage.removeItem('astro_cart');
+        try {
+          window.dispatchEvent(new CustomEvent('astro-cart-change', { detail: [] }));
+        } catch {}
         return;
       }
 

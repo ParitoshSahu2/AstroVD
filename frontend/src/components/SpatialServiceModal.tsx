@@ -14,7 +14,7 @@ interface SpatialServiceModalProps {
   displayBadge?: string | null;
   isOpen: boolean;
   onClose: () => void;
-  onWhatsApp: (title: string) => void;
+  onWhatsApp?: (title: string) => void;
   t: (en: string, hi: string) => string;
   language: 'en' | 'hi';
 }
@@ -157,18 +157,10 @@ export const SpatialServiceModal: React.FC<SpatialServiceModalProps> = ({
             </div>
 
             <div className="flex items-center gap-2.5 w-full sm:w-auto">
-              <button
-                onClick={() => onWhatsApp(displayTitle)}
-                className="flex-1 sm:flex-initial px-4 py-3 rounded-full border border-emerald-400/80 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
-              >
-                <MessageCircle className="w-4 h-4 text-emerald-400" />
-                <span>WhatsApp</span>
-              </button>
-
               <Link
                 href={`/appointment?service=${service.id}`}
                 onClick={onClose}
-                className="flex-1 sm:flex-initial px-6 py-3 rounded-full bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-white text-xs font-extrabold shadow-lg shadow-rose-950/40 hover:scale-105 transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                className="w-full sm:w-auto px-7 py-3 rounded-full bg-gradient-to-r from-amber-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-white text-xs font-extrabold shadow-lg shadow-rose-950/40 hover:scale-105 transition-all flex items-center justify-center gap-1.5 active:scale-95"
               >
                 <span>{t('Book Consultation', 'परामर्श बुक करें')}</span>
                 <ArrowRight className="w-4 h-4 text-amber-200" />

@@ -1367,20 +1367,6 @@ export default function DashboardPage() {
                               Total: ₹{Number(order.totalAmount).toLocaleString('en-IN')}
                             </span>
 
-                            <button
-                              onClick={() => {
-                                const phone = '919999999999';
-                                const msg = encodeURIComponent(
-                                  `Namaste AstroVD Support, I would like to inquire about my order #${orderNum}.`
-                                );
-                                window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
-                              }}
-                              className="px-3.5 py-1.5 rounded-full border border-stone-300 hover:border-emerald-500 text-stone-700 hover:text-emerald-700 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                              title="Track on WhatsApp"
-                            >
-                              <MessageCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                              <span className="truncate">Track</span>
-                            </button>
                             <Link
                               href="/products"
                               className="flex-1 py-2 px-2.5 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs font-semibold shadow-xs transition-all flex items-center justify-center gap-1"

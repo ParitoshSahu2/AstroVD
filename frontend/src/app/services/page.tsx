@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { PageHeader } from '../../components/PageHeader';
@@ -15,6 +16,12 @@ import {
   CheckCircle2,
   Sparkles,
   X,
+  ChevronDown,
+  LayoutGrid,
+  Compass,
+  Flame,
+  Eye,
+  BookOpen,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { SERVICES_TRANSLATIONS } from '../../data/servicesTranslations';
@@ -26,18 +33,45 @@ export default function ServicesPage() {
   const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [sortBy, setSortBy] = useState<'featured' | 'price-low' | 'price-high' | 'duration'>('featured');
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
 
-  // Sync search query from URL (?search=... or ?q=...)
+  // Reset pagination on filter, search, or sort changes
+  const resetPagination = () => {
+    setVisibleCount(SERVICES_BATCH_SIZE);
+    setLoadError(null);
+    setIsLoadingMore(false);
+  };
+
+  // Sync search query from URL (?search=... or ?q=...) and listen to events
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const q = params.get('search') || params.get('q');
-    if (q) {
-      setSearchQuery(q);
-      setVisibleCount(SERVICES_BATCH_SIZE);
-    }
+    const syncFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const urlSearch = params.get('search') || params.get('q') || '';
+      if (urlSearch) {
+        setSearchQuery(urlSearch);
+        resetPagination();
+      }
+    };
+
+    syncFromUrl();
+
+    const handleSearchEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<{ query: string }>;
+      if (customEvent.detail?.query !== undefined) {
+        setSearchQuery(customEvent.detail.query);
+        resetPagination();
+      }
+    };
+
+    window.addEventListener('popstate', syncFromUrl);
+    window.addEventListener('astro-search-change', handleSearchEvent);
+
+    return () => {
+      window.removeEventListener('popstate', syncFromUrl);
+      window.removeEventListener('astro-search-change', handleSearchEvent);
+    };
   }, []);
 
   // Infinite Scrolling State (Batches of 9)
@@ -65,35 +99,40 @@ export default function ServicesPage() {
       labelEn: 'All Services',
       labelHi: 'सभी सेवाएं',
       count: services.length,
+      icon: LayoutGrid,
     },
     {
       id: 'astrology',
       labelEn: 'Vedic Astrology',
       labelHi: 'वैदिक ज्योतिष',
       count: services.filter((s) => s.categoryKey === 'astrology').length,
+      icon: Compass,
     },
     {
       id: 'pooja',
       labelEn: 'Pooja & Shanti',
       labelHi: 'पूजा व शांति',
       count: services.filter((s) => s.categoryKey === 'pooja').length,
+      icon: Flame,
     },
     {
       id: 'occult',
       labelEn: 'Occult & Energy',
       labelHi: 'ऊर्जा व गुप्त विद्याएं',
       count: services.filter((s) => s.categoryKey === 'occult').length,
+      icon: Eye,
     },
     {
       id: 'education',
       labelEn: 'Vedic Courses',
       labelHi: 'वैदिक पाठ्यक्रम',
       count: services.filter((s) => s.categoryKey === 'education').length,
+      icon: BookOpen,
     },
   ];
 
   // 1. Filter by category and search query
-  const filtered = services.filter((s) => {
+  let list = services.filter((s) => {
     const matchesCat = selectedCategory === 'all' || s.categoryKey === selectedCategory;
     const q = searchQuery.toLowerCase().trim();
     if (!q) return matchesCat;
@@ -107,16 +146,20 @@ export default function ServicesPage() {
     return matchesCat && matchesQuery;
   });
 
-  // 2. Paginated visible items (initial 9, then +9 per scroll batch)
+  // 2. Sort
+  if (sortBy === 'price-low') {
+    list = [...list].sort((a, b) => a.priceNumber - b.priceNumber);
+  } else if (sortBy === 'price-high') {
+    list = [...list].sort((a, b) => b.priceNumber - a.priceNumber);
+  } else if (sortBy === 'duration') {
+    list = [...list].sort((a, b) => a.durationMinutes - b.durationMinutes);
+  }
+
+  const filtered = list;
+
+  // 3. Paginated visible items (initial 9, then +9 per scroll batch)
   const visibleServices = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;
-
-  // Reset pagination on filter or search changes
-  const resetPagination = () => {
-    setVisibleCount(SERVICES_BATCH_SIZE);
-    setLoadError(null);
-    setIsLoadingMore(false);
-  };
 
   const handleCategoryChange = (catId: string) => {
     setSelectedCategory(catId);
@@ -125,6 +168,21 @@ export default function ServicesPage() {
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
+    resetPagination();
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (query.trim()) {
+        url.searchParams.set('search', query.trim());
+      } else {
+        url.searchParams.delete('search');
+        url.searchParams.delete('q');
+      }
+      window.history.replaceState({}, '', url.toString());
+    }
+  };
+
+  const handleSortChange = (newSort: 'featured' | 'price-low' | 'price-high' | 'duration') => {
+    setSortBy(newSort);
     resetPagination();
   };
 
@@ -180,99 +238,189 @@ export default function ServicesPage() {
   }, [hasMore, isLoadingMore, loadNextBatch]);
 
   return (
-    <div className="relative min-h-screen w-full bg-[#FAF7F2] m-0 p-0 overflow-x-clip selection:bg-amber-400">
+    <div className="relative min-h-screen w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
       <Navbar />
 
-      {/* Page Header */}
-      <PageHeader
-        breadcrumb={t('Services & Rituals', 'सेवाएं एवं अनुष्ठान')}
-        title={t('Vedic Astrology & Pooja Services', 'वैदिक ज्योतिष एवं पूजा सेवाएं')}
-        subtitle={t(
-          '29 Consecrated Astrological Consultations, Sacred Yagya Rituals, Energy Sciences, and Vedic Education Courses by Dr. Pandit Vishal Dubey (AstroVD).',
-          'पूज्य डॉ. पंडित विशाल दुबे (AstroVD) द्वारा 29 सिद्ध ज्योतिष परामर्श, पावन यज्ञ अनुष्ठान, ऊर्जा विज्ञान एवं वैदिक शिक्षण पाठ्यक्रम।'
-        )}
-      />
+      {/* HERO BANNER SECTION (Panoramic full-bleed backdrop matching reference design) */}
+      <section className="relative w-full bg-[#36170A] overflow-hidden pt-24 sm:pt-28 md:pt-30 pb-9 sm:pb-11 px-4 sm:px-6 lg:px-12 min-h-[220px] sm:min-h-[250px] flex items-center">
+        {/* Background ambient gradient matching reference tone */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#36170A] via-[#36170A] to-[#2B0E06]" />
+
+        {/* Full-bleed Ultra-HD panoramic backdrop (2400x768): Sacred Vedic Diya, Puja, Hawan & Mandir */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none select-none">
+          <Image
+            src="/services/services_panoramic_ultra_hd.png"
+            alt="Sacred Vedic Pooja and Astrological Rituals"
+            fill
+            priority
+            quality={100}
+            className="object-cover object-[right_center] md:object-[right_55%]"
+          />
+          {/* Confined left gradient vignette: protects text readability on left while leaving items 100% luminous with zero haze */}
+          <div className="absolute inset-y-0 left-0 w-full sm:w-[65%] md:w-[54%] lg:w-[48%] bg-gradient-to-r from-[#36170A] via-[#36170A]/92 to-transparent" />
+        </div>
+
+        {/* Content container - Left Text Information (Clear, readable, with zero obstruction) */}
+        <div className="relative max-w-7xl mx-auto w-full z-10">
+          <div className="max-w-xl text-left space-y-2">
+            <div className="tracking-[0.2em] text-[10px] sm:text-[11px] font-bold text-[#D8B28A] uppercase drop-shadow-sm">
+              {t('SACRED VEDIC RITUALS • POOJA & HAVAN • DIVINE BLESSINGS', 'पावन वैदिक अनुष्ठान • पूजा व महाहवन • ईश्वरीय कृपा')}
+            </div>
+            <h1 className="font-serif text-2xl sm:text-3xl md:text-[34px] lg:text-[38px] font-bold text-[#FFFDFB] tracking-wide leading-tight drop-shadow-md">
+              {t('Vedic Astrology & Pooja Services', 'वैदिक ज्योतिष एवं पूजा सेवाएं')}
+            </h1>
+            <p className="text-[#D7C4BD] text-xs sm:text-[13px] leading-relaxed max-w-lg font-normal drop-shadow-sm">
+              {t(
+                '29 Consecrated Astrological Consultations, Sacred Yagya Rituals, Energy Sciences, and Vedic Education Courses by Dr. Pandit Vishal Dubey (AstroVD).',
+                'पूज्य डॉ. पंडित विशाल दुबे (AstroVD) द्वारा 29 सिद्ध ज्योतिष परामर्श, पावन यज्ञ अनुष्ठान, ऊर्जा विज्ञान एवं वैदिक शिक्षण पाठ्यक्रम।'
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Subtle curved bottom wave divider matching reference design */}
+        <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-none pointer-events-none z-10">
+          <svg
+            className="relative block w-full h-4 sm:h-5 md:h-6"
+            viewBox="0 0 1200 40"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0,14 C350,26 700,32 950,22 C1080,16 1160,8 1200,6"
+              fill="none"
+              stroke="#D8A868"
+              strokeWidth="1.2"
+              strokeOpacity="0.45"
+            />
+            <path
+              d="M0,14 C350,26 700,32 950,22 C1080,16 1160,8 1200,6 L1200,40 L0,40 Z"
+              fill="#FCF8ED"
+            />
+          </svg>
+        </div>
+      </section>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-6 sm:py-9 space-y-6 sm:space-y-7">
         
-        {/* Search & Category Filter Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white/85 backdrop-blur-md px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl sm:rounded-3xl border border-amber-200/90 shadow-sm">
+        {/* Unified Search & Sort Bar (Matching Products Page) */}
+        <div className="bg-white rounded-full border border-[#EAE0D0] shadow-xs px-4 py-2 sm:py-2.5 flex flex-col sm:flex-row items-center justify-between gap-3">
           {/* Search Input */}
-          <div className="relative w-full sm:max-w-md">
-            <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="relative flex items-center w-full sm:flex-1">
+            <Search className="w-4 h-4 text-[#9E9082] shrink-0 ml-1" />
             <input
               type="text"
               placeholder={t('Search services (e.g. Mangal Dosh, Kundli, Tarot)...', 'सेवाएं खोजें (उदा. मंगल दोष, कुंडली, टैरो)...')}
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-9 py-2 sm:py-2.5 rounded-full bg-stone-50 border border-stone-200 text-xs sm:text-sm text-stone-800 placeholder-stone-400 shadow-xs focus:bg-white focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-300 transition-colors"
+              className="w-full pl-2.5 pr-8 py-1 bg-transparent text-xs sm:text-sm text-[#2D1408] placeholder-[#9E9082] focus:outline-none"
             />
             {searchQuery && (
               <button
                 onClick={() => handleSearchChange('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                className="text-[#9E9082] hover:text-[#522311] p-1 cursor-pointer"
                 aria-label="Clear search"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
 
-          {/* Category Dropdown */}
-          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
-            <div className="flex items-center gap-1.5 text-stone-700 text-xs sm:text-sm font-semibold">
-              <Filter className="w-4 h-4 text-amber-700" />
-              <span>{t('Category:', 'श्रेणी:')}</span>
-            </div>
-            <select
-              value={selectedCategory}
-              onChange={(e) => handleCategoryChange(e.target.value)}
-              className="px-3.5 sm:px-4 py-2 rounded-full bg-white border border-amber-300 text-xs sm:text-sm font-semibold text-stone-800 shadow-xs focus:outline-none focus:border-amber-500 cursor-pointer"
-            >
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {language === 'hi' ? `${c.labelHi} (${c.count})` : `${c.labelEn} (${c.count})`}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Count & Category Pills Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 px-1">
-          <div className="font-bold text-stone-800 text-xs sm:text-sm flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-700" />
-            <span>
-              {language === 'hi' ? (
-                <>प्रदर्शित <span className="text-[#5B0D15] font-extrabold">{visibleServices.length}</span> कुल <span className="text-stone-900 font-extrabold">{filtered.length}</span> प्रामाणिक वैदिक सेवाएं</>
-              ) : (
-                <>Showing <span className="text-[#5B0D15] font-extrabold">{visibleServices.length}</span> of <span className="text-stone-900 font-extrabold">{filtered.length}</span> authentic services</>
-              )}
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-2 shrink-0 sm:border-l sm:border-[#EAE0D0] sm:pl-4 w-full sm:w-auto justify-end">
+            <span className="text-xs text-[#8C7E72] font-medium">
+              {t('Sort by', 'क्रम')}
             </span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Service Categories">
-            {categories.map((cat) => {
-              const isSelected = selectedCategory === cat.id;
-              const label = language === 'hi' ? `${cat.labelHi} (${cat.count})` : `${cat.labelEn} (${cat.count})`;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => handleCategoryChange(cat.id)}
-                  role="tab"
-                  aria-selected={isSelected}
-                  className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer shadow-xs ${
-                    isSelected
-                      ? 'bg-[#5B0D15] text-white shadow-sm shadow-rose-950/20 scale-[1.02] ring-2 ring-amber-400/40'
-                      : 'bg-white hover:bg-amber-50 text-stone-700 border border-stone-200 hover:border-amber-300'
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => handleSortChange(e.target.value as any)}
+                className="appearance-none pl-3 pr-8 py-1.5 rounded-lg bg-[#FAF6ED] hover:bg-[#F5EFE3] border border-[#EAE0D0] text-xs font-semibold text-[#2D1408] shadow-2xs focus:outline-none cursor-pointer"
+              >
+                <option value="featured">{t('Featured', 'विशेष (डिफ़ॉल्ट)')}</option>
+                <option value="price-low">{t('Price: Low to High', 'मूल्य: कम से ज्यादा')}</option>
+                <option value="price-high">{t('Price: High to Low', 'मूल्य: ज्यादा से कम')}</option>
+                <option value="duration">{t('Duration: Short to Long', 'अवधि: कम से ज्यादा')}</option>
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-[#8C7E72] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
           </div>
         </div>
+
+        {/* Category Pill Buttons (Exact Match to Products Design System) */}
+        <div className="flex items-center gap-2.5 overflow-x-auto pb-1.5 pt-0.5 no-scrollbar scroll-smooth" role="tablist" aria-label="Service Categories">
+          {categories.map((cat) => {
+            const isSelected = selectedCategory === cat.id;
+            const IconComponent = cat.icon || LayoutGrid;
+            const label = language === 'hi' ? `${cat.labelHi} (${cat.count})` : `${cat.labelEn} (${cat.count})`;
+
+            return (
+              <button
+                key={cat.id}
+                onClick={() => handleCategoryChange(cat.id)}
+                role="tab"
+                aria-selected={isSelected}
+                className={`rounded-full px-3.5 py-2 text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${
+                  isSelected
+                    ? 'bg-[#522311] text-white shadow-xs border border-[#522311]'
+                    : 'bg-white hover:bg-[#FAF6ED] text-[#4A3B32] border border-[#EAE0D0] shadow-2xs hover:border-[#D6C4AD]'
+                }`}
+              >
+                <IconComponent className={`w-3.5 h-3.5 ${isSelected ? 'text-[#F5D8A0]' : 'text-[#7C6C60]'}`} />
+                <span>{label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Search Results Banner */}
+        {searchQuery.trim() && (
+          <div className="flex items-center justify-between bg-white border border-[#EAE0D0] rounded-xl p-3 sm:px-4 max-w-5xl mx-auto shadow-2xs">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-[#2D1408]">
+              <Sparkles className="w-4 h-4 text-[#DCA258] shrink-0" />
+              <span>
+                {t('Results for', 'इसके लिए परिणाम:')}{' '}
+                <strong className="text-[#522311]">"{searchQuery}"</strong>
+                <span className="text-[#8C7E72] ml-1.5 font-normal">
+                  ({filtered.length} {t('services found', 'सेवाएं मिलीं')})
+                </span>
+              </span>
+            </div>
+            <button
+              onClick={() => handleSearchChange('')}
+              className="text-xs font-bold text-[#522311] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <span>{t('Clear search', 'हटाएं')}</span>
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* Empty State when search/filter returns zero services */}
+        {filtered.length === 0 && (
+          <div className="text-center py-12 px-4 max-w-md mx-auto space-y-4 bg-white rounded-2xl border border-[#EAE0D0] p-6 shadow-xs">
+            <div className="w-14 h-14 rounded-full bg-[#FAF6ED] border border-[#EAE0D0] text-[#522311] flex items-center justify-center mx-auto">
+              <Search className="w-6 h-6" />
+            </div>
+            <h3 className="font-serif font-bold text-base text-[#2D1408]">
+              {t('No Services Found', 'कोई सेवा नहीं मिली')}
+            </h3>
+            <p className="text-xs text-[#706256] leading-relaxed">
+              {t(
+                `We couldn't find any services matching "${searchQuery}". Try searching for keywords like "Kundli", "Mangal Dosh", "Tarot", or "Pooja".`,
+                `"${searchQuery}" से मेल खाने वाली कोई सेवा नहीं मिली। कृपया "कुंडली", "मंगल दोष", या "पूजा" खोजें।`
+              )}
+            </p>
+            <button
+              onClick={() => {
+                handleSearchChange('');
+                setSelectedCategory('all');
+              }}
+              className="px-4 py-2 rounded-full bg-[#522311] hover:bg-[#3D1A0D] text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+            >
+              {t('View All Services', 'सभी सेवाएं देखें')}
+            </button>
+          </div>
+        )}
 
         {/* Services Cards Grid (Initial 9, then +9 per scroll batch) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-6 lg:gap-7" id="services-grid">
@@ -304,26 +452,6 @@ export default function ServicesPage() {
             );
           })}
         </div>
-
-        {/* Empty State when search/filter returns zero services */}
-        {filtered.length === 0 && (
-          <div className="py-16 text-center space-y-3 bg-white rounded-3xl border border-stone-200 p-8 max-w-lg mx-auto">
-            <Filter className="w-10 h-10 text-stone-300 mx-auto" />
-            <h3 className="font-serif font-semibold text-lg text-stone-700">
-              {t('No services found matching your search', 'आपकी खोज के अनुसार कोई सेवा नहीं मिली')}
-            </h3>
-            <button
-              onClick={() => {
-                setSelectedCategory('all');
-                setSearchQuery('');
-                resetPagination();
-              }}
-              className="px-5 py-2 rounded-full bg-[#5B0D15] text-white text-xs font-semibold hover:bg-rose-950 transition-colors"
-            >
-              {t('Reset Filters & View All', 'फ़िल्टर हटाएं एवं सभी देखें')}
-            </button>
-          </div>
-        )}
 
         {/* Infinite Scroll Sentinel & Controls (Batches of 9) */}
         <div

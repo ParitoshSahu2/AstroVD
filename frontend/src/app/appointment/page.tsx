@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { PageHeader } from '../../components/PageHeader';
-import { AuthModal } from '../../components/AuthModal';
+import dynamic from 'next/dynamic';
+const AuthModal = dynamic(() => import('../../components/AuthModal').then((mod) => mod.AuthModal), { ssr: false });
 import {
   Calendar,
   Clock,
@@ -240,17 +242,67 @@ function AppointmentContent() {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#FAF7F2] m-0 p-0 overflow-x-clip selection:bg-amber-400">
+    <div className="relative min-h-screen w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
       <Navbar />
 
-      <PageHeader
-        breadcrumb={t('Online Consultation', 'ऑनलाइन वैदिक परामर्श')}
-        title={t('Book Your Vedic Consultation', 'अपना वैदिक परामर्श सत्र बुक करें')}
-        subtitle={t(
-          'Select your consecrated service, choose an available published time slot, and receive 1-on-1 divine astrological guidance.',
-          'अपनी पावन वैदिक सेवा चुनें, उपलब्ध समय स्लॉट आरक्षित करें एवं पूज्य आचार्यों से प्रत्यक्ष मार्गदर्शन प्राप्त करें।'
-        )}
-      />
+      {/* HERO BANNER SECTION (Panoramic full-bleed backdrop matching reference design) */}
+      <section className="relative w-full bg-[#36170A] overflow-hidden pt-24 sm:pt-28 md:pt-30 pb-9 sm:pb-11 px-4 sm:px-6 lg:px-12 min-h-[220px] sm:min-h-[250px] flex items-center">
+        {/* Background ambient gradient matching reference tone */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#36170A] via-[#36170A] to-[#2B0E06]" />
+
+        {/* Full-bleed Ultra-HD panoramic backdrop (2400x768): Vedic Kundli, Compass, Gemstone Crystal, Diya & Chakra */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none select-none">
+          <Image
+            src="/consultation/consultation_hero_panoramic_hd.png"
+            alt="Vedic Astrology Consultation"
+            fill
+            priority
+            quality={100}
+            className="object-cover object-[right_center] md:object-[right_55%]"
+          />
+          {/* Confined left gradient vignette: protects text readability on left while leaving items 100% luminous with zero haze */}
+          <div className="absolute inset-y-0 left-0 w-full sm:w-[65%] md:w-[54%] lg:w-[48%] bg-gradient-to-r from-[#36170A] via-[#36170A]/92 to-transparent" />
+        </div>
+
+        {/* Content container - Left Text Information (Clear, readable, with zero obstruction) */}
+        <div className="relative max-w-7xl mx-auto w-full z-10">
+          <div className="max-w-xl text-left space-y-2">
+            <div className="tracking-[0.2em] text-[10px] sm:text-[11px] font-bold text-[#D8B28A] uppercase drop-shadow-sm">
+              {t('DIVINE JYOTISH • 1-ON-1 VEDIC GUIDANCE • SACRED SANKALP', 'दैवीय ज्योतिष • 1-ऑन-1 वैदिक परामर्श • पावन संकल्प')}
+            </div>
+            <h1 className="font-serif text-2xl sm:text-3xl md:text-[34px] lg:text-[38px] font-bold text-[#FFFDFB] tracking-wide leading-tight drop-shadow-md">
+              {t('Book Your Vedic Consultation', 'अपना वैदिक परामर्श सत्र बुक करें')}
+            </h1>
+            <p className="text-[#D7C4BD] text-xs sm:text-[13px] leading-relaxed max-w-lg font-normal drop-shadow-sm">
+              {t(
+                'Direct 1-on-1 private video and voice consultations with verified Jyotish Acharyas. Get comprehensive horoscope analysis, dosha remedies, and celestial guidance.',
+                'पूज्य वैदिक ज्योतिषाचार्यों के साथ निजी 1-ऑन-1 वीडियो व वॉइस परामर्श। संपूर्ण जन्म कुंडली परीक्षण, ग्रह दोष निवारण एवं जीवन के लिए पावन मार्गदर्शन प्राप्त करें।'
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Subtle curved bottom wave divider matching reference design */}
+        <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-none pointer-events-none z-10">
+          <svg
+            className="relative block w-full h-4 sm:h-5 md:h-6"
+            viewBox="0 0 1200 40"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0,14 C350,26 700,32 950,22 C1080,16 1160,8 1200,6"
+              fill="none"
+              stroke="#D8A868"
+              strokeWidth="1.2"
+              strokeOpacity="0.45"
+            />
+            <path
+              d="M0,14 C350,26 700,32 950,22 C1080,16 1160,8 1200,6 L1200,40 L0,40 Z"
+              fill="#FCF8ED"
+            />
+          </svg>
+        </div>
+      </section>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-12 py-8 sm:py-12 space-y-10">
         {/* CONFIRMATION STATE - Simple & Elegant Vedic Receipt */}

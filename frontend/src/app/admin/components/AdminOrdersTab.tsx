@@ -150,17 +150,17 @@ export default function AdminOrdersTab({
           </div>
         ) : (
           <div className="w-full min-w-0 overflow-x-auto">
-            <table className="w-full table-fixed text-left text-xs">
+            <table className="w-full min-w-[1150px] table-fixed text-left text-xs">
               <thead>
                 <tr className="border-b border-stone-200 text-stone-400 uppercase tracking-wider font-semibold">
-                  <th className="py-3 px-3 w-[15%] font-medium">Order Ref / Date</th>
-                  <th className="py-3 px-3 w-[21%] font-medium">Customer Details</th>
-                  <th className="py-3 px-3 w-[18%] font-medium">Items &amp; Relics</th>
-                  <th className="py-3 px-3 w-[14%] font-medium">Destination</th>
-                  <th className="py-3 px-3 text-right w-[10%] font-medium">Order Total</th>
-                  <th className="py-3 px-3 text-center w-[7%] font-medium">Payment</th>
-                  <th className="py-3 px-3 text-center w-[8%] font-medium">Fulfillment</th>
-                  <th className="py-3 px-3 text-right w-[7%] font-medium">Action</th>
+                  <th className="py-3 px-3.5 w-[14%] font-medium whitespace-nowrap">Order Ref / Date</th>
+                  <th className="py-3 px-3.5 w-[17%] font-medium whitespace-nowrap">Customer Details</th>
+                  <th className="py-3 px-3.5 w-[16%] font-medium whitespace-nowrap">Items &amp; Relics</th>
+                  <th className="py-3 px-3.5 w-[13%] font-medium whitespace-nowrap">Destination</th>
+                  <th className="py-3 px-3.5 text-right w-[9%] font-medium whitespace-nowrap">Order Total</th>
+                  <th className="py-3 px-3.5 text-center w-[8%] font-medium whitespace-nowrap">Payment</th>
+                  <th className="py-3 px-4 text-center w-[12%] font-medium whitespace-nowrap">Fulfillment</th>
+                  <th className="py-3 px-4 text-center w-[11%] font-medium whitespace-nowrap">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -251,10 +251,9 @@ export default function AdminOrdersTab({
                           {isPending || (!o.paymentStatus && o.status === 'PENDING') ? 'Pending' : 'Paid'}
                         </span>
                       </td>
-
-                      <td className="py-3.5 px-3 text-center">
+                      <td className="py-3.5 px-4 text-center">
                         <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-[10.5px] font-semibold truncate max-w-full text-center ${
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold truncate max-w-full text-center ${
                             isDelivered
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
                               : isShipped
@@ -271,10 +270,10 @@ export default function AdminOrdersTab({
                         </span>
                       </td>
 
-                      <td className="py-3.5 px-3 text-right">
+                      <td className="py-3.5 px-4 text-center">
                         <button
                           onClick={() => onSelectOrder(o)}
-                          className="px-2.5 py-1.5 rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-[#5B0D15] font-semibold text-[11px] shadow-sm transition-all flex items-center gap-1 ml-auto cursor-pointer shrink-0"
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-[#5B0D15] font-semibold text-[11px] shadow-xs transition-all cursor-pointer mx-auto shrink-0"
                           title="Manage Order"
                         >
                           <Eye className="w-3.5 h-3.5 shrink-0" />

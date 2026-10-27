@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'clsx', 'tailwind-merge'],
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
@@ -41,6 +44,14 @@ const nextConfig: NextConfig = {
         as: "*.css",
       },
     },
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/content/uploads/:path*',
+        destination: 'http://localhost:5001/api/content/uploads/:path*',
+      },
+    ];
   },
 };
 

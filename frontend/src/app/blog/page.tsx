@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { PageHeader } from '../../components/PageHeader';
@@ -23,10 +24,13 @@ import {
   EyeOff,
   CheckCircle2,
   AlertCircle,
+  ChevronDown,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { getStoredUser, getAuthToken, AUTH_CHANGE_EVENT } from '../../lib/auth';
-import BlogManageModal, { BlogPostItem } from './components/BlogManageModal';
+import dynamic from 'next/dynamic';
+import type { BlogPostItem } from './components/BlogManageModal';
+const BlogManageModal = dynamic(() => import('./components/BlogManageModal'), { ssr: false });
 
 interface BlogPost {
   id: string;
@@ -336,6 +340,15 @@ export default function BlogPage() {
     fetchArticles();
   }, [fetchArticles]);
 
+  // Auto-dismiss action feedback toast after 4 seconds
+  useEffect(() => {
+    if (!actionToast) return;
+    const timer = setTimeout(() => {
+      setActionToast(null);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [actionToast]);
+
   const handleTogglePublish = async (post: BlogPost, e: React.MouseEvent) => {
     e.stopPropagation();
     const token = getAuthToken();
@@ -441,91 +454,96 @@ export default function BlogPage() {
   const featured = filtered[0] || articles[0];
 
   return (
-    <div className="relative min-h-screen w-full bg-[#FAF7F2] m-0 p-0 overflow-x-clip selection:bg-amber-400">
+    <div className="relative min-h-screen w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
       <Navbar />
 
-      <PageHeader
-        breadcrumb={t('Sacred Blogs & Articles', 'वैदिक लेख एवं शोध')}
-        title={t('Vedic Wisdom & Astrological Articles', 'वैदिक ज्ञान, शोध पत्र एवं ज्योतिषीय लेख')}
-        subtitle={t(
-          'Scholarly discourses on Kundali analysis, planetary transits, intuitive Tarot, Vastu energy, and ancient mantra sciences by AstroVD Acharyas.',
-          'जन्म कुंडली विश्लेषण, ग्रह गोचर, इंट्यूटिव टैरो, वास्तु ऊर्जा एवं प्राचीन मंत्र विज्ञान पर AstroVD आचार्यों के प्रामाणिक शोध लेख।'
-        )}
-      />
+      {/* HERO BANNER SECTION (Panoramic full-bleed backdrop matching reference design) */}
+      <section className="relative w-full bg-[#36170A] overflow-hidden pt-24 sm:pt-28 md:pt-30 pb-9 sm:pb-11 px-4 sm:px-6 lg:px-12 min-h-[220px] sm:min-h-[250px] flex items-center">
+        {/* Background ambient gradient matching reference tone */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#36170A] via-[#36170A] to-[#2B0E06]" />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-10 sm:py-16 space-y-12">
-        {/* Action Feedback Toast */}
+        {/* Full-bleed Ultra-HD panoramic backdrop (2400x768): Vedic Granth, Scriptures, Peacock Feather, Diya & Chakra */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none select-none">
+          <Image
+            src="/blog/blog_hero_panoramic_hd.png"
+            alt="Sacred Vedic Wisdom Manuscripts"
+            fill
+            priority
+            quality={100}
+            className="object-cover object-[right_center] md:object-[right_55%]"
+          />
+          {/* Confined left gradient vignette: protects text readability on left while leaving items 100% luminous with zero haze */}
+          <div className="absolute inset-y-0 left-0 w-full sm:w-[65%] md:w-[54%] lg:w-[48%] bg-gradient-to-r from-[#36170A] via-[#36170A]/92 to-transparent" />
+        </div>
+
+        {/* Content container - Left Text Information (Clear, readable, with zero obstruction) */}
+        <div className="relative max-w-7xl mx-auto w-full z-10">
+          <div className="max-w-xl text-left space-y-2">
+            <div className="tracking-[0.2em] text-[10px] sm:text-[11px] font-bold text-[#D8B28A] uppercase drop-shadow-sm">
+              {t('SACRED VEDIC SCRIPTURES • JYOTISH SHASTRA • TIMELESS WISDOM', 'पावन वैदिक शास्त्र • ज्योतिष दर्शन • शाश्वत ज्ञान')}
+            </div>
+            <h1 className="font-serif text-2xl sm:text-3xl md:text-[34px] lg:text-[38px] font-bold text-[#FFFDFB] tracking-wide leading-tight drop-shadow-md">
+              {t('Vedic Wisdom & Astrological Articles', 'वैदिक ज्ञान, शोध पत्र एवं ज्योतिषीय लेख')}
+            </h1>
+            <p className="text-[#D7C4BD] text-xs sm:text-[13px] leading-relaxed max-w-lg font-normal drop-shadow-sm">
+              {t(
+                'Scholarly discourses on Kundali analysis, planetary transits, intuitive Tarot, Vastu energy, and ancient mantra sciences by AstroVD Acharyas.',
+                'जन्म कुंडली विश्लेषण, ग्रह गोचर, इंट्यूटिव टैरो, वास्तु ऊर्जा एवं प्राचीन मंत्र विज्ञान पर AstroVD आचार्यों के प्रामाणिक शोध लेख।'
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Subtle curved bottom wave divider matching reference design */}
+        <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-none pointer-events-none z-10">
+          <svg
+            className="relative block w-full h-4 sm:h-5 md:h-6"
+            viewBox="0 0 1200 40"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0,14 C350,26 700,32 950,22 C1080,16 1160,8 1200,6"
+              fill="none"
+              stroke="#D8A868"
+              strokeWidth="1.2"
+              strokeOpacity="0.45"
+            />
+            <path
+              d="M0,14 C350,26 700,32 950,22 C1080,16 1160,8 1200,6 L1200,40 L0,40 Z"
+              fill="#FCF8ED"
+            />
+          </svg>
+        </div>
+      </section>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-6 sm:py-10 space-y-6 sm:space-y-8">
+        {/* Action Feedback Floating Toast */}
         {actionToast && (
           <div
-            className={`p-4 rounded-2xl text-xs sm:text-sm font-semibold flex items-center justify-between shadow-sm animate-fadeIn ${
-              actionToast.type === 'success'
-                ? 'bg-emerald-50 text-emerald-900 border border-emerald-200'
-                : 'bg-rose-50 text-rose-900 border border-rose-200'
-            }`}
+            role="status"
+            aria-live="polite"
+            className="fixed bottom-6 right-6 z-50 max-w-sm sm:max-w-md w-auto animate-fadeIn transition-all duration-300"
           >
-            <div className="flex items-center gap-2">
-              {actionToast.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              ) : (
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-              )}
-              <span>{actionToast.message}</span>
-            </div>
-            <button
-              onClick={() => setActionToast(null)}
-              className="text-stone-400 hover:text-stone-700 font-bold ml-4 cursor-pointer"
+            <div
+              className={`px-4 py-3 rounded-2xl text-xs sm:text-sm font-medium flex items-center gap-3 shadow-2xl backdrop-blur-md border ${
+                actionToast.type === 'success'
+                  ? 'bg-[#1C2820]/95 text-emerald-100 border-emerald-500/50 shadow-emerald-950/30'
+                  : 'bg-[#2D1217]/95 text-rose-100 border-rose-500/50 shadow-rose-950/30'
+              }`}
             >
-              ✕
-            </button>
-          </div>
-        )}
-
-        {/* Admin Control Bar - ONLY VISIBLE TO AUTHENTICATED ADMINS */}
-        {isAdmin && (
-          <div className="rounded-3xl bg-gradient-to-r from-amber-50 via-white to-amber-50/80 border-2 border-amber-300 p-5 sm:p-6 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#5B0D15] text-amber-200 flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
-                👑
-              </div>
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-serif font-bold text-base text-[#3B1E22]">
-                    Admin Content Controls
-                  </h3>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 uppercase tracking-wider">
-                    Blog Management
-                  </span>
-                </div>
-                <p className="text-xs text-stone-600 mt-0.5">
-                  Publish, edit, unpublish, or delete articles directly from this public page. Customers never see these controls.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 flex-wrap">
+              {actionToast.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              )}
+              <span className="leading-snug flex-1">{actionToast.message}</span>
               <button
                 type="button"
-                onClick={() => setShowDrafts(!showDrafts)}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all border flex items-center gap-2 cursor-pointer shadow-xs ${
-                  showDrafts
-                    ? 'bg-amber-100 text-amber-950 border-amber-400 ring-2 ring-amber-300/40'
-                    : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
-                }`}
+                onClick={() => setActionToast(null)}
+                className="text-stone-400 hover:text-white font-bold p-1 hover:bg-white/10 rounded-full transition-colors cursor-pointer shrink-0"
+                aria-label="Dismiss notification"
               >
-                {showDrafts ? <Eye className="w-3.5 h-3.5 text-amber-800" /> : <EyeOff className="w-3.5 h-3.5 text-stone-500" />}
-                <span>{showDrafts ? 'Showing Drafts' : 'Include Drafts'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingPost(null);
-                  setManageModalOpen(true);
-                }}
-                className="px-5 py-2.5 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-amber-100 text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
-              >
-                <Plus className="w-4 h-4 text-amber-300" />
-                <span>Add New Article</span>
+                ✕
               </button>
             </div>
           </div>
@@ -592,52 +610,103 @@ export default function BlogPage() {
           </div>
         )}
 
-        {/* Search & Category Filter Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white/70 backdrop-blur-md p-4 rounded-3xl border border-amber-200/80 shadow-md">
+        {/* Unified Search & Category Filter Bar */}
+        <div className="bg-white rounded-full border border-[#EAE0D0] shadow-xs px-4 py-2 sm:py-2.5 flex flex-col sm:flex-row items-center justify-between gap-3">
           {/* Search Input */}
-          <div className="relative w-full md:max-w-md">
-            <Search className="w-4 h-4 text-stone-400 absolute left-4 top-1/2 -translate-y-1/2" />
+          <div className="relative flex items-center w-full sm:flex-1">
+            <Search className="w-4 h-4 text-[#9E9082] shrink-0 ml-1" />
             <input
               type="text"
               placeholder={t('Search articles by topic, author, or keyword...', 'विषय, लेखक या कीवर्ड द्वारा लेख खोजें...')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-full bg-white border border-stone-200 text-xs sm:text-sm text-stone-800 placeholder-stone-400 shadow-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-300"
+              className="w-full pl-2.5 pr-8 py-1 bg-transparent text-xs sm:text-sm text-[#2D1408] placeholder-[#9E9082] focus:outline-none"
             />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="text-[#9E9082] hover:text-[#522311] p-1 cursor-pointer"
+                aria-label="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
           {/* Category Dropdown */}
-          <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-            <Filter className="w-4 h-4 text-amber-700" />
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-2.5 rounded-full bg-white border border-amber-300 text-xs font-semibold text-stone-800 shadow-sm focus:outline-none focus:border-amber-500 cursor-pointer"
-            >
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+          <div className="flex items-center gap-2 shrink-0 sm:border-l sm:border-[#EAE0D0] sm:pl-4 w-full sm:w-auto justify-end">
+            <span className="text-xs text-[#8C7E72] font-medium">
+              {t('Category', 'श्रेणी')}
+            </span>
+            <div className="relative">
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="appearance-none pl-3 pr-8 py-1.5 rounded-lg bg-[#FAF6ED] hover:bg-[#F5EFE3] border border-[#EAE0D0] text-xs font-semibold text-[#2D1408] shadow-2xs focus:outline-none cursor-pointer"
+              >
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-[#8C7E72] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
           </div>
         </div>
 
-        {/* Category Pills Bar */}
-        <div className="flex flex-wrap items-center gap-2">
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                selectedCategory === cat.id
-                  ? 'bg-[#5B0D15] text-white shadow-md'
-                  : 'bg-white hover:bg-amber-50 text-stone-700 border border-stone-200'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
+        {/* Category Pills & Admin Actions Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth" role="tablist" aria-label="Blog Categories">
+            {categories.map((cat) => {
+              const isSelected = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  role="tab"
+                  aria-selected={isSelected}
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${
+                    isSelected
+                      ? 'bg-[#522311] text-white shadow-xs border border-[#522311]'
+                      : 'bg-white hover:bg-[#FAF6ED] text-[#4A3B32] border border-[#EAE0D0] shadow-2xs hover:border-[#D6C4AD]'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {isAdmin && (
+            <div aria-label="Admin Content Controls" className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowDrafts(!showDrafts)}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                  showDrafts
+                    ? 'bg-amber-100 text-amber-950 border-amber-400 ring-1 ring-amber-300/40'
+                    : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
+                }`}
+              >
+                {showDrafts ? <Eye className="w-3.5 h-3.5 text-amber-800" /> : <EyeOff className="w-3.5 h-3.5 text-stone-500" />}
+                <span>{showDrafts ? t('Showing Drafts', 'ड्राफ्ट दिख रहे हैं') : t('Include Drafts', 'ड्राफ्ट शामिल करें')}</span>
+              </button>
+
+              <button
+                type="button"
+                title="Admin Content Controls - Add New Article"
+                onClick={() => {
+                  setEditingPost(null);
+                  setManageModalOpen(true);
+                }}
+                className="px-4 py-1.5 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-amber-100 text-xs font-bold shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 text-amber-300" />
+                <span>{t('Add New Article', 'नया लेख जोड़ें')}</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Articles Grid */}
@@ -654,16 +723,16 @@ export default function BlogPage() {
             return (
               <article
                 key={post.id}
-                className="rounded-3xl overflow-hidden bg-white border border-stone-200 shadow-md hover:shadow-2xl hover:border-amber-400 transition-all duration-300 flex flex-col justify-between group"
+                className="rounded-2xl overflow-hidden bg-white border border-[#EAE0D0] shadow-xs hover:border-[#D6C4AD] hover:shadow-md transition-all duration-300 flex flex-col justify-between group"
               >
                 <div>
                   <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-stone-100">
                     <img
                       src={post.image}
                       alt={title}
-                      className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-amber-300/60 text-amber-300 text-[10px] font-bold uppercase tracking-wider">
+                    <span className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-md border border-[#DCA258]/35 text-[#F5C77E] text-[10px] font-bold uppercase tracking-wider">
                       ✦ {category}
                     </span>
                     <span className="absolute bottom-3 right-3 px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-stone-200 text-[10px] font-medium flex items-center gap-1">
@@ -724,32 +793,32 @@ export default function BlogPage() {
                     )}
                   </div>
 
-                  <div className="p-6 space-y-3">
-                    <div className="flex items-center gap-2 text-[11px] text-stone-500">
-                      <Calendar className="w-3.5 h-3.5 text-amber-700" />
+                  <div className="p-5 space-y-2.5">
+                    <div className="flex items-center gap-2 text-[11px] text-[#8C7E72]">
+                      <Calendar className="w-3.5 h-3.5 text-[#DCA258]" />
                       <span>{date}</span>
                       <span>•</span>
-                      <span className="font-semibold text-stone-700">{author}</span>
+                      <span className="font-semibold text-[#4A3B32]">{author}</span>
                     </div>
 
-                    <h3 className="font-serif font-bold text-lg sm:text-xl text-[#2A1810] group-hover:text-[#5B0D15] transition-colors leading-snug">
+                    <h3 className="font-serif font-bold text-lg text-[#2D1408] group-hover:text-[#522311] transition-colors leading-snug line-clamp-2">
                       {title}
                     </h3>
 
-                    <p className="text-xs text-stone-600 leading-relaxed line-clamp-3">
+                    <p className="text-xs text-[#706256] leading-relaxed line-clamp-3">
                       {excerpt}
                     </p>
                   </div>
                 </div>
 
-                <div className="px-6 pb-6 pt-3 border-t border-stone-100 flex items-center justify-between bg-stone-50/50">
-                  <span className="text-[11px] font-semibold text-amber-800">
+                <div className="px-5 pb-4 pt-3 border-t border-[#F2ECE1] flex items-center justify-between bg-white">
+                  <span className="text-[11px] font-semibold text-[#8C7E72]">
                     {authorRole}
                   </span>
 
                   <button
                     onClick={() => setReadingArticle(post)}
-                    className="px-4 py-1.5 rounded-full bg-white hover:bg-[#5B0D15] text-[#5B0D15] hover:text-white border border-[#5B0D15] text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-lg bg-[#522311] hover:bg-[#3D1A0D] text-white text-xs font-semibold shadow-xs hover:shadow-sm transition-all duration-200 flex items-center gap-1 cursor-pointer"
                   >
                     <span>{t('Read Discourse', 'विस्तार से पढ़ें')}</span>
                     <ArrowRight className="w-3 h-3" />

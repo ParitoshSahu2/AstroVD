@@ -2,590 +2,487 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
-import { PageHeader } from '../../components/PageHeader';
-import { AuthModal } from '../../components/AuthModal';
-import { useCart } from '../../context/CartContext';
+import { useCart, CartItem } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { formatTitleCase } from '../../data/products';
 import {
   ShoppingCart,
   Trash2,
   Plus,
   Minus,
-  ArrowLeft,
-  ArrowRight,
   ShieldCheck,
   Sparkles,
-  CheckCircle2,
-  AlertCircle,
-  Loader2,
-  PackageCheck,
-  Truck,
-  RotateCcw,
-  Lock,
-  ShoppingBag,
-  MapPin,
-  Check,
+  Clock,
   User,
-  Phone,
-  Home,
-  Building2,
+  Tag,
+  Heart,
+  ArrowRight,
+  ChevronRight,
+  Check,
+  Lock,
+  Package,
+  X,
+  FileText,
   CreditCard,
-  Shield,
+  Building,
+  CheckCircle2,
+  Sparkle,
 } from 'lucide-react';
 
-interface ShippingAddressForm {
-  fullName: string;
-  phone: string;
-  street: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  sankalpName: string;
-  sankalpGotra: string;
-  notes: string;
+interface RecommendedProduct {
+  id: string;
+  name: string;
+  price: number;
+  priceFormatted: string;
+  image: string;
+  category: string;
+  tag: string;
 }
+
+const RECOMMENDED_PRODUCTS: RecommendedProduct[] = [
+  {
+    id: 'rec-rudraksha-mala',
+    name: 'Rudraksha Mala',
+    price: 1499,
+    priceFormatted: '₹ 1,499',
+    image: '/products/rudraksha-mala.jpg',
+    category: 'products',
+    tag: 'Spiritual Beads',
+  },
+  {
+    id: 'rec-rose-quartz',
+    name: 'Rose Quartz Crystal',
+    price: 999,
+    priceFormatted: '₹ 999',
+    image: '/products/prod-rose-quartz.png',
+    category: 'products',
+    tag: 'Wellness Products',
+  },
+  {
+    id: 'rec-shree-yantra',
+    name: 'Shree Yantra',
+    price: 2499,
+    priceFormatted: '₹ 2,499',
+    image: '/products/shree-yantra.jpg',
+    category: 'products',
+    tag: 'Sacred Geometry',
+  },
+  {
+    id: 'rec-herbal-wellness',
+    name: 'Herbal Wellness Kit',
+    price: 1299,
+    priceFormatted: '₹ 1,299',
+    image: '/products/herbal-wellness.jpg',
+    category: 'products',
+    tag: 'Ayurvedic Care',
+  },
+];
+
+const DEFAULT_SAMPLE_ITEMS: CartItem[] = [
+  {
+    id: 'astrological-consultation',
+    name: 'Astrological Consultation',
+    price: 999,
+    priceFormatted: '₹ 999',
+    image: '/services/consultation.jpg',
+    category: 'services',
+    quantity: 1,
+    tag: '60 mins • Expert Astrologers',
+  },
+  {
+    id: 'marriage-match-making',
+    name: 'Marriage Match Making',
+    price: 1499,
+    priceFormatted: '₹ 1,499',
+    image: '/services/marriage.jpg',
+    category: 'services',
+    quantity: 1,
+    tag: '45 mins • Expert Astrologers',
+  },
+  {
+    id: 'rose-quartz-crystal',
+    name: 'Rose Quartz Crystal',
+    price: 999,
+    priceFormatted: '₹ 999',
+    image: '/products/prod-rose-quartz.png',
+    category: 'products',
+    quantity: 1,
+    tag: 'Product • Wellness Products',
+  },
+];
 
 export default function CartPage() {
   const router = useRouter();
-  const { t, language } = useLanguage();
-  const { items, totalCount, subtotal, updateQuantity, removeItem, clearCart } = useCart();
+  const { t } = useLanguage();
+  const { items, totalCount, subtotal, updateQuantity, removeItem, clearCart, addItem } = useCart();
 
-  const [step, setStep] = useState<'cart' | 'checkout' | 'confirmation'>('cart');
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authToken, setAuthToken] = useState<string | null>(null);
-  const [userProfile, setUserProfile] = useState<{ name?: string; email?: string } | null>(null);
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const [wishlist, setWishlist] = useState<string[]>([]);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [completedOrderNumber, setCompletedOrderNumber] = useState<string>('');
 
-  const [shippingForm, setShippingForm] = useState<ShippingAddressForm>({
+  // Shipping form state for checkout step
+  const [shippingForm, setShippingForm] = useState({
     fullName: '',
     phone: '',
-    street: '',
+    address: '',
     city: '',
     state: '',
-    postalCode: '',
+    pincode: '',
     sankalpName: '',
     sankalpGotra: '',
-    notes: '',
+    paymentMethod: 'upi',
   });
 
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [completedOrder, setCompletedOrder] = useState<any | null>(null);
-
-  const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
-
-  // Check auth state on load
+  // Listen to logout & auth changes to immediately wipe all checkout details, modals, and shopping state
   useEffect(() => {
-    const checkAuth = () => {
-      if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('astro_token');
-        setAuthToken(token);
-        const storedUser = localStorage.getItem('astro_user');
-        if (storedUser) {
-          try {
-            const parsed = JSON.parse(storedUser);
-            setUserProfile(parsed);
-            if (parsed.name && !shippingForm.fullName) {
-              setShippingForm((prev) => ({
-                ...prev,
-                fullName: parsed.name,
-                sankalpName: prev.sankalpName || parsed.name,
-              }));
-            }
-          } catch (e) {
-            // ignore
-          }
+    const handleAuthChange = (e: any) => {
+      const user =
+        e?.detail?.user ||
+        (typeof window !== 'undefined' && localStorage.getItem('astro_user')
+          ? JSON.parse(localStorage.getItem('astro_user') || '{}')
+          : null);
+
+      if (!user || !user.id) {
+        setIsCheckoutModalOpen(false);
+        setCurrentStep(1);
+        setCompletedOrderNumber('');
+        setAppliedCoupon(null);
+        setCouponInput('');
+        setCouponError(null);
+        setShippingForm({
+          fullName: '',
+          phone: '',
+          address: '',
+          city: '',
+          state: '',
+          pincode: '',
+          sankalpName: '',
+          sankalpGotra: '',
+          paymentMethod: 'upi',
+        });
+        clearCart();
+        if (typeof window !== 'undefined' && (window.location.pathname === '/cart' || window.location.pathname.startsWith('/cart'))) {
+          router.replace('/');
         }
       }
     };
 
-    checkAuth();
-    const handleAuthChange = () => checkAuth();
     window.addEventListener('astro-auth-change', handleAuthChange);
-    window.addEventListener('storage', handleAuthChange);
-    return () => {
-      window.removeEventListener('astro-auth-change', handleAuthChange);
-      window.removeEventListener('storage', handleAuthChange);
-    };
-  }, []);
+    return () => window.removeEventListener('astro-auth-change', handleAuthChange);
+  }, [clearCart, router]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setShippingForm((prev) => ({ ...prev, [name]: value }));
-    if (formErrors[name]) {
-      setFormErrors((prev) => {
-        const copy = { ...prev };
-        delete copy[name];
-        return copy;
-      });
+  // Wishlist toggle
+  const toggleWishlist = (id: string) => {
+    setWishlist((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  // Helper to get formatted currency string
+  const formatRupee = (val: number) => {
+    return `₹ ${val.toLocaleString('en-IN')}`;
+  };
+
+  // Promo / Voucher state
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
+  const handleApplyCoupon = (codeToApply?: string) => {
+    const code = (codeToApply || couponInput).trim().toUpperCase();
+    if (!code) {
+      setCouponError('Please enter a voucher code');
+      return;
+    }
+    if (code === 'VEDIC10' || code === 'EMOX10' || code === 'SAVE10') {
+      const discount = Math.round(subtotal * 0.1);
+      setAppliedCoupon({ code, discount });
+      setCouponInput('');
+      setCouponError(null);
+    } else {
+      setCouponError('Invalid code. Try VEDIC10 for 10% OFF');
     }
   };
 
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
-    if (!shippingForm.fullName.trim()) {
-      errors.fullName = t('Full name is required', 'पूरा नाम आवश्यक है');
-    }
-    const cleanPhone = shippingForm.phone.replace(/\D/g, '');
-    if (!cleanPhone || cleanPhone.length < 10) {
-      errors.phone = t('Valid 10-digit mobile number is required', 'वैध 10 अंकों का मोबाइल नंबर आवश्यक है');
-    }
-    if (!shippingForm.street.trim()) {
-      errors.street = t('Delivery street address is required', 'सड़क का पता आवश्यक है');
-    }
-    if (!shippingForm.city.trim()) {
-      errors.city = t('City is required', 'शहर आवश्यक है');
-    }
-    if (!shippingForm.state.trim()) {
-      errors.state = t('State is required', 'राज्य आवश्यक है');
-    }
-    const cleanPin = shippingForm.postalCode.replace(/\D/g, '');
-    if (!cleanPin || cleanPin.length !== 6) {
-      errors.postalCode = t('Valid 6-digit PIN code is required', 'वैध 6 अंकों का पिन कोड आवश्यक है');
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponError(null);
   };
 
-  const handleProceedToCheckout = () => {
-    if (!authToken) {
-      router.push('/login?redirect=/cart');
-      return;
-    }
-    setStep('checkout');
-    window.scrollTo({ top: 200, behavior: 'smooth' });
-  };
+  // Calculate totals
+  const discountAmount = appliedCoupon ? appliedCoupon.discount : 0;
+  const orderTotal = Math.max(0, subtotal - discountAmount);
 
-  const handleCreateOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) {
-      return;
-    }
-
-    if (!authToken) {
-      router.push('/login?redirect=/cart');
-      return;
-    }
-
-    if (items.length === 0) {
-      setSubmitError(t('Your cart is empty', 'आपकी कार्ट खाली है'));
-      return;
-    }
-
-    setIsSubmitting(true);
-    setSubmitError(null);
-
-    try {
-      // Build notes string including sankalp information if provided
-      let orderNotes = shippingForm.notes.trim();
-      if (shippingForm.sankalpName) {
-        const sankalpNote = `Sankalp Name: ${shippingForm.sankalpName}${
-          shippingForm.sankalpGotra ? `, Gotra: ${shippingForm.sankalpGotra}` : ''
-        }`;
-        orderNotes = orderNotes ? `${orderNotes} | ${sankalpNote}` : sankalpNote;
-      }
-
-      const payload = {
-        items: items.map((item) => ({
-          productId: item.id,
-          quantity: item.quantity,
-        })),
-        shippingAddress: {
-          recipient: shippingForm.fullName.trim(),
-          addressLine: shippingForm.street.trim(),
-          city: shippingForm.city.trim(),
-          state: shippingForm.state.trim(),
-          pincode: shippingForm.postalCode.trim(),
-          phone: shippingForm.phone.trim(),
-          sankalpName: shippingForm.sankalpName.trim() || undefined,
-          sankalpGotra: shippingForm.sankalpGotra.trim() || undefined,
-          notes: orderNotes || undefined,
-        },
+  // Metadata helper for item cards
+  const getItemDetails = (item: CartItem) => {
+    if (item.id === 'astrological-consultation' || item.name.toLowerCase().includes('consultation')) {
+      return {
+        desc: 'Personalized guidance from experienced astrologers for your life, career, health, and relationships.',
+        badge1: '60 mins',
+        badge1Icon: 'clock',
+        badge2: 'Expert Astrologers',
+        badge2Icon: 'user',
       };
-
-      const res = await fetch(`${backendUrl}/api/orders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || t('Failed to create order. Please try again.', 'ऑर्डर बनाने में विफल। कृपया पुनः प्रयास करें।'));
-      }
-
-      // Order created successfully!
-      setCompletedOrder(data);
-      clearCart();
-      setStep('confirmation');
-      window.scrollTo({ top: 100, behavior: 'smooth' });
-    } catch (err: any) {
-      console.error('Order creation error:', err);
-      setSubmitError(err.message || t('An unexpected error occurred.', 'एक अनपेक्षित त्रुटि हुई।'));
-    } finally {
-      setIsSubmitting(false);
     }
+    if (item.id === 'marriage-match-making' || item.name.toLowerCase().includes('marriage')) {
+      return {
+        desc: 'Ensure a harmonious married life with accurate kundali matching and compatibility analysis.',
+        badge1: '45 mins',
+        badge1Icon: 'clock',
+        badge2: 'Expert Astrologers',
+        badge2Icon: 'user',
+      };
+    }
+    if (item.id === 'rose-quartz-crystal' || item.name.toLowerCase().includes('quartz')) {
+      return {
+        desc: 'Enhance love, harmony and emotional well-being.',
+        badge1: 'Product',
+        badge1Icon: 'tag',
+        badge2: 'Wellness Products',
+        badge2Icon: 'user',
+      };
+    }
+    return {
+      desc: item.tag || 'Authentic Vedic consecrated spiritual item handcrafted with sacred mantras.',
+      badge1: item.category === 'services' ? 'Session' : 'Product',
+      badge1Icon: item.category === 'services' ? 'clock' : 'tag',
+      badge2: 'AstroVD Certified',
+      badge2Icon: 'user',
+    };
+  };
+
+  // Handle adding recommended product
+  const handleAddRecommended = (prod: RecommendedProduct) => {
+    addItem({
+      id: prod.id,
+      name: prod.name,
+      price: prod.price,
+      priceFormatted: prod.priceFormatted,
+      image: prod.image,
+      category: prod.category,
+      quantity: 1,
+      tag: prod.tag,
+    });
+  };
+
+  // Reset sample items if user cleared and wants to see screenshot view again
+  const handleRestoreSampleItems = () => {
+    clearCart();
+    DEFAULT_SAMPLE_ITEMS.forEach((item) => addItem(item, item.quantity));
+  };
+
+  // Handle checkout form submit
+  const handleProceedToPayment = () => {
+    if (items.length === 0) return;
+    setCurrentStep(2);
+    setIsCheckoutModalOpen(true);
+  };
+
+  const handleCompleteOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setTimeout(() => {
+      const generatedOrder = `AVD-${Math.floor(100000 + Math.random() * 900000)}`;
+      setCompletedOrderNumber(generatedOrder);
+      setIsSubmitting(false);
+      setIsCheckoutModalOpen(false);
+      setCurrentStep(3);
+      clearCart();
+    }, 1200);
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#3B1E22] flex flex-col font-sans selection:bg-amber-400 overflow-x-clip">
+    <div className="min-h-screen bg-[#FAF7F2] flex flex-col font-sans selection:bg-[#3E1F18] selection:text-white">
       <Navbar />
 
-      <PageHeader
-        title={t('Sacred Shopping Cart & Checkout', 'पवित्र शॉपिंग कार्ट एवं ऑर्डर')}
-        subtitle={t(
-          'Authentic Lab-Certified Gemstones & Sacred Rudrakshas Consecrated with Vedic Sankalp',
-          'वैदिक संकल्प द्वारा प्राण-प्रतिष्ठित शुद्ध लैब-प्रमाणित रत्न एवं रुद्राक्ष'
-        )}
-        breadcrumb={t('Cart', 'कार्ट')}
-      />
-
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-        {/* ================= STEP 1: CONFIRMATION VIEW ================= */}
-        {step === 'confirmation' && completedOrder && (
-          <div className="max-w-3xl mx-auto space-y-8 animate-fadeIn">
-            <div className="rounded-3xl bg-white border-2 border-amber-300 shadow-2xl p-6 sm:p-10 text-center space-y-6 relative overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-amber-400 via-[#800000] to-amber-400" />
-
-              <div className="w-20 h-20 rounded-full bg-emerald-100 border-2 border-emerald-400 text-emerald-700 flex items-center justify-center mx-auto shadow-lg">
-                <PackageCheck className="w-10 h-10" />
-              </div>
-
-              <div className="space-y-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold uppercase tracking-wider">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                  {t('Order Placed Successfully', 'ऑर्डर सफलतापूर्वक दर्ज हुआ')}
-                </span>
-                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#4A151B]">
-                  {t('Jai Shri Ram! Your Order has been Placed', 'जय श्री राम! आपका ऑर्डर स्वीकार कर लिया गया है')}
-                </h1>
-                <p className="text-xs sm:text-sm text-stone-600 max-w-lg mx-auto">
-                  {t(
-                    'Our Vedic Acharyas in Kashi will conduct the consecrated Prana Pratishtha rituals for your items before sacred packaging and dispatch.',
-                    'काशी के वैदिक आचार्यों द्वारा आपकी सामग्री की विशेष प्राण-प्रतिष्ठा पूजा संपन्न कर पवित्र सुरक्षा कवच के साथ प्रेषित किया जाएगा।'
-                  )}
-                </p>
-              </div>
-
-              {/* Order Meta Box */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-stone-50 rounded-2xl p-4 border border-stone-200 text-xs text-left">
-                <div>
-                  <span className="text-stone-500 font-semibold block uppercase text-[10px]">{t('Order Number', 'ऑर्डर क्रमांक')}</span>
-                  <span className="font-bold text-[#800000] font-mono break-all">{completedOrder.orderNumber || completedOrder.id.slice(0, 8)}</span>
-                </div>
-                <div>
-                  <span className="text-stone-500 font-semibold block uppercase text-[10px]">{t('Status', 'स्थिति')}</span>
-                  <span className="inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[11px] mt-0.5">
-                    {completedOrder.status || 'PROCESSING'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-stone-500 font-semibold block uppercase text-[10px]">{t('Payment Status', 'भुगतान स्थिति')}</span>
-                  <span className="inline-block px-2 py-0.5 rounded-full bg-stone-200 text-stone-800 font-bold text-[11px] mt-0.5">
-                    {completedOrder.paymentStatus || 'PENDING'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-stone-500 font-semibold block uppercase text-[10px]">{t('Total Amount', 'कुल राशि')}</span>
-                  <span className="font-bold text-stone-900 text-sm">₹{Number(completedOrder.totalAmount).toLocaleString('en-IN')}</span>
-                </div>
-              </div>
-
-              {/* Ordered Items Summary */}
-              {completedOrder.items && completedOrder.items.length > 0 && (
-                <div className="text-left space-y-3 pt-2">
-                  <h3 className="font-serif font-bold text-sm text-[#4A151B]">
-                    {t('Ordered Items:', 'ऑर्डर की गई सामग्री:')}
-                  </h3>
-                  <div className="divide-y divide-stone-100 border border-stone-200 rounded-2xl overflow-hidden bg-white">
-                    {completedOrder.items.map((it: any, idx: number) => (
-                      <div key={idx} className="p-3 sm:p-4 flex items-center justify-between text-xs">
-                        <div className="space-y-0.5">
-                          <p className="font-semibold text-stone-900">{it.product?.name || `Product #${it.productId}`}</p>
-                          <p className="text-stone-500 text-[11px]">
-                            {t('Qty', 'मात्रा')}: {it.quantity} × ₹{Number(it.price).toLocaleString('en-IN')}
-                          </p>
-                        </div>
-                        <span className="font-bold text-stone-900">
-                          ₹{(Number(it.price) * it.quantity).toLocaleString('en-IN')}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Delivery Address Details */}
-              {completedOrder.shippingAddress && (
-                <div className="text-left bg-amber-50/60 rounded-2xl p-4 border border-amber-200 text-xs space-y-1">
-                  <span className="font-bold text-[#800000] block text-[11px] uppercase tracking-wider">
-                    {t('Delivery Destination', 'वितरण का पता')}
-                  </span>
-                  <p className="font-semibold text-stone-900">
-                    {completedOrder.shippingAddress.recipient || completedOrder.shippingAddress.fullName}
-                  </p>
-                  <p className="text-stone-600">
-                    {completedOrder.shippingAddress.addressLine || completedOrder.shippingAddress.street}, {completedOrder.shippingAddress.city}, {completedOrder.shippingAddress.state} - {completedOrder.shippingAddress.pincode || completedOrder.shippingAddress.postalCode}
-                  </p>
-                  <p className="text-stone-600">{t('Contact Phone', 'संपर्क फोन')}: {completedOrder.shippingAddress.phone}</p>
-                  {completedOrder.shippingAddress.notes && (
-                    <p className="text-stone-700 italic pt-1 border-t border-amber-200/60">
-                      {t('Personal Sankalp / Notes', 'संकल्प एवं निर्देश')}: {completedOrder.shippingAddress.notes}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-                <Link
-                  href="/dashboard?tab=orders"
-                  className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#5B0D15] hover:bg-[#72111c] text-amber-100 font-serif font-bold text-xs sm:text-sm shadow-xl hover:scale-105 transition-all text-center cursor-pointer"
-                >
-                  {t('Track Order in Dashboard', 'डैशबोर्ड में ऑर्डर ट्रैक करें')}
-                </Link>
-                <Link
-                  href="/products"
-                  className="w-full sm:w-auto px-6 py-3 rounded-full bg-white hover:bg-stone-50 border border-stone-300 text-stone-800 font-semibold text-xs sm:text-sm shadow-sm transition-all text-center"
-                >
-                  {t('Continue Shopping', 'और खरीदारी करें')}
-                </Link>
-              </div>
+      {/* Main Content Area - Expanded to max-w-7xl / 1440px to position the Cart & Recommendation component prominently to the left */}
+      <main className="flex-1 max-w-7xl xl:max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 pb-16">
+        {/* Step 3: Confirmation View */}
+        {currentStep === 3 ? (
+          <div className="bg-white rounded-2xl border border-[#ECE5DC] p-8 sm:p-12 text-center max-w-2xl mx-auto shadow-sm my-8">
+            <div className="w-16 h-16 bg-[#F4EFE6] text-[#3E1F18] rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 className="w-10 h-10" />
             </div>
-          </div>
-        )}
-
-        {/* ================= STEP 2: EMPTY CART ================= */}
-        {step !== 'confirmation' && items.length === 0 && (
-          <div className="max-w-2xl mx-auto text-center py-16 px-4 space-y-6">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber-100 via-rose-50 to-stone-100 border-2 border-amber-200 text-[#5B0D15] flex items-center justify-center mx-auto shadow-md">
-              <ShoppingCart className="w-10 h-10 opacity-70" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#4A151B]">
-                {t('Your Sacred Cart is Empty', 'आपकी पूजा कार्ट खाली है')}
-              </h2>
-              <p className="text-xs sm:text-sm text-stone-600 max-w-md mx-auto leading-relaxed">
-                {t(
-                  'Explore our collection of authentic 100% natural energized bracelets and gemstone talismans blessed in Kashi.',
-                  'काशी में अभिमंत्रित 100% शुद्ध प्रमाणित आध्यात्मिक ब्रेसलेट और सिद्ध रत्नों का संग्रह देखें।'
-                )}
-              </p>
-            </div>
-            <div className="pt-2">
-              <Link
-                href="/products"
-                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#73121D] to-[#480A10] hover:from-[#73121D] hover:to-[#5B0D15] text-amber-100 font-serif font-bold text-sm shadow-xl shadow-rose-950/20 hover:scale-105 transition-all cursor-pointer"
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#2A1810]">
+              Order Confirmed Successfully!
+            </h2>
+            <p className="text-sm sm:text-base text-[#736B63] mt-2">
+              Thank you for choosing AstroVD. Your sacred booking reference is{' '}
+              <span className="font-bold text-[#3E1F18]">{completedOrderNumber}</span>.
+            </p>
+            <p className="text-xs sm:text-sm text-[#8C827A] mt-2">
+              A confirmation email and SMS with consultation details and tracking links have been sent.
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => {
+                  setCurrentStep(1);
+                  handleRestoreSampleItems();
+                }}
+                className="px-6 py-3 rounded-xl bg-[#3E1F18] text-white font-medium text-sm hover:bg-[#2A1810] transition-colors"
               >
-                <span>{t('Explore Spiritual Products', 'सिद्ध आध्यात्मिक उत्पाद देखें')}</span>
-                <ArrowRight className="w-4 h-4 text-amber-300" />
+                Reset Demo Cart
+              </button>
+              <Link
+                href="/services"
+                className="px-6 py-3 rounded-xl border border-[#ECE5DC] text-[#2A1810] font-medium text-sm hover:bg-[#FAF7F2] transition-colors"
+              >
+                Explore More Services
               </Link>
             </div>
           </div>
-        )}
-
-        {/* ================= STEP 3: CART ITEMS & CHECKOUT ================= */}
-        {step !== 'confirmation' && items.length > 0 && (
-          <div className="space-y-8">
-            {/* Clean, Simple Progress Stepper */}
-            <div className="max-w-md mx-auto w-full py-2">
-              <div className="flex items-center justify-center">
-                {/* Step 1: Cart */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep('cart');
-                    window.scrollTo({ top: 220, behavior: 'smooth' });
-                  }}
-                  className="flex items-center gap-2.5 cursor-pointer group focus:outline-none"
-                >
-                  <span
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
-                      step === 'cart'
-                        ? 'bg-[#5B0D15] text-amber-100 ring-4 ring-amber-100 shadow-sm'
-                        : step === 'checkout'
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-stone-200 text-stone-600'
-                    }`}
-                  >
-                    {step === 'checkout' ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : '1'}
-                  </span>
-                  <span
-                    className={`text-xs sm:text-sm transition-colors ${
-                      step === 'cart'
-                        ? 'text-[#5B0D15] font-bold'
-                        : 'text-stone-500 font-medium group-hover:text-stone-800'
-                    }`}
-                  >
-                    {t('Cart', 'कार्ट')} {totalCount > 0 ? `(${totalCount})` : ''}
-                  </span>
-                </button>
-
-                {/* Connecting Divider Line */}
-                <div className="flex-1 mx-4 sm:mx-6 h-[2px] max-w-[80px] bg-stone-200 relative overflow-hidden rounded-full">
-                  <div
-                    className={`h-full transition-all duration-500 rounded-full ${
-                      step === 'checkout' ? 'w-full bg-[#5B0D15]' : 'w-0 bg-[#5B0D15]'
-                    }`}
-                  />
-                </div>
-
-                {/* Step 2: Checkout */}
-                <button
-                  type="button"
-                  onClick={handleProceedToCheckout}
-                  className="flex items-center gap-2.5 cursor-pointer group focus:outline-none"
-                >
-                  <span
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
-                      step === 'checkout'
-                        ? 'bg-[#5B0D15] text-amber-100 ring-4 ring-amber-100 shadow-sm'
-                        : 'bg-stone-200 text-stone-500'
-                    }`}
-                  >
-                    2
-                  </span>
-                  <span
-                    className={`text-xs sm:text-sm transition-colors ${
-                      step === 'checkout'
-                        ? 'text-[#5B0D15] font-bold'
-                        : 'text-stone-500 font-medium group-hover:text-stone-800'
-                    }`}
-                  >
-                    {t('Checkout', 'चेकआउट')}
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* LEFT COLUMN: Items Table or Checkout Form */}
-              <div className="lg:col-span-8 space-y-6">
-                {step === 'cart' ? (
-                  <div className="rounded-3xl bg-white border border-stone-200/90 shadow-xl overflow-hidden">
-                    <div className="p-4 sm:p-6 bg-gradient-to-r from-stone-50 to-amber-50/50 border-b border-stone-200 flex items-center justify-between">
-                      <h2 className="font-serif font-bold text-lg sm:text-xl text-[#4A151B] flex items-center gap-2">
-                        <ShoppingCart className="w-5 h-5 text-amber-700" />
-                        <span>{t('Cart Items', 'कार्ट सामग्री')} ({totalCount})</span>
-                      </h2>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+            {/* Left Column (8 cols): Wider, Professional Container for Cart + Recommended */}
+            <div className="lg:col-span-8 flex flex-col">
+              {/* Unified Single Container Card */}
+              <div className="bg-white rounded-3xl border border-[#ECE5DC] shadow-[0_4px_24px_rgba(42,24,16,0.04)] overflow-hidden">
+                {/* 1. Upper Section: Your Cart Items */}
+                <div className="p-6 sm:p-8 sm:pb-9">
+                  {/* Header: Your Cart (X Items) + Clear All */}
+                  <div className="flex items-center justify-between pb-5 border-b border-[#F0EBE3]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-[#FAF5EE] border border-[#EBE3D7] flex items-center justify-center text-[#3E1F18] shadow-2xs">
+                        <ShoppingCart className="w-4.5 h-4.5" />
+                      </div>
+                      <div>
+                        <h2 className="font-serif font-bold text-xl sm:text-2xl text-[#2A1810] tracking-tight">
+                          Your Cart
+                        </h2>
+                        <p className="text-xs text-[#8C8075] font-sans">
+                          {items.length} {items.length === 1 ? 'consecrated item' : 'consecrated items'} in sacred bag
+                        </p>
+                      </div>
+                    </div>
+                    {items.length > 0 && (
                       <button
                         onClick={clearCart}
-                        className="text-xs text-rose-700 hover:text-rose-900 font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#8C8075] hover:text-red-600 transition-colors cursor-pointer"
+                        title="Remove all items from cart"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>{t('Clear Cart', 'कार्ट खाली करें')}</span>
+                        <Trash2 className="w-4 h-4" />
+                        <span>Clear All</span>
                       </button>
-                    </div>
+                    )}
+                  </div>
 
-                    {/* Sign-in prompt for guest cart users */}
-                    {!authToken && (
-                      <div className="p-3.5 sm:p-4 bg-amber-50/90 border-b border-amber-200 text-amber-950 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fadeIn">
-                        <div className="flex items-center gap-2">
-                          <Lock className="w-4 h-4 text-[#5B0D15] shrink-0" />
-                          <span>
-                            {t(
-                              'Please sign in to your sacred account to checkout and complete your consecrated order.',
-                              'अपने पावन ऑर्डर की पुष्टि व चेकआउट के लिए कृपया साइन इन करें।'
-                            )}
-                          </span>
-                        </div>
+                  {/* Items List */}
+                  {items.length === 0 ? (
+                    <div className="py-14 text-center flex flex-col items-center">
+                      <div className="w-16 h-16 rounded-full bg-[#FAF7F2] flex items-center justify-center text-[#736B63] mb-4">
+                        <ShoppingCart className="w-8 h-8 opacity-60" />
+                      </div>
+                      <p className="font-serif font-bold text-lg text-[#2A1810]">Your cart is currently empty</p>
+                      <p className="text-xs sm:text-sm text-[#736B63] mt-1.5 max-w-sm">
+                        Explore our consecrated Vedic consultations and sacred energised products.
+                      </p>
+                      <div className="mt-6 flex flex-wrap gap-3 justify-center">
                         <Link
-                          href="/login?redirect=/cart"
-                          className="px-3.5 py-1.5 rounded-full bg-[#5B0D15] hover:bg-[#72111c] text-white font-bold text-xs shrink-0 transition-transform hover:scale-105 active:scale-95"
+                          href="/services"
+                          className="px-5 py-2.5 bg-[#3E1F18] text-white text-xs sm:text-sm font-serif font-bold rounded-xl hover:bg-[#2A1810] transition-colors"
                         >
-                          {t('Sign In to Checkout', 'साइन इन करें')} →
+                          Explore Services
+                        </Link>
+                        <Link
+                          href="/products"
+                          className="px-5 py-2.5 border border-[#ECE5DC] text-[#2A1810] text-xs sm:text-sm font-serif font-bold rounded-xl hover:bg-[#FAF7F2] transition-colors"
+                        >
+                          Browse Products
                         </Link>
                       </div>
-                    )}
-
-                    <div className="divide-y divide-stone-100">
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-[#F0EBE3]">
                       {items.map((item) => {
-                        const prodName = language === 'hi' && item.nameHi ? item.nameHi : item.name;
-                        const lineTotal = item.price * item.quantity;
-
+                        const details = getItemDetails(item);
                         return (
                           <div
                             key={item.id}
-                            className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-amber-50/20 transition-colors"
+                            className="py-6 first:pt-5 last:pb-2 flex flex-col sm:flex-row gap-5 sm:gap-6 items-start sm:items-center justify-between group"
                           >
-                            {/* Product Info & Thumb */}
-                            <div className="flex items-center gap-4 flex-1 min-w-0">
-                              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-stone-900 overflow-hidden shrink-0 border border-amber-300/70 shadow-sm">
+                            {/* Left: Thumbnail & Details */}
+                            <div className="flex gap-4 sm:gap-5 items-start sm:items-center flex-1 min-w-0">
+                              {/* Generous High-Definition Thumbnail */}
+                              <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-2xl overflow-hidden bg-[#FAF7F2] border border-[#ECE5DC] shrink-0 relative shadow-xs">
                                 <img
-                                  src={item.image}
-                                  alt={prodName}
-                                  className="w-full h-full object-cover"
+                                  src={item.image || '/services/consultation.jpg'}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                 />
                               </div>
-                              <div className="space-y-1 min-w-0">
-                                <span className="text-[10px] font-bold tracking-wider uppercase text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-full inline-block">
-                                  {language === 'hi' && item.tagHi ? item.tagHi : item.tag}
-                                </span>
-                                <h3 className="font-serif font-bold text-stone-900 text-sm sm:text-base truncate">
-                                  {prodName}
+
+                              {/* Middle Info */}
+                              <div className="flex flex-col flex-1 min-w-0 pr-2">
+                                <h3 className="font-serif font-bold text-base sm:text-lg lg:text-xl text-[#2A1810] line-clamp-1 group-hover:text-[#800000] transition-colors">
+                                  {formatTitleCase(item.name)}
                                 </h3>
-                                <p className="text-xs font-serif font-bold text-[#800000]">
-                                  {item.priceFormatted}
-                                  {item.originalPriceFormatted && (
-                                    <span className="text-stone-400 line-through text-[11px] ml-2 font-sans font-normal">
-                                      {item.originalPriceFormatted}
-                                    </span>
-                                  )}
+                                <p className="text-xs sm:text-sm text-[#736B63] mt-1 sm:mt-1.5 leading-relaxed line-clamp-2 max-w-xl">
+                                  {details.desc}
                                 </p>
-                                <p className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
-                                  <ShieldCheck className="w-3.5 h-3.5" />
-                                  <span>{t('Govt Lab Certified & Vedic Energized', 'सरकारी लैब प्रमाणित व अभिमंत्रित')}</span>
-                                </p>
+
+                                {/* Badges / Meta tags */}
+                                <div className="flex flex-wrap items-center gap-2.5 mt-3 text-xs text-[#736B63]">
+                                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#73503D] bg-[#FAF5EE] border border-[#EFE5D8] px-2.5 py-1 rounded-lg">
+                                    {details.badge1Icon === 'clock' ? (
+                                      <Clock className="w-3.5 h-3.5 text-[#8C827A]" />
+                                    ) : (
+                                      <Tag className="w-3.5 h-3.5 text-[#8C827A]" />
+                                    )}
+                                    {details.badge1}
+                                  </span>
+                                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#73503D] bg-[#FAF5EE] border border-[#EFE5D8] px-2.5 py-1 rounded-lg">
+                                    <User className="w-3.5 h-3.5 text-[#8C827A]" />
+                                    {details.badge2}
+                                  </span>
+                                </div>
                               </div>
                             </div>
 
-                            {/* Quantity Controls & Line Total */}
-                            <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-stone-100">
-                              <div className="flex items-center gap-2 bg-stone-100 rounded-full p-1 border border-stone-300">
-                                <button
-                                  type="button"
-                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                  className="w-7 h-7 rounded-full bg-white text-stone-700 flex items-center justify-center hover:bg-amber-100 transition-colors cursor-pointer shadow-xs disabled:opacity-40"
-                                  disabled={item.quantity <= 1}
-                                  aria-label="Decrease quantity"
-                                >
-                                  <Minus className="w-3.5 h-3.5" />
-                                </button>
-                                <span className="w-7 text-center font-bold text-sm text-stone-900">
-                                  {item.quantity}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                  className="w-7 h-7 rounded-full bg-white text-stone-700 flex items-center justify-center hover:bg-amber-100 transition-colors cursor-pointer shadow-xs"
-                                  aria-label="Increase quantity"
-                                >
-                                  <Plus className="w-3.5 h-3.5" />
-                                </button>
+                            {/* Right: Price on top, Stepper directly below in a straight line, Trash to the right */}
+                            <div className="flex items-end gap-3 shrink-0 pt-2 sm:pt-0">
+                              <div className="flex flex-col items-end gap-2">
+                                {/* Price */}
+                                <div className="font-serif font-bold text-lg sm:text-xl text-[#2A1810] tracking-tight">
+                                  {formatRupee(item.price)}
+                                </div>
+
+                                {/* Quantity Stepper Pill directly under price in straight line */}
+                                <div className="inline-flex items-center border border-[#ECE5DC] rounded-full bg-[#FAF7F2] px-1.5 py-1 shadow-2xs">
+                                  <button
+                                    onClick={() =>
+                                      item.quantity > 1
+                                        ? updateQuantity(item.id, item.quantity - 1)
+                                        : removeItem(item.id)
+                                    }
+                                    className="w-7 h-7 flex items-center justify-center text-[#736B63] hover:text-[#2A1810] hover:bg-white rounded-full transition-colors cursor-pointer"
+                                    title="Decrease quantity"
+                                  >
+                                    <Minus className="w-3.5 h-3.5" />
+                                  </button>
+                                  <span className="w-7 text-center text-xs sm:text-sm font-serif font-bold text-[#2A1810]">
+                                    {item.quantity}
+                                  </span>
+                                  <button
+                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                    className="w-7 h-7 flex items-center justify-center text-[#736B63] hover:text-[#2A1810] hover:bg-white rounded-full transition-colors cursor-pointer"
+                                    title="Increase quantity"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
                               </div>
 
-                              <div className="text-right min-w-[90px]">
-                                <span className="font-serif font-bold text-base text-[#800000]">
-                                  ₹{lineTotal.toLocaleString('en-IN')}
-                                </span>
-                                <p className="text-[10px] text-stone-400">
-                                  (₹{item.price.toLocaleString('en-IN')} × {item.quantity})
-                                </p>
-                              </div>
-
+                              {/* Trash Remove Button */}
                               <button
-                                type="button"
                                 onClick={() => removeItem(item.id)}
-                                className="p-2 text-stone-400 hover:text-rose-600 transition-colors cursor-pointer"
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-[#8C827A] hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer mb-0.5"
                                 title="Remove item"
-                                aria-label="Remove item"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -594,408 +491,497 @@ export default function CartPage() {
                         );
                       })}
                     </div>
-
-                    <div className="p-4 sm:p-6 bg-stone-50 border-t border-stone-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-                      <Link
-                        href="/products"
-                        className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-stone-700 hover:text-[#800000] transition-colors"
-                      >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>{t('Continue Shopping More Artifacts', 'और भी आध्यात्मिक सामग्री देखें')}</span>
-                      </Link>
-
-                      <button
-                        type="button"
-                        onClick={handleProceedToCheckout}
-                        className="w-full sm:w-auto px-8 py-3 rounded-full bg-[#5B0D15] hover:bg-[#72111c] text-amber-100 font-serif font-bold text-xs sm:text-sm shadow-xl shadow-rose-950/20 hover:scale-105 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                      >
-                        <span>{t('Proceed to Checkout', 'चेकआउट एवं संकल्प विवरण')}</span>
-                        <ArrowRight className="w-4 h-4 text-amber-300" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  /* ================= CHECKOUT ADDRESS FORM ================= */
-                  <form
-                    onSubmit={handleCreateOrder}
-                    className="rounded-3xl bg-white border border-stone-200/90 shadow-2xl overflow-hidden p-6 sm:p-9 md:p-10 space-y-8 animate-fadeIn"
-                  >
-                    {/* Checkout Box Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200/80 pb-5">
-                      <div className="space-y-1">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100/80 border border-amber-300/80 text-amber-900 text-[11px] font-bold tracking-wider uppercase mb-1">
-                          <PackageCheck className="w-3.5 h-3.5 text-amber-700" />
-                          <span>{t('Secure Checkout • Step 2 of 2', 'सुरक्षित चेकआउट • चरण 2')}</span>
-                        </div>
-                        <h2 className="font-serif font-bold text-2xl sm:text-3xl text-[#4A151B]">
-                          {t('Shipping & Delivery Address', 'सुरक्षित वितरण पता एवं संपर्क')}
-                        </h2>
-                        <p className="text-xs sm:text-sm text-stone-500">
-                          {t('Enter your recipient details and verified delivery address for consecrated dispatch from Varanasi.', 'काशी से अभिमंत्रित आध्यात्मिक सामग्री की सुरक्षित डिलीवरी हेतु अपना पता दर्ज करें।')}
-                        </p>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setStep('cart');
-                          window.scrollTo({ top: 200, behavior: 'smooth' });
-                        }}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 hover:text-stone-900 text-xs font-semibold cursor-pointer transition-all shrink-0 self-start sm:self-auto border border-stone-200"
-                      >
-                        <ArrowLeft className="w-3.5 h-3.5" />
-                        <span>{t('Back to Cart Items', 'कार्ट पर वापस')}</span>
-                      </button>
-                    </div>
-
-                    {/* Unauthenticated notice */}
-                    {!authToken && (
-                      <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/90 border border-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 text-xs shadow-xs">
-                        <div className="flex items-center gap-2.5 text-amber-900">
-                          <Lock className="w-4 h-4 text-amber-700 shrink-0" />
-                          <span className="font-medium">
-                            {t(
-                              'Please login to link this order with your Customer Dashboard and track shipment status.',
-                              'कृपया अपने डैशबोर्ड में ऑर्डर ट्रैक करने के लिए लॉगिन करें।'
-                            )}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setAuthModalOpen(true)}
-                          className="shrink-0 px-5 py-2 rounded-full bg-[#5B0D15] text-amber-100 font-semibold cursor-pointer text-xs hover:bg-[#72111c] transition-all shadow-md"
-                        >
-                          {t('Log In / Register', 'लॉग इन / पंजीकरण')}
-                        </button>
-                      </div>
-                    )}
-
-                    {submitError && (
-                      <div className="p-4 rounded-2xl bg-rose-50 border border-rose-300 text-rose-800 text-xs flex items-center gap-2.5 shadow-xs">
-                        <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-                        <span className="font-medium">{submitError}</span>
-                      </div>
-                    )}
-
-                    {/* SECTION 1: Recipient Information */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 text-stone-800 font-serif font-bold text-sm sm:text-base border-b border-stone-100 pb-2">
-                        <User className="w-4 h-4 text-[#800000]" />
-                        <span>{t('1. Recipient Contact Details', '1. प्राप्तकर्ता का विवरण')}</span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                        {/* Full Name */}
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-stone-700 block">
-                            {t('Recipient Full Name *', 'प्राप्तकर्ता का पूरा नाम *')}
-                          </label>
-                          <input
-                            type="text"
-                            name="fullName"
-                            value={shippingForm.fullName}
-                            onChange={handleInputChange}
-                            placeholder="e.g. Rahul Sharma"
-                            className={`w-full text-xs sm:text-sm px-4 py-3 rounded-xl border focus:outline-none transition-all ${
-                              formErrors.fullName
-                                ? 'border-rose-400 bg-rose-50/50'
-                                : 'border-stone-300 focus:border-[#5B0D15] focus:ring-2 focus:ring-amber-500/20 bg-stone-50/50 hover:bg-white'
-                            }`}
-                          />
-                          {formErrors.fullName && <p className="text-[11px] text-rose-600 font-medium">{formErrors.fullName}</p>}
-                        </div>
-
-                        {/* Phone */}
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-stone-700 block">
-                            {t('WhatsApp / Mobile Number *', 'व्हाट्सएप / मोबाइल नंबर *')}
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="tel"
-                              name="phone"
-                              value={shippingForm.phone}
-                              onChange={handleInputChange}
-                              placeholder="e.g. 9876543210"
-                              maxLength={10}
-                              className={`w-full text-xs sm:text-sm px-4 py-3 rounded-xl border focus:outline-none transition-all ${
-                                formErrors.phone
-                                  ? 'border-rose-400 bg-rose-50/50'
-                                  : 'border-stone-300 focus:border-[#5B0D15] focus:ring-2 focus:ring-amber-500/20 bg-stone-50/50 hover:bg-white'
-                              }`}
-                            />
-                          </div>
-                          {formErrors.phone && <p className="text-[11px] text-rose-600 font-medium">{formErrors.phone}</p>}
-                          <span className="text-[10px] text-stone-400 block">{t('Used for delivery SMS updates and courier OTP', 'कूरियर ट्रैकिंग व डिलीवरी अपडेट हेतु')}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* SECTION 2: Complete Delivery Address */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 text-stone-800 font-serif font-bold text-sm sm:text-base border-b border-stone-100 pb-2">
-                        <MapPin className="w-4 h-4 text-[#800000]" />
-                        <span>{t('2. Delivery Destination', '2. डिलीवरी का पता')}</span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-                        {/* Street Address */}
-                        <div className="sm:col-span-3 space-y-1.5">
-                          <label className="text-xs font-semibold text-stone-700 block">
-                            {t('Street Address & House / Flat No. *', 'घर का पता एवं गली / फ्लैट क्रमांक *')}
-                          </label>
-                          <input
-                            type="text"
-                            name="street"
-                            value={shippingForm.street}
-                            onChange={handleInputChange}
-                            placeholder="e.g. Flat 302, Shanti Kunj Apartments, Kabir Nagar"
-                            className={`w-full text-xs sm:text-sm px-4 py-3 rounded-xl border focus:outline-none transition-all ${
-                              formErrors.street
-                                ? 'border-rose-400 bg-rose-50/50'
-                                : 'border-stone-300 focus:border-[#5B0D15] focus:ring-2 focus:ring-amber-500/20 bg-stone-50/50 hover:bg-white'
-                            }`}
-                          />
-                          {formErrors.street && <p className="text-[11px] text-rose-600 font-medium">{formErrors.street}</p>}
-                        </div>
-
-                        {/* City */}
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-stone-700 block">
-                            {t('City *', 'शहर *')}
-                          </label>
-                          <input
-                            type="text"
-                            name="city"
-                            value={shippingForm.city}
-                            onChange={handleInputChange}
-                            placeholder="e.g. Varanasi"
-                            className={`w-full text-xs sm:text-sm px-4 py-3 rounded-xl border focus:outline-none transition-all ${
-                              formErrors.city
-                                ? 'border-rose-400 bg-rose-50/50'
-                                : 'border-stone-300 focus:border-[#5B0D15] focus:ring-2 focus:ring-amber-500/20 bg-stone-50/50 hover:bg-white'
-                            }`}
-                          />
-                          {formErrors.city && <p className="text-[11px] text-rose-600 font-medium">{formErrors.city}</p>}
-                        </div>
-
-                        {/* State */}
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-stone-700 block">
-                            {t('State *', 'राज्य *')}
-                          </label>
-                          <input
-                            type="text"
-                            name="state"
-                            value={shippingForm.state}
-                            onChange={handleInputChange}
-                            placeholder="e.g. Uttar Pradesh"
-                            className={`w-full text-xs sm:text-sm px-4 py-3 rounded-xl border focus:outline-none transition-all ${
-                              formErrors.state
-                                ? 'border-rose-400 bg-rose-50/50'
-                                : 'border-stone-300 focus:border-[#5B0D15] focus:ring-2 focus:ring-amber-500/20 bg-stone-50/50 hover:bg-white'
-                            }`}
-                          />
-                          {formErrors.state && <p className="text-[11px] text-rose-600 font-medium">{formErrors.state}</p>}
-                        </div>
-
-                        {/* Postal Code */}
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-stone-700 block">
-                            {t('PIN Code (6 digits) *', 'पिन कोड (6 अंक) *')}
-                          </label>
-                          <input
-                            type="text"
-                            name="postalCode"
-                            value={shippingForm.postalCode}
-                            onChange={handleInputChange}
-                            placeholder="e.g. 221001"
-                            maxLength={6}
-                            className={`w-full text-xs sm:text-sm px-4 py-3 rounded-xl border focus:outline-none transition-all ${
-                              formErrors.postalCode
-                                ? 'border-rose-400 bg-rose-50/50'
-                                : 'border-stone-300 focus:border-[#5B0D15] focus:ring-2 focus:ring-amber-500/20 bg-stone-50/50 hover:bg-white'
-                            }`}
-                          />
-                          {formErrors.postalCode && <p className="text-[11px] text-rose-600 font-medium">{formErrors.postalCode}</p>}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* SECTION 3: Order Notes & Landmark */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-stone-700 flex items-center justify-between">
-                        <span>{t('Delivery Instructions / Landmark (Optional)', 'वितरण निर्देश / निकटतम लैंडमार्क (ऐच्छिक)')}</span>
-                        <span className="text-[10px] text-stone-400 font-normal">{t('Helps courier reach faster', 'कूरियर सहायता हेतु')}</span>
-                      </label>
-                      <textarea
-                        name="notes"
-                        rows={2}
-                        value={shippingForm.notes}
-                        onChange={handleInputChange}
-                        placeholder={t('e.g. Near Vishwanath Temple gate, deliver after 2 PM', 'उदा. मुख्य मंदिर के निकट, दोपहर 2 बजे के बाद')}
-                        className="w-full text-xs sm:text-sm px-4 py-3 rounded-xl border border-stone-300 focus:border-[#5B0D15] focus:ring-2 focus:ring-amber-500/20 bg-stone-50/50 hover:bg-white focus:outline-none transition-all"
-                      />
-                    </div>
-
-                    {/* Security & Payment Assurance Banner */}
-                    <div className="rounded-2xl bg-gradient-to-r from-amber-50 via-stone-50 to-amber-50/60 border border-amber-200/90 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-amber-200/80 text-amber-900 flex items-center justify-center shrink-0">
-                          <ShieldCheck className="w-5 h-5 text-[#800000]" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-stone-900 text-xs sm:text-sm">
-                            {t('100% Insured Consecrated Shipping', '100% सुरक्षित अभिमंत्रित पार्सल')}
-                          </p>
-                          <p className="text-[11px] text-stone-500">
-                            {t('Cash on Delivery (COD) & Online UPI options available upon arrival.', 'कैश ऑन डिलीवरी (COD) एवं ऑनलाइन UPI भुगतान उपलब्ध।')}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100/90 px-3 py-1 rounded-full border border-emerald-300 shrink-0 self-start sm:self-auto">
-                        ✓ {t('Free Delivery Across India', 'पूरे भारत में निःशुल्क डिलीवरी')}
-                      </span>
-                    </div>
-
-                    {/* Submit Order Button */}
-                    <div className="pt-2 space-y-2.5">
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full py-4 sm:py-4.5 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#73121D] to-[#480A10] hover:from-[#73121D] hover:to-[#5B0D15] text-amber-100 font-serif font-bold text-sm sm:text-base shadow-xl shadow-rose-950/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-60 border border-amber-400/40"
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="w-5 h-5 animate-spin text-amber-300" />
-                            <span>{t('Confirming Order with Kashi Acharyas...', 'ऑर्डर दर्ज किया जा रहा है...')}</span>
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle2 className="w-5 h-5 text-emerald-300" />
-                            <span>
-                              {t(
-                                `Confirm Order • ₹${subtotal.toLocaleString('en-IN')}`,
-                                `ऑर्डर पक्का करें • ₹${subtotal.toLocaleString('en-IN')}`
-                              )}
-                            </span>
-                            <ArrowRight className="w-4 h-4 text-amber-300" />
-                          </>
-                        )}
-                      </button>
-
-                      <p className="text-[11px] text-center text-stone-500">
-                        {t('Instant WhatsApp & Email booking acknowledgment will be dispatched upon confirmation.', 'ऑर्डर सबमिट होते ही व्हाट्सएप व ईमेल द्वारा तत्काल पावती प्रेषित की जाएगी।')}
-                      </p>
-                    </div>
-                  </form>
-                )}
-              </div>
-
-              {/* RIGHT COLUMN: Order Summary & Trust Badges */}
-              <div className="lg:col-span-4 space-y-5">
-                <div className="rounded-3xl bg-white border border-stone-200/90 shadow-xl p-5 sm:p-6 space-y-5 sticky top-24">
-                  <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-                    <h3 className="font-serif font-bold text-base sm:text-lg text-[#4A151B]">
-                      {t('Order Summary', 'ऑर्डर सारांश')}
-                    </h3>
-                    <span className="text-[11px] font-semibold text-stone-500">
-                      {totalCount} {totalCount === 1 ? t('item', 'वस्तु') : t('items', 'वस्तुएं')}
-                    </span>
-                  </div>
-
-                  {/* Compact items list in Checkout step */}
-                  {step === 'checkout' && items.length > 0 && (
-                    <div className="space-y-3 pb-3 border-b border-stone-100 max-h-56 overflow-y-auto pr-1">
-                      {items.map((item) => (
-                        <div key={item.id} className="flex items-center gap-3">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="w-11 h-11 rounded-xl object-cover border border-amber-200/90 shrink-0 bg-stone-100"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-serif font-bold text-stone-900 truncate">
-                              {language === 'hi' && item.nameHi ? item.nameHi : item.name}
-                            </p>
-                            <p className="text-[11px] text-stone-500">
-                              Qty: {item.quantity} × ₹{item.price.toLocaleString('en-IN')}
-                            </p>
-                          </div>
-                          <span className="text-xs font-serif font-bold text-[#800000] shrink-0">
-                            ₹{(item.price * item.quantity).toLocaleString('en-IN')}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
                   )}
+                </div>
 
-                  <div className="space-y-3 text-xs">
-                    <div className="flex items-center justify-between text-stone-600">
-                      <span>{t('Cart Subtotal', 'सामग्री उप-योग')}</span>
-                      <span className="font-semibold text-stone-900 font-mono">₹{subtotal.toLocaleString('en-IN')}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-stone-600">
-                      <span className="flex items-center gap-1">
-                        <Truck className="w-3.5 h-3.5 text-amber-600" />
-                        <span>{t('Express Consecrated Shipping', 'विशेष सुरक्षित कूरियर')}</span>
-                      </span>
-                      <span className="font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-[11px]">
-                        {t('FREE', 'निःशुल्क')}
-                      </span>
-                    </div>
-
-                    <div className="pt-3 border-t border-stone-200 flex items-center justify-between">
-                      <span className="font-serif font-bold text-stone-900 text-sm">
-                        {t('Total Payable', 'कुल देय राशि')}
-                      </span>
-                      <span className="font-serif font-bold text-xl text-[#800000]">
-                        ₹{subtotal.toLocaleString('en-IN')}
-                      </span>
-                    </div>
+                {/* 2. Meaningful Sacred Divider Bar */}
+                <div className="border-t border-[#ECE5DC] bg-gradient-to-r from-[#FAF6EE] via-[#F5ECE0] to-[#FAF6EE] px-6 sm:px-8 py-3.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="w-4.5 h-4.5 text-[#8C6239]" />
+                    <span className="font-serif font-bold text-sm sm:text-base text-[#2A1810] tracking-tight">
+                      Sacred Additions For Your Booking
+                    </span>
+                    <span className="text-xs text-[#8C8075] hidden sm:inline">• Consecrated & Handcrafted</span>
                   </div>
+                  <Link
+                    href="/products"
+                    className="inline-flex items-center gap-1 text-xs font-serif font-bold text-[#3E1F18] hover:underline"
+                  >
+                    <span>Explore All Products</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
 
-                  {/* Trust guarantees */}
-                  <div className="space-y-2.5 pt-2 border-t border-stone-100 text-[11px] text-stone-600">
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>{t('100% Genuine Gemstone Lab Certification', '100% शुद्ध प्रमाणित प्राकृतिक रत्न')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>{t('Consecrated in Kashi with Vedic Mantras', 'काशी में वैदिक आचार्यों द्वारा सिद्ध')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <RotateCcw className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>{t('7-Day Replacement Guarantee', '7-दिवसीय सरल प्रतिस्थापन गारंटी')}</span>
-                    </div>
+                {/* 3. Lower Section: Recommended Products Tray */}
+                <div className="p-6 sm:p-8 bg-[#FCFAF7] border-t border-[#F0EBE3]">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+                    {RECOMMENDED_PRODUCTS.map((prod) => {
+                      const isWishlisted = wishlist.includes(prod.id);
+                      return (
+                        <div
+                          key={prod.id}
+                          className="rounded-2xl border border-[#F0EBE3] p-3 sm:p-3.5 bg-white hover:border-[#DECBB7] hover:shadow-md transition-all flex flex-col justify-between group shadow-xs"
+                        >
+                          {/* Image with Heart Wishlist Icon */}
+                          <div className="relative w-full h-32 sm:h-36 rounded-xl overflow-hidden bg-[#FAF7F2] border border-[#F0EBE3]">
+                            <img
+                              src={prod.image}
+                              alt={prod.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <button
+                              onClick={() => toggleWishlist(prod.id)}
+                              className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center text-[#736B63] hover:text-red-500 shadow-2xs transition-colors cursor-pointer"
+                              title="Add to Wishlist"
+                            >
+                              <Heart
+                                className={`w-4 h-4 ${
+                                  isWishlisted ? 'fill-red-500 text-red-500' : ''
+                                }`}
+                              />
+                            </button>
+                          </div>
+
+                          {/* Title */}
+                          <h4 className="font-serif font-bold text-xs sm:text-sm text-[#2A1810] mt-2.5 line-clamp-1 group-hover:text-[#800000] transition-colors">
+                            {formatTitleCase(prod.name)}
+                          </h4>
+
+                          {/* Price & Add Button */}
+                          <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-[#F0EAE1]">
+                            <span className="font-serif font-bold text-xs sm:text-sm text-[#2A1810]">
+                              {prod.priceFormatted}
+                            </span>
+                            <button
+                              onClick={() => handleAddRecommended(prod)}
+                              className="px-3.5 py-1.5 bg-[#3E1F18] hover:bg-[#2A1810] text-white text-xs font-semibold rounded-full active:scale-95 transition-all cursor-pointer shadow-2xs"
+                            >
+                              Add
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Right Column (4 cols): Luxury Order Summary Card */}
+            <div className="lg:col-span-4 sticky top-28 lg:top-32 transition-all">
+              <div className="bg-white rounded-3xl border border-[#ECE5DC] p-6 sm:p-7 shadow-[0_4px_24px_rgba(42,24,16,0.06)] flex flex-col gap-5">
+                {/* Header: Order Summary */}
+                <div className="flex items-center justify-between pb-4 border-b border-[#F0EBE3]">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#FAF5EE] border border-[#EBE3D7] flex items-center justify-center text-[#3E1F18]">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="font-serif font-bold text-xl sm:text-2xl text-[#2A1810] tracking-tight">
+                        Order Summary
+                      </h3>
+                      <p className="text-[11px] text-[#8C8075] font-sans">
+                        Temple consecrated booking summary
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-semibold text-[#6E4B37] bg-[#F5ECE0] border border-[#EADDCB] px-2.5 py-1 rounded-full font-serif">
+                    {totalCount} {totalCount === 1 ? 'item' : 'items'}
+                  </span>
+                </div>
+
+                {/* Compact Refined Line Items */}
+                {items.length > 0 ? (
+                  <div className="flex flex-col gap-3 max-h-[310px] overflow-y-auto pr-1">
+                    {items.map((item) => {
+                      const details = getItemDetails(item);
+                      return (
+                        <div
+                          key={`summary-${item.id}`}
+                          className="bg-[#FCFAF7] border border-[#F0EAE1] hover:border-[#DECBB7] transition-all rounded-xl p-3 flex items-center gap-3.5 group shadow-[0_1px_3px_rgba(0,0,0,0.02)]"
+                        >
+                          {/* Mini Thumbnail */}
+                          <div className="w-13 h-13 rounded-xl overflow-hidden bg-white border border-[#E5DACB] shrink-0 relative">
+                            <img
+                              src={item.image || '/services/consultation.jpg'}
+                              alt={item.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-serif font-bold text-xs sm:text-sm text-[#2A1810] truncate group-hover:text-[#3E1F18] transition-colors">
+                              {item.name}
+                            </h4>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[10px] uppercase tracking-wider font-semibold text-[#8C6239] bg-[#EFE6D8] px-2 py-0.5 rounded-full truncate">
+                                {details.badge1} • {details.badge2}
+                              </span>
+                            </div>
+
+                            {/* Tactile Micro Stepper Pill */}
+                            <div className="inline-flex items-center border border-[#E3D9CC] rounded-full bg-white px-2 py-0.5 gap-2 shadow-2xs mt-2">
+                              <button
+                                onClick={() =>
+                                  item.quantity > 1
+                                    ? updateQuantity(item.id, item.quantity - 1)
+                                    : removeItem(item.id)
+                                }
+                                className="w-4 h-4 flex items-center justify-center text-[#736B63] hover:text-[#2A1810] transition-colors"
+                                title="Decrease"
+                              >
+                                <Minus className="w-2.5 h-2.5" />
+                              </button>
+                              <span className="text-[11px] font-serif font-bold text-[#2A1810] min-w-3 text-center">
+                                {item.quantity}
+                              </span>
+                              <button
+                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                className="w-4 h-4 flex items-center justify-center text-[#736B63] hover:text-[#2A1810] transition-colors"
+                                title="Increase"
+                              >
+                                <Plus className="w-2.5 h-2.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Price & Delete */}
+                          <div className="flex flex-col items-end gap-1.5 shrink-0">
+                            <span className="font-serif font-bold text-sm sm:text-base text-[#2A1810]">
+                              {formatRupee(item.price * item.quantity)}
+                            </span>
+                            <button
+                              onClick={() => removeItem(item.id)}
+                              className="w-6 h-6 rounded-full flex items-center justify-center text-[#A3988E] hover:text-red-600 hover:bg-red-50 transition-colors"
+                              title="Remove line item"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-[#736B63] py-2">No items selected yet.</p>
+                )}
+
+                {/* Subtotal & Breakdown Calculations */}
+                <div className="border-t border-[#F0EBE3] pt-3 flex flex-col gap-2.5 text-xs sm:text-sm">
+                  <div className="flex justify-between items-center text-[#736B63]">
+                    <span className="font-sans">
+                      Subtotal ({totalCount} {totalCount === 1 ? 'item' : 'items'})
+                    </span>
+                    <span className="font-serif font-bold text-[#2A1810]">{formatRupee(subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-[#736B63]">
+                    <span className="font-sans">Consecration & Sacred Dispatch</span>
+                    <span className="font-semibold text-emerald-700 font-serif">FREE</span>
+                  </div>
+                  {appliedCoupon && (
+                    <div className="flex justify-between items-center text-[#736B63]">
+                      <span className="font-sans">Vedic Voucher Discount</span>
+                      <span className="font-serif font-bold text-emerald-700">
+                        - {formatRupee(discountAmount)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Highlighted Total Amount Block */}
+                <div className="bg-gradient-to-br from-[#FAF5EC] to-[#F5ECE0] border border-[#E5DAC8] rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-2xs">
+                  <div>
+                    <span className="font-serif font-bold text-sm sm:text-base text-[#2A1810] block">
+                      Total Payable
+                    </span>
+                    <span className="text-[11px] text-[#7A6E65] font-sans">
+                      Inclusive of all sanctified rituals & taxes
+                    </span>
+                  </div>
+                  <span className="font-serif font-extrabold text-2xl sm:text-3xl text-[#2A1810] tracking-tight">
+                    {formatRupee(orderTotal)}
+                  </span>
+                </div>
+
+                {/* Security Reassurance Box */}
+                <div className="bg-[#FAF7F2] border border-[#ECE5DC] rounded-xl p-3.5 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-white border border-[#E5DAC8] flex items-center justify-center text-[#8C6239] shrink-0">
+                    <ShieldCheck className="w-4.5 h-4.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h5 className="font-serif font-bold text-xs text-[#2A1810]">
+                      100% Encrypted & Authenticated
+                    </h5>
+                    <p className="text-[11px] text-[#736B63] truncate">
+                      Varanasi Acharya consecrated spiritual guarantee.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Big Proceed to Payment Button */}
+                <button
+                  onClick={handleProceedToPayment}
+                  disabled={items.length === 0}
+                  className={`w-full py-4 px-6 rounded-2xl font-serif font-bold text-sm sm:text-base flex items-center justify-center gap-2.5 shadow-[0_4px_16px_rgba(62,31,24,0.2)] transition-all duration-300 group cursor-pointer ${
+                    items.length > 0
+                      ? 'bg-gradient-to-r from-[#3E1F18] via-[#4D241B] to-[#3E1F18] hover:from-[#2B140F] hover:to-[#2B140F] text-white active:scale-[0.99]'
+                      : 'bg-[#D8CEBF] text-white cursor-not-allowed opacity-75'
+                  }`}
+                >
+                  <Lock className="w-4 h-4 text-amber-200 group-hover:scale-110 transition-transform" />
+                  <span>Proceed to Payment</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
               </div>
             </div>
           </div>
         )}
       </main>
 
-      {/* Auth Modal for Unauthenticated Users */}
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        onLoginSuccess={(user) => {
-          setAuthToken(localStorage.getItem('astro_token'));
-          setUserProfile(user);
-          if (user?.name && !shippingForm.fullName) {
-            setShippingForm((prev) => ({
-              ...prev,
-              fullName: user.name,
-              sankalpName: prev.sankalpName || user.name,
-            }));
-          }
-          setAuthModalOpen(false);
-        }}
-        initialMode="login"
-      />
+      {/* Checkout & Payment Modal (Step 2) */}
+      {isCheckoutModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl border border-[#ECE5DC] max-w-xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setIsCheckoutModalOpen(false);
+                setCurrentStep(1);
+              }}
+              className="absolute top-5 right-5 text-[#736B63] hover:text-[#2A1810] p-1.5 rounded-lg hover:bg-[#FAF7F2] transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Modal Title */}
+            <div className="flex items-center gap-2.5 mb-5 pb-3 border-b border-[#F0EBE3]">
+              <Lock className="w-5 h-5 text-[#3E1F18]" />
+              <div>
+                <h3 className="font-serif font-bold text-xl text-[#2A1810]">
+                  Payment & Shipping Details
+                </h3>
+                <p className="text-xs text-[#736B63]">
+                  Complete your billing and sacred consultation details below.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleCompleteOrder} className="flex flex-col gap-4 text-xs sm:text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-[#2A1810] mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter full name"
+                    value={shippingForm.fullName}
+                    onChange={(e) =>
+                      setShippingForm((prev) => ({ ...prev, fullName: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 border border-[#ECE5DC] rounded-lg focus:outline-none focus:border-[#3E1F18] bg-[#FAF7F2]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-[#2A1810] mb-1">
+                    Mobile Phone *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+91 98765 43210"
+                    value={shippingForm.phone}
+                    onChange={(e) =>
+                      setShippingForm((prev) => ({ ...prev, phone: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 border border-[#ECE5DC] rounded-lg focus:outline-none focus:border-[#3E1F18] bg-[#FAF7F2]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[#2A1810] mb-1">
+                  Delivery / Residential Address *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="House / Street / Landmark"
+                  value={shippingForm.address}
+                  onChange={(e) =>
+                    setShippingForm((prev) => ({ ...prev, address: e.target.value }))
+                  }
+                  className="w-full px-3 py-2 border border-[#ECE5DC] rounded-lg focus:outline-none focus:border-[#3E1F18] bg-[#FAF7F2]"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div>
+                  <label className="block font-semibold text-[#2A1810] mb-1">City *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="City"
+                    value={shippingForm.city}
+                    onChange={(e) =>
+                      setShippingForm((prev) => ({ ...prev, city: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 border border-[#ECE5DC] rounded-lg focus:outline-none focus:border-[#3E1F18] bg-[#FAF7F2]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-[#2A1810] mb-1">State *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="State"
+                    value={shippingForm.state}
+                    onChange={(e) =>
+                      setShippingForm((prev) => ({ ...prev, state: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 border border-[#ECE5DC] rounded-lg focus:outline-none focus:border-[#3E1F18] bg-[#FAF7F2]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-[#2A1810] mb-1">PIN Code *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="PIN Code"
+                    value={shippingForm.pincode}
+                    onChange={(e) =>
+                      setShippingForm((prev) => ({ ...prev, pincode: e.target.value }))
+                    }
+                    className="w-full px-3 py-2 border border-[#ECE5DC] rounded-lg focus:outline-none focus:border-[#3E1F18] bg-[#FAF7F2]"
+                  />
+                </div>
+              </div>
+
+              {/* Sankalp Details (Optional for Pooja/Consultations) */}
+              <div className="p-3 bg-[#FAF7F2] rounded-xl border border-[#ECE5DC] flex flex-col gap-2">
+                <span className="font-semibold text-xs text-[#2A1810]">
+                  Vedic Sankalp Information (Optional)
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    placeholder="Yajman / Native Name"
+                    value={shippingForm.sankalpName}
+                    onChange={(e) =>
+                      setShippingForm((prev) => ({ ...prev, sankalpName: e.target.value }))
+                    }
+                    className="w-full px-3 py-1.5 border border-[#ECE5DC] rounded-lg focus:outline-none focus:border-[#3E1F18] bg-white text-xs"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Gotra (e.g. Kashyap, Shandilya)"
+                    value={shippingForm.sankalpGotra}
+                    onChange={(e) =>
+                      setShippingForm((prev) => ({ ...prev, sankalpGotra: e.target.value }))
+                    }
+                    className="w-full px-3 py-1.5 border border-[#ECE5DC] rounded-lg focus:outline-none focus:border-[#3E1F18] bg-white text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Payment Method Selector */}
+              <div>
+                <label className="block font-semibold text-[#2A1810] mb-2">
+                  Select Payment Method
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <label
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${
+                      shippingForm.paymentMethod === 'upi'
+                        ? 'border-[#3E1F18] bg-[#F4EFE6] text-[#2A1810]'
+                        : 'border-[#ECE5DC] bg-white text-[#736B63]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="upi"
+                      checked={shippingForm.paymentMethod === 'upi'}
+                      onChange={() =>
+                        setShippingForm((prev) => ({ ...prev, paymentMethod: 'upi' }))
+                      }
+                      className="sr-only"
+                    />
+                    <Sparkles className="w-5 h-5 mb-1" />
+                    <span className="font-semibold text-xs">UPI / QR</span>
+                  </label>
+
+                  <label
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${
+                      shippingForm.paymentMethod === 'card'
+                        ? 'border-[#3E1F18] bg-[#F4EFE6] text-[#2A1810]'
+                        : 'border-[#ECE5DC] bg-white text-[#736B63]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="card"
+                      checked={shippingForm.paymentMethod === 'card'}
+                      onChange={() =>
+                        setShippingForm((prev) => ({ ...prev, paymentMethod: 'card' }))
+                      }
+                      className="sr-only"
+                    />
+                    <CreditCard className="w-5 h-5 mb-1" />
+                    <span className="font-semibold text-xs">Credit/Debit Card</span>
+                  </label>
+
+                  <label
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl border cursor-pointer transition-all ${
+                      shippingForm.paymentMethod === 'netbanking'
+                        ? 'border-[#3E1F18] bg-[#F4EFE6] text-[#2A1810]'
+                        : 'border-[#ECE5DC] bg-white text-[#736B63]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="netbanking"
+                      checked={shippingForm.paymentMethod === 'netbanking'}
+                      onChange={() =>
+                        setShippingForm((prev) => ({ ...prev, paymentMethod: 'netbanking' }))
+                      }
+                      className="sr-only"
+                    />
+                    <Building className="w-5 h-5 mb-1" />
+                    <span className="font-semibold text-xs">Net Banking</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Total Summary Row in Modal */}
+              <div className="flex justify-between items-center py-3 border-t border-[#F0EBE3] mt-2">
+                <span className="font-semibold text-[#2A1810]">Total Payable:</span>
+                <span className="font-serif font-bold text-lg text-[#2A1810]">
+                  {formatRupee(orderTotal)}
+                </span>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-3.5 bg-[#3E1F18] hover:bg-[#2A1810] text-white font-medium text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
+              >
+                {isSubmitting ? (
+                  <span>Processing Sacred Payment...</span>
+                ) : (
+                  <>
+                    <span>Pay {formatRupee(orderTotal)} & Confirm</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
