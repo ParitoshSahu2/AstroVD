@@ -24,6 +24,7 @@ import {
   Globe,
 } from 'lucide-react';
 import { AuthModal } from './AuthModal';
+import { CompleteProfileModal } from './CompleteProfileModal';
 import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
 import { performLogout } from '../lib/auth';
@@ -51,6 +52,7 @@ export const Navbar: React.FC = () => {
   const [mobileSearchQuery, setMobileSearchQuery] = useState('');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
@@ -150,13 +152,36 @@ export const Navbar: React.FC = () => {
       }
     };
 
+    const handleAuthEvent = (e: any) => {
+      syncUser();
+      const eventUser = e?.detail?.user || JSON.parse(localStorage.getItem('astro_user') || 'null');
+      if (
+        eventUser &&
+        (!eventUser.dateOfBirth || !eventUser.placeOfBirth || !eventUser.timeOfBirth)
+      ) {
+        setTimeout(() => setProfileModalOpen(true), 400);
+      }
+    };
+
     syncUser();
 
-    window.addEventListener('astro-auth-change', syncUser);
+    // Check on mount if user is logged in with incomplete profile
+    const savedUser = localStorage.getItem('astro_user');
+    if (savedUser) {
+      try {
+        const u = JSON.parse(savedUser);
+        if (u && (!u.dateOfBirth || !u.placeOfBirth || !u.timeOfBirth)) {
+          // Open reminder popup on session start
+          setTimeout(() => setProfileModalOpen(true), 1200);
+        }
+      } catch (err) {}
+    }
+
+    window.addEventListener('astro-auth-change', handleAuthEvent);
     window.addEventListener('storage', syncUser);
 
     return () => {
-      window.removeEventListener('astro-auth-change', syncUser);
+      window.removeEventListener('astro-auth-change', handleAuthEvent);
       window.removeEventListener('storage', syncUser);
     };
   }, []);
@@ -684,6 +709,35 @@ export const Navbar: React.FC = () => {
                     </div>
 
                     <div className="py-2 space-y-2 max-h-72 overflow-y-auto">
+                      {/* Actionable Profile Incomplete Notification Card */}
+                      {(!user?.dateOfBirth || !user?.placeOfBirth || !user?.timeOfBirth) && (
+                        <div
+                          onClick={() => {
+                            setNotificationOpen(false);
+                            setProfileModalOpen(true);
+                          }}
+                          className="p-3 rounded-xl bg-gradient-to-r from-amber-100/90 via-rose-50 to-amber-50 border border-amber-300 text-xs cursor-pointer hover:shadow-md transition-all group"
+                        >
+                          <div className="flex items-center justify-between font-bold text-[#800000] mb-1">
+                            <span className="flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+                              {t('Complete Your Kundli Profile', 'जन्म विवरण पूर्ण करें')}
+                            </span>
+                            <span className="text-[9px] text-rose-700 bg-rose-100 border border-rose-200 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                              {t('Action Needed', 'अनिवार्य')}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-stone-700 leading-snug">
+                            {t(
+                              'Add your Date, Time, and Place of birth for accurate Janam Kundli and planetary predictions.',
+                              'सटीक जन्म कुंडली एवं दशा फल हेतु जन्म समय, तिथि व स्थान दर्ज करें।'
+                            )}
+                          </p>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#800000] group-hover:underline mt-1.5">
+                            {t('Complete Profile Now →', 'अभी प्रोफाइल पूर्ण करें →')}
+                          </span>
+                        </div>
+                      )}
                       <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-200/70 text-xs">
                         <div className="flex items-center justify-between font-bold text-[#5B0D15] mb-1">
                           <span>🪙 {t('Spiritual Welcome Bonus', 'स्वागत बोनस')}</span>
@@ -809,27 +863,7 @@ export const Navbar: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Quick Consultation Status */}
-                      <div className="px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-300/60 flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-900 flex items-center justify-center">
-                            <Sparkles className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <div className="text-[10px] uppercase font-bold text-amber-800 tracking-wider">Consultations</div>
-                            <div className="text-xs font-bold text-[#5B0D15]">
-                              Active Sessions
-                            </div>
-                          </div>
-                        </div>
-                        <Link
-                          href="/dashboard?tab=consultations"
-                          onClick={() => setProfileDropdownOpen(false)}
-                          className="text-[10px] font-bold text-[#5B0D15] hover:text-[#3B1E22] hover:underline"
-                        >
-                          View →
-                        </Link>
-                      </div>
+                      
 
                       {/* Quick Navigation Items */}
                       <div className="space-y-0.5 text-xs text-stone-700">
@@ -855,7 +889,7 @@ export const Navbar: React.FC = () => {
                             className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-amber-500/10 text-[#5B0D15] font-bold hover:bg-amber-500/20 transition-colors"
                           >
                             <UserIcon className="w-4 h-4 text-[#5B0D15]" />
-                            <span>Customer Dashboard</span>
+                            <span>Dashboard</span>
                           </Link>
                         )}
                         <Link
@@ -880,6 +914,8 @@ export const Navbar: React.FC = () => {
                           <span>{t('My Orders', 'मेरे ऑर्डर्स')}</span>
                         </Link>
                       </div>
+
+                        
 
                       {/* Divider */}
                       <div className="border-t border-stone-200/80 my-2" />
@@ -1081,12 +1117,57 @@ export const Navbar: React.FC = () => {
         </div>
       </header>
 
+      {/* Top Persistent Reminder Ribbon when profile is incomplete */}
+      {mounted && user && (!user.dateOfBirth || !user.placeOfBirth || !user.timeOfBirth) && (
+        <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-[#5B0D15] via-[#851622] to-[#5B0D15] text-white text-xs py-2 px-4 shadow-md border-b border-amber-400/40">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 w-full">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
+              <span className="font-semibold text-amber-300">
+                {t('Action Required:', 'आवश्यक सूचना:')}
+              </span>
+              <span className="hidden sm:inline text-amber-100">
+                {t(
+                  'Your Vedic Kundli profile is incomplete! Add your Date, Time & Place of birth for accurate planetary predictions.',
+                  'आपकी जन्म कुंडली प्रोफाइल अधूरी है! सटीक भविष्यफल हेतु जन्म तिथि, समय व स्थान दर्ज करें।'
+                )}
+              </span>
+              <span className="sm:hidden text-amber-100 truncate">
+                {t('Complete your birth profile for Kundli', 'जन्म प्रोफाइल पूर्ण करें')}
+              </span>
+            </div>
+
+            <button
+              onClick={() => setProfileModalOpen(true)}
+              className="px-3.5 py-1 rounded-full bg-amber-400 hover:bg-amber-300 text-[#5B0D15] font-extrabold text-[11px] shadow-sm hover:scale-105 transition-all cursor-pointer shrink-0"
+            >
+              {t('Complete Profile Now', 'अभी पूर्ण करें')} →
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Auth Modal for Sign Up / Login */}
       <AuthModal
         isOpen={authModalOpen}
         initialMode={authMode}
         onClose={() => setAuthModalOpen(false)}
-        onLoginSuccess={(userData) => setUser(userData)}
+        onLoginSuccess={(userData) => {
+          setUser(userData);
+          if (!userData?.dateOfBirth || !userData?.placeOfBirth || !userData?.timeOfBirth) {
+            setTimeout(() => setProfileModalOpen(true), 400);
+          }
+        }}
+      />
+
+      {/* Complete Profile Modal */}
+      <CompleteProfileModal
+        isOpen={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+        user={user}
+        onSuccess={(updatedUser) => {
+          setUser(updatedUser);
+        }}
       />
     </>
   );

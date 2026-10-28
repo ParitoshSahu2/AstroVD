@@ -8,6 +8,7 @@ import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { PageHeader } from '../../components/PageHeader';
 import { AuthModal } from '../../components/AuthModal';
+import { CompleteProfileModal } from '../../components/CompleteProfileModal';
 import {
   User as UserIcon,
   Wallet,
@@ -49,6 +50,9 @@ interface UserProfile {
   id: string;
   name: string;
   email: string;
+  phone?: string | null;
+  gender?: string | null;
+  gotra?: string | null;
   role: string;
   status: string;
   dateOfBirth?: string | null;
@@ -621,8 +625,8 @@ export default function DashboardPage() {
                     onClick={() => setEditModalOpen(true)}
                     className="px-3 py-1.5 rounded-lg border border-amber-300/90 bg-white hover:bg-amber-50 text-[#5B0D15] font-semibold text-[11px] shadow-2xs hover:shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   >
-                    <Edit3 className="w-3 h-3 text-[#5B0D15]" />
-                    <span>Edit Profile</span>
+                    <Compass className="w-3.5 h-3.5 text-[#5B0D15]" />
+                    <span>Edit Kundli Profile</span>
                   </button>
                   <button
                     onClick={loadData}
@@ -761,10 +765,10 @@ export default function DashboardPage() {
                     </div>
                     <button
                       onClick={() => setEditModalOpen(true)}
-                      className="text-xs font-bold text-[#5B0D15] hover:underline flex items-center gap-1 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50/70 hover:bg-amber-100/80 text-[#5B0D15] text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      Edit
+                      <Compass className="w-3.5 h-3.5" />
+                      <span>Edit Kundli Profile</span>
                     </button>
                   </div>
 
@@ -1686,119 +1690,17 @@ export default function DashboardPage() {
         )}
       </main>
 
-      {/* EDIT PROFILE MODAL */}
-      {editModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
-          <div className="relative w-full max-w-lg rounded-3xl bg-white/95 backdrop-blur-2xl border border-amber-200/90 shadow-2xl p-6 sm:p-8 space-y-5 text-[#3B1E22]">
-            <div className="flex items-center justify-between pb-3 border-b border-stone-200">
-              <h3 className="font-serif text-xl font-bold text-[#3B1E22]">
-                Update Birth Profile
-              </h3>
-              <button
-                onClick={() => setEditModalOpen(false)}
-                className="text-stone-400 hover:text-stone-700 text-lg font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            {profileMsg && (
-              <div
-                className={`p-3 rounded-2xl text-xs font-semibold flex items-center gap-2 ${
-                  profileMsg.type === 'success'
-                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                    : 'bg-rose-50 text-rose-800 border border-rose-200'
-                }`}
-              >
-                {profileMsg.type === 'success' ? (
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
-                ) : (
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                )}
-                <span>{profileMsg.text}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleUpdateProfile} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white/80 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
-                  placeholder="Your full name"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Date of Birth</label>
-                  <input
-                    type="date"
-                    value={editDob}
-                    onChange={(e) => setEditDob(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-stone-300 bg-white/80 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Time of Birth</label>
-                  <input
-                    type="time"
-                    value={editTob}
-                    onChange={(e) => setEditTob(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-stone-300 bg-white/80 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Place of Birth</label>
-                <input
-                  type="text"
-                  value={editPob}
-                  onChange={(e) => setEditPob(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 bg-white/80 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
-                  placeholder="City, State, Country"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Zodiac Sun Sign (Rashi)</label>
-                <select
-                  value={editZodiac}
-                  onChange={(e) => setEditZodiac(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-stone-300 bg-white/80 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/40 cursor-pointer"
-                >
-                  {zodiacSigns.map((z) => (
-                    <option key={z} value={z}>
-                      {z}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="pt-3 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setEditModalOpen(false)}
-                  className="px-4 py-2 rounded-full border border-stone-300 text-stone-600 text-xs font-semibold hover:bg-stone-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingProfile}
-                  className="px-6 py-2 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  {savingProfile ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* KUNDLI PROFILE MODAL */}
+      <CompleteProfileModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        user={profile}
+        onSuccess={(updatedUser) => {
+          setProfile((prev) => (prev ? { ...prev, ...updatedUser } : updatedUser));
+          setEditModalOpen(false);
+          loadDashboardData(true);
+        }}
+      />
 
       {/* Global Auth Modal for Login */}
       <AuthModal

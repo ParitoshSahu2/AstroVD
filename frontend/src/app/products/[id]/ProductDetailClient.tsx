@@ -156,17 +156,6 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
               <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#3B1E22]">
                 {name}
               </h1>
-
-              {/* Rating & Reviews */}
-              <div className="flex items-center gap-2 mt-2 text-xs">
-                <div className="flex items-center gap-1 text-amber-500">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <span className="font-bold text-stone-800">{product.rating}</span>
-                <span className="text-stone-400">• ({product.reviewsCount} {t('Customer Reviews', 'भक्त समीक्षाएं')})</span>
-              </div>
             </div>
 
             {/* Price Box */}

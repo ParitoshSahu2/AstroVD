@@ -13,8 +13,8 @@ interface MotionServiceCardProps {
   displayPandit: string;
   displayDesc: string;
   displayBadge?: string | null;
-  isExpanded: boolean;
-  onToggleExpand: (id: string) => void;
+  isExpanded?: boolean;
+  onToggleExpand?: (id: string) => void;
   onWhatsApp?: (title: string) => void;
   onSelectService?: (service: ServiceItem) => void;
   t: (en: string, hi: string) => string;
@@ -28,9 +28,6 @@ export const MotionServiceCard: React.FC<MotionServiceCardProps> = ({
   displayPandit,
   displayDesc,
   displayBadge,
-  isExpanded,
-  onToggleExpand,
-  onWhatsApp,
   onSelectService,
   t,
   language,
@@ -86,7 +83,7 @@ export const MotionServiceCard: React.FC<MotionServiceCardProps> = ({
             <div className="space-y-1.5">
               <h3
                 onClick={() => onSelectService && onSelectService(item)}
-                className="font-serif font-bold text-sm sm:text-base text-[#2A1810] group-hover:text-[#5B0D15] transition-colors leading-snug cursor-pointer line-clamp-2 h-10 sm:h-11 flex items-start"
+                className="font-serif font-bold text-sm sm:text-base text-[#2A1810] group-hover:text-[#5B0D15] transition-colors leading-snug cursor-pointer line-clamp-1"
                 title={displayTitle}
               >
                 {displayTitle}
@@ -98,20 +95,11 @@ export const MotionServiceCard: React.FC<MotionServiceCardProps> = ({
               </div>
             </div>
 
-            {/* Description with Uniform Reserved Height */}
-            <div className="text-xs text-stone-600 leading-relaxed min-h-[2.75rem] sm:min-h-[3rem] flex flex-col justify-start">
-              <span className={isExpanded ? '' : 'line-clamp-2'}>
+            {/* Description clamped to 2 lines ending with ellipsis */}
+            <div className="text-xs text-stone-600 leading-relaxed min-h-[2.5rem] flex flex-col justify-start">
+              <p className="line-clamp-2">
                 {displayDesc}
-                {displayDesc.length > 70 && (
-                  <button
-                    type="button"
-                    onClick={() => onToggleExpand(item.id)}
-                    className="ml-1 text-[11px] font-bold text-[#5B0D15] hover:text-amber-800 hover:underline cursor-pointer inline-flex items-center"
-                  >
-                    {isExpanded ? t('(less)', '(कम)') : t('(more)', '(और पढ़ें)')}
-                  </button>
-                )}
-              </span>
+              </p>
             </div>
           </div>
         </div>
@@ -122,20 +110,15 @@ export const MotionServiceCard: React.FC<MotionServiceCardProps> = ({
             <span className="text-[9px] text-stone-500 uppercase font-bold tracking-wider block leading-none">
               {t('Dakshina', 'न्योछावर')}
             </span>
-            <div className="flex items-baseline gap-1 mt-0.5">
-              <span className={`font-serif font-bold text-sm sm:text-base ${
-                item.price.includes('FREE') ? 'text-emerald-700 font-extrabold' : 'text-[#5B0D15]'
-              }`}>
-                {language === 'hi' && item.price.includes('FREE') ? '100% निःशुल्क' : item.price}
-              </span>
-              <span className="text-[9.5px] text-amber-800 font-semibold" title={t('Time extension: ₹50 per minute', 'समय विस्तार: ₹50 प्रति मिनट')}>
-                (+₹50/{t('m', 'मि')})
-              </span>
-            </div>
+            <span className={`font-serif font-bold text-sm sm:text-base ${
+              item.price.includes('FREE') ? 'text-emerald-700 font-extrabold' : 'text-[#5B0D15]'
+            }`}>
+              {language === 'hi' && item.price.includes('FREE') ? '100% निःशुल्क' : item.price}
+            </span>
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Details Button: opens light modal to read full description and vidhi */}
+            {/* Details Button */}
             <button
               type="button"
               onClick={() => onSelectService && onSelectService(item)}
@@ -149,7 +132,7 @@ export const MotionServiceCard: React.FC<MotionServiceCardProps> = ({
             {/* Direct Booking Button */}
             <Link
               href={`/appointment?service=${item.id}`}
-              className="px-3 sm:px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#5B0D15] to-[#7B121C] hover:from-[#7B121C] hover:to-[#5B0D15] text-white text-xs font-bold shadow-xs hover:scale-105 transition-all flex items-center gap-1 active:scale-95"
+              className="px-3 sm:px-3.5 py-1.5 rounded-full bg-[#5B0D15] hover:bg-[#72111c] text-white text-xs font-bold shadow-xs hover:scale-105 transition-all flex items-center gap-1 active:scale-95"
               title={t('Book appointment directly', 'सीधे परामर्श बुक करें')}
             >
               <span>{t('Book', 'परामर्श')}</span>

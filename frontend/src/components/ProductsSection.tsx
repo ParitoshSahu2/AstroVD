@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   Sparkles,
   ArrowRight,
@@ -20,8 +20,14 @@ import {
   Loader2,
   AlertCircle,
   Filter,
+  LayoutGrid,
+  Heart,
+  Award,
+  MessageCircle,
+  Star,
+  ChevronDown,
 } from 'lucide-react';
-import { PRODUCTS_CATALOG, ProductItem } from '../data/products';
+import { PRODUCTS_CATALOG, ProductItem, formatTitleCase } from '../data/products';
 import { useLanguage } from '../context/LanguageContext';
 import { useCart, parsePriceNumber } from '../context/CartContext';
 
@@ -30,14 +36,18 @@ export const PRODUCTS_BATCH_SIZE = 8;
 interface ProductsSectionProps {
   limit?: number;
   showExploreMore?: boolean;
+  showHeader?: boolean;
+  showCheckoutBar?: boolean;
 }
 
 export const ProductsSection: React.FC<ProductsSectionProps> = ({
   limit,
   showExploreMore = false,
+  showHeader = limit !== undefined,
+  showCheckoutBar,
 }) => {
   const { t, language } = useLanguage();
-  const { addItem, totalCount, subtotal } = useCart();
+  const { addItem, updateQuantity, removeItem, items, totalCount, subtotal } = useCart();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<'featured' | 'price-low' | 'price-high' | 'rating'>('featured');
@@ -47,6 +57,12 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
   const [addedProductId, setAddedProductId] = useState<string | null>(null);
   const [modalQty, setModalQty] = useState<number>(1);
   const router = useRouter();
+  const pathname = usePathname();
+
+  // The checkout bar should only ever be visible on dedicated product pages, never on the homepage
+  const isProductPage = Boolean(pathname?.startsWith('/products') || pathname?.startsWith('/shop'));
+  const isHomePage = pathname === '/' || pathname === '' || limit !== undefined;
+  const allowCheckoutBar = showCheckoutBar !== undefined ? showCheckoutBar : (isProductPage && !isHomePage);
 
   const handleAddToCart = (item: ProductItem, qty: number = 1) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
@@ -104,30 +120,35 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
       labelEn: 'All Bracelets',
       labelHi: 'सभी ब्रेसलेट',
       count: PRODUCTS_CATALOG.length,
+      icon: LayoutGrid,
     },
     {
       id: 'wealth',
       labelEn: 'Wealth & Prosperity',
       labelHi: 'धन एवं समृद्धि',
       count: PRODUCTS_CATALOG.filter((p) => p.category === 'wealth').length,
+      icon: Sparkles,
     },
     {
       id: 'protection',
       labelEn: 'Protection & Nazar',
       labelHi: 'सुरक्षा एवं नज़र दोष',
       count: PRODUCTS_CATALOG.filter((p) => p.category === 'protection').length,
+      icon: ShieldCheck,
     },
     {
       id: 'love',
       labelEn: 'Love & Peace',
       labelHi: 'प्रेम एवं शांति',
       count: PRODUCTS_CATALOG.filter((p) => p.category === 'love').length,
+      icon: Heart,
     },
     {
       id: 'healing',
       labelEn: 'Healing & Balance',
       labelHi: 'आरोग्य एवं संतुलन',
       count: PRODUCTS_CATALOG.filter((p) => p.category === 'healing').length,
+      icon: Award,
     },
   ];
 
@@ -273,7 +294,12 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
   };
 
   return (
-    <section id="shop" className="relative w-full bg-[#FAF7F2] py-20 lg:py-24 px-4 sm:px-6 lg:px-12 overflow-hidden selection:bg-amber-400">
+    <section
+      id="shop"
+      className={`relative w-full bg-[#FCF8ED] ${
+        showHeader ? 'py-16 lg:py-20' : 'pt-3 sm:pt-4 pb-14 sm:pb-16 lg:pb-20'
+      } px-4 sm:px-6 lg:px-12 overflow-hidden selection:bg-amber-400`}
+    >
       
       {/* Background Watermarks */}
       <img
@@ -287,108 +313,115 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
         className="absolute bottom-1/4 -right-32 w-80 sm:w-[480px] h-auto object-contain pointer-events-none opacity-20 select-none"
       />
 
-      <div className="max-w-7xl mx-auto space-y-12 sm:space-y-14 relative z-10">
+      <div
+        className={`max-w-7xl mx-auto ${
+          showHeader ? 'space-y-10 sm:space-y-12' : 'space-y-4 sm:space-y-5'
+        } relative z-10`}
+      >
         
         {/* Section Header */}
-        <div className="text-center space-y-3 max-w-3xl mx-auto">
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#4A151B] leading-tight">
-            {t('Energized Spiritual Gemstones & Sacred Bracelets', 'प्राण-प्रतिष्ठित आध्यात्मिक रत्न एवं सिद्ध ब्रेसलेट')}
-          </h2>
-          <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
-            {t(
-              'Every bracelet is hand-selected, lab-certified, and energized through authentic Vedic Prana-Pratishtha rituals in Varanasi with your personal Gotra & Nakshatra sankalp.',
-              'प्रत्येक ब्रेसलेट 100% शुद्ध, लैब प्रमाणित और वाराणसी में आपके नाम, गोत्र व नक्षत्र संकल्प द्वारा वैदिक प्राण-प्रतिष्ठा से अभिमंत्रित है।'
-            )}
-          </p>
-        </div>
+        {showHeader && (
+          <div className="text-center space-y-3 max-w-3xl mx-auto">
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#34140A] leading-tight">
+              {t('Energized Spiritual Gemstones & Sacred Bracelets', 'प्राण-प्रतिष्ठित आध्यात्मिक रत्न एवं सिद्ध ब्रेसलेट')}
+            </h2>
+            <p className="text-xs sm:text-sm text-[#706256] leading-relaxed">
+              {t(
+                'Every bracelet is hand-selected, lab-certified, and energized through authentic Vedic Prana-Pratishtha rituals in Varanasi with your personal Gotra & Nakshatra sankalp.',
+                'प्रत्येक ब्रेसलेट 100% शुद्ध, लैब प्रमाणित और वाराणसी में आपके नाम, गोत्र व नक्षत्र संकल्प द्वारा वैदिक प्राण-प्रतिष्ठा से अभिमंत्रित है।'
+              )}
+            </p>
+          </div>
+        )}
 
-        {/* Category Filter Tabs */}
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 max-w-4xl mx-auto" role="tablist" aria-label="Product Categories">
-          {filterCategories.map((cat) => {
-            const isActive = activeCategory === cat.id;
-            const label = language === 'hi' ? `${cat.labelHi} (${cat.count})` : `${cat.labelEn} (${cat.count})`;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => handleCategoryChange(cat.id)}
-                role="tab"
-                aria-selected={isActive}
-                className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-sm ${
-                  isActive
-                    ? 'bg-[#5B0D15] text-amber-100 shadow-md shadow-rose-950/20 border border-amber-400/80 scale-105 ring-2 ring-amber-400/40'
-                    : 'bg-white/80 hover:bg-amber-50 text-stone-700 border border-amber-200/80'
-                }`}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Search & Sort Controls (Shown on full store / shop view) */}
+        {/* Unified Search & Sort Bar (Matching Services Page) */}
         {isInfiniteScrollEnabled && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 max-w-5xl mx-auto px-2">
+          <div className="bg-white rounded-full border border-[#EAE0D0] shadow-xs px-4 py-2 sm:py-2.5 flex flex-col sm:flex-row items-center justify-between gap-3">
             {/* Search Input */}
-            <div className="relative w-full sm:w-80">
-              <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <div className="relative flex items-center w-full sm:flex-1">
+              <Search className="w-4 h-4 text-[#9E9082] shrink-0 ml-1" />
               <input
                 type="text"
+                placeholder={t('Search energized bracelets (e.g. Tiger Eye, Rudraksha, Pyrite)...', 'सिद्ध ब्रेसलेट खोजें (उदा. टाइगर आई, रुद्राक्ष, पाइराइट)...')}
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder={t('Search energized bracelets...', 'सिद्ध ब्रेसलेट खोजें...')}
-                className="w-full pl-9 pr-9 py-2 rounded-full bg-white border border-stone-200 focus:border-amber-400 focus:outline-none text-xs sm:text-sm text-stone-800 shadow-sm"
+                className="w-full pl-2.5 pr-8 py-1 bg-transparent text-xs sm:text-sm text-[#2D1408] placeholder-[#9E9082] focus:outline-none"
               />
               {searchQuery && (
                 <button
                   onClick={() => handleSearchChange('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                  className="text-[#9E9082] hover:text-[#522311] p-1 cursor-pointer"
                   aria-label="Clear search"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
 
-            {/* Sort Dropdown & Product Counter */}
-            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-              <div className="flex items-center gap-1.5 text-xs text-stone-600">
-                <ArrowUpDown className="w-3.5 h-3.5 text-amber-700" />
-                <span className="font-medium hidden sm:inline">{t('Sort:', 'क्रम:')}</span>
+            {/* Sort Dropdown */}
+            <div className="flex items-center gap-2 shrink-0 sm:border-l sm:border-[#EAE0D0] sm:pl-4 w-full sm:w-auto justify-end">
+              <span className="text-xs text-[#8C7E72] font-medium">
+                {t('Sort by', 'क्रम')}
+              </span>
+              <div className="relative">
                 <select
                   value={sortBy}
                   onChange={(e) => handleSortChange(e.target.value as any)}
-                  className="bg-white border border-stone-200 rounded-full px-3 py-1.5 text-xs text-stone-700 focus:outline-none focus:border-amber-400 cursor-pointer shadow-sm"
+                  className="appearance-none pl-3 pr-8 py-1.5 rounded-lg bg-[#FAF6ED] hover:bg-[#F5EFE3] border border-[#EAE0D0] text-xs font-semibold text-[#2D1408] shadow-2xs focus:outline-none cursor-pointer"
                 >
-                  <option value="featured">{t('Featured (Default)', 'विशेष (डिफ़ॉल्ट)')}</option>
+                  <option value="featured">{t('Featured', 'विशेष (डिफ़ॉल्ट)')}</option>
                   <option value="price-low">{t('Price: Low to High', 'मूल्य: कम से ज्यादा')}</option>
                   <option value="price-high">{t('Price: High to Low', 'मूल्य: ज्यादा से कम')}</option>
                   <option value="rating">{t('Highest Rated', 'उच्चतम रेटिंग')}</option>
                 </select>
-              </div>
-
-              <div className="text-xs text-stone-500 font-medium">
-                <span>{displayProducts.length}</span> / <span>{filteredProducts.length}</span> {t('items', 'सामग्री')}
+                <ChevronDown className="w-3.5 h-3.5 text-[#8C7E72] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
           </div>
         )}
 
+        {/* Category Pill Buttons (Exact Match to Mockup Design System) */}
+        <div className="flex items-center gap-2.5 overflow-x-auto pb-1.5 pt-0.5 no-scrollbar scroll-smooth" role="tablist" aria-label="Product Categories">
+          {filterCategories.map((cat) => {
+            const isSelected = activeCategory === cat.id;
+            const IconComponent = cat.icon || LayoutGrid;
+            const label = language === 'hi' ? `${cat.labelHi} (${cat.count})` : `${cat.labelEn} (${cat.count})`;
+
+            return (
+              <button
+                key={cat.id}
+                onClick={() => handleCategoryChange(cat.id)}
+                role="tab"
+                aria-selected={isSelected}
+                className={`rounded-full px-3.5 py-2 text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${
+                  isSelected
+                    ? 'bg-[#522311] text-white shadow-xs border border-[#522311]'
+                    : 'bg-white hover:bg-[#FAF6ED] text-[#4A3B32] border border-[#EAE0D0] shadow-2xs hover:border-[#D6C4AD]'
+                }`}
+              >
+                <IconComponent className={`w-3.5 h-3.5 ${isSelected ? 'text-[#F5D8A0]' : 'text-[#7C6C60]'}`} />
+                <span>{label}</span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* Search Results Banner */}
         {searchQuery.trim() && (
-          <div className="flex items-center justify-between bg-amber-50/90 border border-amber-300/80 rounded-2xl p-3 sm:px-4 max-w-5xl mx-auto shadow-2xs">
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-[#3B1E22]">
-              <Sparkles className="w-4 h-4 text-amber-700 shrink-0" />
+          <div className="flex items-center justify-between bg-white border border-[#EAE0D0] rounded-xl p-3 sm:px-4 max-w-5xl mx-auto shadow-2xs">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-[#2D1408]">
+              <Sparkles className="w-4 h-4 text-[#DCA258] shrink-0" />
               <span>
                 {t('Results for', 'इसके लिए परिणाम:')}{' '}
-                <strong className="text-[#5B0D15]">"{searchQuery}"</strong>
-                <span className="text-stone-500 ml-1.5 font-normal">
+                <strong className="text-[#522311]">"{searchQuery}"</strong>
+                <span className="text-[#8C7E72] ml-1.5 font-normal">
                   ({filteredProducts.length} {t('products found', 'उत्पाद मिले')})
                 </span>
               </span>
             </div>
             <button
               onClick={() => handleSearchChange('')}
-              className="text-xs font-bold text-[#800000] hover:text-[#5B0D15] hover:underline flex items-center gap-1 cursor-pointer"
+              className="text-xs font-bold text-[#522311] hover:underline flex items-center gap-1 cursor-pointer"
             >
               <span>{t('Clear search', 'हटाएं')}</span>
               <X className="w-3.5 h-3.5" />
@@ -398,14 +431,14 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
 
         {/* Empty State when no products match */}
         {filteredProducts.length === 0 && (
-          <div className="text-center py-12 px-4 max-w-md mx-auto space-y-4">
-            <div className="w-14 h-14 rounded-full bg-amber-100/70 border border-amber-300 text-amber-800 flex items-center justify-center mx-auto">
+          <div className="text-center py-12 px-4 max-w-md mx-auto space-y-4 bg-white rounded-2xl border border-[#EAE0D0] p-6 shadow-xs">
+            <div className="w-14 h-14 rounded-full bg-[#FAF6ED] border border-[#EAE0D0] text-[#522311] flex items-center justify-center mx-auto">
               <Search className="w-6 h-6" />
             </div>
-            <h3 className="font-serif font-bold text-base text-[#3B1E22]">
+            <h3 className="font-serif font-bold text-base text-[#2D1408]">
               {t('No Products Found', 'कोई उत्पाद नहीं मिला')}
             </h3>
-            <p className="text-xs text-stone-600 leading-relaxed">
+            <p className="text-xs text-[#706256] leading-relaxed">
               {t(
                 `We couldn't find any products matching "${searchQuery}". Try searching for bracelets like "Tiger Eye", "Rudraksha", "Pyrite", or "Seven Chakra".`,
                 `"${searchQuery}" से मेल खाने वाला कोई उत्पाद नहीं मिला। कृपया "Tiger Eye", "Rudraksha", या "Pyrite" खोजें।`
@@ -416,80 +449,140 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                 handleSearchChange('');
                 setActiveCategory('all');
               }}
-              className="px-4 py-2 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs font-semibold shadow-md transition-all cursor-pointer"
+              className="px-4 py-2 rounded-full bg-[#522311] hover:bg-[#3D1A0D] text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
             >
               {t('View All Products', 'सभी उत्पाद देखें')}
             </button>
           </div>
         )}
 
-        {/* Product Cards Grid: Featuring the exact Tiger Eye card design with Default & Hover states */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-7 items-stretch justify-center" id="products-grid">
-          
+        {/* Product Cards Grid: Sleek Card Design matching the Services Page */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-6 items-stretch justify-center" id="products-grid">
           {displayProducts.map((item) => {
-            const prodName = language === 'hi' && item.nameHi ? item.nameHi : item.name;
+            const rawName = language === 'hi' && item.nameHi ? item.nameHi : item.name;
+            const prodName = formatTitleCase(rawName);
             const prodTag = language === 'hi' && item.tagHi ? item.tagHi : item.tag;
             const prodDesc = language === 'hi' && item.descHi ? item.descHi : item.desc;
+            const cartItem = items.find((i) => i.id === item.id);
+            const quantityInCart = cartItem ? cartItem.quantity : 0;
 
             return (
               <div
                 key={item.id}
-                onClick={() => {
-                  setModalQty(1);
-                  setSelectedProduct(item);
-                }}
-                className="group relative rounded-3xl overflow-hidden bg-white border-2 border-amber-300 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col h-full"
+                className="group relative rounded-2xl overflow-hidden bg-white border border-[#EAE0D0] shadow-xs hover:border-[#D6C4AD] hover:shadow-md transition-all duration-300 flex flex-col justify-between h-full"
               >
                 {/* 1. Base Product Image Area */}
-                <div className="relative w-full aspect-[4/3] overflow-hidden bg-stone-100">
+                <div
+                  onClick={() => {
+                    setModalQty(1);
+                    setSelectedProduct(item);
+                  }}
+                  className="relative w-full aspect-[4/3] overflow-hidden bg-stone-100 cursor-pointer"
+                >
                   <Image
                     src={item.image}
                     alt={prodName}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
-
-                  {/* Floating Price Pill at Top Right */}
-                  <div className="absolute top-3.5 right-3.5 z-10 px-3.5 py-1.5 rounded-full bg-[#2C231C]/90 backdrop-blur-md border border-amber-400/50 shadow-md">
-                    <span className="font-serif font-bold text-xs sm:text-sm text-amber-300 tracking-wide">
-                      {item.price}
-                    </span>
-                  </div>
                 </div>
 
-                {/* 2. White Card Content Area */}
-                <div className="p-4 sm:p-5 flex flex-col justify-between flex-1 bg-white">
-                  <div className="space-y-1.5">
-                    {/* Category / Energy Subtitle Tag in Deep Maroon */}
-                    <span className="text-[11px] sm:text-xs font-bold text-[#800000] uppercase tracking-wider block">
+                {/* 2. White Card Content Area - Snug spacing directly leading into price and button */}
+                <div className="p-4 pt-3.5 flex-1 flex flex-col justify-between">
+                  <div>
+                    {/* 1. Category / Energy Subtitle Tag - Clean single line */}
+                    <span
+                      className="text-[9.5px] sm:text-[10px] xl:text-[10.5px] font-bold uppercase tracking-[0.05em] text-[#C05621] block truncate mb-1"
+                      title={prodTag}
+                    >
                       {prodTag}
                     </span>
 
-                    {/* Product Name in Bold Navy/Midnight Serif */}
-                    <h3 className="font-serif font-bold text-base sm:text-lg text-[#0F1E36] tracking-wide uppercase line-clamp-1 group-hover:text-[#800000] transition-colors">
+                    {/* 2. Product Name in Elegant Title Case Serif */}
+                    <h3
+                      onClick={() => {
+                        setModalQty(1);
+                        setSelectedProduct(item);
+                      }}
+                      className="font-serif font-bold text-[16.5px] sm:text-[17.5px] text-[#2A1810] group-hover:text-[#800000] transition-colors leading-snug cursor-pointer line-clamp-1 tracking-tight"
+                      title={prodName}
+                    >
                       {prodName}
                     </h3>
+
+                    {/* 3. Product Description in Warm Slate Stone */}
+                    <p className="text-[12px] text-[#5C554E] leading-relaxed mt-1 line-clamp-2 font-normal">
+                      {prodDesc}
+                    </p>
                   </div>
 
-                  {/* Subtle Divider Line */}
-                  <hr className="my-3.5 border-stone-200/80" />
-
-                  {/* Bottom Row: Rating & Details Link */}
-                  <div className="flex items-center justify-between">
-                    {/* Rating & Review Count */}
-                    <div className="flex items-center gap-1.5 text-xs text-stone-500 font-medium">
-                      <span className="text-stone-400 text-sm">★</span>
-                      <span>
-                        {item.rating || 4.9} ({item.reviewsCount || 342})
+                  {/* 3. Bottom Card Bar: Price & Action Buttons - Closely connected with snug gap */}
+                  <div className="mt-3 pt-2.5 border-t border-[#F2ECE1] flex items-center justify-between">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-serif font-bold text-base sm:text-lg text-[#800000]">
+                        {item.price}
                       </span>
+                      {item.originalPrice && (
+                        <span className="text-[11px] text-stone-400 line-through">
+                          {item.originalPrice}
+                        </span>
+                      )}
                     </div>
 
-                    {/* Details Link with Right Arrow */}
-                    <span className="text-xs sm:text-sm font-serif font-bold text-[#800000] group-hover:text-[#5B0D15] flex items-center gap-1 group-hover:gap-1.5 transition-all">
-                      <span>{t('Details', 'विवरण')}</span>
-                      <span className="text-base font-sans">→</span>
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {quantityInCart === 0 ? (
+                        /* Clean Add to Cart button (text only, no sign/icon) */
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToCart(item, 1);
+                          }}
+                          className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-[#800000] to-[#5B0D15] hover:from-[#5B0D15] hover:to-[#3E090E] text-white text-xs font-semibold shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer text-center"
+                          aria-label={t(`Add ${item.name} to cart`, `${item.name} कार्ट में जोड़ें`)}
+                        >
+                          {t('Add to Cart', 'कार्ट में जोड़ें')}
+                        </button>
+                      ) : (
+                        /* Jumps to + 1 and -1 quantity selector */
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center bg-[#5B0D15] text-white rounded-lg px-1.5 py-1 shadow-xs border border-[#43080F]"
+                        >
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (quantityInCart <= 1) {
+                                removeItem(item.id);
+                              } else {
+                                updateQuantity(item.id, quantityInCart - 1);
+                              }
+                            }}
+                            className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-black/20 text-white font-bold cursor-pointer transition-colors"
+                            aria-label={t('Decrease quantity', 'मात्रा घटाएं')}
+                          >
+                            <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
+                          </button>
+
+                          <span className="w-7 text-center font-bold text-xs text-amber-100 select-none">
+                            {quantityInCart}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateQuantity(item.id, quantityInCart + 1);
+                            }}
+                            className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-black/20 text-white font-bold cursor-pointer transition-colors"
+                            aria-label={t('Increase quantity', 'मात्रा बढ़ाएं')}
+                          >
+                            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -676,8 +769,8 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                   <span className="text-[10px] font-bold tracking-[0.2em] text-[#800000] uppercase block">
                     {language === 'hi' && selectedProduct.tagHi ? selectedProduct.tagHi : selectedProduct.tag}
                   </span>
-                  <h3 className="font-serif text-2xl font-bold text-[#4A151B]">
-                    {language === 'hi' && selectedProduct.nameHi ? selectedProduct.nameHi : selectedProduct.name}
+                  <h3 className="font-serif text-2xl font-bold text-[#2A1810] tracking-tight">
+                    {formatTitleCase(language === 'hi' && selectedProduct.nameHi ? selectedProduct.nameHi : selectedProduct.name)}
                   </h3>
                   <div className="flex items-center gap-3">
                     <span className="font-serif text-2xl font-bold text-[#800000]">{selectedProduct.price}</span>
@@ -813,8 +906,8 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
         </div>
       )}
 
-      {/* Floating Bottom Cart Bar for quick access */}
-      {totalCount > 0 && (
+      {/* Floating Bottom Cart Bar for quick access - only on product page, never on homepage */}
+      {allowCheckoutBar && totalCount > 0 && (
         <aside aria-label="Shopping Cart Bar" className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-lg bg-[#2A0E13]/95 backdrop-blur-md border border-amber-400/80 rounded-full px-5 py-3 shadow-2xl flex items-center justify-between text-amber-100 animate-slideUp">
           <div className="flex items-center gap-3">
             <div className="relative">

@@ -1,12 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ArrowRight, Flame, Sparkles, Shield, Heart } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { SERVICES_CATALOGUE, ServiceItem } from '../data/servicesData';
+import { SERVICES_TRANSLATIONS } from '../data/servicesTranslations';
+import { MotionServiceCard } from './MotionServiceCard';
+import { SpatialServiceModal } from './SpatialServiceModal';
 
 export const PoojaServicesSection: React.FC = () => {
-  const { t } = useLanguage();
-  const [modalOpen, setModalOpen] = useState(false);
+  const { t, language } = useLanguage();
+  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
 
   const openWhatsAppClaim = () => {
     window.open(
@@ -15,48 +20,29 @@ export const PoojaServicesSection: React.FC = () => {
     );
   };
 
-  const poojaList = [
-    {
-      title: t('Maha Mrityunjaya Jaap', 'महामृत्युंजय जाप अनुष्ठान'),
-      benefit: t('Bestows health, vitality & protection from malefic afflictions.', 'दीर्घायु, आरोग्य एवं अकाल मृत्यु व गंभीर रोगों से दिव्य रक्षा।'),
-      priests: t('5 Vedic Priests', '5 वैदिक ब्राह्मण'),
-      icon: '🕉️',
-    },
-    {
-      title: t('Navgrah Shanti Havan', 'नवग्रह शांति महाहवन'),
-      benefit: t('Harmonizes all 9 planetary energies and dissolves Graha doshas.', 'समस्त 9 ग्रहों की अनुकूलता, ग्रह दोष शांति व सुख-समृद्धि।'),
-      priests: t('7 Vedic Priests', '7 वैदिक ब्राह्मण'),
-      icon: '☀️',
-    },
-    {
-      title: t('Kaal Sarp Dosh Nivaran', 'कालसर्प दोष निवारण पूजा'),
-      benefit: t('Dissolves karmic blocks, delays in career and mental stress.', 'करियर में आ रही बाधाएं, मानसिक तनाव व कर्म बंधनों का नाश।'),
-      priests: t('Specialized Acharya', 'विशेषज्ञ आचार्य'),
-      icon: '🐍',
-    },
-    {
-      title: t('Mangal Dosh & Vivah Shanti', 'मंगल दोष एवं विवाह शांति'),
-      benefit: t('Eliminates marital obstacles, relationship misunderstandings.', 'विवाह में विलंब, वैवाहिक कलह एवं मांगलिक बाधा निवारण।'),
-      priests: t('Vedic Acharyas', 'वैदिक आचार्य मंडल'),
-      icon: '🔴',
-    },
-    {
-      title: t('Shree Suktam & Mahalakshmi Yagya', 'श्री सूक्तम एवं महालक्ष्मी यज्ञ'),
-      benefit: t('Attracts perpetual financial prosperity, abundance & auspiciousness.', 'निरंतर धन-समृद्धि, व्यापार में अकूत लाभ एवं आर्थिक संपन्नता।'),
-      priests: t('Kashi Scholars', 'काशी के विद्वान पंडित'),
-      icon: '🪷',
-    },
-    {
-      title: t('Vastu Dosh Shanti Puja', 'वास्तु दोष शांति पूजा'),
-      benefit: t('Purifies home/office energy, dispels negative planetary vibes.', 'गृह व व्यापार स्थल की ऊर्जा शुद्धिकरण एवं नकारात्मकता का नाश।'),
-      priests: t('Vastu Specialist', 'वास्तु शास्त्री'),
-      icon: '🏛️',
-    },
+  const openWhatsApp = (title: string) => {
+    const text = encodeURIComponent(
+      `Pranam Guruji, I am interested in knowing more about ${title} service.`
+    );
+    window.open(`https://wa.me/919876543210?text=${text}`, '_blank');
+  };
+
+  // 6 Authentic high-relevance services
+  const FEATURED_SERVICE_IDS = [
+    'astrological_consultation',
+    'marriage_match_making',
+    'grah_pravesh_vaastu',
+    'navgrah_shanti_poojan',
+    'mangal_dosh_shanti',
+    'birth_chart_kundli',
   ];
+
+  const featuredServices = FEATURED_SERVICE_IDS
+    .map((id) => SERVICES_CATALOGUE.find((s) => s.id === id))
+    .filter((s): s is ServiceItem => Boolean(s));
 
   return (
     <section id="pooja-services" className="relative w-full bg-[#FAF7F2] py-20 lg:py-24 px-4 sm:px-6 lg:px-12 overflow-hidden selection:bg-amber-400">
-      
       {/* Background Subtle Mandala */}
       <img
         src="/ornaments/clean_mandala.png"
@@ -65,32 +51,26 @@ export const PoojaServicesSection: React.FC = () => {
       />
 
       <div className="max-w-7xl mx-auto space-y-10 sm:space-y-12 relative z-10">
-        
-        {/* ================= 1. SECTION HEADER (FROM IMAGE 1) ================= */}
+        {/* ================= 1. SECTION HEADER ================= */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-amber-200/60 pb-6">
           <h2 className="font-serif text-2xl sm:text-3xl lg:text-[34px] font-bold text-[#4A151B] tracking-[0.03em] flex items-center gap-2">
             <span>{t('OUR ASTROLOGY & POOJA SERVICES', 'हमारी ज्योतिष एवं पूजा सेवाएं')}</span>
             <span className="text-amber-600 text-lg sm:text-xl">✦</span>
           </h2>
 
-          <button
-            onClick={() => {
-              const el = document.getElementById('services');
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }}
+          <Link
+            href="/services"
             className="px-5 py-2.5 rounded-full bg-white/90 hover:bg-amber-50 border border-stone-300 hover:border-amber-400 text-stone-800 hover:text-[#5B0D15] text-xs sm:text-sm font-semibold shadow-sm transition-all flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
           >
             <span>{t('View All 28+ Services', 'सभी 28+ सेवाएं देखें')}</span>
             <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          </Link>
         </div>
 
-        {/* ================= 2. SPECIAL BLESSING BANNER (FROM IMAGE 1) ================= */}
+        {/* ================= 2. SPECIAL BLESSING BANNER ================= */}
         <div className="rounded-3xl border border-dashed border-rose-300 bg-gradient-to-r from-rose-50/80 via-[#FFF9F6] to-amber-50/60 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
-          
           {/* Left Content */}
           <div className="flex items-start gap-4 sm:gap-5">
-            {/* Red Gift Bow Icon */}
             <div className="text-3xl sm:text-4xl shrink-0 pt-0.5">
               🎀
             </div>
@@ -123,53 +103,72 @@ export const PoojaServicesSection: React.FC = () => {
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
-
         </div>
 
-        {/* ================= 3. FEATURED POOJA & YAGYA RITUALS GRID ================= */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 pt-2">
-          {poojaList.map((pooja, idx) => (
-            <div
-              key={idx}
-              className="p-5 sm:p-6 rounded-3xl bg-white/80 border border-amber-200/80 hover:border-amber-400 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between group"
-            >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-3xl p-2.5 rounded-2xl bg-amber-50 border border-amber-200/60">
-                    {pooja.icon}
-                  </span>
-                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-100/70 text-amber-900 border border-amber-200">
-                    {pooja.priests}
-                  </span>
-                </div>
+        {/* ================= 3. FEATURED AUTHENTIC SERVICES CARDS GRID ================= */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-6 lg:gap-7 items-stretch pt-2">
+          {featuredServices.map((item) => {
+            const tr = language === 'hi' ? SERVICES_TRANSLATIONS[item.id] : null;
+            const displayTitle = tr ? tr.titleHi : item.title;
+            const displayCatTag = tr ? tr.categoryTagHi : item.categoryTag;
+            const displayPandit = tr ? tr.panditHi : item.pandit;
+            const displayDesc = tr ? tr.descHi : item.desc;
+            const displayBadge = tr && tr.badgeHi ? tr.badgeHi : item.badge;
 
-                <h4 className="font-serif font-bold text-base sm:text-lg text-[#2A1810] group-hover:text-[#800000] transition-colors">
-                  {pooja.title}
-                </h4>
-
-                <p className="text-xs text-stone-600 leading-relaxed">
-                  {pooja.benefit}
-                </p>
-              </div>
-
-              <div className="pt-4 mt-4 border-t border-amber-100 flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-amber-800">
-                  {t('Vedic Vidhi & Samagri Included', 'शास्त्रोक्त विधि व पूजन सामग्री सहित')}
-                </span>
-                <button
-                  onClick={() => openWhatsAppClaim()}
-                  className="text-xs font-bold text-[#800000] hover:text-[#500000] flex items-center gap-1 group-hover:translate-x-1 transition-transform cursor-pointer"
-                >
-                  <span>{t('Book Sankalp', 'संकल्प लें')}</span>
-                  <span>→</span>
-                </button>
-              </div>
-            </div>
-          ))}
+            return (
+              <MotionServiceCard
+                key={item.id}
+                item={item}
+                displayTitle={displayTitle}
+                displayCatTag={displayCatTag}
+                displayPandit={displayPandit}
+                displayDesc={displayDesc}
+                displayBadge={displayBadge}
+                onSelectService={(srv) => setSelectedService(srv)}
+                t={t}
+                language={language}
+              />
+            );
+          })}
         </div>
 
+        {/* ================= 4. EXPLORE MORE SERVICES BUTTON ================= */}
+        <div className="pt-6 sm:pt-8 flex justify-center">
+          <Link
+            href="/services"
+            className="px-8 py-3.5 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#7B121C] to-[#5B0D15] hover:from-[#7B121C] hover:to-[#5B0D15] text-white font-bold text-sm sm:text-base shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center gap-2.5 group cursor-pointer active:scale-95"
+          >
+            <span>{t('Explore More Services', 'और भी सेवाएं देखें')}</span>
+            <ArrowRight className="w-4 h-4 text-amber-300 group-hover:translate-x-1.5 transition-transform" />
+          </Link>
+        </div>
       </div>
 
+      {/* VisionOS Spatial Modal Preview */}
+      {selectedService && (() => {
+        const tr = language === 'hi' ? SERVICES_TRANSLATIONS[selectedService.id] : null;
+        const displayTitle = tr ? tr.titleHi : selectedService.title;
+        const displayCatTag = tr ? tr.categoryTagHi : selectedService.categoryTag;
+        const displayPandit = tr ? tr.panditHi : selectedService.pandit;
+        const displayDesc = tr ? tr.descHi : selectedService.desc;
+        const displayBadge = tr && tr.badgeHi ? tr.badgeHi : selectedService.badge;
+
+        return (
+          <SpatialServiceModal
+            service={selectedService}
+            displayTitle={displayTitle}
+            displayCatTag={displayCatTag}
+            displayPandit={displayPandit}
+            displayDesc={displayDesc}
+            displayBadge={displayBadge}
+            isOpen={!!selectedService}
+            onClose={() => setSelectedService(null)}
+            onWhatsApp={openWhatsApp}
+            t={t}
+            language={language}
+          />
+        );
+      })()}
     </section>
   );
 };
