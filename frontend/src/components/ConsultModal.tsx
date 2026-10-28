@@ -59,6 +59,17 @@ export const ConsultModal: React.FC<ConsultModalProps> = ({
     }
   }, [isOpen, user]);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow || '';
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const normalizeInputPhone = (raw: string): string => {

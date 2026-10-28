@@ -234,10 +234,10 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleAddToCart}
-                  className={`flex-1 py-3 px-6 rounded-full text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  className={`flex-1 py-3 px-6 rounded-full text-xs font-bold shadow-md transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
                     added
                       ? 'bg-emerald-700 text-white'
-                      : 'bg-[#5B0D15] hover:bg-[#480a11] text-white hover:scale-[1.02]'
+                      : 'bg-[#5B0D15] hover:bg-[#78121d] text-white hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-98'
                   }`}
                 >
                   {added ? (

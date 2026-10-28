@@ -343,13 +343,13 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                     <ArrowRight className="w-4 h-4 text-amber-300" />
                   </Link>
                 ) : (
-                  <button
-                    onClick={() => openWhatsApp('Dr. Vishal Dubey')}
+                  <Link
+                    href="/appointment?service=astrological_consultation"
                     className="px-8 py-3.5 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#73121D] to-[#480A10] hover:from-[#73121D] hover:to-[#5B0D15] text-amber-100 font-bold text-xs sm:text-sm shadow-xl shadow-rose-950/25 hover:scale-105 transition-all inline-flex items-center gap-2 cursor-pointer"
                   >
                     <span>{t('Book Consultation with Dr. Vishal Dubey', 'डॉ. विशाल दुबे से परामर्श लें')}</span>
                     <ArrowRight className="w-4 h-4 text-amber-300" />
-                  </button>
+                  </Link>
                 )}
               </div>
 
@@ -410,13 +410,13 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                   </p>
 
                   <div className="pt-2">
-                    <button
-                      onClick={() => openWhatsApp('Madhuri Dubey')}
-                      className="px-7 py-3 rounded-full bg-white hover:bg-amber-50 border-2 border-amber-400 text-[#2A1810] font-bold text-xs sm:text-sm shadow-md hover:border-amber-500 hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
+                    <Link
+                      href="/appointment?service=tarot_reading"
+                      className="px-7 py-3 rounded-full bg-white hover:bg-amber-50 border-2 border-amber-400 text-[#2A1810] font-bold text-xs sm:text-sm shadow-md hover:border-amber-500 hover:scale-105 transition-all inline-flex items-center gap-2 cursor-pointer"
                     >
                       <span>{t('Book Tarot Reading with Madhuri Ji', 'माधुरी जी संग टैरो रीडिंग बुक करें')}</span>
                       <ArrowRight className="w-4 h-4 text-amber-700" />
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -536,8 +536,8 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
 
       </div>
 
-      {/* Floating Bottom-Right Buttons: Back to Top & WhatsApp */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
+      {/* Floating Bottom-Right Button: Back to Top */}
+      <div className="fixed bottom-6 right-6 z-40">
         <button
           onClick={scrollToTop}
           className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md border border-stone-300 shadow-lg text-stone-700 hover:text-[#5B0D15] hover:scale-110 flex items-center justify-center transition-all cursor-pointer"
@@ -545,15 +545,6 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
           aria-label="Scroll to top"
         >
           <ArrowUp className="w-4 h-4 stroke-[2.5]" />
-        </button>
-
-        <button
-          onClick={() => openWhatsApp('Dr. Vishal Dubey')}
-          className="w-12 h-12 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-white shadow-xl flex items-center justify-center hover:scale-110 transition-all cursor-pointer"
-          title="Chat on WhatsApp"
-          aria-label="Chat on WhatsApp"
-        >
-          <MessageCircle className="w-6 h-6 fill-current" />
         </button>
       </div>
 

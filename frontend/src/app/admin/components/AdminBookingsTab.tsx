@@ -195,7 +195,7 @@ export default function AdminBookingsTab({
           </div>
         ) : (
           <div className="w-full min-w-0 overflow-x-auto">
-            <table className="w-full table-fixed text-left text-xs">
+            <table className="w-full min-w-[1050px] table-fixed text-left text-xs">
               <thead>
                 <tr className="border-b border-stone-200 text-stone-400 uppercase tracking-wider font-semibold">
                   <th className="py-3 px-3 w-[15%] font-medium">Booking ID / Date</th>

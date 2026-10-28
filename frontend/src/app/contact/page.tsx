@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
-import { PageHeader } from '../../components/PageHeader';
-import { Phone, Mail, MapPin, MessageCircle, Send, CheckCircle2, Clock, Globe, ShieldCheck } from 'lucide-react';
+import { Phone, Mail, MapPin, Calendar, Send, CheckCircle2, Clock, Globe, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function ContactPage() {
@@ -21,22 +22,68 @@ export default function ContactPage() {
     setSubmitted(true);
   };
 
-  const openWhatsApp = () => {
-    window.open('https://wa.me/919826012345?text=Hello%20AstroVD,%20I%20have%20an%20inquiry%20regarding%20consultations.', '_blank');
-  };
-
   return (
-    <div className="relative min-h-screen w-full bg-[#FAF7F2] m-0 p-0 overflow-x-clip selection:bg-amber-400">
+    <div className="relative min-h-screen w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
       <Navbar />
 
-      <PageHeader
-        breadcrumb={t('Contact Us', 'संपर्क करें')}
-        title={t('Connect with AstroVD Sanctum', 'AstroVD मुख्य परामर्श केंद्र से जुड़ें')}
-        subtitle={t(
-          "Reach out to Dr. Pandit Vishal Dubey's spiritual desks in Varanasi, Indore, New Delhi, and Dubai for astrology consultations, yagyas, and appointments.",
-          'काशी, इंदौर, नई दिल्ली एवं दुबई स्थित डॉ. पंडित विशाल दुबे जी के आध्यात्मिक केंद्रों से परामर्श, यज्ञ एवं अपॉइंटमेंट हेतु संपर्क करें।'
-        )}
-      />
+      {/* HERO BANNER SECTION (Panoramic full-bleed backdrop matching reference design) */}
+      <section className="relative w-full bg-[#36170A] overflow-hidden pt-24 sm:pt-28 md:pt-30 pb-9 sm:pb-11 px-4 sm:px-6 lg:px-12 min-h-[220px] sm:min-h-[250px] flex items-center">
+        {/* Background ambient gradient matching reference tone */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#36170A] via-[#36170A] to-[#2B0E06]" />
+
+        {/* Full-bleed Ultra-HD panoramic backdrop: Sacred Ganga Aarti, Mandir, Diya & Sanctum */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none select-none">
+          <Image
+            src="/gallery/gallery_hero_panoramic_hd.png"
+            alt="Contact Us - AstroVD Vedic Sanctum"
+            fill
+            priority
+            quality={100}
+            className="object-cover object-[right_center] md:object-[right_55%]"
+          />
+          {/* Confined left gradient vignette: protects text readability on left while leaving items 100% luminous with zero haze */}
+          <div className="absolute inset-y-0 left-0 w-full sm:w-[65%] md:w-[54%] lg:w-[48%] bg-gradient-to-r from-[#36170A] via-[#36170A]/92 to-transparent" />
+        </div>
+
+        {/* Content container - Left Text Information (Clear, readable, with zero obstruction) */}
+        <div className="relative max-w-7xl mx-auto w-full z-10">
+          <div className="max-w-xl text-left space-y-2">
+            <div className="tracking-[0.2em] text-[10px] sm:text-[11px] font-bold text-[#D8B28A] uppercase drop-shadow-sm">
+              {t('SANCTUM HELPLINE • GLOBAL DESKS • INSTANT CONNECT', 'परामर्श केंद्र • वैश्विक संपर्क डेस्क • सहज संवाद')}
+            </div>
+            <h1 className="font-serif text-2xl sm:text-3xl md:text-[34px] lg:text-[38px] font-bold text-[#FFFDFB] tracking-wide leading-tight drop-shadow-md">
+              {t('Contact Us • Connect with AstroVD Sanctum', 'संपर्क करें • AstroVD मुख्य परामर्श केंद्र से जुड़ें')}
+            </h1>
+            <p className="text-[#D7C4BD] text-xs sm:text-[13px] leading-relaxed max-w-lg font-normal drop-shadow-sm">
+              {t(
+                "Reach out to Dr. Pandit Vishal Dubey's spiritual desks in Varanasi, Indore, New Delhi, and Dubai for astrology consultations, yagyas, and appointments.",
+                'काशी, इंदौर, नई दिल्ली एवं दुबई स्थित डॉ. पंडित विशाल दुबे जी के आध्यात्मिक केंद्रों से परामर्श, यज्ञ एवं अपॉइंटमेंट हेतु संपर्क करें।'
+              )}
+            </p>
+          </div>
+        </div>
+
+        {/* Subtle curved bottom wave divider matching reference design */}
+        <div className="absolute bottom-0 left-0 right-0 w-full overflow-hidden leading-none pointer-events-none z-10">
+          <svg
+            className="relative block w-full h-4 sm:h-5 md:h-6"
+            viewBox="0 0 1200 40"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M0,14 C350,26 700,32 950,22 C1080,16 1160,8 1200,6"
+              fill="none"
+              stroke="#D8A868"
+              strokeWidth="1.2"
+              strokeOpacity="0.45"
+            />
+            <path
+              d="M0,14 C350,26 700,32 950,22 C1080,16 1160,8 1200,6 L1200,40 L0,40 Z"
+              fill="#FCF8ED"
+            />
+          </svg>
+        </div>
+      </section>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-12 py-8 sm:py-14 space-y-12">
 
@@ -62,7 +109,7 @@ export default function ContactPage() {
                   </a>
                 </p>
                 <p>
-                  <strong>{t('Desk & WhatsApp:', 'कार्यालय एवं व्हाट्सएप:')}</strong>{' '}
+                  <strong>{t('Ashram Desk:', 'कार्यालय हेल्पलाइन:')}</strong>{' '}
                   <a href="tel:+918889977665" className="text-[#5B0D15] font-semibold hover:underline">
                     +91 88899 77665
                   </a>
@@ -109,27 +156,27 @@ export default function ContactPage() {
               </div>
             </div>
 
-            {/* WhatsApp Direct Card */}
-            <div
-              onClick={openWhatsApp}
-              className="p-6 rounded-3xl bg-gradient-to-br from-[#25D366]/15 via-white to-emerald-50/60 border border-emerald-300 shadow-md space-y-2 cursor-pointer hover:shadow-lg transition-all"
+            {/* Online Vedic Consultation Card */}
+            <Link
+              href="/appointment"
+              className="p-6 rounded-3xl bg-gradient-to-br from-amber-500/15 via-white to-amber-50/60 border border-amber-300 shadow-md space-y-2 cursor-pointer hover:shadow-lg transition-all block"
             >
-              <div className="w-10 h-10 rounded-2xl bg-[#25D366] text-white flex items-center justify-center">
-                <MessageCircle className="w-5 h-5 fill-current" />
+              <div className="w-10 h-10 rounded-2xl bg-[#5B0D15] text-amber-200 flex items-center justify-center">
+                <Calendar className="w-5 h-5" />
               </div>
-              <h3 className="font-serif font-bold text-base text-emerald-950">
-                {t('Instant WhatsApp Chat (Dr. Vishal Dubey)', 'त्वरित व्हाट्सएप संपर्क (डॉ. विशाल दुबे)')}
+              <h3 className="font-serif font-bold text-base text-[#2A1810]">
+                {t('Online Vedic Consultation (Dr. Vishal Dubey)', 'ऑनलाइन परामर्श सत्र (डॉ. विशाल दुबे)')}
               </h3>
               <p className="text-xs text-stone-600">
                 {t(
-                  'Connect directly with AstroVD Acharyas for instant slot availability, Kundli sharing, and priority booking.',
-                  'कुंडली साझा करने, स्लॉट उपलब्धता एवं तत्काल परामर्श हेतु सीधे व्हाट्सएप पर संवाद करें।'
+                  'Book directly with AstroVD Acharyas for instant slot availability, Kundli analysis, and priority booking.',
+                  'कुंडली विश्लेषण, स्लॉट उपलब्धता एवं तत्काल परामर्श हेतु सीधे ऑनलाइन अपॉइंटमेंट बुक करें।'
                 )}
               </p>
-              <span className="text-xs font-bold text-emerald-700 underline block pt-1">
-                {t('Chat on WhatsApp (+91 98260 12345) →', 'व्हाट्सएप पर चैट करें (+91 98260 12345) →')}
+              <span className="text-xs font-bold text-[#5B0D15] underline block pt-1">
+                {t('Reserve Appointment Slot →', 'अपॉइंटमेंट स्लॉट आरक्षित करें →')}
               </span>
-            </div>
+            </Link>
 
             {/* Spiritual Centers & Vidyapiths */}
             <div className="p-6 rounded-3xl bg-white border border-amber-200/90 shadow-md space-y-2.5">

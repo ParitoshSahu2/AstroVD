@@ -150,16 +150,16 @@ export default function AdminUsersTab({
           </div>
         ) : (
           <div className="w-full min-w-0 overflow-x-auto">
-            <table className="w-full table-fixed text-left text-xs">
+            <table className="w-full min-w-[1050px] table-fixed text-left text-xs">
               <thead>
                 <tr className="border-b border-stone-200 text-stone-400 uppercase tracking-wider font-semibold">
-                  <th className="py-3 px-3 w-[28%] font-medium">User</th>
-                  <th className="py-3 px-3 w-[10%] font-medium">Role</th>
-                  <th className="py-3 px-3 w-[12%] font-medium">Status</th>
-                  <th className="py-3 px-3 w-[12%] font-medium">Wallet</th>
-                  <th className="py-3 px-3 text-center w-[8%] font-medium">Orders</th>
-                  <th className="py-3 px-3 text-center w-[8%] font-medium">Bookings</th>
-                  <th className="py-3 px-3 text-right w-[22%] font-medium">Actions</th>
+                  <th className="py-3 px-3 w-[28%] font-medium whitespace-nowrap">User</th>
+                  <th className="py-3 px-3 w-[10%] font-medium whitespace-nowrap">Role</th>
+                  <th className="py-3 px-3 w-[12%] font-medium whitespace-nowrap">Status</th>
+                  <th className="py-3 px-3 w-[12%] font-medium whitespace-nowrap">Wallet</th>
+                  <th className="py-3 px-3 text-center w-[8%] font-medium whitespace-nowrap">Orders</th>
+                  <th className="py-3 px-3 text-center w-[8%] font-medium whitespace-nowrap">Bookings</th>
+                  <th className="py-3 px-3 text-right w-[22%] font-medium whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">

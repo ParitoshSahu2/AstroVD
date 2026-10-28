@@ -5,8 +5,9 @@ import Lenis from 'lenis';
 
 export function SmoothScroll() {
   useEffect(() => {
-    // Respect reduced-motion preferences
     if (typeof window === 'undefined') return;
+
+    // Respect reduced-motion preferences
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) return;
 
@@ -17,8 +18,8 @@ export function SmoothScroll() {
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 0.95,
-      touchMultiplier: 1.2,
+      wheelMultiplier: 1.0,
+      touchMultiplier: 1.5,
       infinite: false,
     });
 
@@ -63,3 +64,4 @@ export function SmoothScroll() {
 
   return null;
 }
+

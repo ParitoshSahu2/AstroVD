@@ -41,13 +41,11 @@ import {
   X,
   ExternalLink,
   Sun,
-  UserCheck,
   Download,
   Printer,
   LayoutGrid,
   Wallet,
   CreditCard,
-  MessageSquare,
 } from 'lucide-react';
 import {
   UserSummary,
@@ -171,6 +169,61 @@ export default function AdminPage() {
   const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'bookings' | 'orders' | 'availability' | 'activity'>('overview');
   const [globalSearch, setGlobalSearch] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notificationsList, setNotificationsList] = useState<{
+    id: string;
+    title: string;
+    description: string;
+    time?: string;
+    read: boolean;
+    actionTab?: string;
+  }[]>([
+    {
+      id: 'notif-1',
+      title: 'Pending astrologer approval',
+      description: '1 astrologer is awaiting approval.',
+      time: '10m ago',
+      read: false,
+      actionTab: 'pandits',
+    },
+    {
+      id: 'notif-2',
+      title: 'Upcoming consultation',
+      description: 'Scheduled for today at 2:00 PM.',
+      time: '1h ago',
+      read: false,
+      actionTab: 'appointments',
+    },
+    {
+      id: 'notif-3',
+      title: 'New system activity',
+      description: 'Audit logs recorded new events.',
+      time: '2h ago',
+      read: false,
+      actionTab: 'activity',
+    },
+  ]);
+
+  const unreadNotificationsCount = notificationsList.filter((n) => !n.read).length;
+
+  const handleNotificationClick = (item: { id: string; actionTab?: string }) => {
+    setNotificationsList((prev) =>
+      prev.map((n) => (n.id === item.id ? { ...n, read: true } : n))
+    );
+    setNotificationsOpen(false);
+
+    if (item.actionTab) {
+      if (item.actionTab === 'activity') {
+        setAdminTab('activity');
+      } else {
+        handleSidebarTabClick(item.actionTab);
+      }
+    }
+  };
+
+  const handleMarkAllNotificationsRead = () => {
+    setNotificationsList((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -358,6 +411,15 @@ export default function AdminPage() {
       window.removeEventListener('pageshow', handlePageShow);
     };
   }, [backendUrl, router]);
+
+  // Auto-dismiss popup notification after 4 seconds
+  useEffect(() => {
+    if (!notification) return;
+    const timer = setTimeout(() => {
+      setNotification(null);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [notification]);
 
   // Load user directory
   const fetchUsers = async (targetPage = page) => {
@@ -1440,19 +1502,6 @@ export default function AdminPage() {
                       <Sparkles className="w-4 h-4 text-stone-400 shrink-0" />
                       <span>Astrologers</span>
                     </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSidebarTabClick('appointments')}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                        adminTab === 'bookings' && bookingServiceFilter !== 'INSPECTION'
-                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
-                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
-                      }`}
-                    >
-                      <UserCheck className="w-4 h-4 text-stone-400 shrink-0" />
-                      <span>Consultations</span>
-                    </button>
                   </div>
                 </div>
 
@@ -1577,15 +1626,6 @@ export default function AdminPage() {
                   <div className="space-y-0.5">
                     <button
                       type="button"
-                      onClick={() => handleSidebarTabClick('messages')}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
-                    >
-                      <MessageSquare className="w-4 h-4 text-stone-400 shrink-0" />
-                      <span>Messages</span>
-                    </button>
-
-                    <button
-                      type="button"
                       onClick={() => handleSidebarTabClick('notifications')}
                       className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
                     >
@@ -1698,7 +1738,7 @@ export default function AdminPage() {
                       onClick={() => handleSidebarTabClick('appointments')}
                       className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-stone-600 hover:bg-stone-50"
                     >
-                      Consultations
+                      Bookings
                     </button>
                     <button
                       type="button"
@@ -1758,59 +1798,80 @@ export default function AdminPage() {
 
                 {/* Right Header Items: Notifications & Admin Profile */}
                 <div className="flex items-center gap-4">
-                  {/* Notification Bell with Red Badge "3" */}
+                  {/* Notification Bell with Dynamic Unread Badge */}
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => setNotificationsOpen(!notificationsOpen)}
                       className="w-10 h-10 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-600 relative cursor-pointer transition-colors"
                       title="Platform notifications"
+                      aria-label="Platform notifications"
                     >
                       <Bell className="w-5 h-5" />
-                      <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#E11D48] text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-xs">
-                        3
-                      </span>
+                      {unreadNotificationsCount > 0 && (
+                        <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 bg-[#E11D48] text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-xs animate-fadeIn">
+                          {unreadNotificationsCount}
+                        </span>
+                      )}
                     </button>
 
                     {notificationsOpen && (
                       <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-30 space-y-3 animate-fadeIn">
                         <div className="flex items-center justify-between pb-2 border-b border-stone-100">
                           <span className="text-xs font-bold text-stone-900">Notifications</span>
-                          <span className="text-[10px] font-bold text-[#E11D48] bg-rose-50 px-2 py-0.5 rounded-full">
-                            3 new
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {unreadNotificationsCount > 0 ? (
+                              <span className="text-[10px] font-bold text-[#E11D48] bg-rose-50 px-2 py-0.5 rounded-full">
+                                {unreadNotificationsCount} new
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                All read
+                              </span>
+                            )}
+                            {unreadNotificationsCount > 0 && (
+                              <button
+                                type="button"
+                                onClick={handleMarkAllNotificationsRead}
+                                className="text-[10px] text-stone-500 hover:text-stone-900 underline cursor-pointer"
+                              >
+                                Mark all read
+                              </button>
+                            )}
+                          </div>
                         </div>
-                        <div className="space-y-2 text-xs">
-                          <div
-                            onClick={() => {
-                              setNotificationsOpen(false);
-                              handleSidebarTabClick('pandits');
-                            }}
-                            className="p-2.5 rounded-xl hover:bg-stone-50 cursor-pointer border border-transparent hover:border-stone-150 transition-all"
-                          >
-                            <div className="font-bold text-stone-900">Pending astrologer approval</div>
-                            <div className="text-[11px] text-stone-500">1 astrologer is awaiting approval.</div>
-                          </div>
-                          <div
-                            onClick={() => {
-                              setNotificationsOpen(false);
-                              handleSidebarTabClick('appointments');
-                            }}
-                            className="p-2.5 rounded-xl hover:bg-stone-50 cursor-pointer border border-transparent hover:border-stone-150 transition-all"
-                          >
-                            <div className="font-bold text-stone-900">Upcoming consultation</div>
-                            <div className="text-[11px] text-stone-500">Scheduled for today at 2:00 PM.</div>
-                          </div>
-                          <div
-                            onClick={() => {
-                              setNotificationsOpen(false);
-                              setAdminTab('activity');
-                            }}
-                            className="p-2.5 rounded-xl hover:bg-stone-50 cursor-pointer border border-transparent hover:border-stone-150 transition-all"
-                          >
-                            <div className="font-bold text-stone-900">New system activity</div>
-                            <div className="text-[11px] text-stone-500">Audit logs recorded 4 new events.</div>
-                          </div>
+
+                        <div className="space-y-1.5 text-xs max-h-72 overflow-y-auto">
+                          {notificationsList.map((item) => (
+                            <div
+                              key={item.id}
+                              onClick={() => handleNotificationClick(item)}
+                              className={`p-2.5 rounded-xl cursor-pointer border transition-all flex items-start gap-2.5 ${
+                                item.read
+                                  ? 'bg-transparent hover:bg-stone-50 border-transparent text-stone-500'
+                                  : 'bg-amber-50/50 hover:bg-amber-50/80 border-amber-200/60 text-stone-900 font-medium'
+                              }`}
+                            >
+                              <span
+                                className={`w-2 h-2 rounded-full mt-1.5 shrink-0 transition-colors ${
+                                  item.read ? 'bg-transparent' : 'bg-[#E11D48]'
+                                }`}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1">
+                                  <div className={`truncate ${item.read ? 'font-normal text-stone-600' : 'font-bold text-stone-900'}`}>
+                                    {item.title}
+                                  </div>
+                                  {item.time && (
+                                    <span className="text-[10px] text-stone-400 shrink-0">{item.time}</span>
+                                  )}
+                                </div>
+                                <div className="text-[11px] text-stone-500 leading-snug line-clamp-2">
+                                  {item.description}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
@@ -1878,29 +1939,35 @@ export default function AdminPage() {
 
               {/* Main Content Body */}
               <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto min-w-0">
-                {/* Global Notification Toast */}
+            {/* Global Notification Floating Toast */}
             {notification && (
               <div
-                className={`p-4 rounded-2xl text-xs sm:text-sm font-semibold flex items-center justify-between shadow-sm animate-fadeIn ${
-                  notification.type === 'success'
-                    ? 'bg-emerald-50 text-emerald-900 border border-emerald-200'
-                    : 'bg-rose-50 text-rose-900 border border-rose-200'
-                }`}
+                role="status"
+                aria-live="polite"
+                className="fixed bottom-6 right-6 z-50 max-w-sm sm:max-w-md w-auto animate-fadeIn transition-all duration-300"
               >
-                <div className="flex items-center gap-2">
-                  {notification.type === 'success' ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                  ) : (
-                    <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
-                  )}
-                  <span>{notification.message}</span>
-                </div>
-                <button
-                  onClick={() => setNotification(null)}
-                  className="text-stone-400 hover:text-stone-700 font-bold ml-4"
+                <div
+                  className={`px-4 py-3 rounded-2xl text-xs sm:text-sm font-medium flex items-center gap-3 shadow-2xl backdrop-blur-md border ${
+                    notification.type === 'success'
+                      ? 'bg-[#1C2820]/95 text-emerald-100 border-emerald-500/50 shadow-emerald-950/30'
+                      : 'bg-[#2D1217]/95 text-rose-100 border-rose-500/50 shadow-rose-950/30'
+                  }`}
                 >
-                  ✕
-                </button>
+                  {notification.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                  )}
+                  <span className="leading-snug flex-1">{notification.message}</span>
+                  <button
+                    type="button"
+                    onClick={() => setNotification(null)}
+                    className="text-stone-400 hover:text-white font-bold p-1 hover:bg-white/10 rounded-full transition-colors cursor-pointer shrink-0"
+                    aria-label="Dismiss notification"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
             )}
 

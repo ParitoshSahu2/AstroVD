@@ -95,13 +95,13 @@ export const PoojaServicesSection: React.FC = () => {
 
           {/* Right Action Button */}
           <div className="shrink-0 w-full sm:w-auto">
-            <button
-              onClick={openWhatsAppClaim}
+            <Link
+              href="/appointment?service=free_kundli"
               className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-[#A2671A] hover:bg-[#8B5612] text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>{t('Claim Free Kundli', 'निःशुल्क कुंडली प्राप्त करें')}</span>
               <ArrowRight className="w-4 h-4" />
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -114,6 +114,7 @@ export const PoojaServicesSection: React.FC = () => {
             const displayPandit = tr ? tr.panditHi : item.pandit;
             const displayDesc = tr ? tr.descHi : item.desc;
             const displayBadge = tr && tr.badgeHi ? tr.badgeHi : item.badge;
+
 
             return (
               <MotionServiceCard
@@ -130,6 +131,7 @@ export const PoojaServicesSection: React.FC = () => {
               />
             );
           })}
+
         </div>
 
         {/* ================= 4. EXPLORE MORE SERVICES BUTTON ================= */}

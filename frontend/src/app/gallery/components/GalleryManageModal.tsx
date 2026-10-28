@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   X,
   Upload,
@@ -11,8 +11,10 @@ import {
   Sparkles,
   MapPin,
   Calendar,
+  Languages,
 } from 'lucide-react';
 import { getAuthToken } from '../../../lib/auth';
+import { translateEnToHi } from '../../../lib/translator';
 
 export interface GalleryItemData {
   id: string;
@@ -58,6 +60,10 @@ export default function GalleryManageModal({
   const [descriptionHi, setDescriptionHi] = useState('');
   const [isPublished, setIsPublished] = useState(true);
 
+  // Auto-translate state
+  const [autoTranslateEnabled, setAutoTranslateEnabled] = useState(true);
+  const [translatingFields, setTranslatingFields] = useState<Record<string, boolean>>({});
+
   // Upload state
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -98,7 +104,85 @@ export default function GalleryManageModal({
     }
     setFormError(null);
     setUploadError(null);
+    setTranslatingFields({});
   }, [itemToEdit, isOpen]);
+
+  // Translate specific field
+  const translateField = useCallback(
+    async (field: 'title' | 'location' | 'date' | 'description', sourceText?: string) => {
+      const src = (sourceText !== undefined ? sourceText : (
+        field === 'title' ? title :
+        field === 'location' ? location :
+        field === 'date' ? date :
+        description
+      )).trim();
+
+      if (!src) return;
+
+      setTranslatingFields((prev) => ({ ...prev, [field]: true }));
+      try {
+        const translated = await translateEnToHi(src);
+        if (translated) {
+          if (field === 'title') setTitleHi(translated);
+          else if (field === 'location') setLocationHi(translated);
+          else if (field === 'date') setDateHi(translated);
+          else if (field === 'description') setDescriptionHi(translated);
+        }
+      } catch (err) {
+        console.error(`Error auto-translating ${field}:`, err);
+      } finally {
+        setTranslatingFields((prev) => ({ ...prev, [field]: false }));
+      }
+    },
+    [title, location, date, description]
+  );
+
+  // Translate all English fields to Hindi
+  const translateAllFields = async () => {
+    await Promise.all([
+      title.trim() ? translateField('title', title) : Promise.resolve(),
+      location.trim() ? translateField('location', location) : Promise.resolve(),
+      date.trim() ? translateField('date', date) : Promise.resolve(),
+      description.trim() ? translateField('description', description) : Promise.resolve(),
+    ]);
+  };
+
+  // Debounced auto-translation triggers when English inputs change
+  useEffect(() => {
+    if (!autoTranslateEnabled || !title.trim()) return;
+    if (isEdit && itemToEdit?.title === title) return;
+    const timer = setTimeout(() => {
+      translateField('title', title);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [title, autoTranslateEnabled, isEdit, itemToEdit?.title, translateField]);
+
+  useEffect(() => {
+    if (!autoTranslateEnabled || !location.trim()) return;
+    if (isEdit && itemToEdit?.location === location) return;
+    const timer = setTimeout(() => {
+      translateField('location', location);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [location, autoTranslateEnabled, isEdit, itemToEdit?.location, translateField]);
+
+  useEffect(() => {
+    if (!autoTranslateEnabled || !date.trim()) return;
+    if (isEdit && itemToEdit?.date === date) return;
+    const timer = setTimeout(() => {
+      translateField('date', date);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [date, autoTranslateEnabled, isEdit, itemToEdit?.date, translateField]);
+
+  useEffect(() => {
+    if (!autoTranslateEnabled || !description.trim()) return;
+    if (isEdit && itemToEdit?.description === description) return;
+    const timer = setTimeout(() => {
+      translateField('description', description);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [description, autoTranslateEnabled, isEdit, itemToEdit?.description, translateField]);
 
   if (!isOpen) return null;
 
@@ -262,6 +346,35 @@ export default function GalleryManageModal({
             </div>
           )}
 
+          {/* Smart Auto-Translate Banner */}
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50/50 border border-amber-300 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-[#5B0D15] flex items-center justify-center shrink-0">
+                <Languages className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-[#3B1E22] flex items-center gap-1.5">
+                  <span>Automatic Translation (English → Hindi)</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 font-semibold">Active</span>
+                </p>
+                <p className="text-[11px] text-stone-500">
+                  Type in English — Hindi fields translate &amp; populate automatically
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={translateAllFields}
+                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-amber-100/60 border border-amber-400/80 text-[#5B0D15] text-[11px] font-bold shadow-2xs flex items-center gap-1 cursor-pointer transition-colors"
+                title="Translate all English fields to Hindi immediately"
+              >
+                <Sparkles className="w-3 h-3 text-amber-600" />
+                <span>Translate All</span>
+              </button>
+            </div>
+          </div>
+
           {/* Titles */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -278,7 +391,27 @@ export default function GalleryManageModal({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">Title (Hindi - शीर्षक)</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-stone-700">Title (Hindi - शीर्षक)</label>
+                <button
+                  type="button"
+                  onClick={() => translateField('title')}
+                  disabled={translatingFields.title}
+                  className="text-[11px] font-semibold text-[#8B1D2C] hover:text-[#5B0D15] flex items-center gap-1 cursor-pointer"
+                >
+                  {translatingFields.title ? (
+                    <>
+                      <RefreshCw className="w-3 h-3 animate-spin text-amber-600" />
+                      <span>Translating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3 text-amber-600" />
+                      <span>Auto-Translate</span>
+                    </>
+                  )}
+                </button>
+              </div>
               <input
                 type="text"
                 value={titleHi}
@@ -306,7 +439,27 @@ export default function GalleryManageModal({
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">Auspicious Date / Muhurta</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-stone-700">Auspicious Date / Muhurta</label>
+                <button
+                  type="button"
+                  onClick={() => translateField('date')}
+                  disabled={translatingFields.date}
+                  className="text-[11px] font-semibold text-[#8B1D2C] hover:text-[#5B0D15] flex items-center gap-1 cursor-pointer"
+                >
+                  {translatingFields.date ? (
+                    <>
+                      <RefreshCw className="w-3 h-3 animate-spin text-amber-600" />
+                      <span>Translating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3 text-amber-600" />
+                      <span>Auto-Translate</span>
+                    </>
+                  )}
+                </button>
+              </div>
               <input
                 type="text"
                 value={date}
@@ -330,7 +483,27 @@ export default function GalleryManageModal({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">Location (Hindi - स्थान)</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-stone-700">Location (Hindi - स्थान)</label>
+                <button
+                  type="button"
+                  onClick={() => translateField('location')}
+                  disabled={translatingFields.location}
+                  className="text-[11px] font-semibold text-[#8B1D2C] hover:text-[#5B0D15] flex items-center gap-1 cursor-pointer"
+                >
+                  {translatingFields.location ? (
+                    <>
+                      <RefreshCw className="w-3 h-3 animate-spin text-amber-600" />
+                      <span>Translating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3 text-amber-600" />
+                      <span>Auto-Translate</span>
+                    </>
+                  )}
+                </button>
+              </div>
               <input
                 type="text"
                 value={locationHi}
@@ -411,9 +584,29 @@ export default function GalleryManageModal({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">
-                Description (Hindi - विवरण)
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-stone-700">
+                  Description (Hindi - विवरण)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => translateField('description')}
+                  disabled={translatingFields.description}
+                  className="text-[11px] font-semibold text-[#8B1D2C] hover:text-[#5B0D15] flex items-center gap-1 cursor-pointer"
+                >
+                  {translatingFields.description ? (
+                    <>
+                      <RefreshCw className="w-3 h-3 animate-spin text-amber-600" />
+                      <span>Translating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3 text-amber-600" />
+                      <span>Auto-Translate</span>
+                    </>
+                  )}
+                </button>
+              </div>
               <textarea
                 rows={3}
                 value={descriptionHi}

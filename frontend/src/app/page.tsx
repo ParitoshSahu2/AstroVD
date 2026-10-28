@@ -5,7 +5,6 @@ import { HeroSection } from '../components/HeroSection';
 import { ServicesCarousel } from '../components/ServicesCarousel';
 import { AboutSection } from '../components/AboutSection';
 import { ProductsSection } from '../components/ProductsSection';
-import { PoojaServicesSection } from '../components/PoojaServicesSection';
 import { GallerySection } from '../components/GallerySection';
 import { BlogSection } from '../components/BlogSection';
 import { FeedbackSection } from '../components/FeedbackSection';
@@ -37,23 +36,15 @@ export default function Home() {
       {/* Divider after About Us */}
       <SectionDivider />
 
-      {/* 3. Products Section (Showing 8 cards on home page with explore more) */}
+      {/* 3. Products Section (Showing 8 cards on home page with explore more, no checkout bar) */}
       <div id="shop">
-        <ProductsSection limit={8} showExploreMore={true} />
+        <ProductsSection limit={8} showExploreMore={true} showCheckoutBar={false} />
       </div>
 
       {/* Divider after Products */}
       <SectionDivider />
 
-      {/* 4. Our Astrology & Pooja Services (Special Baby Girl Kundli Blessing Banner) */}
-      <div id="pooja-services">
-        <PoojaServicesSection />
-      </div>
-
-      {/* Divider after Pooja Services */}
-      <SectionDivider />
-
-      {/* 5. Divine Gallery & Sacred Rituals Showcase */}
+      {/* 4. Divine Gallery & Sacred Rituals Showcase */}
       <div id="gallery">
         <GallerySection />
       </div>
@@ -61,7 +52,7 @@ export default function Home() {
       {/* Divider after Gallery */}
       <SectionDivider />
 
-      {/* 6. Blog & Sacred Knowledge Section */}
+      {/* 5. Blog & Sacred Knowledge Section */}
       <div id="blog">
         <BlogSection />
       </div>
@@ -69,7 +60,7 @@ export default function Home() {
       {/* Divider after Blog */}
       <SectionDivider />
 
-      {/* 7. Seeker Feedback & Reviews Section */}
+      {/* 6. Seeker Feedback & Reviews Section */}
       <div id="feedback">
         <FeedbackSection />
       </div>
