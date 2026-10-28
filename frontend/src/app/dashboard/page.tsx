@@ -96,6 +96,46 @@ function formatGoogleMeetLink(bookingId: string): string {
   return `https://meet.google.com/${p1}-${p2}-${p3}`;
 }
 
+function getCombinedOrders(backendOrders: any[] = []): any[] {
+  let localOrders: any[] = [];
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('astro_placed_orders');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          localOrders = parsed;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse astro_placed_orders:', e);
+    }
+  }
+
+  const seenIds = new Set<string>();
+  const combined: any[] = [];
+
+  // Local/recent orders first so newest orders show at top
+  for (const o of localOrders) {
+    const key = o.orderNumber || o.id;
+    if (key && !seenIds.has(key)) {
+      seenIds.add(key);
+      combined.push(o);
+    }
+  }
+
+  // Then backend orders
+  for (const o of backendOrders) {
+    const key = o.orderNumber || o.id;
+    if (key && !seenIds.has(key)) {
+      seenIds.add(key);
+      combined.push(o);
+    }
+  }
+
+  return combined;
+}
+
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'consultations' | 'orders'>('profile');
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -157,7 +197,43 @@ export default function DashboardPage() {
 
   const loadDashboardData = useCallback(async (isRefresh = false) => {
     const token = getAuthToken();
+    const stored = getStoredUser();
+
     if (!token) {
+      // Check if there are local orders saved in browser
+      let localOrders: any[] = [];
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('astro_placed_orders');
+          if (raw) localOrders = JSON.parse(raw);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      if (localOrders && localOrders.length > 0) {
+        setProfile(
+          stored ||
+            ({
+              id: 'guest-seeker',
+              name: localOrders[0]?.shippingAddress?.recipient || 'Valued Seeker',
+              role: 'USER',
+              status: 'ACTIVE',
+            } as any)
+        );
+        setWallet({
+          walletBalance: 0,
+          currency: 'INR',
+          currencySymbol: '₹',
+        });
+        setOrders(localOrders);
+        setLoading(false);
+        setOrdersLoading(false);
+        setBookingsLoading(false);
+        setTxLoading(false);
+        return;
+      }
+
       clearDashboardData();
       setLoading(false);
       router.replace('/login?redirect=/dashboard');
@@ -165,7 +241,6 @@ export default function DashboardPage() {
     }
 
     // Immediately populate dashboard with stored seeker identity if available
-    const stored = getStoredUser();
     if (stored && !profileRef.current) {
       setProfile(stored as any);
       setWallet({
@@ -248,14 +323,17 @@ export default function DashboardPage() {
       }
 
       // Process 4: Orders
+      let backendList: any[] = [];
       if (ordersRes.ok) {
         const oData = await ordersRes.json();
-        setOrders(Array.isArray(oData) ? oData : oData.orders || []);
+        backendList = Array.isArray(oData) ? oData : oData.orders || [];
       }
+      setOrders(getCombinedOrders(backendList));
     } catch (err: any) {
       if (err?.name !== 'AbortError') {
         console.error('Error fetching dashboard data:', err);
       }
+      setOrders((prev) => getCombinedOrders(prev));
     } finally {
       if (abortControllerRef.current === controller) {
         isFetchingRef.current = false;
@@ -398,8 +476,13 @@ export default function DashboardPage() {
       }
     };
 
+    const handleOrderPlaced = () => {
+      setOrders((prev) => getCombinedOrders(prev));
+    };
+
     window.addEventListener('astro-auth-change', handleAuthChange);
     window.addEventListener('astro-tab-change', handleTabChange);
+    window.addEventListener('astro-order-placed', handleOrderPlaced);
     window.addEventListener('popstate', handleTabChange);
     window.addEventListener('storage', handleAuthChange);
     window.addEventListener('pageshow', handlePageShow);
@@ -410,6 +493,7 @@ export default function DashboardPage() {
       }
       window.removeEventListener('astro-auth-change', handleAuthChange);
       window.removeEventListener('astro-tab-change', handleTabChange);
+      window.removeEventListener('astro-order-placed', handleOrderPlaced);
       window.removeEventListener('popstate', handleTabChange);
       window.removeEventListener('storage', handleAuthChange);
       window.removeEventListener('pageshow', handlePageShow);

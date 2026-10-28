@@ -52,8 +52,6 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<'featured' | 'price-low' | 'price-high' | 'rating'>('featured');
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
-  const [sankalpName, setSankalpName] = useState('');
-  const [sankalpGotra, setSankalpGotra] = useState('');
   const [addedProductId, setAddedProductId] = useState<string | null>(null);
   const [modalQty, setModalQty] = useState<number>(1);
   const router = useRouter();
@@ -113,6 +111,25 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
       window.removeEventListener('astro-search-change', handleSearchEvent);
     };
   }, [limit]);
+
+  // Lock body scroll and listen for Escape key when product view is active
+  useEffect(() => {
+    if (selectedProduct) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setSelectedProduct(null);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = 'unset';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [selectedProduct]);
 
   const filterCategories = [
     {
@@ -286,10 +303,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
 
   const openWhatsAppInquiry = (product: ProductItem) => {
     const prodName = language === 'hi' && product.nameHi ? product.nameHi : product.name;
-    let text = `Hello AstroVD, I would like to order the consecrated ${prodName} (${product.price}).`;
-    if (sankalpName) {
-      text += ` Please consecrate it in the name of ${sankalpName}${sankalpGotra ? ` (Gotra: ${sankalpGotra})` : ''}.`;
-    }
+    const text = `Hello AstroVD, I would like to order the consecrated ${prodName} (${product.price}).`;
     window.open(`https://wa.me/919876543210?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -532,13 +546,13 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
 
                     <div className="flex items-center gap-2">
                       {quantityInCart === 0 ? (
-                        /* Clean Add to Cart button (text only, no sign/icon) */
+                        /* Clean Add to Cart button (rounded with clean, subtle hover effect) */
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleAddToCart(item, 1);
                           }}
-                          className="px-4 py-1.5 rounded-lg bg-gradient-to-r from-[#800000] to-[#5B0D15] hover:from-[#5B0D15] hover:to-[#3E090E] text-white text-xs font-semibold shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer text-center"
+                          className="px-4 py-1.5 rounded-full bg-[#800000] hover:bg-[#5B0D15] text-white text-xs font-semibold shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 cursor-pointer text-center"
                           aria-label={t(`Add ${item.name} to cart`, `${item.name} कार्ट में जोड़ें`)}
                         >
                           {t('Add to Cart', 'कार्ट में जोड़ें')}
@@ -547,7 +561,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                         /* Jumps to + 1 and -1 quantity selector */
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="flex items-center bg-[#5B0D15] text-white rounded-lg px-1.5 py-1 shadow-xs border border-[#43080F]"
+                          className="flex items-center bg-[#5B0D15] text-white rounded-full px-1.5 py-1 shadow-xs border border-amber-400/30"
                         >
                           <button
                             type="button"
@@ -559,7 +573,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                                 updateQuantity(item.id, quantityInCart - 1);
                               }
                             }}
-                            className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-black/20 text-white font-bold cursor-pointer transition-colors"
+                            className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/20 text-white font-bold cursor-pointer transition-colors active:scale-90"
                             aria-label={t('Decrease quantity', 'मात्रा घटाएं')}
                           >
                             <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -575,7 +589,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                               e.stopPropagation();
                               updateQuantity(item.id, quantityInCart + 1);
                             }}
-                            className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-black/20 text-white font-bold cursor-pointer transition-colors"
+                            className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/20 text-white font-bold cursor-pointer transition-colors active:scale-90"
                             aria-label={t('Increase quantity', 'मात्रा बढ़ाएं')}
                           >
                             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -723,184 +737,161 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
 
       </div>
 
-      {/* ================= QUICK VIEW & SANKALP MODAL ================= */}
+      {/* ================= FULL VIEWPORT PRODUCT DETAILS VIEW ================= */}
       {selectedProduct && (
         <div
-          onClick={() => setSelectedProduct(null)}
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-fadeIn"
+          className="fixed inset-0 z-50 w-screen h-screen bg-[#FAF7F2] flex flex-col md:flex-row overflow-hidden animate-fadeIn"
           role="dialog"
           aria-modal="true"
         >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-3xl rounded-3xl bg-[#FAF7F2] border-2 border-amber-300/90 shadow-2xl overflow-hidden my-8"
+          {/* Modal Close Button */}
+          <button
+            onClick={() => setSelectedProduct(null)}
+            className="absolute top-4 right-4 z-40 w-11 h-11 rounded-full bg-stone-900/80 hover:bg-stone-900 text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xl border border-white/20"
+            aria-label="Close product view"
+            title={t('Close (Esc)', 'बंद करें (Esc)')}
           >
-            {/* Modal Close Button */}
-            <button
-              onClick={() => setSelectedProduct(null)}
-              className="absolute top-4 right-4 z-30 w-8 h-8 rounded-full bg-stone-900/60 hover:bg-stone-900 text-white flex items-center justify-center transition-colors cursor-pointer"
-              aria-label="Close dialog"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <X className="w-5 h-5" />
+          </button>
 
-            <div className="grid grid-cols-1 md:grid-cols-2">
-              {/* Product Image Side */}
-              <div className="relative h-72 sm:h-96 md:h-full bg-stone-950 min-h-[300px]">
-                <Image
-                  src={selectedProduct.image}
-                  alt={language === 'hi' && selectedProduct.nameHi ? selectedProduct.nameHi : selectedProduct.name}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover"
-                />
-                <div className="absolute bottom-4 left-4 right-4 p-3 rounded-2xl bg-black/70 backdrop-blur-md border border-amber-400/60 text-white text-xs space-y-1">
-                  <div className="text-amber-300 font-bold flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>{t('Consecration Mantra:', 'प्राण-प्रतिष्ठा मंत्र:')}</span>
-                  </div>
-                  <div className="font-serif italic text-stone-200">{selectedProduct.mantra}</div>
-                </div>
+          {/* Product Image Side - Full-bleed edge-to-edge fill taking full viewport, completely eliminating black background */}
+          <div className="relative w-full md:w-1/2 lg:w-7/12 h-[42vh] md:h-full shrink-0 overflow-hidden bg-stone-100">
+            <Image
+              src={selectedProduct.image}
+              alt={language === 'hi' && selectedProduct.nameHi ? selectedProduct.nameHi : selectedProduct.name}
+              fill
+              priority
+              sizes="(max-width: 768px) 100vw, 60vw"
+              className="object-cover object-center w-full h-full select-none"
+            />
+          </div>
+
+          {/* Details & Actions Side - Takes full viewport height */}
+          <div className="w-full md:w-1/2 lg:w-5/12 h-[58vh] md:h-full p-5 sm:p-7 md:p-8 lg:p-10 flex flex-col justify-between overflow-y-auto bg-[#FAF7F2] border-l border-amber-200/80 space-y-3">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold tracking-[0.2em] text-[#800000] uppercase block">
+                  {language === 'hi' && selectedProduct.tagHi ? selectedProduct.tagHi : selectedProduct.tag}
+                </span>
+                <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  {t('Govt Lab Certified', 'सरकारी लैब द्वारा प्रमाणित')}
+                </span>
               </div>
+              <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#2A1810] tracking-tight leading-snug">
+                {formatTitleCase(language === 'hi' && selectedProduct.nameHi ? selectedProduct.nameHi : selectedProduct.name)}
+              </h3>
+              <div className="flex items-center gap-3">
+                <span className="font-serif text-2xl sm:text-3xl font-bold text-[#800000]">{selectedProduct.price}</span>
+                <span className="text-stone-400 line-through text-sm sm:text-base">{selectedProduct.originalPrice}</span>
+              </div>
+              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed line-clamp-3">
+                {language === 'hi' && selectedProduct.descHi ? selectedProduct.descHi : selectedProduct.desc}
+              </p>
 
-              {/* Details & Sankalp Side */}
-              <div className="p-6 sm:p-8 space-y-5 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <span className="text-[10px] font-bold tracking-[0.2em] text-[#800000] uppercase block">
-                    {language === 'hi' && selectedProduct.tagHi ? selectedProduct.tagHi : selectedProduct.tag}
+              {/* Sacred Astro Attributes */}
+              <div className="grid grid-cols-2 gap-2.5 pt-1 text-xs">
+                <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80">
+                  <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Ruling Planet', 'स्वामी ग्रह')}</span>
+                  <span className="font-semibold text-stone-900 text-xs truncate block">
+                    {language === 'hi' && selectedProduct.planetHi ? selectedProduct.planetHi : selectedProduct.planet}
                   </span>
-                  <h3 className="font-serif text-2xl font-bold text-[#2A1810] tracking-tight">
-                    {formatTitleCase(language === 'hi' && selectedProduct.nameHi ? selectedProduct.nameHi : selectedProduct.name)}
-                  </h3>
-                  <div className="flex items-center gap-3">
-                    <span className="font-serif text-2xl font-bold text-[#800000]">{selectedProduct.price}</span>
-                    <span className="text-stone-400 line-through text-sm">{selectedProduct.originalPrice}</span>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-                      {t('Govt Lab Certified', 'सरकारी लैब द्वारा प्रमाणित')}
-                    </span>
-                  </div>
-                  <p className="text-xs text-stone-600 leading-relaxed">
-                    {language === 'hi' && selectedProduct.descHi ? selectedProduct.descHi : selectedProduct.desc}
-                  </p>
-
-                  {/* Sacred Astro Attributes */}
-                  <div className="grid grid-cols-2 gap-2.5 pt-2 text-xs">
-                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200">
-                      <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Ruling Planet', 'स्वामी ग्रह')}</span>
-                      <span className="font-semibold text-stone-900">
-                        {language === 'hi' && selectedProduct.planetHi ? selectedProduct.planetHi : selectedProduct.planet}
-                      </span>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200">
-                      <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Active Chakra', 'सक्रिय चक्र')}</span>
-                      <span className="font-semibold text-stone-900">
-                        {language === 'hi' && selectedProduct.chakraHi ? selectedProduct.chakraHi : selectedProduct.chakra}
-                      </span>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200">
-                      <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Auspicious Day', 'शुभ धारण वार')}</span>
-                      <span className="font-semibold text-stone-900">
-                        {language === 'hi' && selectedProduct.dayToWearHi ? selectedProduct.dayToWearHi : selectedProduct.dayToWear}
-                      </span>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200">
-                      <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Bead Spec', 'मनका विवरण')}</span>
-                      <span className="font-semibold text-stone-900">
-                        {language === 'hi' && selectedProduct.beadSizeHi ? selectedProduct.beadSizeHi : selectedProduct.beadSize}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Free Sankalp Personalization Input */}
-                  <div className="p-3 rounded-2xl bg-white border border-amber-300/80 space-y-2">
-                    <span className="text-[11px] font-bold text-[#800000] flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      {t('Free Personal Vedic Sankalp:', 'निःशुल्क व्यक्तिगत वैदिक संकल्प:')}
-                    </span>
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="text"
-                        placeholder={t('Your Name', 'आपका नाम')}
-                        value={sankalpName}
-                        onChange={(e) => setSankalpName(e.target.value)}
-                        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-stone-200 focus:outline-none focus:border-amber-400 bg-stone-50"
-                      />
-                      <input
-                        type="text"
-                        placeholder={t('Gotra (Optional)', 'गोत्र (ऐच्छिक)')}
-                        value={sankalpGotra}
-                        onChange={(e) => setSankalpGotra(e.target.value)}
-                        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-stone-200 focus:outline-none focus:border-amber-400 bg-stone-50"
-                      />
-                    </div>
-                  </div>
                 </div>
-
-                {/* Quantity selector & Add to Cart button */}
-                <div className="space-y-2 pt-2">
-                  <div className="flex items-center justify-between bg-stone-100 rounded-2xl p-2 px-3 border border-stone-200">
-                    <span className="text-xs font-semibold text-stone-700">
-                      {t('Quantity:', 'मात्रा:')}
-                    </span>
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setModalQty((q) => Math.max(1, q - 1))}
-                        className="w-7 h-7 rounded-full bg-white border border-stone-300 flex items-center justify-center text-stone-700 hover:bg-amber-100 cursor-pointer transition-colors"
-                        disabled={modalQty <= 1}
-                      >
-                        <Minus className="w-3.5 h-3.5" />
-                      </button>
-                      <span className="font-bold text-sm text-stone-900 w-6 text-center">{modalQty}</span>
-                      <button
-                        type="button"
-                        onClick={() => setModalQty((q) => Math.min(10, q + 1))}
-                        className="w-7 h-7 rounded-full bg-white border border-stone-300 flex items-center justify-center text-stone-700 hover:bg-amber-100 cursor-pointer transition-colors"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-2 pt-1">
-                    <button
-                      onClick={() => {
-                        handleAddToCart(selectedProduct, modalQty);
-                      }}
-                      className={`flex-1 py-3 px-4 rounded-full font-serif font-bold text-sm shadow-xl flex items-center justify-center gap-2 cursor-pointer transition-all ${
-                        addedProductId === selectedProduct.id
-                          ? 'bg-emerald-700 text-white shadow-emerald-900/30'
-                          : 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#3B1E22] shadow-amber-950/30 hover:scale-[1.02]'
-                      }`}
-                    >
-                      {addedProductId === selectedProduct.id ? (
-                        <>
-                          <Check className="w-4 h-4 text-emerald-200" />
-                          <span>{t('Added to Cart ✓', 'कार्ट में जोड़ा गया ✓')}</span>
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingCart className="w-4 h-4" />
-                          <span>
-                            {t(
-                              `Add to Cart • ₹${(parsePriceNumber(selectedProduct.price) * modalQty).toLocaleString('en-IN')}`,
-                              `कार्ट में जोड़ें • ₹${(parsePriceNumber(selectedProduct.price) * modalQty).toLocaleString('en-IN')}`
-                            )}
-                          </span>
-                        </>
-                      )}
-                    </button>
-
-                    <Link
-                      href="/cart"
-                      className="py-3 px-5 rounded-full bg-[#5B0D15] hover:bg-[#72111c] text-amber-100 font-serif font-bold text-xs sm:text-sm shadow-xl flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] text-center"
-                    >
-                      <span>{t('Go to Cart', 'कार्ट देखें')}</span>
-                      <ArrowRight className="w-3.5 h-3.5 text-amber-300" />
-                    </Link>
-                  </div>
+                <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80">
+                  <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Active Chakra', 'सक्रिय चक्र')}</span>
+                  <span className="font-semibold text-stone-900 text-xs truncate block">
+                    {language === 'hi' && selectedProduct.chakraHi ? selectedProduct.chakraHi : selectedProduct.chakra}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80">
+                  <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Auspicious Day', 'शुभ धारण वार')}</span>
+                  <span className="font-semibold text-stone-900 text-xs truncate block">
+                    {language === 'hi' && selectedProduct.dayToWearHi ? selectedProduct.dayToWearHi : selectedProduct.dayToWear}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80">
+                  <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Bead Spec', 'मनका विवरण')}</span>
+                  <span className="font-semibold text-stone-900 text-xs truncate block">
+                    {language === 'hi' && selectedProduct.beadSizeHi ? selectedProduct.beadSizeHi : selectedProduct.beadSize}
+                  </span>
                 </div>
               </div>
+
+              {/* Product-Specific Sacred Energizing Mantra Container */}
+              <div className="p-3 sm:p-4 rounded-2xl bg-amber-50/90 border border-amber-300/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-[#800000] uppercase tracking-wider flex items-center gap-1.5 font-serif">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    {t('Energizing Beej Mantra', 'धारण एवं सिद्ध बीज मंत्र')}
+                  </span>
+                  <span className="text-[10px] font-semibold text-amber-900 bg-amber-200/60 px-2 py-0.5 rounded-full border border-amber-300/60">
+                    {t('108 Chants', '108 जाप')}
+                  </span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white border border-amber-200/90 text-center shadow-2xs">
+                  <p className="font-serif font-bold text-xs sm:text-[14px] text-[#5B0D15] tracking-wide select-all">
+                    {selectedProduct.mantra}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between text-[10.5px] sm:text-xs text-stone-600 px-1">
+                  <span className="truncate">
+                    <span className="text-amber-700 font-bold">✦ {t('Muhurta:', 'शुभ मुहूर्त:')} </span>
+                    <span>{language === 'hi' && selectedProduct.dayToWearHi ? selectedProduct.dayToWearHi : selectedProduct.dayToWear}</span>
+                  </span>
+                  <span className="shrink-0 text-[10px] font-medium text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200/70">
+                    {t('Chant while wearing', 'धारण करते समय जपें')}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quantity selector & Single Checkout button */}
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between bg-stone-100 rounded-xl p-2 px-4 border border-stone-200">
+                <span className="text-xs sm:text-sm font-semibold text-stone-700">
+                  {t('Quantity:', 'मात्रा:')}
+                </span>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setModalQty((q) => Math.max(1, q - 1))}
+                    className="w-7 h-7 rounded-full bg-white border border-stone-300 flex items-center justify-center text-stone-700 hover:bg-amber-100 cursor-pointer transition-colors"
+                    disabled={modalQty <= 1}
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="font-bold text-sm text-stone-900 w-6 text-center">{modalQty}</span>
+                  <button
+                    type="button"
+                    onClick={() => setModalQty((q) => Math.min(10, q + 1))}
+                    className="w-7 h-7 rounded-full bg-white border border-stone-300 flex items-center justify-center text-stone-700 hover:bg-amber-100 cursor-pointer transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
+                  if (!token) {
+                    router.push(`/login?redirect=${encodeURIComponent('/cart')}`);
+                    return;
+                  }
+                  addItem(selectedProduct, modalQty);
+                  setSelectedProduct(null);
+                  router.push('/cart');
+                }}
+                className="w-full py-3.5 px-6 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:via-amber-400 hover:to-amber-500 text-[#2A0E13] font-serif font-bold text-sm sm:text-base shadow-[0_8px_25px_rgba(245,199,126,0.38)] hover:shadow-[0_12px_32px_rgba(245,199,126,0.55)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer group border border-amber-300/60"
+              >
+                <Sparkles className="w-4 h-4 text-[#2A0E13]/80 group-hover:rotate-12 transition-transform" />
+                <span>
+                  {t('Check out', 'चेकआउट करें')} • ₹{(parsePriceNumber(selectedProduct.price) * modalQty).toLocaleString('en-IN')}
+                </span>
+                <ArrowRight className="w-4 h-4 text-[#2A0E13] group-hover:translate-x-1 transition-transform" />
+              </button>
             </div>
           </div>
         </div>
@@ -908,29 +899,38 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
 
       {/* Floating Bottom Cart Bar for quick access - only on product page, never on homepage */}
       {allowCheckoutBar && totalCount > 0 && (
-        <aside aria-label="Shopping Cart Bar" className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-lg bg-[#2A0E13]/95 backdrop-blur-md border border-amber-400/80 rounded-full px-5 py-3 shadow-2xl flex items-center justify-between text-amber-100 animate-slideUp">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <ShoppingCart className="w-5 h-5 text-amber-400" />
-              <span className="absolute -top-2 -right-2 bg-rose-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white">
+        <aside
+          aria-label="Shopping Cart Bar"
+          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-auto min-w-[300px] max-w-[94vw] sm:max-w-md bg-gradient-to-r from-[#240A0F]/95 via-[#350F16]/95 to-[#240A0F]/95 backdrop-blur-xl border border-amber-400/50 shadow-[0_12px_36px_rgba(0,0,0,0.5),0_0_20px_rgba(245,199,126,0.15)] rounded-full px-3.5 py-2 sm:px-4 sm:py-2.5 flex items-center justify-between gap-3 sm:gap-4 text-amber-100 animate-slideUp transition-all duration-300 hover:border-amber-400/70"
+        >
+          {/* Left: Cart Icon & Items Count */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="relative w-8 h-8 rounded-full bg-amber-400/15 border border-amber-400/30 flex items-center justify-center shrink-0">
+              <ShoppingCart className="w-4 h-4 text-amber-300" />
+              <span className="absolute -top-1 -right-1 bg-[#800000] text-amber-100 text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center border border-amber-300/80 shadow-xs">
                 {totalCount}
               </span>
             </div>
-            <div>
-              <p className="text-xs font-semibold">
-                {totalCount} {totalCount === 1 ? t('item in cart', 'सामग्री कार्ट में') : t('items in cart', 'सामग्रियां कार्ट में')}
-              </p>
-              <p className="text-xs font-bold text-amber-300">
+            <div className="flex flex-col leading-none min-w-0">
+              <span className="text-[10px] font-semibold text-amber-200/80 uppercase tracking-wider truncate">
+                {totalCount} {totalCount === 1 ? t('item', 'सामग्री') : t('items', 'सामग्रियां')}
+              </span>
+              <span className="text-sm font-bold text-white tracking-tight pt-0.5">
                 ₹{subtotal.toLocaleString('en-IN')}
-              </p>
+              </span>
             </div>
           </div>
+
+          {/* Subtle Vertical Divider */}
+          <div className="h-6 w-px bg-gradient-to-b from-transparent via-amber-400/40 to-transparent shrink-0" />
+
+          {/* Right: Gold Luxury CTA Button */}
           <Link
             href="/cart"
-            className="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#2A0E13] font-serif font-bold text-xs shadow-md hover:scale-105 transition-all flex items-center gap-1"
+            className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 hover:from-amber-200 hover:to-amber-400 text-[#240A0F] font-serif font-bold text-xs shadow-md hover:shadow-lg hover:scale-[1.03] active:scale-95 transition-all flex items-center gap-1.5 shrink-0 group cursor-pointer"
           >
             <span>{t('Checkout Now', 'ऑर्डर पूरा करें')}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-3.5 h-3.5 text-[#240A0F] group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </aside>
       )}
