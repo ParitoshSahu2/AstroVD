@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   ShoppingCart,
   Check,
+  CheckCircle2,
   Plus,
   Minus,
   Star,
@@ -111,11 +112,12 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
         breadcrumb={t('Astro Store', 'वैदिक स्टोर')}
         title={name}
         subtitle={tag}
+        compact={true}
       />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Back Link */}
-        <div className="mb-6">
+        <div className="mb-4">
           <Link
             href="/products"
             className="inline-flex items-center gap-2 text-xs font-semibold text-[#5B0D15] hover:underline"
@@ -125,30 +127,30 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-start">
           {/* Left: Product Image Box */}
-          <div className="relative rounded-3xl overflow-hidden bg-stone-950 border-2 border-amber-300/80 shadow-2xl group min-h-[420px] sm:min-h-[500px]">
+          <div className="md:col-span-5 relative rounded-2xl overflow-hidden bg-stone-950 border-2 border-amber-300/80 shadow-xl group aspect-square max-h-[380px] sm:max-h-[420px] w-full mx-auto">
             <Image
               src={product.image}
               alt={name}
               fill
               priority
-              sizes="(max-width: 768px) 100vw, 50vw"
+              sizes="(max-width: 768px) 100vw, 42vw"
               className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
             />
             {/* Price badge */}
-            <div className="absolute top-4 right-4 px-3.5 py-1.5 rounded-full bg-black/70 backdrop-blur-md border border-amber-400 text-amber-200 font-serif font-bold text-sm shadow-md">
+            <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/70 backdrop-blur-md border border-amber-400 text-amber-200 font-serif font-bold text-xs shadow-md">
               {product.price}
             </div>
             {/* Consecration guarantee tag */}
-            <div className="absolute bottom-4 left-4 right-4 p-3 rounded-2xl bg-black/65 backdrop-blur-md border border-amber-300/40 text-amber-100 flex items-center gap-2.5 text-xs">
-              <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-              <span>{t('100% Lab Certified Natural Stone & Prana Pratishtha Done in Kashi', '100% लैब प्रमाणित प्राकृतिक रत्न एवं काशी में प्राण-प्रतिष्ठित')}</span>
+            <div className="absolute bottom-3 left-3 right-3 p-2.5 rounded-xl bg-black/70 backdrop-blur-md border border-amber-300/40 text-amber-100 flex items-center gap-2 text-[11px]">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{t('100% Lab Certified & Prana Pratishtha Done in Kashi', '100% लैब प्रमाणित एवं काशी में प्राण-प्रतिष्ठित')}</span>
             </div>
           </div>
 
           {/* Right: Product Details & Add to Cart */}
-          <div className="space-y-6">
+          <div className="md:col-span-7 space-y-4">
             <div>
               <span className="text-[11px] font-bold tracking-[0.2em] text-amber-800 uppercase block mb-1">
                 {tag}
@@ -210,28 +212,21 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
               </div>
             </div>
 
-            {/* Quantity Selector & Action Buttons */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center gap-4">
-                <span className="text-xs font-bold text-stone-700">{t('Quantity:', 'मात्रा:')}</span>
-                <div className="flex items-center border border-stone-300 rounded-full bg-white px-2 py-1">
-                  <button
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="p-1 hover:text-[#5B0D15] cursor-pointer"
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="w-8 text-center text-xs font-bold text-stone-800">{quantity}</span>
-                  <button
-                    onClick={() => setQuantity((q) => Math.min(10, q + 1))}
-                    className="p-1 hover:text-[#5B0D15] cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
+            {/* Action Buttons directly visible in viewport */}
+            <div className="pt-2">
+              <div className="relative flex items-center gap-3">
+                {/* Added to Cart Popup for 2 seconds */}
+                {added && (
+                  <div className="absolute -top-11 left-1/4 -translate-x-1/2 z-30 pointer-events-none flex flex-col items-center animate-fadeIn">
+                    <div className="px-3 py-1 bg-[#1C090C] text-emerald-300 text-xs font-bold rounded-lg shadow-xl flex items-center gap-1.5 whitespace-nowrap border border-amber-400/60 ring-1 ring-black/40">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>{t('Added to Cart', 'कार्ट में जोड़ा गया')}</span>
+                    </div>
+                    {/* Triangle indicator pointing down */}
+                    <div className="w-2 h-2 bg-[#1C090C] rotate-45 -mt-1 border-r border-b border-amber-400/60" />
+                  </div>
+                )}
 
-              <div className="flex items-center gap-3">
                 <button
                   onClick={handleAddToCart}
                   className={`flex-1 py-3 px-6 rounded-full text-xs font-bold shadow-md transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${

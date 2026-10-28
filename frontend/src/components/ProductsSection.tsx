@@ -26,6 +26,7 @@ import {
   MessageCircle,
   Star,
   ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { PRODUCTS_CATALOG, ProductItem, formatTitleCase } from '../data/products';
 import { useLanguage } from '../context/LanguageContext';
@@ -54,6 +55,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [addedProductId, setAddedProductId] = useState<string | null>(null);
   const [modalQty, setModalQty] = useState<number>(1);
+  const [isCheckoutBarHovered, setIsCheckoutBarHovered] = useState<boolean>(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -73,7 +75,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
     setAddedProductId(item.id);
     setTimeout(() => {
       setAddedProductId((current) => (current === item.id ? null : current));
-    }, 1600);
+    }, 2000);
   };
 
   // Infinite Scrolling State (batches of 8)
@@ -555,7 +557,19 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="relative flex items-center gap-2">
+                      {/* Added to Cart Popup Tooltip for 2 seconds */}
+                      {addedProductId === item.id && (
+                        <div className="absolute -top-10 right-0 z-30 pointer-events-none flex flex-col items-center animate-fadeIn">
+                          <div className="px-2.5 py-1 bg-[#1C090C] text-emerald-300 text-[11px] font-bold rounded-lg shadow-xl flex items-center gap-1.5 whitespace-nowrap border border-amber-400/60 ring-1 ring-black/40">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>{t('Added to Cart', 'कार्ट में जोड़ा गया')}</span>
+                          </div>
+                          {/* Triangle indicator pointing down to button */}
+                          <div className="w-2 h-2 bg-[#1C090C] rotate-45 -mt-1 border-r border-b border-amber-400/60" />
+                        </div>
+                      )}
+
                       {quantityInCart === 0 ? (
 
                         /* Clean Add to Cart button (rounded with clean, subtle hover effect) */
@@ -755,37 +769,43 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
 
       </div>
 
-      {/* ================= FULL VIEWPORT PRODUCT DETAILS VIEW ================= */}
+      {/* ================= REDUCED WIDTH PRODUCT DETAILS MODAL ================= */}
       {selectedProduct && (
         <div
-          className="fixed inset-0 z-50 w-screen h-screen bg-[#FAF7F2] flex flex-col md:flex-row overflow-hidden animate-fadeIn"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 md:p-6 overflow-y-auto animate-fadeIn"
           role="dialog"
           aria-modal="true"
+          onClick={() => setSelectedProduct(null)}
         >
-          {/* Modal Close Button */}
-          <button
-            onClick={() => setSelectedProduct(null)}
-            className="absolute top-4 right-4 z-40 w-11 h-11 rounded-full bg-stone-900/80 hover:bg-stone-900 text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xl border border-white/20"
-            aria-label="Close product view"
-            title={t('Close (Esc)', 'बंद करें (Esc)')}
+          {/* Modal Container with Contained Width */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-4xl max-h-[90vh] bg-[#FAF7F2] rounded-3xl border border-amber-300/80 shadow-2xl flex flex-col md:flex-row overflow-hidden my-auto"
           >
-            <X className="w-5 h-5" />
-          </button>
+            {/* Modal Close Button */}
+            <button
+              onClick={() => setSelectedProduct(null)}
+              className="absolute top-3.5 right-3.5 z-40 w-10 h-10 rounded-full bg-stone-900/80 hover:bg-stone-900 text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xl border border-white/20"
+              aria-label="Close product view"
+              title={t('Close (Esc)', 'बंद करें (Esc)')}
+            >
+              <X className="w-5 h-5" />
+            </button>
 
-          {/* Product Image Side - Full-bleed edge-to-edge fill taking full viewport, completely eliminating black background */}
-          <div className="relative w-full md:w-1/2 lg:w-7/12 h-[42vh] md:h-full shrink-0 overflow-hidden bg-stone-100">
-            <Image
-              src={selectedProduct.image}
-              alt={language === 'hi' && selectedProduct.nameHi ? selectedProduct.nameHi : selectedProduct.name}
-              fill
-              priority
-              sizes="(max-width: 768px) 100vw, 60vw"
-              className="object-cover object-center w-full h-full select-none"
-            />
-          </div>
+            {/* Product Image Side - Contained & balanced */}
+            <div className="relative w-full md:w-5/12 min-h-[260px] sm:min-h-[320px] md:min-h-full shrink-0 overflow-hidden bg-stone-100">
+              <Image
+                src={selectedProduct.image}
+                alt={language === 'hi' && selectedProduct.nameHi ? selectedProduct.nameHi : selectedProduct.name}
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 42vw"
+                className="object-cover object-center w-full h-full select-none"
+              />
+            </div>
 
-          {/* Details & Actions Side - Takes full viewport height */}
-          <div className="w-full md:w-1/2 lg:w-5/12 h-[58vh] md:h-full p-5 sm:p-7 md:p-8 lg:p-10 flex flex-col justify-between overflow-y-auto bg-[#FAF7F2] border-l border-amber-200/80 space-y-3">
+            {/* Details & Actions Side */}
+            <div className="w-full md:w-7/12 p-5 sm:p-6 md:p-7 flex flex-col justify-between overflow-y-auto bg-[#FAF7F2] border-t md:border-t-0 md:border-l border-amber-200/80 space-y-3">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold tracking-[0.2em] text-[#800000] uppercase block">
@@ -866,31 +886,8 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
               </div>
             </div>
 
-            {/* Quantity selector & Single Checkout button */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between bg-stone-100 rounded-xl p-2 px-4 border border-stone-200">
-                <span className="text-xs sm:text-sm font-semibold text-stone-700">
-                  {t('Quantity:', 'मात्रा:')}
-                </span>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setModalQty((q) => Math.max(1, q - 1))}
-                    className="w-7 h-7 rounded-full bg-white border border-stone-300 flex items-center justify-center text-stone-700 hover:bg-amber-100 cursor-pointer transition-colors"
-                    disabled={modalQty <= 1}
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="font-bold text-sm text-stone-900 w-6 text-center">{modalQty}</span>
-                  <button
-                    type="button"
-                    onClick={() => setModalQty((q) => Math.min(10, q + 1))}
-                    className="w-7 h-7 rounded-full bg-white border border-stone-300 flex items-center justify-center text-stone-700 hover:bg-amber-100 cursor-pointer transition-colors"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
+            {/* Single Checkout button directly visible in viewport */}
+            <div className="pt-2">
 
               <button
                 type="button"
@@ -915,17 +912,26 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
             </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
 
       {/* Floating Bottom Cart Bar for quick access - only on product page, never on homepage */}
       {allowCheckoutBar && totalCount > 0 && (
 
         <aside
           aria-label="Shopping Cart Bar"
-          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-auto min-w-[300px] max-w-[94vw] sm:max-w-md bg-gradient-to-r from-[#240A0F]/95 via-[#350F16]/95 to-[#240A0F]/95 backdrop-blur-xl border border-amber-400/50 shadow-[0_12px_36px_rgba(0,0,0,0.5),0_0_20px_rgba(245,199,126,0.15)] rounded-full px-3.5 py-2 sm:px-4 sm:py-2.5 flex items-center justify-between gap-3 sm:gap-4 text-amber-100 animate-slideUp transition-all duration-300 hover:border-amber-400/70"
+          onMouseEnter={() => setIsCheckoutBarHovered(true)}
+          onMouseLeave={() => setIsCheckoutBarHovered(false)}
+          className="fixed bottom-5 right-5 sm:right-8 z-40 group bg-gradient-to-r from-[#240A0F]/95 via-[#350F16]/95 to-[#240A0F]/95 backdrop-blur-xl border border-amber-400/50 shadow-[0_12px_36px_rgba(0,0,0,0.5),0_0_20px_rgba(245,199,126,0.15)] rounded-full p-1 sm:p-1.5 flex items-center transition-all duration-300 hover:border-amber-400/80 hover:shadow-[0_16px_40px_rgba(0,0,0,0.6),0_0_25px_rgba(245,199,126,0.25)] animate-slideUp cursor-pointer"
         >
-          {/* Left: Cart Icon & Items Count */}
-          <div className="flex items-center gap-2.5 min-w-0">
+          {/* Expanded Info on Hover: Cart icon, items count & Total price */}
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-out flex items-center select-none whitespace-nowrap ${
+              isCheckoutBarHovered
+                ? 'max-w-[260px] opacity-100 pl-3 pr-2 gap-2.5'
+                : 'max-w-0 opacity-0 p-0 gap-0 pointer-events-none'
+            }`}
+          >
             <div className="relative w-8 h-8 rounded-full bg-amber-400/15 border border-amber-400/30 flex items-center justify-center shrink-0">
               <ShoppingCart className="w-4 h-4 text-amber-300" />
               <span className="absolute -top-1 -right-1 bg-[#800000] text-amber-100 text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center border border-amber-300/80 shadow-xs">
@@ -941,18 +947,21 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                 ₹{subtotal.toLocaleString('en-IN')}
               </span>
             </div>
+
+            {/* Subtle Vertical Divider */}
+            <div className="h-6 w-px bg-gradient-to-b from-transparent via-amber-400/40 to-transparent shrink-0 ml-1" />
           </div>
 
-          {/* Subtle Vertical Divider */}
-          <div className="h-6 w-px bg-gradient-to-b from-transparent via-amber-400/40 to-transparent shrink-0" />
-
-          {/* Right: Gold Luxury CTA Button */}
+          {/* Black Pill CTA Button: Exactly matching reference design */}
           <Link
             href="/cart"
-            className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 hover:from-amber-200 hover:to-amber-400 text-[#240A0F] font-serif font-bold text-xs shadow-md hover:shadow-lg hover:scale-[1.03] active:scale-95 transition-all flex items-center gap-1.5 shrink-0 group cursor-pointer"
+            className="px-5 py-2.5 rounded-full bg-black hover:bg-stone-900 text-white font-sans font-bold text-xs sm:text-sm shadow-xl transition-all flex items-center gap-2 shrink-0 cursor-pointer whitespace-nowrap group-hover:scale-[1.02] active:scale-95"
           >
-            <span>{t('Checkout Now', 'ऑर्डर पूरा करें')}</span>
-            <ArrowRight className="w-3.5 h-3.5 text-[#240A0F] group-hover:translate-x-0.5 transition-transform" />
+            {!isCheckoutBarHovered && (
+              <ShoppingCart className="w-3.5 h-3.5 text-white animate-fadeIn shrink-0" />
+            )}
+            <span>Proceed To Checkout</span>
+            <ChevronRight className="w-4 h-4 text-white stroke-[2.5] group-hover:translate-x-1 transition-transform" />
           </Link>
         </aside>
       )}
