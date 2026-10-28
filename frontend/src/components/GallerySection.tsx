@@ -190,19 +190,14 @@ export const GallerySection: React.FC = () => {
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-10 md:mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FAF0E6] border border-[#D4AF37]/40 text-[#8B2635] text-xs font-semibold uppercase tracking-wider mb-4 shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" />
-            <span>{t('Divine Glimpses & Sacred Rituals', 'पावन स्मृतियाँ एवं अलौकिक अनुष्ठान')}</span>
-          </div>
-          
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[#3B1E22] leading-tight mb-4">
-            {t('Sacred Moments & Divine Ceremonies', 'अलौकिक अनुष्ठान एवं पावन क्षण')}
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif font-bold text-[#4A151B] leading-tight mb-4">
+            {t('Gallery', 'गैलरी')}
           </h2>
           
           <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
             {t(
-              'Witness the authentic divine radiance of sacred Vedic Havans, televised planetary discourses, temple anushthans, and divine blessings presided over by Dr. Pandit Vishal Dubey Ji.',
-              'पूज्य डॉ. पंडित विशाल दुबे जी के पावन सानिध्य में संपन्न हुए शास्त्रोक्त वैदिक महाहवन, राष्ट्रीय टीवी परिचर्चा, काशी विश्वनाथ अनुष्ठान एवं यजमानों के आशीर्वाद के पावन क्षण।'
+              'Photos and special moments from our poojas, events, and TV sessions.',
+              'हमारे पूजन, अनुष्ठान और आयोजनों की प्रमुख तस्वीरें एवं झलकियां।'
             )}
           </p>
         </div>
@@ -298,11 +293,10 @@ export const GallerySection: React.FC = () => {
         <div className="mt-12 text-center">
           <Link
             href="/gallery"
-            className="inline-flex items-center gap-3 px-8 py-3.5 rounded-full bg-gradient-to-r from-[#8B2635] via-[#A02E40] to-[#8B2635] text-white font-medium text-sm sm:text-base shadow-lg shadow-[#8B2635]/25 hover:shadow-xl hover:shadow-[#8B2635]/35 hover:-translate-y-0.5 transition-all duration-200 border border-[#D4AF37]/40"
+            className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#73121D] to-[#480A10] hover:from-[#73121D] hover:to-[#5B0D15] text-amber-100 font-bold text-sm sm:text-base shadow-xl shadow-rose-950/25 hover:scale-105 transition-all duration-200 border border-amber-300/40 cursor-pointer"
           >
-            <Sparkles className="w-4 h-4 text-[#D4AF37]" />
             <span>{t('Explore Complete Sacred Gallery (50+ Moments)', 'सम्पूर्ण पावन दीर्घा देखें (50+ स्मृतियाँ)')}</span>
-            <ArrowRight className="w-4 h-4 text-[#D4AF37]" />
+            <ArrowRight className="w-4 h-4 text-amber-300" />
           </Link>
         </div>
 
@@ -377,7 +371,7 @@ export const GallerySection: React.FC = () => {
                 </div>
               </div>
 
-              <h3 className="text-lg sm:text-xl font-serif font-bold text-[#3B1E22] mb-2">
+              <h3 className="text-lg sm:text-xl font-serif font-bold text-[#4A151B] mb-2">
                 {language === 'hi' ? activePhoto.titleHi : activePhoto.title}
               </h3>
 

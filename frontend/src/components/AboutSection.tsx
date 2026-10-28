@@ -113,7 +113,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
       title: t('B.Pharma & MBA Dual Foundations', 'बी.फार्मा एवं एमबीए उच्च शिक्षा'),
       institution: t('Premier Indian Universities', 'प्रतिष्ठित भारतीय विश्वविद्यालय'),
       year: t('Bridging Medical Science, Analytics & Astrology', 'चिकित्सा विज्ञान, विश्लेषण व ज्योतिष का समन्वय'),
-      icon: Sparkles,
+      icon: Award,
       badge: t('Academic Foundation', 'शैक्षणिक आधार'),
     },
   ];
@@ -167,13 +167,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
           /* Dedicated About Page: Sacred Parampara Intro */
           <div className="text-center space-y-3.5 max-w-3xl mx-auto">
             {/* Sacred Vedic Tag */}
-            <div>
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-100/90 border border-amber-300 text-amber-950 text-xs font-bold uppercase tracking-widest shadow-sm">
-                <span className="text-sm">ॐ</span>
-                <span>{t('Spiritual Lineage & Vedic Parampara', 'आध्यात्मिक परंपरा एवं वैदिक ज्ञान')}</span>
-                <span className="text-sm">ॐ</span>
-              </div>
-            </div>
+            
 
             {/* Main Page Title */}
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#4A151B] leading-tight tracking-tight">
@@ -191,12 +185,6 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
         ) : (
           /* Home Page: Compact Section Glimpse Header */
           <div className="text-center space-y-2.5 max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-100/90 border border-amber-300 text-amber-900 text-xs font-bold uppercase tracking-widest shadow-sm">
-              <span>✦</span>
-              <span>{t('ABOUT US & SPIRITUAL LINEAGE', 'परिचय एवं आध्यात्मिक परंपरा')}</span>
-              <span>✦</span>
-            </div>
-
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#4A151B] leading-tight">
               {t('Guiding Your Destiny with Authentic Vedic Truth', 'प्रामाणिक वैदिक सत्य से आपके भाग्य का मार्गदर्शन')}
             </h2>
@@ -232,14 +220,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                   </div>
                 </div>
 
-                {/* Overlapping Bottom Badge: Gold Medalist */}
-                <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-[94%] py-2 px-3 rounded-full bg-[#231A16] border border-amber-400/70 shadow-2xl flex items-center justify-center gap-2 text-center z-10">
-                  <span className="text-amber-400 text-sm">🏆</span>
-                  <span className="text-amber-200 text-xs sm:text-[13px] font-bold tracking-wide">
-                    {t('PhD in Jyotish & Rog • Gold Medalist', 'ज्योतिष एवं रोग में पीएचडी • स्वर्ण पदक विजेता')}
-                  </span>
                 </div>
-              </div>
             </div>
 
             {/* Right Column: Name, Accreditations, High-Impact Points & Button */}
@@ -328,7 +309,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                   <div className="text-lg sm:text-xl font-bold text-[#5B0D15]">
                     <AnimatedCounter target={15000} suffix="+" />
                   </div>
-                  <div className="text-xs text-stone-600 font-medium mt-0.5">{t('5★ Reviews', '5★ रेटिंग')}</div>
+                  <div className="text-xs text-stone-600 font-medium mt-0.5">{t('Top Reviews', 'श्रेष्ठ समीक्षाएं')}</div>
                 </div>
               </div>
 
@@ -428,10 +409,6 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
             {/* ================= SECTION 4: CERTIFICATIONS & HONORS ================= */}
             <div className="space-y-8">
               <div className="text-center space-y-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100/90 text-amber-900 text-xs font-semibold">
-                  <Award className="w-3.5 h-3.5 text-amber-700" />
-                  <span>{t('Accreditations & Vedic Honors', 'वैदिक सम्मान व उपाधियां')}</span>
-                </div>
                 <h3 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#4A151B] tracking-tight">
                   {t('CERTIFICATIONS & ACADEMIC EXCELLENCE', 'प्रमाणपत्र एवं शैक्षणिक उत्कृष्टता')}
                 </h3>
@@ -490,10 +467,6 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
             {/* ================= SECTION 5: TEAM (ACHARYA SOURABH SWAMI JI & SCHOLARS) ================= */}
             <div className="space-y-8 pt-4">
               <div className="text-center space-y-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100/90 text-amber-900 text-xs font-semibold">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Vedic Scholars &amp; Pandits</span>
-                </div>
                 <h3 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#4A151B] tracking-tight">
                   OUR LEARNED VEDIC TEAM &amp; ACHARYAS
                 </h3>

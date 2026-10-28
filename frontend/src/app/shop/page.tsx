@@ -45,7 +45,7 @@ export default function ShopPage() {
   ];
 
   return (
-    <div className="relative min-h-screen w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
+    <div className="relative min-h-screen flex flex-col justify-between w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
       <Navbar />
 
       {/* HERO BANNER SECTION (Panoramic full-bleed backdrop matching reference design) */}
@@ -131,7 +131,7 @@ export default function ShopPage() {
 
             <div className="space-y-2">
               <div className="w-12 h-12 mx-auto rounded-full bg-amber-200/60 text-amber-900 flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-[#800000]" />
+                
               </div>
               <h4 className="font-serif font-bold text-sm text-[#2A1810]">
                 {t('Vedic Prana Pratishtha', 'वैदिक प्राण-प्रतिष्ठा व संकल्प')}

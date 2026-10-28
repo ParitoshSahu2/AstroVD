@@ -30,7 +30,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#F5EFE6]`}
       suppressHydrationWarning
     >
       <head>
@@ -41,7 +41,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-[#FAF7F2] overflow-x-clip selection:bg-amber-400" suppressHydrationWarning>
+      <body className="min-h-screen min-h-[100dvh] flex flex-col bg-[#F5EFE6] overflow-x-clip selection:bg-amber-400" suppressHydrationWarning>
         <Suspense fallback={null}>
           <NavigationProgressBar />
         </Suspense>

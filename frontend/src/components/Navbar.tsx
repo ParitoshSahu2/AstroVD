@@ -566,7 +566,7 @@ export const Navbar: React.FC = () => {
                 {searchOpen && trimmedSearch.length > 0 && (
                   <div
                     onClick={(e) => e.stopPropagation()}
-                    className="absolute top-full right-0 mt-3 w-80 sm:w-96 rounded-2xl bg-white/98 backdrop-blur-2xl border border-amber-300/80 shadow-2xl p-3 z-50 animate-fadeIn text-[#3B1E22]"
+                    className="absolute top-full right-0 mt-5 w-80 sm:w-96 rounded-2xl bg-white/98 backdrop-blur-2xl border border-amber-300/80 shadow-2xl p-3 z-50 animate-fadeIn text-[#3B1E22]"
                     style={{
                       boxShadow: '0 16px 40px -4px rgba(91, 13, 21, 0.16), 0 4px 16px -2px rgba(0, 0, 0, 0.08)',
                     }}
@@ -635,7 +635,7 @@ export const Navbar: React.FC = () => {
                             className="flex items-center gap-3 p-2 rounded-xl hover:bg-amber-50/80 transition-colors group"
                           >
                             <div className="w-8 h-8 rounded-lg bg-amber-100/80 text-amber-900 flex items-center justify-center shrink-0">
-                              <Sparkles className="w-4 h-4 text-amber-700" />
+                              
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="text-xs font-bold text-[#3B1E22] group-hover:text-[#5B0D15] truncate">
@@ -714,7 +714,7 @@ export const Navbar: React.FC = () => {
                 {notificationOpen && (
                   <div
                     onClick={(e) => e.stopPropagation()}
-                    className="absolute top-full right-0 mt-3 w-80 sm:w-88 rounded-2xl bg-white/98 backdrop-blur-2xl border border-amber-200/90 shadow-2xl p-4 z-50 animate-fadeIn text-[#3B1E22]"
+                    className="absolute top-full right-0 mt-5 w-80 sm:w-88 rounded-2xl bg-white/98 backdrop-blur-2xl border border-amber-200/90 shadow-2xl p-4 z-50 animate-fadeIn text-[#3B1E22]"
                     style={{
                       boxShadow: '0 16px 40px -4px rgba(91, 13, 21, 0.15), 0 4px 16px -2px rgba(0, 0, 0, 0.06)',
                     }}
@@ -748,7 +748,7 @@ export const Navbar: React.FC = () => {
                         >
                           <div className="flex items-center justify-between font-bold text-[#800000] mb-1">
                             <span className="flex items-center gap-1.5">
-                              <Sparkles className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+                              
                               {t('Complete Your Kundli Profile', 'जन्म विवरण पूर्ण करें')}
                             </span>
                             <span className="text-[9px] text-rose-700 bg-rose-100 border border-rose-200 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
@@ -872,7 +872,10 @@ export const Navbar: React.FC = () => {
                   {profileDropdownOpen && (
                     <div
                       onClick={(e) => e.stopPropagation()}
-                      className="absolute top-full right-0 mt-2.5 w-72 rounded-2xl bg-white/95 backdrop-blur-2xl border border-amber-200/90 shadow-2xl p-3 z-50 animate-fadeIn text-[#3B1E22]"
+                      className="absolute top-full right-0 mt-5 w-72 rounded-2xl bg-white/98 backdrop-blur-2xl border border-amber-200/90 shadow-2xl p-3 z-50 animate-fadeIn text-[#3B1E22]"
+                      style={{
+                        boxShadow: '0 20px 45px -4px rgba(91, 13, 21, 0.16), 0 8px 24px -2px rgba(0, 0, 0, 0.08)',
+                      }}
                     >
                       {/* Identity Card */}
                       <div className="flex items-center gap-3 p-2.5 bg-gradient-to-r from-amber-50/80 via-rose-50/40 to-amber-50/50 rounded-xl border border-amber-200/60 mb-2.5">
@@ -896,29 +899,6 @@ export const Navbar: React.FC = () => {
                           </div>
                           <p className="text-[11px] text-stone-500 truncate">{user.email}</p>
                         </div>
-                      </div>
-
-
-                      {/* Astro Wallet Highlight Card */}
-                      <div className="px-3 py-2.5 rounded-xl bg-amber-500/10 border border-amber-300/60 flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-900 flex items-center justify-center">
-                            <Wallet className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <div className="text-[10px] uppercase font-bold text-amber-800 tracking-wider">Astro Balance</div>
-                            <div className="text-xs font-black text-[#5B0D15]">
-                              ₹{user.walletBalance ?? 150} <span className="text-[10px] font-normal text-stone-500">Credits</span>
-                            </div>
-                          </div>
-                        </div>
-                        <Link
-                          href="/dashboard?tab=consultations"
-                          onClick={() => setProfileDropdownOpen(false)}
-                          className="text-[10px] font-bold text-[#5B0D15] hover:text-[#3B1E22] hover:underline"
-                        >
-                          Book Now →
-                        </Link>
                       </div>
 
 
@@ -948,7 +928,7 @@ export const Navbar: React.FC = () => {
                             className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-amber-500/10 text-[#5B0D15] font-bold hover:bg-amber-500/20 transition-colors"
                           >
                             <UserIcon className="w-4 h-4 text-[#5B0D15]" />
-                            <span>Dashboard</span>
+                            <span>Customer Dashboard</span>
                           </Link>
                         )}
                         <Link

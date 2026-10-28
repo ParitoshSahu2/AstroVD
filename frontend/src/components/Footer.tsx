@@ -9,7 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 export const Footer: React.FC = () => {
   const { t } = useLanguage();
   return (
-    <footer className="relative w-full bg-[#F5EFE6] border-t border-amber-200/80 pt-16 pb-12 px-4 sm:px-6 lg:px-12 text-stone-700 selection:bg-amber-400">
+    <footer className="relative w-full bg-[#F5EFE6] mt-auto m-0 mb-0 border-t border-amber-200/80 pt-16 pb-12 px-4 sm:px-6 lg:px-12 text-stone-700 selection:bg-amber-400">
       
       {/* Background Watermark */}
       <img
@@ -121,7 +121,7 @@ export const Footer: React.FC = () => {
             <div className="space-y-2 text-xs text-stone-600">
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-amber-700" />
-                <span>+91 98260 12345 / +91 88899 77665</span>
+                <span>+91 98260 12345</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-amber-700" />
@@ -129,7 +129,7 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex items-start gap-2">
                 <MapPin className="w-3.5 h-3.5 text-amber-700 mt-0.5 shrink-0" />
-                <span>{t('Kashi Vishwanath Corridor, Varanasi • Indore • New Delhi • Dubai', 'काशी विश्वनाथ कॉरिडोर, वाराणसी • इंदौर • नई दिल्ली • दुबई')}</span>
+                <span>{t('Kashi Vishwanath Corridor, Varanasi • Indore • New Delhi', 'काशी विश्वनाथ कॉरिडोर, वाराणसी • इंदौर • नई दिल्ली')}</span>
               </div>
             </div>
 

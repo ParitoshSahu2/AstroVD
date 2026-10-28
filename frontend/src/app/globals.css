@@ -2,7 +2,7 @@
 
 @layer base {
   :root {
-    --background: #FAF7F2;
+    --background: #F5EFE6;
     --foreground: #1C1917;
   }
 }
@@ -20,7 +20,7 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background-color: #FAF7F2;
+  background-color: #F5EFE6;
   scrollbar-width: none !important; /* Firefox */
   -ms-overflow-style: none !important; /* IE and Edge */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;

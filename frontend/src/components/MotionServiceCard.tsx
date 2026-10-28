@@ -36,11 +36,10 @@ export const MotionServiceCard: React.FC<MotionServiceCardProps> = ({
     <div className="relative group transition-transform duration-300 hover:-translate-y-1.5 will-change-transform select-none h-full flex flex-col">
       {/* High-Performance Hardware-Accelerated Card */}
       <div
-        className={`relative rounded-2xl overflow-hidden bg-white border flex flex-col justify-between h-full transition-all duration-300 ${
-          item.isSpecial
-            ? 'border-amber-400 ring-1 ring-amber-300/60 shadow-md hover:shadow-xl hover:border-amber-500'
-            : 'border-stone-200/90 shadow-xs hover:border-amber-400 hover:shadow-lg'
-        }`}
+        className={`relative rounded-2xl overflow-hidden bg-white border flex flex-col justify-between h-full transition-all duration-300 ${item.isSpecial
+          ? 'border-amber-400 ring-1 ring-amber-300/60 shadow-md hover:shadow-xl hover:border-amber-500'
+          : 'border-stone-200/90 shadow-xs hover:border-amber-400 hover:shadow-lg'
+          }`}
       >
         {/* Ambient Cosmic Prana Shimmer Border for Special Consecrated Rituals */}
         {item.isSpecial && (
@@ -60,19 +59,19 @@ export const MotionServiceCard: React.FC<MotionServiceCardProps> = ({
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-cover group-hover/media:scale-105 transition-transform duration-500 ease-out"
             />
-            
+
             {/* Dark gradient for text legibility & depth */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
             {/* Holographic Category Tag */}
             <div className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-black/65 backdrop-blur-md border border-amber-300/70 text-amber-300 font-bold text-[10px] uppercase tracking-wider shadow-sm z-10">
-              ✦ {displayCatTag}
+              {displayCatTag}
             </div>
 
             {/* Special Ritual Badge */}
             {displayBadge && (
               <div className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 via-rose-600 to-amber-600 text-white font-extrabold text-[10px] uppercase tracking-wider shadow-md flex items-center gap-1 z-10">
-                <Sparkles className="w-3 h-3 text-amber-200 animate-spin" style={{ animationDuration: '6s' }} />
+                
                 <span>{displayBadge}</span>
               </div>
             )}
@@ -110,9 +109,8 @@ export const MotionServiceCard: React.FC<MotionServiceCardProps> = ({
             <span className="text-[9px] text-stone-500 uppercase font-bold tracking-wider block leading-none">
               {t('Dakshina', 'न्योछावर')}
             </span>
-            <span className={`font-serif font-bold text-sm sm:text-base ${
-              item.price.includes('FREE') ? 'text-emerald-700 font-extrabold' : 'text-[#5B0D15]'
-            }`}>
+            <span className={`font-serif font-bold text-sm sm:text-base ${item.price.includes('FREE') ? 'text-emerald-700 font-extrabold' : 'text-[#5B0D15]'
+              }`}>
               {language === 'hi' && item.price.includes('FREE') ? '100% निःशुल्क' : item.price}
             </span>
           </div>

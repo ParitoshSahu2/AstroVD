@@ -35,7 +35,7 @@ export const HeroSection: React.FC = () => {
           
           {/* Main Headline - Exact 3-line breakdown matching reference screenshot */}
           <div>
-            <h1 className="font-serif text-3xl sm:text-4xl lg:text-[48px] xl:text-[54px] font-bold text-[#3B1E22] leading-[1.15] tracking-tight">
+            <h1 className="font-serif text-3xl sm:text-4xl lg:text-[48px] xl:text-[54px] font-bold text-[#4A151B] leading-[1.15] tracking-tight">
               {t('Guidance from the', 'ग्रहों का मार्गदर्शन,')}<br />
               <span className="text-[#800000] italic font-normal">{t('Stars, Grounded in', 'सत्य पर आधारित')}</span><br />
               {t('Truth.', 'विश्वसनीय ज्ञान।')}
@@ -63,9 +63,9 @@ export const HeroSection: React.FC = () => {
 
             <Link
               href="/services"
-              className="px-5 sm:px-6 py-3 rounded-full bg-white hover:bg-stone-50 text-[#3B1E22] border border-amber-300/80 backdrop-blur-md font-serif font-semibold text-xs sm:text-sm shadow-sm hover:border-amber-400 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-5 sm:px-6 py-3 rounded-full bg-white hover:bg-stone-50 text-[#4A151B] border border-amber-300/80 backdrop-blur-md font-serif font-semibold text-xs sm:text-sm shadow-sm hover:border-amber-400 transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              <Sparkles className="w-4 h-4 text-amber-500 fill-amber-500/20" />
+              
               <span>{t('Explore Services', 'सेवाएं देखें')}</span>
             </Link>
           </div>

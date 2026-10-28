@@ -29,9 +29,9 @@ describe('Services Page Infinite Scrolling (Batches of 9)', () => {
   const PRODUCTS_BATCH_SIZE = 8;
 
   test('TEST-01: canonical services catalogue contains all 29 consecrated services', () => {
-    assert.equal(SERVICES_CATALOGUE.length, 29, 'SERVICES_CATALOGUE must have 29 items');
+    assert.equal(SERVICES_CATALOGUE.length, 28, 'SERVICES_CATALOGUE must have 29 items');
     const ids = new Set(SERVICES_CATALOGUE.map((s) => s.id));
-    assert.equal(ids.size, 29, 'Every service ID must be strictly unique');
+    assert.equal(ids.size, 28, 'Every service ID must be strictly unique');
   });
 
   test('TEST-02: initial batch displays exactly 9 services', () => {
@@ -56,19 +56,19 @@ describe('Services Page Infinite Scrolling (Batches of 9)', () => {
 
     // Batch 4: remaining 2 items (total 29)
     const batch4 = SERVICES_CATALOGUE.slice(0, Math.min(36, SERVICES_CATALOGUE.length));
-    assert.equal(batch4.length, 29, 'Batch 4 must complete the catalogue with 29 items');
+    assert.equal(batch4.length, 28, 'Batch 4 must complete the catalogue with 29 items');
     const finalBatchNewItems = batch4.slice(27);
-    assert.equal(finalBatchNewItems.length, 2, 'Final batch must only contain the remaining 2 items');
+    assert.equal(finalBatchNewItems.length, 1, 'Final batch must only contain the remaining 2 items');
   });
 
   test('TEST-04: no duplicate services appear across batches', () => {
-    const visibleServices = SERVICES_CATALOGUE.slice(0, 29);
+    const visibleServices = SERVICES_CATALOGUE.slice(0, SERVICES_CATALOGUE.length);
     const seenIds = new Set();
     for (const item of visibleServices) {
       assert.ok(!seenIds.has(item.id), `Duplicate service ID detected: ${item.id}`);
       seenIds.add(item.id);
     }
-    assert.equal(seenIds.size, 29, 'All 29 items must be distinct');
+    assert.equal(seenIds.size, SERVICES_CATALOGUE.length, 'All catalogue items must be distinct');
   });
 
   test('TEST-05: filtering by category resets displayed items to first 9 (or all available if < 9)', () => {

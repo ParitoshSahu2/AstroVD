@@ -336,7 +336,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
         {/* Section Header */}
         {showHeader && (
           <div className="text-center space-y-3 max-w-3xl mx-auto">
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#34140A] leading-tight">
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#4A151B] leading-tight">
               {t('Energized Spiritual Gemstones & Sacred Bracelets', 'प्राण-प्रतिष्ठित आध्यात्मिक रत्न एवं सिद्ध ब्रेसलेट')}
             </h2>
             <p className="text-xs sm:text-sm text-[#706256] leading-relaxed">
@@ -348,83 +348,94 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
           </div>
         )}
 
-        {/* Unified Search & Sort Bar (Matching Services Page) */}
+        {/* Search & Category Filter Bar */}
         {isInfiniteScrollEnabled && (
-          <div className="bg-white rounded-full border border-[#EAE0D0] shadow-xs px-4 py-2 sm:py-2.5 flex flex-col sm:flex-row items-center justify-between gap-3">
-            {/* Search Input */}
-            <div className="relative flex items-center w-full sm:flex-1">
-              <Search className="w-4 h-4 text-[#9E9082] shrink-0 ml-1" />
-              <input
-                type="text"
-                placeholder={t('Search energized bracelets (e.g. Tiger Eye, Rudraksha, Pyrite)...', 'सिद्ध ब्रेसलेट खोजें (उदा. टाइगर आई, रुद्राक्ष, पाइराइट)...')}
-                value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full pl-2.5 pr-8 py-1 bg-transparent text-xs sm:text-sm text-[#2D1408] placeholder-[#9E9082] focus:outline-none"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => handleSearchChange('')}
-                  className="text-[#9E9082] hover:text-[#522311] p-1 cursor-pointer"
-                  aria-label="Clear search"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
+          <>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white/85 backdrop-blur-md px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl sm:rounded-3xl border border-amber-200/90 shadow-sm">
+              {/* Search Input */}
+              <div className="relative w-full sm:max-w-md">
+                <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder={t('Search energized bracelets (e.g. Tiger Eye, Rudraksha, Pyrite)...', 'सिद्ध ब्रेसलेट खोजें (उदा. टाइगर आई, रुद्राक्ष, पाइराइट)...')}
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="w-full pl-10 pr-9 py-2 sm:py-2.5 rounded-full bg-stone-50 border border-stone-200 text-xs sm:text-sm text-stone-800 placeholder-stone-400 shadow-xs focus:bg-white focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-300 transition-colors"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => handleSearchChange('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 cursor-pointer"
+                    aria-label="Clear search"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
 
-            {/* Sort Dropdown */}
-            <div className="flex items-center gap-2 shrink-0 sm:border-l sm:border-[#EAE0D0] sm:pl-4 w-full sm:w-auto justify-end">
-              <span className="text-xs text-[#8C7E72] font-medium">
-                {t('Sort by', 'क्रम')}
-              </span>
-              <div className="relative">
+              {/* Category Dropdown */}
+              <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                <div className="flex items-center gap-1.5 text-stone-700 text-xs sm:text-sm font-semibold">
+                  <Filter className="w-4 h-4 text-amber-700" />
+                  <span>{t('Category:', 'श्रेणी:')}</span>
+                </div>
                 <select
-                  value={sortBy}
-                  onChange={(e) => handleSortChange(e.target.value as any)}
-                  className="appearance-none pl-3 pr-8 py-1.5 rounded-lg bg-[#FAF6ED] hover:bg-[#F5EFE3] border border-[#EAE0D0] text-xs font-semibold text-[#2D1408] shadow-2xs focus:outline-none cursor-pointer"
+                  value={activeCategory}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  className="px-3.5 sm:px-4 py-2 rounded-full bg-white border border-amber-300 text-xs sm:text-sm font-semibold text-stone-800 shadow-xs focus:outline-none focus:border-amber-500 cursor-pointer"
                 >
-                  <option value="featured">{t('Featured', 'विशेष (डिफ़ॉल्ट)')}</option>
-                  <option value="price-low">{t('Price: Low to High', 'मूल्य: कम से ज्यादा')}</option>
-                  <option value="price-high">{t('Price: High to Low', 'मूल्य: ज्यादा से कम')}</option>
-                  <option value="rating">{t('Highest Rated', 'उच्चतम रेटिंग')}</option>
+                  {filterCategories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {language === 'hi' ? `${c.labelHi} (${c.count})` : `${c.labelEn} (${c.count})`}
+                    </option>
+                  ))}
                 </select>
-                <ChevronDown className="w-3.5 h-3.5 text-[#8C7E72] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
-          </div>
+
+            {/* Count & Category Pills Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+              <div className="font-bold text-stone-800 text-xs sm:text-sm flex items-center gap-2">
+                
+                <span>
+                  {language === 'hi' ? (
+                    <>प्रदर्शित <span className="text-[#5B0D15] font-extrabold">{displayProducts.length}</span> कुल <span className="text-stone-900 font-extrabold">{filteredProducts.length}</span> प्राण-प्रतिष्ठित उत्पाद</>
+                  ) : (
+                    <>Showing <span className="text-[#5B0D15] font-extrabold">{displayProducts.length}</span> of <span className="text-stone-900 font-extrabold">{filteredProducts.length}</span> energized products</>
+                  )}
+                </span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Product Categories">
+                {filterCategories.map((cat) => {
+                  const isSelected = activeCategory === cat.id;
+                  const label = language === 'hi' ? `${cat.labelHi} (${cat.count})` : `${cat.labelEn} (${cat.count})`;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => handleCategoryChange(cat.id)}
+                      role="tab"
+                      aria-selected={isSelected}
+                      className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer shadow-xs ${
+                        isSelected
+                          ? 'bg-[#5B0D15] text-white shadow-sm shadow-rose-950/20 scale-[1.02] ring-2 ring-amber-400/40'
+                          : 'bg-white hover:bg-amber-50 text-stone-700 border border-stone-200 hover:border-amber-300'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
         )}
-
-        {/* Category Pill Buttons (Exact Match to Mockup Design System) */}
-        <div className="flex items-center gap-2.5 overflow-x-auto pb-1.5 pt-0.5 no-scrollbar scroll-smooth" role="tablist" aria-label="Product Categories">
-          {filterCategories.map((cat) => {
-            const isSelected = activeCategory === cat.id;
-            const IconComponent = cat.icon || LayoutGrid;
-            const label = language === 'hi' ? `${cat.labelHi} (${cat.count})` : `${cat.labelEn} (${cat.count})`;
-
-            return (
-              <button
-                key={cat.id}
-                onClick={() => handleCategoryChange(cat.id)}
-                role="tab"
-                aria-selected={isSelected}
-                className={`rounded-full px-3.5 py-2 text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${
-                  isSelected
-                    ? 'bg-[#522311] text-white shadow-xs border border-[#522311]'
-                    : 'bg-white hover:bg-[#FAF6ED] text-[#4A3B32] border border-[#EAE0D0] shadow-2xs hover:border-[#D6C4AD]'
-                }`}
-              >
-                <IconComponent className={`w-3.5 h-3.5 ${isSelected ? 'text-[#F5D8A0]' : 'text-[#7C6C60]'}`} />
-                <span>{label}</span>
-              </button>
-            );
-          })}
-        </div>
 
         {/* Search Results Banner */}
         {searchQuery.trim() && (
           <div className="flex items-center justify-between bg-white border border-[#EAE0D0] rounded-xl p-3 sm:px-4 max-w-5xl mx-auto shadow-2xs">
             <div className="flex items-center gap-2 text-xs sm:text-sm text-[#2D1408]">
-              <Sparkles className="w-4 h-4 text-[#DCA258] shrink-0" />
+              
               <span>
                 {t('Results for', 'इसके लिए परिणाम:')}{' '}
                 <strong className="text-[#522311]">"{searchQuery}"</strong>
@@ -722,10 +733,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
         {/* Bottom Banner directing to Shop Page */}
         <div className="rounded-3xl bg-gradient-to-r from-[#3B1E22] via-[#5B0D15] to-[#3B1E22] border-2 border-amber-400/60 p-6 sm:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
           <div className="space-y-1.5 text-center sm:text-left z-10">
-            <div className="inline-flex items-center gap-2 text-amber-300 text-xs font-bold uppercase tracking-wider">
-              <ShieldCheck className="w-4 h-4" />
-              <span>{t('Free Personalized Prana Pratishtha Puja Included', 'निःशुल्क व्यक्तिगत प्राण-प्रतिष्ठा पूजा शामिल')}</span>
-            </div>
+            
             <h3 className="font-serif text-xl sm:text-2xl font-bold text-amber-100">
               {t('Need Personal Astrological Gemstone Recommendation?', 'क्या आपको व्यक्तिगत रत्न परामर्श की आवश्यकता है?')}
             </h3>
@@ -832,7 +840,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
               <div className="p-3 sm:p-4 rounded-2xl bg-amber-50/90 border border-amber-300/80 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-[#800000] uppercase tracking-wider flex items-center gap-1.5 font-serif">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    
                     {t('Energizing Beej Mantra', 'धारण एवं सिद्ध बीज मंत्र')}
                   </span>
                   <span className="text-[10px] font-semibold text-amber-900 bg-amber-200/60 px-2 py-0.5 rounded-full border border-amber-300/60">
@@ -848,7 +856,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
 
                 <div className="flex items-center justify-between text-[10.5px] sm:text-xs text-stone-600 px-1">
                   <span className="truncate">
-                    <span className="text-amber-700 font-bold">✦ {t('Muhurta:', 'शुभ मुहूर्त:')} </span>
+                    <span className="text-amber-700 font-bold">• {t('Muhurta:', 'शुभ मुहूर्त:')} </span>
                     <span>{language === 'hi' && selectedProduct.dayToWearHi ? selectedProduct.dayToWearHi : selectedProduct.dayToWear}</span>
                   </span>
                   <span className="shrink-0 text-[10px] font-medium text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200/70">
@@ -898,7 +906,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                 }}
                 className="w-full py-3.5 px-6 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:via-amber-400 hover:to-amber-500 text-[#2A0E13] font-serif font-bold text-sm sm:text-base shadow-[0_8px_25px_rgba(245,199,126,0.38)] hover:shadow-[0_12px_32px_rgba(245,199,126,0.55)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer group border border-amber-300/60"
               >
-                <Sparkles className="w-4 h-4 text-[#2A0E13]/80 group-hover:rotate-12 transition-transform" />
+                
                 <span>
                   {t('Check out', 'चेकआउट करें')} • ₹{(parsePriceNumber(selectedProduct.price) * modalQty).toLocaleString('en-IN')}
                 </span>

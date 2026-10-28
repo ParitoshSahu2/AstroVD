@@ -17,7 +17,7 @@ import {
   CheckCircle2,
   Shield,
   Star,
-  Sparkles,
+  Users,
   ArrowRight,
   UserCheck,
   AlertCircle,
@@ -358,7 +358,7 @@ function AppointmentContent() {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
+    <div className="relative min-h-screen flex flex-col justify-between w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
       <Navbar />
 
       {/* HERO BANNER SECTION (Panoramic full-bleed backdrop matching reference design) */}
@@ -483,7 +483,7 @@ function AppointmentContent() {
               <div className="rounded-2xl bg-[#FAF8F5] border border-stone-200/80 p-5 text-left text-xs space-y-3.5 shadow-2xs">
                 <div className="flex justify-between items-center pb-2.5 border-b border-stone-200/60">
                   <span className="text-stone-500 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                    
                     <span>{t('Spiritual Service:', 'वैदिक सेवा:')}</span>
                   </span>
                   <span className="font-bold text-[#5B0D15] text-right truncate max-w-[240px]">
@@ -606,7 +606,7 @@ function AppointmentContent() {
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/70 backdrop-blur-md border border-amber-300/60 text-amber-300 font-bold text-[10px] uppercase tracking-wider">
-                    ✦ {displayCatTag}
+                    {displayCatTag}
                   </div>
                   {displayBadge && (
                     <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-rose-600 text-white font-extrabold text-[10px] uppercase tracking-wider shadow-md">
@@ -655,25 +655,25 @@ function AppointmentContent() {
                 </div>
                 <ul className="space-y-2 text-[11px] text-stone-600">
                   <li className="flex items-start gap-1.5">
-                    <span className="text-amber-700">✦</span>
+                    <span className="text-amber-700">•</span>
                     <span>{t('Direct 1-on-1 private video or audio appointment with Dr. Pandit Vishal Dubey.', 'पूज्य डॉ. पंडित विशाल दुबे संग प्रत्यक्ष एकांत परामर्श।')}</span>
                   </li>
                   <li className="flex items-start gap-1.5">
-                    <span className="text-amber-700">✦</span>
+                    <span className="text-amber-700">•</span>
                     <span>{t('Personalized remedial gemstone, mantra and yagya recommendations.', 'जन्मपत्रिका अनुकूल सटीक रत्न, मंत्र एवं उपाय मार्गदर्शन।')}</span>
                   </li>
                   <li className="flex items-start gap-1.5">
-                    <span className="text-amber-700">✦</span>
+                    <span className="text-amber-700">•</span>
                     <span>{t('Strict Vedic secrecy maintained for all birth details and questions.', 'जन्म विवरण एवं जिज्ञासाओं की शत-प्रतिशत गोपनीयता।')}</span>
                   </li>
                 </ul>
               </div>
             </div>
 
-            {/* RIGHT COLUMN (7 cols): Main Form with Dropdown ABOVE ALL */}
-            <div className="lg:col-span-7 bg-white/95 p-6 sm:p-8 rounded-3xl border border-amber-200 shadow-xl space-y-6">
+            {/* RIGHT COLUMN (7 cols): Main Form */}
+            <div className="lg:col-span-7 bg-white/95 p-5 sm:p-6 rounded-2xl border border-amber-200 shadow-xl space-y-4">
               {/* Header */}
-              <div className="border-b border-stone-100 pb-3">
+              <div className="border-b border-stone-100 pb-2">
                 <h3 className="font-serif font-bold text-base sm:text-lg text-[#2A1810]">
                   {t('Schedule Your Astrological Consultation', 'अपना ज्योतिषीय परामर्श सत्र आरक्षित करें')}
                 </h3>
@@ -687,16 +687,16 @@ function AppointmentContent() {
 
               {/* Error Toast */}
               {errorMsg && (
-                <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
                   <span>{errorMsg}</span>
                 </div>
               )}
 
-              {/* 1. SELECT SERVICE OR GENERAL CONSULTATION (ABOVE ALL) */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-white border-2 border-amber-400 shadow-sm space-y-2">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-stone-600 block">
-                  {t('SELECT FROM 30 AUTHENTIC SERVICES OR OPEN CONSULTATION:', '30 प्रामाणिक सेवाओं या सामान्य परामर्श में से चुनें:')}
+              {/* 1. SELECT SERVICE OR GENERAL CONSULTATION (UNHIGHLIGHTED & COMPACT) */}
+              <div>
+                <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  {t('Selected Service / Consultation Type', 'परामर्श सेवा / प्रकार चुनें')} <span className="text-rose-600">*</span>
                 </label>
                 <div className="relative">
                   <select
@@ -705,11 +705,11 @@ function AppointmentContent() {
                       setSelectedServiceId(e.target.value);
                       router.replace(`/appointment?service=${e.target.value}`, { scroll: false });
                     }}
-                    className="w-full px-4 py-3 rounded-xl border border-amber-300 text-xs sm:text-sm font-serif font-bold text-stone-800 bg-white focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-500 transition-all cursor-pointer shadow-xs appearance-none pr-10"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-xs font-medium text-stone-800 bg-white focus:outline-none focus:border-amber-500 transition-all cursor-pointer shadow-xs appearance-none pr-10"
                   >
-                    <option value="general_consultation" className="font-bold text-[#5B0D15]">
+                    <option value="general_consultation" className="font-semibold text-[#5B0D15]">
                       {t(
-                        'GENERAL CONSULTATION - ASK ANY QUERY / OPEN GUIDANCE',
+                        'General Consultation - Ask Any Query / Open Guidance',
                         'सामान्य परामर्श - कोई भी प्रश्न / खुला मार्गदर्शन'
                       )}
                     </option>
@@ -725,20 +725,12 @@ function AppointmentContent() {
                       })}
                     </optgroup>
                   </select>
-                  <ChevronDown className="w-4 h-4 text-amber-700 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <ChevronDown className="w-4 h-4 text-stone-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
-                {activeService.id === 'general_consultation' && (
-                  <p className="text-[11px] text-amber-900 bg-amber-50/80 p-2.5 rounded-xl border border-amber-200/80 leading-relaxed">
-                    ✦ {t(
-                      'Open Guidance: Ask any personal, spiritual, family, career, or life questions freely below without being restricted to any pre-defined field.',
-                      'खुला मार्गदर्शन: बिना किसी पूर्व-निर्धारित सीमा के अपने किसी भी व्यक्तिगत, पारिवारिक, करियर या आध्यात्मिक प्रश्न को नीचे विस्तार से पूछें।'
-                    )}
-                  </p>
-                )}
               </div>
 
               {/* 2. SEEKER CONTACT DETAILS (NAME AND PHONE NUMBER) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 mb-1">
                     {t('Full Name', 'पूरा नाम')} <span className="text-rose-600">*</span>
@@ -749,7 +741,7 @@ function AppointmentContent() {
                     placeholder={t('Enter your full name', 'अपना पूरा नाम दर्ज करें')}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-xs focus:outline-none focus:border-amber-500 bg-white"
+                    className="w-full px-3.5 py-2 rounded-xl border border-stone-300 text-xs focus:outline-none focus:border-amber-500 bg-white"
                   />
                 </div>
 
@@ -763,11 +755,8 @@ function AppointmentContent() {
                     placeholder="+91 98260 12345"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-xs focus:outline-none focus:border-amber-500 bg-white"
+                    className="w-full px-3.5 py-2 rounded-xl border border-stone-300 text-xs focus:outline-none focus:border-amber-500 bg-white"
                   />
-                  <span className="text-[10px] text-stone-400 mt-0.5 block">
-                    {t('E.164 or 10-digit authentic phone for session coordinates', 'सत्र समन्वय हेतु 10-अंकीय प्रामाणिक मोबाइल नंबर')}
-                  </span>
                 </div>
               </div>
 
@@ -779,12 +768,12 @@ function AppointmentContent() {
                     : t('Birth Details & Primary Query (Date, Time, Place of Birth)', 'जन्म विवरण एवं मुख्य प्रश्न (जन्म तिथि, समय, जन्म स्थान)')}
                 </label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   placeholder={
                     activeService.id === 'general_consultation'
                       ? t(
-                          'Write your queries, questions, or specific dilemmas freely (e.g. career dilemma, family peace, health concern, and your birth date/time/place if known).',
-                          'अपने वे सभी प्रश्न या जिज्ञासाएं यहां लिखें जिन पर आप चर्चा करना चाहते हैं (उदा. करियर, पारिवारिक शांति, स्वास्थ्य विचार, आध्यात्मिक मार्गदर्शन एवं यदि उपलब्ध हो तो जन्म तिथि/समय/स्थान)।'
+                          'Write your queries or dilemmas freely (e.g. career dilemma, family peace, and birth date/time/place if known).',
+                          'अपने वे सभी प्रश्न यहां लिखें जिन पर आप चर्चा करना चाहते हैं (उदा. करियर, पारिवारिक शांति एवं यदि उपलब्ध हो तो जन्म तिथि/समय/स्थान)।'
                         )
                       : t(
                           'e.g. 15th Aug 1990, 04:30 AM, Varanasi. Question regarding career transition and Manglik yoga.',
@@ -793,20 +782,20 @@ function AppointmentContent() {
                   }
                   value={birthDetails}
                   onChange={(e) => setBirthDetails(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-xs focus:outline-none focus:border-amber-500 bg-white"
+                  className="w-full px-3.5 py-2 rounded-xl border border-stone-300 text-xs focus:outline-none focus:border-amber-500 bg-white"
                 />
               </div>
 
               {/* 4. CONSULTATION MODE */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-stone-700">
                   {t('Select Consultation Mode', 'परामर्श माध्यम चुनें')}
                 </label>
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-3 gap-2">
                   {[
                     { id: 'video', label: t('Video Call', 'वीडियो कॉल'), icon: Video },
                     { id: 'call', label: t('Audio Call', 'ऑडियो कॉल'), icon: PhoneCall },
-                    { id: 'in-person', label: t('In Person', 'प्रत्यक्ष भेंट'), icon: Sparkles },
+                    { id: 'in-person', label: t('In Person', 'प्रत्यक्ष भेंट'), icon: Users },
                   ].map((mode) => {
                     const Icon = mode.icon;
                     const isSel = consultType === mode.id;
@@ -815,13 +804,13 @@ function AppointmentContent() {
                         key={mode.id}
                         type="button"
                         onClick={() => setConsultType(mode.id as any)}
-                        className={`p-3 rounded-2xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                        className={`py-2 px-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
                           isSel
                             ? 'bg-rose-50 border-[#800000] text-[#800000] font-bold shadow-sm ring-1 ring-[#800000]'
                             : 'bg-white border-stone-200 text-stone-600 hover:border-amber-300'
                         }`}
                       >
-                        <Icon className="w-4 h-4 text-amber-700" />
+                        <Icon className="w-3.5 h-3.5 text-amber-700" />
                         <span className="text-[11px]">{mode.label}</span>
                       </button>
                     );
@@ -829,115 +818,123 @@ function AppointmentContent() {
                 </div>
               </div>
 
-              {/* 5. SELECT DATE & REAL-TIME PUBLISHED SLOTS */}
-              <div className="space-y-4 pt-2 border-t border-stone-100">
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1.5 flex items-center justify-between">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-amber-700" />
-                      {t('Select Preferred Date', 'पसंदीदा दिनांक चुनें')}
-                    </span>
-                    <span className="text-[11px] text-stone-400 font-normal">
-                      {t('Minimum: Today', 'न्यूनतम: आज')}
-                    </span>
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    min={todayStr}
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    suppressHydrationWarning
-                    className="w-full px-4 py-2.5 rounded-xl border border-stone-300 text-xs font-medium text-stone-800 focus:outline-none focus:border-amber-500 bg-white"
-                  />
-                </div>
-
-                {/* Published Slots Grid & Availability Banner */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-stone-700 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-amber-700" />
-                      {t('Available Published Time Slots (IST)', 'उपलब्ध समय स्लॉट (भारतीय समय)')}
-                    </label>
-                    {loadingSlots && (
-                      <span className="text-[11px] text-amber-800 flex items-center gap-1">
-                        <RefreshCw className="w-3 h-3 animate-spin" />
-                        {t('Checking calendar availability...', 'पंचांग व समय जांचा जा रहा है...')}
+              {/* 5. SELECT DATE & REAL-TIME PUBLISHED SLOTS (ORGANIZED & SPACED) */}
+              <div className="pt-2 border-t border-stone-100">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 items-start">
+                  
+                  {/* Left: Date Selection (4 cols) */}
+                  <div className="md:col-span-4 space-y-1">
+                    <label className="block text-xs font-semibold text-stone-700 flex items-center justify-between">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5 text-amber-700" />
+                        {t('Preferred Date', 'पसंदीदा दिनांक')}
                       </span>
+                      <span className="text-[10px] text-stone-400 font-normal">
+                        {t('Min: Today', 'आज से')}
+                      </span>
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      min={todayStr}
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      suppressHydrationWarning
+                      className="w-full px-3 py-2 rounded-xl border border-stone-300 text-xs font-medium text-stone-800 focus:outline-none focus:border-amber-500 bg-white shadow-xs"
+                    />
+                    <span className="text-[10px] text-stone-400 block">
+                      {t('Pick date for live slots', 'लाइव स्लॉट देखने हेतु दिनांक चुनें')}
+                    </span>
+                  </div>
+
+                  {/* Right: Time Slots Selection (8 cols - More breathing space) */}
+                  <div className="md:col-span-8 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-stone-700 flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-amber-700" />
+                        {t('Available Time Slots (IST)', 'उपलब्ध समय स्लॉट (IST)')}
+                      </label>
+                      {loadingSlots && (
+                        <span className="text-[10px] text-amber-800 flex items-center gap-1">
+                          <RefreshCw className="w-3 h-3 animate-spin" />
+                          {t('Checking...', 'जांच जारी...')}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Date Blocked Notice */}
+                    {isDateBlocked ? (
+                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 flex items-start gap-2 shadow-xs">
+                        <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                        <div className="space-y-0.5 text-xs">
+                          <h4 className="font-serif font-bold text-[#5B0D15]">
+                            {t('Date Not Available', 'दिनांक उपलब्ध नहीं')}
+                          </h4>
+                          <p className="text-[11px] text-stone-700 leading-snug">
+                            {blockedReason ||
+                              t(
+                                'Panditji is observing sacred rituals on this day. Please select another date.',
+                                'पंडित जी इस पावन तिथि को विशेष अनुष्ठान में लीन हैं। कृपया अन्य दिनांक का चयन करें।'
+                              )}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {availableSlots.length > 0 ? (
+                          availableSlots.map((slot) => {
+                            const isSelected = timeSlot === slot.time && slot.isAvailable;
+                            return (
+                              <button
+                                key={slot.time}
+                                type="button"
+                                disabled={!slot.isAvailable}
+                                onClick={() => setTimeSlot(slot.time)}
+                                className={`py-2 px-2 rounded-xl text-xs font-semibold transition-all border flex flex-col items-center justify-center gap-0.5 cursor-pointer ${
+                                  !slot.isAvailable
+                                    ? 'bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed opacity-60'
+                                    : isSelected
+                                    ? 'bg-[#5B0D15] text-white border-[#5B0D15] shadow-md ring-2 ring-amber-300'
+                                    : 'bg-white hover:bg-amber-50 text-stone-800 border-stone-200 hover:border-amber-300'
+                                }`}
+                              >
+                                <span className="font-bold text-xs">{slot.time}</span>
+                                <span
+                                  className={`text-[9px] uppercase tracking-wider font-extrabold ${
+                                    !slot.isAvailable
+                                      ? 'text-stone-400'
+                                      : isSelected
+                                      ? 'text-amber-300'
+                                      : 'text-emerald-700'
+                                  }`}
+                                >
+                                  {slot.isAvailable ? t('Available', 'उपलब्ध') : slot.reason || t('Reserved', 'आरक्षित')}
+                                </span>
+                              </button>
+                            );
+                          })
+                        ) : loadingSlots ? (
+                          <div className="col-span-2 sm:col-span-3 py-3 text-center text-xs text-stone-500">
+                            {t('Loading slots...', 'स्लॉट लोड हो रहे हैं...')}
+                          </div>
+                        ) : (
+                          <div className="col-span-2 sm:col-span-3 py-3 px-3 text-center rounded-xl bg-stone-50 border border-stone-200 space-y-0.5">
+                            <Clock className="w-4 h-4 mx-auto text-stone-400" />
+                            <p className="text-xs font-semibold text-stone-700">
+                              {t('No Slots Published For This Date', 'कोई स्लॉट उपलब्ध नहीं')}
+                            </p>
+                            <p className="text-[10px] text-stone-500">
+                              {t(
+                                'Please pick an alternate date.',
+                                'कृपया अन्य दिनांक का चयन करें।'
+                              )}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
 
-                  {/* Date Blocked Notice */}
-                  {isDateBlocked ? (
-                    <div className="p-5 rounded-2xl bg-amber-50/90 border border-amber-300 text-amber-950 flex items-start gap-3 shadow-sm animate-fadeIn">
-                      <AlertCircle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <h4 className="font-serif font-bold text-xs sm:text-sm text-[#5B0D15]">
-                          {t('Consultations Not Accepted on This Date', 'इस दिनांक को कोई परामर्श स्वीकार नहीं किया जाएगा')}
-                        </h4>
-                        <p className="text-xs text-stone-700 leading-relaxed">
-                          {blockedReason ||
-                            t(
-                              'Panditji is observing sacred rituals on this day. Please select another date.',
-                              'पंडित जी इस पावन तिथि को विशेष अनुष्ठान में लीन हैं। कृपया अन्य दिनांक का चयन करें।'
-                            )}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                      {availableSlots.length > 0 ? (
-                        availableSlots.map((slot) => {
-                          const isSelected = timeSlot === slot.time && slot.isAvailable;
-                          return (
-                            <button
-                              key={slot.time}
-                              type="button"
-                              disabled={!slot.isAvailable}
-                              onClick={() => setTimeSlot(slot.time)}
-                              className={`py-3 px-2 rounded-xl text-xs font-semibold transition-all border flex flex-col items-center justify-center gap-0.5 cursor-pointer ${
-                                !slot.isAvailable
-                                  ? 'bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed opacity-60'
-                                  : isSelected
-                                  ? 'bg-[#5B0D15] text-white border-[#5B0D15] shadow-md ring-2 ring-amber-300'
-                                  : 'bg-white hover:bg-amber-50 text-stone-800 border-stone-200 hover:border-amber-300'
-                              }`}
-                            >
-                              <span className="font-bold">{slot.time}</span>
-                              <span
-                                className={`text-[9px] uppercase tracking-wider font-extrabold ${
-                                  !slot.isAvailable
-                                    ? 'text-stone-400'
-                                    : isSelected
-                                    ? 'text-amber-300'
-                                    : 'text-emerald-700'
-                                }`}
-                              >
-                                {slot.isAvailable ? t('Available', 'उपलब्ध') : slot.reason || t('Reserved', 'आरक्षित')}
-                              </span>
-                            </button>
-                          );
-                        })
-                      ) : loadingSlots ? (
-                        <div className="col-span-3 py-6 text-center text-xs text-stone-500">
-                          {t('Loading slots...', 'स्लॉट लोड हो रहे हैं...')}
-                        </div>
-                      ) : (
-                        <div className="col-span-3 py-6 px-4 text-center rounded-2xl bg-stone-50 border border-stone-200 space-y-1.5">
-                          <Clock className="w-6 h-6 mx-auto text-stone-400" />
-                          <p className="text-xs font-semibold text-stone-700">
-                            {t('No Consultation Slots Published For This Date', 'इस दिनांक के लिए कोई प्रकाशित स्लॉट उपलब्ध नहीं है')}
-                          </p>
-                          <p className="text-[11px] text-stone-500 max-w-sm mx-auto">
-                            {t(
-                              'Please select an alternate date to inspect available consultation windows.',
-                              'कृपया उपलब्ध परामर्श समय देखने हेतु किसी अन्य दिनांक का चयन करें।'
-                            )}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -977,10 +974,7 @@ function AppointmentContent() {
                   ) : (
                     <>
                       <span>
-                        {t(
-                          `Confirm & Book ${displayTitle} (${activeService.price}) →`,
-                          `पुष्टि करें एवं ${displayTitle} बुक करें (${activeService.price}) →`
-                        )}
+                        {t('Book the Appointment →', 'परामर्श बुक करें →')}
                       </span>
                     </>
                   )}

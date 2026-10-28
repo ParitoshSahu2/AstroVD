@@ -197,7 +197,7 @@ export const ServicesCarousel: React.FC = () => {
         {/* Left Column: Heading, Subtitle, Divider & Explore Button */}
         <div className="lg:col-span-4 space-y-4 sm:space-y-5 text-left z-10 pl-2 sm:pl-0">
           <div className="space-y-1.5 sm:space-y-2">
-            <span className="text-xs sm:text-sm font-bold tracking-[0.22em] text-[#800000] uppercase inline-block border-b-2 border-[#800000] pb-0.5 leading-tight">{t('OUR SERVICES', 'हमारी वैदिक सेवाएं')}</span>
+            <span className="text-xs sm:text-sm font-bold tracking-[0.22em] text-[#4A151B] uppercase inline-block border-b-2 border-[#4A151B] pb-0.5 leading-tight">{t('SERVICES', 'वैदिक सेवाएं')}</span>
 
             <h2 className="text-3xl sm:text-4xl lg:text-[44px] font-serif font-bold text-[#4A151B] leading-[1.1] sm:leading-[1.12] tracking-tight">
               {language === 'hi' ? (
@@ -226,7 +226,7 @@ export const ServicesCarousel: React.FC = () => {
           <div className="pt-2">
             <Link
               href="/services"
-              className="inline-flex items-center gap-2 px-6 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#FEE58F] via-[#FDC754] to-[#F59E0B] hover:from-[#fce080] hover:to-[#eb9405] text-[#3B1E22] font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer"
+              className="inline-flex items-center gap-2 px-6 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#FEE58F] via-[#FDC754] to-[#F59E0B] hover:from-[#fce080] hover:to-[#eb9405] text-[#4A151B] font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer"
             >
               <span>{t('Explore All Services', 'सभी सेवाएं देखें')}</span>
               <span className="text-sm font-serif">→</span>
@@ -321,7 +321,7 @@ export const ServicesCarousel: React.FC = () => {
 
                       {/* Bottom Content Area */}
                       <div className="p-4 sm:p-5 pt-2 text-center bg-gradient-to-b from-white to-[#FDFBF7] space-y-2">
-                        <h3 className="font-serif font-bold text-base sm:text-lg text-[#3B1E22] group-hover:text-[#5B0D15] transition-colors">
+                        <h3 className="font-serif font-bold text-base sm:text-lg text-[#4A151B] group-hover:text-[#5B0D15] transition-colors">
                           {language === 'hi' ? item.titleHi : item.title}
                         </h3>
                         <p className="text-[11px] text-stone-500 leading-snug line-clamp-2">

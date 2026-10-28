@@ -567,7 +567,7 @@ export default function BlogPage() {
   const featured = filtered[0] || articles[0];
 
   return (
-    <div className="relative min-h-screen w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
+    <div className="relative min-h-screen flex flex-col justify-between w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
       <Navbar />
 
       {/* HERO BANNER SECTION (Panoramic full-bleed backdrop matching reference design) */}
@@ -668,11 +668,6 @@ export default function BlogPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
               {/* Left Content */}
               <div className="lg:col-span-7 p-6 sm:p-10 lg:p-12 space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold uppercase tracking-wider">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>{t('Featured Discourse', 'विशेष संपादकीय शोध')}</span>
-                </div>
-
                 <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-100 leading-tight">
                   {language === 'hi' ? featured.titleHi : featured.title}
                 </h2>
@@ -846,7 +841,7 @@ export default function BlogPage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <span className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-md border border-[#DCA258]/35 text-[#F5C77E] text-[10px] font-bold uppercase tracking-wider">
-                      ✦ {category}
+                      {category}
                     </span>
                     <span className="absolute bottom-3 right-3 px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-stone-200 text-[10px] font-medium flex items-center gap-1">
                       <Clock className="w-3 h-3 text-amber-300" />
@@ -999,7 +994,7 @@ export default function BlogPage() {
               {/* Title & Header */}
               <div className="space-y-2">
                 <div className="inline-flex items-center gap-1.5 text-xs text-amber-800 font-semibold">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  
                   <span>{t('Vedic Guidance & Spiritual Wisdom', 'वैदिक मार्गदर्शन एवं आध्यात्मिक ज्ञान')}</span>
                 </div>
                 <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#4A151B] leading-snug">
@@ -1010,7 +1005,7 @@ export default function BlogPage() {
               {/* Key Takeaways Box */}
               <div className="p-4 sm:p-5 rounded-2xl bg-amber-50 border border-amber-200/80 space-y-2">
                 <h4 className="font-serif font-bold text-xs uppercase tracking-wider text-[#800000] flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  
                   <span>{t('Key Astrological Takeaways', 'मुख्य ज्योतिषीय निष्कर्ष')}</span>
                 </h4>
                 <ul className="text-xs text-stone-700 space-y-1.5 list-disc pl-4 leading-relaxed">

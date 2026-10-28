@@ -334,7 +334,7 @@ export default function GalleryPage() {
   }, [selectedImage, currentModalIndex, visibleItems]);
 
   return (
-    <div className="relative min-h-screen w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
+    <div className="relative min-h-screen flex flex-col justify-between w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
       <Navbar />
 
       {/* HERO BANNER SECTION (Panoramic full-bleed backdrop matching reference design) */}
@@ -456,7 +456,7 @@ export default function GalleryPage() {
         {/* Gallery Items Count Header & Admin Action */}
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-[#706256] border-b border-[#EAE0D0] pb-3">
           <div className="flex items-center gap-2 font-serif font-medium text-[#2D1408]">
-            <Sparkles className="w-4 h-4 text-[#DCA258] shrink-0" />
+            
             <span>
               {t('Showing', 'प्रदर्शित')}:{' '}
               <strong className="text-[#522311] font-bold">{visibleItems.length}</strong> {t('of', 'कुल')}{' '}
@@ -544,7 +544,7 @@ export default function GalleryPage() {
 
                   {/* Top Category Tag */}
                   <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-black/75 backdrop-blur-md border border-[#DCA258]/35 text-[#F5C77E] text-[10px] font-semibold uppercase tracking-wider">
-                    ✦ {catLabel}
+                    {catLabel}
                   </div>
 
                   {/* Admin Actions Overlay - ONLY VISIBLE TO AUTHENTICATED ADMINS */}
@@ -750,7 +750,7 @@ export default function GalleryPage() {
                 }}
               />
               <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#5B0D15] text-amber-200 text-xs font-bold tracking-wide">
-                ✦ {language === 'hi' ? selectedImage.categoryLabelHi : selectedImage.categoryLabel}
+                {language === 'hi' ? selectedImage.categoryLabelHi : selectedImage.categoryLabel}
               </div>
               <div className="absolute bottom-3 right-4 px-2.5 py-0.5 rounded-full bg-black/60 text-white/90 text-[10px] font-mono">
                 {currentModalIndex + 1} / {visibleItems.length}

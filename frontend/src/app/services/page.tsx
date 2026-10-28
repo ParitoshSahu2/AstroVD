@@ -238,7 +238,7 @@ export default function ServicesPage() {
   }, [hasMore, isLoadingMore, loadNextBatch]);
 
   return (
-    <div className="relative min-h-screen w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
+    <div className="relative min-h-screen flex flex-col justify-between w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
       <Navbar />
 
       {/* HERO BANNER SECTION (Panoramic full-bleed backdrop matching reference design) */}
@@ -302,81 +302,90 @@ export default function ServicesPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-6 sm:py-9 space-y-6 sm:space-y-7">
         
-        {/* Unified Search & Sort Bar (Matching Products Page) */}
-        <div className="bg-white rounded-full border border-[#EAE0D0] shadow-xs px-4 py-2 sm:py-2.5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        {/* Search & Category Filter Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white/85 backdrop-blur-md px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl sm:rounded-3xl border border-amber-200/90 shadow-sm">
           {/* Search Input */}
-          <div className="relative flex items-center w-full sm:flex-1">
-            <Search className="w-4 h-4 text-[#9E9082] shrink-0 ml-1" />
+          <div className="relative w-full sm:max-w-md">
+            <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               placeholder={t('Search services (e.g. Mangal Dosh, Kundli, Tarot)...', 'सेवाएं खोजें (उदा. मंगल दोष, कुंडली, टैरो)...')}
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-2.5 pr-8 py-1 bg-transparent text-xs sm:text-sm text-[#2D1408] placeholder-[#9E9082] focus:outline-none"
+              className="w-full pl-10 pr-9 py-2 sm:py-2.5 rounded-full bg-stone-50 border border-stone-200 text-xs sm:text-sm text-stone-800 placeholder-stone-400 shadow-xs focus:bg-white focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-300 transition-colors"
             />
             {searchQuery && (
               <button
                 onClick={() => handleSearchChange('')}
-                className="text-[#9E9082] hover:text-[#522311] p-1 cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 cursor-pointer"
                 aria-label="Clear search"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
 
-          {/* Sort Dropdown */}
-          <div className="flex items-center gap-2 shrink-0 sm:border-l sm:border-[#EAE0D0] sm:pl-4 w-full sm:w-auto justify-end">
-            <span className="text-xs text-[#8C7E72] font-medium">
-              {t('Sort by', 'क्रम')}
-            </span>
-            <div className="relative">
-              <select
-                value={sortBy}
-                onChange={(e) => handleSortChange(e.target.value as any)}
-                className="appearance-none pl-3 pr-8 py-1.5 rounded-lg bg-[#FAF6ED] hover:bg-[#F5EFE3] border border-[#EAE0D0] text-xs font-semibold text-[#2D1408] shadow-2xs focus:outline-none cursor-pointer"
-              >
-                <option value="featured">{t('Featured', 'विशेष (डिफ़ॉल्ट)')}</option>
-                <option value="price-low">{t('Price: Low to High', 'मूल्य: कम से ज्यादा')}</option>
-                <option value="price-high">{t('Price: High to Low', 'मूल्य: ज्यादा से कम')}</option>
-                <option value="duration">{t('Duration: Short to Long', 'अवधि: कम से ज्यादा')}</option>
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-[#8C7E72] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          {/* Category Dropdown */}
+          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+            <div className="flex items-center gap-1.5 text-stone-700 text-xs sm:text-sm font-semibold">
+              <Filter className="w-4 h-4 text-amber-700" />
+              <span>{t('Category:', 'श्रेणी:')}</span>
             </div>
+            <select
+              value={selectedCategory}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="px-3.5 sm:px-4 py-2 rounded-full bg-white border border-amber-300 text-xs sm:text-sm font-semibold text-stone-800 shadow-xs focus:outline-none focus:border-amber-500 cursor-pointer"
+            >
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {language === 'hi' ? `${c.labelHi} (${c.count})` : `${c.labelEn} (${c.count})`}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Category Pill Buttons (Exact Match to Products Design System) */}
-        <div className="flex items-center gap-2.5 overflow-x-auto pb-1.5 pt-0.5 no-scrollbar scroll-smooth" role="tablist" aria-label="Service Categories">
-          {categories.map((cat) => {
-            const isSelected = selectedCategory === cat.id;
-            const IconComponent = cat.icon || LayoutGrid;
-            const label = language === 'hi' ? `${cat.labelHi} (${cat.count})` : `${cat.labelEn} (${cat.count})`;
+        {/* Count & Category Pills Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+          <div className="font-bold text-stone-800 text-xs sm:text-sm flex items-center gap-2">
+            
+            <span>
+              {language === 'hi' ? (
+                <>प्रदर्शित <span className="text-[#5B0D15] font-extrabold">{visibleServices.length}</span> कुल <span className="text-stone-900 font-extrabold">{filtered.length}</span> प्रामाणिक वैदिक सेवाएं</>
+              ) : (
+                <>Showing <span className="text-[#5B0D15] font-extrabold">{visibleServices.length}</span> of <span className="text-stone-900 font-extrabold">{filtered.length}</span> authentic services</>
+              )}
+            </span>
+          </div>
 
-            return (
-              <button
-                key={cat.id}
-                onClick={() => handleCategoryChange(cat.id)}
-                role="tab"
-                aria-selected={isSelected}
-                className={`rounded-full px-3.5 py-2 text-xs font-semibold flex items-center gap-2 whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${
-                  isSelected
-                    ? 'bg-[#522311] text-white shadow-xs border border-[#522311]'
-                    : 'bg-white hover:bg-[#FAF6ED] text-[#4A3B32] border border-[#EAE0D0] shadow-2xs hover:border-[#D6C4AD]'
-                }`}
-              >
-                <IconComponent className={`w-3.5 h-3.5 ${isSelected ? 'text-[#F5D8A0]' : 'text-[#7C6C60]'}`} />
-                <span>{label}</span>
-              </button>
-            );
-          })}
+          <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Service Categories">
+            {categories.map((cat) => {
+              const isSelected = selectedCategory === cat.id;
+              const label = language === 'hi' ? `${cat.labelHi} (${cat.count})` : `${cat.labelEn} (${cat.count})`;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryChange(cat.id)}
+                  role="tab"
+                  aria-selected={isSelected}
+                  className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer shadow-xs ${
+                    isSelected
+                      ? 'bg-[#5B0D15] text-white shadow-sm shadow-rose-950/20 scale-[1.02] ring-2 ring-amber-400/40'
+                      : 'bg-white hover:bg-amber-50 text-stone-700 border border-stone-200 hover:border-amber-300'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Search Results Banner */}
         {searchQuery.trim() && (
           <div className="flex items-center justify-between bg-white border border-[#EAE0D0] rounded-xl p-3 sm:px-4 max-w-5xl mx-auto shadow-2xs">
             <div className="flex items-center gap-2 text-xs sm:text-sm text-[#2D1408]">
-              <Sparkles className="w-4 h-4 text-[#DCA258] shrink-0" />
+              
               <span>
                 {t('Results for', 'इसके लिए परिणाम:')}{' '}
                 <strong className="text-[#522311]">"{searchQuery}"</strong>

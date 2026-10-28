@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
-import { Phone, Mail, MapPin, Calendar, Send, CheckCircle2, Clock, Globe, ShieldCheck } from 'lucide-react';
+import { Phone, Mail, Send, CheckCircle2, Clock, Globe, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function ContactPage() {
@@ -23,7 +23,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
+    <div className="relative min-h-screen flex flex-col justify-between w-full bg-[#FCF8ED] m-0 p-0 overflow-x-clip selection:bg-amber-400">
       <Navbar />
 
       {/* HERO BANNER SECTION (Panoramic full-bleed backdrop matching reference design) */}
@@ -108,18 +108,6 @@ export default function ContactPage() {
                     +91 98260 12345
                   </a>
                 </p>
-                <p>
-                  <strong>{t('Ashram Desk:', 'कार्यालय हेल्पलाइन:')}</strong>{' '}
-                  <a href="tel:+918889977665" className="text-[#5B0D15] font-semibold hover:underline">
-                    +91 88899 77665
-                  </a>
-                </p>
-                <p>
-                  <strong>{t('Dubai / International:', 'दुबई / अंतर्राष्ट्रीय:')}</strong>{' '}
-                  <a href="tel:+971501234567" className="text-[#5B0D15] font-semibold hover:underline">
-                    +971 50 123 4567
-                  </a>
-                </p>
               </div>
               <span className="text-[11px] text-amber-800 font-semibold block pt-1 border-t border-stone-100">
                 🕒 {t('Mon - Sun: 8:00 AM - 9:00 PM IST', 'सोमवार - रविवार: प्रातः 8:00 से रात्रि 9:00 बजे')}
@@ -156,68 +144,7 @@ export default function ContactPage() {
               </div>
             </div>
 
-            {/* Online Vedic Consultation Card */}
-            <Link
-              href="/appointment"
-              className="p-6 rounded-3xl bg-gradient-to-br from-amber-500/15 via-white to-amber-50/60 border border-amber-300 shadow-md space-y-2 cursor-pointer hover:shadow-lg transition-all block"
-            >
-              <div className="w-10 h-10 rounded-2xl bg-[#5B0D15] text-amber-200 flex items-center justify-center">
-                <Calendar className="w-5 h-5" />
-              </div>
-              <h3 className="font-serif font-bold text-base text-[#2A1810]">
-                {t('Online Vedic Consultation (Dr. Vishal Dubey)', 'ऑनलाइन परामर्श सत्र (डॉ. विशाल दुबे)')}
-              </h3>
-              <p className="text-xs text-stone-600">
-                {t(
-                  'Book directly with AstroVD Acharyas for instant slot availability, Kundli analysis, and priority booking.',
-                  'कुंडली विश्लेषण, स्लॉट उपलब्धता एवं तत्काल परामर्श हेतु सीधे ऑनलाइन अपॉइंटमेंट बुक करें।'
-                )}
-              </p>
-              <span className="text-xs font-bold text-[#5B0D15] underline block pt-1">
-                {t('Reserve Appointment Slot →', 'अपॉइंटमेंट स्लॉट आरक्षित करें →')}
-              </span>
-            </Link>
-
-            {/* Spiritual Centers & Vidyapiths */}
-            <div className="p-6 rounded-3xl bg-white border border-amber-200/90 shadow-md space-y-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-amber-100 text-[#5B0D15] flex items-center justify-center">
-                <MapPin className="w-5 h-5" />
-              </div>
-              <h3 className="font-serif font-bold text-base text-[#2A1810]">
-                {t('Spiritual Centers & Vidyapiths', 'प्रमुख आध्यात्मिक व ज्योतिष केंद्र')}
-              </h3>
-              <div className="space-y-2 text-xs text-stone-600 leading-relaxed">
-                <p>
-                  <strong className="text-stone-900">{t('Varanasi (Head Center):', 'वाराणसी (मुख्य केंद्र):')}</strong><br />
-                  {t(
-                    'Shree Ganesh Vidyapith Astrological Center, Near Kashi Vishwanath Corridor, Dashashwamedh, Varanasi, Uttar Pradesh - 221001.',
-                    'श्री गणेश विद्यापीठ ज्योतिष केंद्र, श्री काशी विश्वनाथ कॉरिडोर के समीप, दशाश्वमेध घाट, वाराणसी, उत्तर प्रदेश - 221001।'
-                  )}
-                </p>
-                <p>
-                  <strong className="text-stone-900">{t('Indore (Research Office):', 'इंदौर (शोध कार्यालय):')}</strong><br />
-                  {t(
-                    'Scheme No. 54, Vijay Nagar, Indore, Madhya Pradesh - 452010.',
-                    'स्कीम नं. 54, विजय नगर, इंदौर, मध्य प्रदेश - 452010।'
-                  )}
-                </p>
-                <p>
-                  <strong className="text-stone-900">{t('New Delhi Consultation Desk:', 'नई दिल्ली परामर्श केंद्र:')}</strong><br />
-                  {t(
-                    'South Extension Part II, Ring Road, New Delhi - 110049.',
-                    'साउथ एक्सटेंशन पार्ट II, रिंग रोड, नई दिल्ली - 110049।'
-                  )}
-                </p>
-                <p>
-                  <strong className="text-stone-900">{t('Dubai Overseas Desk:', 'दुबई अंतर्राष्ट्रीय केंद्र:')}</strong><br />
-                  {t(
-                    'Business Bay, Downtown Dubai, United Arab Emirates.',
-                    'बिजनेस बे, डाउनटाउन दुबई, संयुक्त अरब अमीरात।'
-                  )}
-                </p>
-              </div>
             </div>
-          </div>
 
           {/* Right: Message Form */}
           <div className="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-amber-200/90 shadow-xl space-y-5">

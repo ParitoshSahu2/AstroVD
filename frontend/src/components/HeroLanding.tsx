@@ -78,7 +78,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({ openConsultModal, open
                 onClick={openAuthModal}
                 className="px-6 py-3.5 rounded-2xl bg-white/85 hover:bg-white text-stone-800 border border-amber-300/80 backdrop-blur-md font-bold text-sm flex items-center gap-2 cursor-pointer transition-all duration-200 hover:border-amber-400 shadow-sm"
               >
-                <Sparkles className="w-4 h-4 text-amber-600" />
+                
                 <span>{t('Join AstroVeda (Free Credits)', 'एस्ट्रोवेदा से जुड़ें (निःशुल्क)')}</span>
               </button>
             </div>

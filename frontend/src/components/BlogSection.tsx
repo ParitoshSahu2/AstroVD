@@ -87,24 +87,17 @@ export const BlogSection: React.FC = () => {
 
       <div className="max-w-7xl mx-auto space-y-12 relative z-10">
         
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-amber-200/60 pb-6">
-          <div className="space-y-2">
-            <span className="text-xs sm:text-sm font-bold tracking-[0.22em] text-[#800000] uppercase block">
-              {t('VEDIC KNOWLEDGE & ARTICLES', 'वैदिक ज्ञान एवं लेख')}
-            </span>
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[40px] font-bold text-[#4A151B] leading-tight">
-              {t('Insights for Conscious Living', 'सार्थक व जागरूक जीवन के लिए सूत्र')}
-            </h2>
-          </div>
-
-          <Link
-            href="/blog"
-            className="px-6 py-2.5 rounded-full bg-white/90 hover:bg-amber-50 border border-stone-300 hover:border-amber-400 text-stone-800 hover:text-[#5B0D15] text-xs sm:text-sm font-semibold shadow-sm transition-all flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
-          >
-            <span>{t('Explore All Articles', 'सभी लेख पढ़ें')}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+        {/* Section Header (Centered) */}
+        <div className="text-center max-w-3xl mx-auto space-y-3">
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#4A151B] leading-tight">
+            {t('Blogs & Articles', 'ब्लॉग एवं लेख')}
+          </h2>
+          <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-xl mx-auto">
+            {t(
+              'Sacred Vedic wisdom, planetary insights, and spiritual practices written by Varanasi Acharyas.',
+              'काशी के विद्वान आचार्यों द्वारा रचित पावन वैदिक ज्ञान, ग्रह-नक्षत्र विचार एवं आध्यात्मिक लेख।'
+            )}
+          </p>
         </div>
 
         {/* Blog Cards Grid */}
@@ -153,7 +146,7 @@ export const BlogSection: React.FC = () => {
 
                   <div className="pt-4 border-t border-stone-100 flex items-center justify-between">
                     <span className="text-[11px] font-semibold text-amber-800 uppercase tracking-wider">
-                      ✦ {category}
+                      {category}
                     </span>
                     <Link
                       href={`/blog?id=${post.id}`}
@@ -167,6 +160,17 @@ export const BlogSection: React.FC = () => {
               </article>
             );
           })}
+        </div>
+
+        {/* Explore All Blogs Button Shifted Below Cards */}
+        <div className="text-center pt-2 sm:pt-4">
+          <Link
+            href="/blog"
+            className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#73121D] to-[#480A10] hover:from-[#73121D] hover:to-[#5B0D15] text-amber-100 font-bold text-xs sm:text-sm shadow-xl shadow-rose-950/25 hover:scale-105 transition-all duration-200 border border-amber-300/40 cursor-pointer group"
+          >
+            <span>{t('Explore All Blogs', 'सभी ब्लॉग पढ़ें')}</span>
+            <ArrowRight className="w-4 h-4 text-amber-300 group-hover:translate-x-1 transition-transform" />
+          </Link>
         </div>
 
       </div>

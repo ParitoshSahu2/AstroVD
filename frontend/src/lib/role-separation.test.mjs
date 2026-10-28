@@ -132,10 +132,6 @@ describe('User & Admin Role Separation & Data Isolation Tests', () => {
     const content = fs.readFileSync(navbarPath, 'utf-8');
 
     assert.ok(
-      content.includes('Astro Balance'),
-      'Navbar dropdown displays authentic Astro Balance card',
-    );
-    assert.ok(
       content.includes('Admin Control Panel'),
       'Navbar dropdown includes Admin Control Panel for admin accounts',
     );

@@ -81,11 +81,11 @@ export const SpatialServiceModal: React.FC<SpatialServiceModalProps> = ({
         <div className="shrink-0 flex items-center justify-between px-5 py-4 bg-white/95 backdrop-blur-md border-b border-amber-200/80 z-10">
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full bg-amber-100/80 border border-amber-300 text-amber-900 text-xs font-bold uppercase tracking-wider">
-              ✦ {displayCatTag}
+              {displayCatTag}
             </span>
             {displayBadge && (
               <span className="px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 via-rose-600 to-amber-600 text-white text-xs font-bold uppercase tracking-wider shadow-sm flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-amber-200" />
+                
                 {displayBadge}
               </span>
             )}
@@ -144,7 +144,7 @@ export const SpatialServiceModal: React.FC<SpatialServiceModalProps> = ({
               </div>
             </div>
             <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex items-center gap-2.5 col-span-2 sm:col-span-1 shadow-2xs">
-              <Sparkles className="w-4 h-4 text-amber-700 shrink-0" />
+              
               <div>
                 <div className="text-[10px] text-stone-500 uppercase font-bold">{t('Ritual Offering', 'न्योछावर')}</div>
                 <div className={`text-xs font-bold ${service.price.includes('FREE') ? 'text-emerald-700' : 'text-[#5B0D15]'}`}>
