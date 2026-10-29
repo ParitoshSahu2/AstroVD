@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { SERVICES_CATALOGUE, PUBLISHED_TIME_SLOTS, ServiceCatalogueItem } from './services.data.js';
+import { SERVICES_CATALOGUE, PUBLISHED_TIME_SLOTS, ServiceCatalogueItem, generateWorkingHourSlots, isWithinGurujiWorkingHours, parseTimeToMinutes } from './services.data.js';
 import { BookAppointmentDto } from './dto/book-appointment.dto.js';
 import { ListBookingsQueryDto } from './dto/list-bookings-query.dto.js';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto.js';
@@ -22,26 +22,14 @@ import { normalizePhoneNumber, isValidE164 } from '../auth/phone.util.js';
 import type { JwtPayload } from '../auth/decorators/current-user.decorator.js';
 import { EmailService } from '../email/email.service.js';
 
-export function formatGoogleMeetLink(bookingId: string): string {
-  if (bookingId && bookingId.startsWith('https://meet.google.com/')) {
-    return bookingId;
+export const DEFAULT_GURUJI_MEET_LINK = 'https://meet.google.com/zrg-vfdz-jky';
+
+export function formatGoogleMeetLink(bookingId?: string): string {
+  const configured = process.env.GURUJI_MEET_LINK || process.env.NEXT_PUBLIC_GURUJI_MEET_LINK;
+  if (configured && configured.trim().startsWith('https://meet.google.com/')) {
+    return configured.trim();
   }
-  const sanitized = (bookingId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const numToLetter: Record<string, string> = {
-    '0': 'a', '1': 'b', '2': 'c', '3': 'd', '4': 'e',
-    '5': 'f', '6': 'g', '7': 'h', '8': 'i', '9': 'j',
-  };
-  let letters = sanitized
-    .split('')
-    .map((ch) => numToLetter[ch] || ch)
-    .join('');
-  while (letters.length < 10) {
-    letters += 'avd';
-  }
-  const p1 = letters.slice(0, 3);
-  const p2 = letters.slice(3, 7);
-  const p3 = letters.slice(7, 10);
-  return `https://meet.google.com/${p1}-${p2}-${p3}`;
+  return DEFAULT_GURUJI_MEET_LINK;
 }
 
 @Injectable()
@@ -84,7 +72,7 @@ export class AppointmentsService {
   }
 
   /**
-   * Return the canonical catalogue of 29 services, optionally filtered by category.
+   * Return the canonical catalogue of 28 services, optionally filtered by category.
    */
   getServices(category?: string): ServiceCatalogueItem[] {
     if (!category || category === 'all') {
@@ -109,8 +97,8 @@ export class AppointmentsService {
   /**
    * Calculate published time slots for a service and date, querying PostgreSQL AppointmentSlot & BlockedDate.
    */
-  async getAvailableSlots(serviceId: string, dateStr: string) {
-    this.getServiceById(serviceId); // Validate service exists
+  async getAvailableSlots(serviceId: string, dateStr: string, requestedDuration?: number) {
+    const service = this.getServiceById(serviceId); // Validate service exists
 
     // Validate date format YYYY-MM-DD
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -120,6 +108,10 @@ export class AppointmentsService {
 
     const todayStr = new Date().toISOString().split('T')[0];
     const isPastDate = dateStr < todayStr;
+    const durationMinutes =
+      requestedDuration && requestedDuration >= 10 && requestedDuration <= 240
+        ? requestedDuration
+        : undefined;
 
     try {
       // Check if date is blocked in sanctuary registry
@@ -130,6 +122,7 @@ export class AppointmentsService {
         return {
           serviceId,
           date: dateStr,
+          durationMinutes: durationMinutes || service.durationMinutes || 30,
           isBlocked: true,
           blockedReason: blockedDate.reason || 'Panditji is not accepting consultations on this date.',
           slots: [],
@@ -145,8 +138,22 @@ export class AppointmentsService {
         orderBy: { startTime: 'asc' },
       });
 
-      // If no slots exist yet for this date, auto-seed standard Vedic schedule so slots are persisted in DB
-      if (dbSlots.length === 0) {
+      let slotTimes: string[];
+      let effectiveDuration: number;
+
+      if (durationMinutes) {
+        slotTimes = generateWorkingHourSlots(durationMinutes);
+        effectiveDuration = durationMinutes;
+      } else if (dbSlots.length > 0) {
+        slotTimes = dbSlots.map((s) => s.startTime);
+        effectiveDuration = dbSlots[0]?.durationMinutes || service.durationMinutes || 30;
+      } else {
+        slotTimes = PUBLISHED_TIME_SLOTS;
+        effectiveDuration = service.durationMinutes || 30;
+      }
+
+      // If no slots exist yet for this date, auto-seed published schedule so slots are persisted in DB
+      if (dbSlots.length === 0 && !durationMinutes) {
         const defaultSlotsData = PUBLISHED_TIME_SLOTS.map((time, idx) => ({
           id: `slot-std-${idx}`,
           date: dateStr,
@@ -188,39 +195,69 @@ export class AppointmentsService {
         select: {
           id: true,
           scheduledTime: true,
+          durationMinutes: true,
           serviceType: true,
           astrologerId: true,
         },
       });
 
-      const bookedTimes = new Set(existingBookings.map((b) => b.scheduledTime));
+      const fallbackOnDate = this.fallbackBookings.filter(
+        (b) => b.scheduledDate === dateStr && !['CANCELLED', 'REJECTED'].includes(b.status),
+      );
 
-      const slots = dbSlots.map((slot) => {
-        const isBooked = bookedTimes.has(slot.startTime);
+      const allBookings = [
+        ...existingBookings.map((b) => ({
+          time: b.scheduledTime,
+          duration: b.durationMinutes || 30,
+        })),
+        ...fallbackOnDate.map((b) => ({
+          time: b.scheduledTime,
+          duration: b.durationMinutes || 30,
+        })),
+      ];
+
+      const bookedIntervals = allBookings
+        .map((b) => {
+          const start = parseTimeToMinutes(b.time);
+          return start >= 0 ? { start, end: start + (b.duration || 30) } : null;
+        })
+        .filter((iv) => iv !== null);
+
+      const bookedTimesExact = new Set(allBookings.map((b) => b.time));
+
+      const slots = slotTimes.map((time, idx) => {
+        const slotStart = parseTimeToMinutes(time);
+        const slotEnd = slotStart + effectiveDuration;
+        const isColliding =
+          bookedTimesExact.has(time) ||
+          bookedIntervals.some(
+            (b) => Math.max(slotStart, b.start) < Math.min(slotEnd, b.end),
+          );
+
         if (isPastDate) {
           return {
-            id: slot.id,
-            time: slot.startTime,
-            durationMinutes: slot.durationMinutes,
+            id: `slot-${idx}`,
+            time,
+            durationMinutes: effectiveDuration,
             isAvailable: false,
             reason: 'Date is in the past',
           };
         }
 
-        if (isBooked) {
+        if (isColliding) {
           return {
-            id: slot.id,
-            time: slot.startTime,
-            durationMinutes: slot.durationMinutes,
+            id: `slot-${idx}`,
+            time,
+            durationMinutes: effectiveDuration,
             isAvailable: false,
             reason: 'Already Reserved',
           };
         }
 
         return {
-          id: slot.id,
-          time: slot.startTime,
-          durationMinutes: slot.durationMinutes,
+          id: `slot-${idx}`,
+          time,
+          durationMinutes: effectiveDuration,
           isAvailable: true,
         };
       });
@@ -228,29 +265,48 @@ export class AppointmentsService {
       return {
         serviceId,
         date: dateStr,
+        durationMinutes: effectiveDuration,
         isBlocked: false,
         slots,
       };
     } catch (err: any) {
       // Graceful fallback if database is temporarily offline
-      const bookedInFallback = new Set(
-        this.fallbackBookings
-          .filter((b) => b.scheduledDate === dateStr && !['CANCELLED', 'REJECTED'].includes(b.status))
-          .map((b) => b.scheduledTime),
+      const fallbackOnDate = this.fallbackBookings.filter(
+        (b) => b.scheduledDate === dateStr && !['CANCELLED', 'REJECTED'].includes(b.status),
       );
+      const bookedIntervals = fallbackOnDate
+        .map((b) => {
+          const start = parseTimeToMinutes(b.scheduledTime);
+          return start >= 0 ? { start, end: start + (b.durationMinutes || 30) } : null;
+        })
+        .filter((iv) => iv !== null);
+
+      const slotTimes = durationMinutes
+        ? generateWorkingHourSlots(durationMinutes)
+        : PUBLISHED_TIME_SLOTS;
+      const effectiveDuration = durationMinutes || service.durationMinutes || 30;
 
       return {
         serviceId,
         date: dateStr,
+        durationMinutes: effectiveDuration,
         isBlocked: false,
-        slots: PUBLISHED_TIME_SLOTS.map((time, idx) => {
-          const isBooked = bookedInFallback.has(time);
+        slots: slotTimes.map((time, idx) => {
+          const slotStart = parseTimeToMinutes(time);
+          const slotEnd = slotStart + effectiveDuration;
+          const isColliding = bookedIntervals.some(
+            (b) => Math.max(slotStart, b.start) < Math.min(slotEnd, b.end),
+          );
           return {
             id: `slot-fallback-${idx}`,
             time,
-            durationMinutes: 45,
-            isAvailable: !isPastDate && !isBooked,
-            reason: isPastDate ? 'Date is in the past' : isBooked ? 'Already Reserved' : undefined,
+            durationMinutes: effectiveDuration,
+            isAvailable: isPastDate ? false : !isColliding,
+            reason: isPastDate
+              ? 'Date is in the past'
+              : isColliding
+              ? 'Already Reserved'
+              : undefined,
           };
         }),
       };
@@ -298,6 +354,7 @@ export class AppointmentsService {
   async bookAppointment(actor: JwtPayload, dto: BookAppointmentDto, ipAddress?: string) {
     // 1. Validate canonical service definition (price is derived server-side only)
     const service = this.getServiceById(dto.serviceId);
+    const bookingDuration = dto.durationMinutes || service.durationMinutes || 30;
 
     // 2. Validate appointment date and time slot
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -411,6 +468,25 @@ export class AppointmentsService {
             .filter(Boolean)
             .join(' | ');
 
+          let payer: any = null;
+          const cost = service.priceNumber;
+          if (dto.paymentMethod === 'WALLET') {
+            payer = await tx.user.findUnique({
+              where: { id: user.id },
+              select: { id: true, walletBalance: true },
+            });
+            if (!payer || Number(payer.walletBalance || 0) < cost) {
+              throw new BadRequestException(
+                `Insufficient wallet balance (₹${payer?.walletBalance || 0}). Required: ₹${cost}`,
+              );
+            }
+            await tx.user.update({
+              where: { id: user.id },
+              data: { walletBalance: { decrement: cost } },
+              select: { walletBalance: true },
+            });
+          }
+
           const newBooking = await tx.booking.create({
             data: {
               userId: user.id,
@@ -418,7 +494,7 @@ export class AppointmentsService {
               serviceType: service.id,
               scheduledDate: dto.scheduledDate,
               scheduledTime: dto.scheduledTime,
-              durationMinutes: service.durationMinutes,
+              durationMinutes: bookingDuration,
               totalCost: service.priceNumber,
               status: initialStatus,
               notes: formattedNotes,
@@ -435,6 +511,19 @@ export class AppointmentsService {
               },
             },
           });
+
+          if (dto.paymentMethod === 'WALLET') {
+            await tx.walletTransaction.create({
+              data: {
+                userId: user.id,
+                type: 'DEBIT',
+                amount: service.priceNumber,
+                balanceAfter: Math.max(0, Number(payer?.walletBalance || 0) - cost),
+                description: `Consultation reservation: ${service.title}`,
+                reference: `BOOKING_${newBooking.id}`,
+              },
+            });
+          }
 
           // Update user phone if previously missing
           if (!user.phone && normalizedPhone) {
@@ -455,8 +544,7 @@ export class AppointmentsService {
 
       // Asynchronously trigger confirmation email with meeting link
       if (user.email) {
-        this.emailService
-          .sendConsultationConfirmation({
+        this.emailService?.sendConsultationConfirmation?.({
             seekerEmail: user.email,
             seekerName: dto.customerName?.trim() || user.name || 'Devotee',
             serviceTitle: service.title,
@@ -592,8 +680,7 @@ export class AppointmentsService {
     this.saveFallbackBookings();
 
     if (customerEmail) {
-      this.emailService
-        .sendConsultationConfirmation({
+      this.emailService?.sendConsultationConfirmation?.({
           seekerEmail: customerEmail,
           seekerName: customerName,
           serviceTitle: service.title,

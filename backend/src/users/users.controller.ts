@@ -38,7 +38,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Profile returned successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized - invalid or expired token' })
   async getMe(@CurrentUser() user: JwtPayload) {
-    return await this.usersService.getMe(user.sub);
+    return await this.usersService.getMe(user.sub, user);
   }
 
   @Patch('me')
@@ -56,7 +56,7 @@ export class UsersController {
     @Req() req: Request,
   ) {
     const ipAddress = req.ip || req.socket?.remoteAddress;
-    return await this.usersService.updateMe(user.sub, dto, ipAddress);
+    return await this.usersService.updateMe(user.sub, dto, ipAddress, user);
   }
 
   @Patch('me/password')

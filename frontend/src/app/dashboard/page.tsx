@@ -46,7 +46,7 @@ import {
   Quote,
   Loader2,
 } from 'lucide-react';
-import { SERVICES_CATALOGUE } from '../../data/servicesData';
+import { SERVICES_CATALOGUE, formatGoogleMeetLink, getMeetingTimeStatus } from '../../data/servicesData';
 
 interface UserProfile {
   id: string;
@@ -80,27 +80,7 @@ interface Transaction {
   createdAt: string;
 }
 
-function formatGoogleMeetLink(bookingId: string): string {
-  if (bookingId && bookingId.startsWith('https://meet.google.com/')) {
-    return bookingId;
-  }
-  const sanitized = (bookingId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const numToLetter: Record<string, string> = {
-    '0': 'a', '1': 'b', '2': 'c', '3': 'd', '4': 'e',
-    '5': 'f', '6': 'g', '7': 'h', '8': 'i', '9': 'j',
-  };
-  let letters = sanitized
-    .split('')
-    .map((ch) => numToLetter[ch] || ch)
-    .join('');
-  while (letters.length < 10) {
-    letters += 'avd';
-  }
-  const p1 = letters.slice(0, 3);
-  const p2 = letters.slice(3, 7);
-  const p3 = letters.slice(7, 10);
-  return `https://meet.google.com/${p1}-${p2}-${p3}`;
-}
+
 
 function getCombinedOrders(backendOrders: any[] = []): any[] {
   let localOrders: any[] = [];
@@ -144,6 +124,12 @@ function getCombinedOrders(backendOrders: any[] = []): any[] {
 
 export default function DashboardPage() {
   const { t } = useLanguage();
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => setTick((v) => v + 1), 30000);
+    return () => clearInterval(timer);
+  }, []);
   const [activeTab, setActiveTab] = useState<'profile' | 'consultations' | 'orders'>('profile');
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [wallet, setWallet] = useState<WalletData | null>(null);
@@ -301,17 +287,28 @@ export default function DashboardPage() {
       // Process 1: Profile & Wallet Balance
       if (profRes.ok) {
         const profData = await profRes.json();
-        setProfile(profData);
+
+        // Safeguard: Ensure we never overwrite the authenticated user's real identity with dummy fallback data
+        const isDummyFallback = profData.name === 'Aarav Sharma' || profData.email === 'celestial@universe.com';
+        const finalProfile = isDummyFallback && stored
+          ? {
+              ...profData,
+              name: stored.name || profData.name,
+              email: stored.email || profData.email,
+            }
+          : profData;
+
+        setProfile(finalProfile);
         setWallet({
-          walletBalance: profData.walletBalance ?? 0,
+          walletBalance: finalProfile.walletBalance ?? stored?.walletBalance ?? 0,
           currency: 'INR',
           currencySymbol: '₹',
         });
-        setEditName(profData.name || '');
-        setEditDob(profData.dateOfBirth || '');
-        setEditTob(profData.timeOfBirth || '');
-        setEditPob(profData.placeOfBirth || '');
-        setEditZodiac(profData.zodiacSign || 'Aries');
+        setEditName(finalProfile.name || '');
+        setEditDob(finalProfile.dateOfBirth || '');
+        setEditTob(finalProfile.timeOfBirth || '');
+        setEditPob(finalProfile.placeOfBirth || '');
+        setEditZodiac(finalProfile.zodiacSign || 'Aries');
       }
 
       // Process 2: Transactions & Ledger
@@ -778,29 +775,11 @@ export default function DashboardPage() {
               </div>
 
               {/* Quick Metrics Bar */}
-              <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 items-stretch">
-                {/* 1. Zodiac Sign Card */}
-                <div className="p-3 rounded-2xl bg-white/95 border border-stone-200/80 shadow-xs hover:shadow-sm transition-all flex flex-col justify-between">
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <span className="text-[10px] font-bold text-stone-600 tracking-wide uppercase truncate">
-                      Sun / Rashi
-                    </span>
-                    <div className="w-6 h-6 rounded-lg bg-amber-50 border border-amber-200/70 text-amber-600 flex items-center justify-center shrink-0 shadow-2xs">
-                      <Sparkles className="w-3 h-3" />
-                    </div>
-                  </div>
-                  <div className="text-xs sm:text-sm font-serif font-bold text-[#3B1E22] tracking-tight truncate">
-                    {formatZodiacName(profile.zodiacSign)}
-                  </div>
-                  <div className="text-[9.5px] text-stone-500 font-medium truncate mt-0.5">
-                    Vedic astrological sign
-                  </div>
-                </div>
-
-                {/* 3. Consultations Card */}
+              <div className="flex gap-2.5 sm:gap-3 items-stretch shrink-0">
+                {/* Consultations Card */}
                 <div
                   onClick={() => setActiveTab('consultations')}
-                  className={`p-3 rounded-2xl bg-white/95 border border-stone-200/80 shadow-xs hover:shadow-sm hover:border-amber-300 transition-all flex flex-col justify-between cursor-pointer group ${
+                  className={`w-36 sm:w-44 p-3 rounded-2xl bg-white/95 border border-stone-200/80 shadow-xs hover:shadow-sm hover:border-amber-300 transition-all flex flex-col justify-between cursor-pointer group ${
                     activeTab === 'consultations' ? 'ring-2 ring-rose-500/20 border-rose-300' : ''
                   }`}
                 >
@@ -823,7 +802,7 @@ export default function DashboardPage() {
                 {/* 4. Orders Card */}
                 <div
                   onClick={() => setActiveTab('orders')}
-                  className={`p-3 rounded-2xl bg-white/95 border border-stone-200/80 shadow-xs hover:shadow-sm hover:border-amber-300 transition-all flex flex-col justify-between cursor-pointer group ${
+                  className={`w-36 sm:w-44 p-3 rounded-2xl bg-white/95 border border-stone-200/80 shadow-xs hover:shadow-sm hover:border-amber-300 transition-all flex flex-col justify-between cursor-pointer group ${
                     activeTab === 'orders' ? 'ring-2 ring-blue-500/20 border-blue-300' : ''
                   }`}
                 >
@@ -892,7 +871,7 @@ export default function DashboardPage() {
             {activeTab === 'profile' && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Personal Information Card */}
-                <div className="md:col-span-2 p-6 sm:p-8 rounded-3xl bg-white/90 backdrop-blur-xl border border-stone-200/80 shadow-sm space-y-6">
+                <div className="md:col-span-3 p-6 sm:p-8 rounded-3xl bg-white/90 backdrop-blur-xl border border-stone-200/80 shadow-sm space-y-6">
                   <div className="flex items-center justify-between pb-4 border-b border-stone-100">
                     <div>
                       <h3 className="font-serif text-lg sm:text-xl font-bold text-[#3B1E22]">
@@ -950,50 +929,6 @@ export default function DashboardPage() {
                         {profile.placeOfBirth || 'Not specified'}
                       </p>
                     </div>
-
-                    <div className="space-y-1">
-                      <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider">Rashi / Zodiac Sign</span>
-                      <p className="text-sm font-semibold text-[#5B0D15] font-bold flex items-center gap-1.5">
-                        <Sparkles className="w-4 h-4 text-amber-600" />
-                        {profile.zodiacSign || 'Aries'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Account Security & Spiritual Status Card */}
-                <div className="p-6 sm:p-8 rounded-3xl bg-white/90 backdrop-blur-xl border border-stone-200/80 shadow-sm space-y-5">
-                  <h3 className="font-serif text-lg font-bold text-[#3B1E22] pb-3 border-b border-stone-100">
-                    Account Security
-                  </h3>
-
-                  <div className="space-y-4 text-xs">
-                    <div>
-                      <div className="text-stone-500 mb-0.5">Assigned Security Role</div>
-                      <div className="font-bold text-[#3B1E22]">{profile.role}</div>
-                    </div>
-
-                    <div>
-                      <div className="text-stone-500 mb-0.5">Account Status</div>
-                      <div className="font-bold text-emerald-700 flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                        {profile.status}
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="text-stone-500 mb-0.5">Password Security</div>
-                      <div className="text-stone-600">Encrypted with bcrypt (10 rounds)</div>
-                    </div>
-
-                    <div className="pt-2">
-                      <Link
-                        href="/appointment"
-                        className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 text-[#5B0D15] font-bold text-xs border border-amber-300/70 hover:bg-amber-100/60 transition-colors block text-center"
-                      >
-                        Book Vedic Consultation →
-                      </Link>
-                    </div>
                   </div>
                 </div>
 
@@ -1002,7 +937,7 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between pb-2.5 border-b border-stone-100">
                     <div>
                       <h3 className="font-serif text-base sm:text-lg font-bold text-[#3B1E22] flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-amber-600" />
+                        <Compass className="w-4 h-4 text-amber-600" />
                         <span>Recent Consecrated Services &amp; Sacred Orders</span>
                       </h3>
                       <p className="text-xs text-stone-500">
@@ -1163,7 +1098,7 @@ export default function DashboardPage() {
                     <div className="space-y-2 max-w-xl">
                       <div className="flex items-center gap-2">
                         <span className="px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[10px] font-bold uppercase tracking-widest">
-                          ✨ 1-on-1 Vedic Consultations
+                          1-on-1 Vedic Consultations
                         </span>
                         <span className="text-[11px] text-amber-200/80">Kashi Jyotish Parampara</span>
                       </div>
@@ -1355,8 +1290,7 @@ export default function DashboardPage() {
                         href="/appointment"
                         className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white font-bold text-sm shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                       >
-                        <Sparkles className="w-4 h-4 text-amber-300" />
-                        <span>Book Your First Consultation (₹500 Welcome Bonus)</span>
+                        <span>Book Your Sacred Consultation</span>
                         <ArrowRight className="w-4 h-4 ml-1" />
                       </Link>
                     </div>
@@ -1386,7 +1320,7 @@ export default function DashboardPage() {
                               <div className="flex items-center justify-between gap-2 flex-wrap">
                                 <div className="flex items-center gap-2">
                                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100/80 text-amber-900 border border-amber-300/70">
-                                    ✨ {booking.category || 'Vedic Astrology'}
+                                    {booking.category || 'Vedic Astrology'}
                                   </span>
                                   <span className="text-[11px] font-mono font-bold text-stone-400">
                                     #{booking.id}
@@ -1510,31 +1444,58 @@ export default function DashboardPage() {
                               </div>
 
                               <div className="flex items-center gap-2">
-                                {isConfirmed && (
-                                  <>
-                                    <a
-                                      href={booking.meetLink && booking.meetLink.includes('meet.google.com') ? booking.meetLink : formatGoogleMeetLink(booking.id)}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-900/20 hover:shadow-lg transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
-                                    >
-                                      <Video className="w-4 h-4" />
-                                      <span>Join Google Meet</span>
-                                    </a>
+                                {isConfirmed && (() => {
+                                  const meetStatus = getMeetingTimeStatus(
+                                    booking.scheduledDate,
+                                    booking.scheduledTime,
+                                    booking.durationMinutes || 30
+                                  );
+                                  const canonicalMeetLink = formatGoogleMeetLink(booking.meetLink || booking.id);
 
-                                    <a
-                                      href={`https://wa.me/919826012345?text=${encodeURIComponent(
-                                        `Hello AstroVD, regarding my consultation #${booking.id} on ${booking.scheduledDate} with ${booking.astrologerName || 'Panditji'}.`
-                                      )}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="p-2.5 rounded-full bg-stone-100 hover:bg-emerald-50 text-stone-600 hover:text-emerald-700 border border-stone-200 transition-colors"
-                                      title="WhatsApp AstroVD Support"
-                                    >
-                                      <MessageCircle className="w-4 h-4" />
-                                    </a>
-                                  </>
-                                )}
+                                  return (
+                                    <>
+                                      {meetStatus.isJoinable ? (
+                                        <a
+                                          href={canonicalMeetLink}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-900/20 hover:shadow-lg transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer animate-pulse"
+                                        >
+                                          <Video className="w-4 h-4" />
+                                          <span>Join Google Meet Now</span>
+                                        </a>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          disabled
+                                          className="px-4 py-2.5 rounded-full bg-stone-200 text-stone-500 font-bold text-xs flex items-center gap-1.5 cursor-not-allowed border border-stone-300"
+                                          title={
+                                            meetStatus.hasEnded
+                                              ? 'Consultation session has ended'
+                                              : 'Google Meet link unlocks 5 minutes before scheduled session'
+                                          }
+                                        >
+                                          <Lock className="w-3.5 h-3.5 text-stone-400" />
+                                          <span>
+                                            {meetStatus.hasEnded ? 'Session Concluded' : 'Opens 5m Before Session'}
+                                          </span>
+                                        </button>
+                                      )}
+
+                                      <a
+                                        href={`https://wa.me/919826012345?text=${encodeURIComponent(
+                                          `Hello AstroVD, regarding my consultation #${booking.id} on ${booking.scheduledDate} with ${booking.astrologerName || 'Panditji'}.`
+                                        )}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-2.5 rounded-full bg-stone-100 hover:bg-emerald-50 text-stone-600 hover:text-emerald-700 border border-stone-200 transition-colors"
+                                        title="WhatsApp AstroVD Support"
+                                      >
+                                        <MessageCircle className="w-4 h-4" />
+                                      </a>
+                                    </>
+                                  );
+                                })()}
 
                                 {isCompleted && (
                                   <>

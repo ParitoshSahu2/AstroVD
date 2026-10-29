@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   User,
@@ -9,13 +9,13 @@ import {
   MapPin,
   Phone,
   Mail,
-  Sparkles,
   CheckCircle2,
   AlertCircle,
   Loader2,
   Compass,
   Heart,
   ShieldCheck,
+  ChevronDown,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { getAuthToken } from '../lib/auth';
@@ -55,6 +55,7 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
   const [phone, setPhone] = useState('');
   const [dob, setDob] = useState('');
   const [tob, setTob] = useState('');
+  const [timePeriod, setTimePeriod] = useState<'AM' | 'PM'>('AM');
   const [isTobApprox, setIsTobApprox] = useState(false);
   const [pob, setPob] = useState('');
   const [gender, setGender] = useState<'Male' | 'Female' | 'Other'>('Male');
@@ -65,6 +66,101 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Stop Lenis smooth scroll and disable background scroll while modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      if (typeof window !== 'undefined' && (window as any).__lenis) {
+        (window as any).__lenis.stop();
+      }
+    }
+    return () => {
+      document.body.style.overflow = '';
+      if (typeof window !== 'undefined' && (window as any).__lenis) {
+        (window as any).__lenis.start();
+      }
+    };
+  }, [isOpen]);
+
+  // Handle escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleDismiss();
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  const handleContainerWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
+    if (formRef.current && e.target !== formRef.current && !formRef.current.contains(e.target as Node)) {
+      formRef.current.scrollTop += e.deltaY;
+    }
+  };
+
+  const isDummyBirthData = (val?: string | null) => {
+    if (!val) return true;
+    const lower = val.toLowerCase().trim();
+    return (
+      lower === 'india' ||
+      lower === 'new delhi, india' ||
+      lower === 'indore, madhya pradesh, india' ||
+      lower === '1998-05-10' ||
+      lower === '1996-11-14' ||
+      lower === '06:00' ||
+      lower === '07:30' ||
+      lower === '+91 98765 43210' ||
+      lower === '+919876543210' ||
+      lower === '+917089390239'
+    );
+  };
+
+  const parseTimeOfBirth = (val: string) => {
+    if (!val) return { time: '', period: 'AM' as const };
+    const upper = val.toUpperCase().trim();
+    if (upper.includes('PM')) {
+      return { time: upper.replace('PM', '').trim(), period: 'PM' as const };
+    }
+    if (upper.includes('AM')) {
+      return { time: upper.replace('AM', '').trim(), period: 'AM' as const };
+    }
+    const parts = upper.split(':');
+    if (parts.length >= 2) {
+      const h = parseInt(parts[0], 10);
+      const m = parts[1].slice(0, 2);
+      if (!isNaN(h)) {
+        if (h >= 12) {
+          const h12 = h > 12 ? h - 12 : 12;
+          return {
+            time: `${h12.toString().padStart(2, '0')}:${m}`,
+            period: 'PM' as const,
+          };
+        } else {
+          const h12 = h === 0 ? 12 : h;
+          return {
+            time: `${h12.toString().padStart(2, '0')}:${m}`,
+            period: 'AM' as const,
+          };
+        }
+      }
+    }
+    return { time: val.trim(), period: 'AM' as const };
+  };
+
+  const handleTobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/[^0-9:]/g, '');
+    if (val.length === 2 && !val.includes(':') && !tob.includes(':')) {
+      val = val + ':';
+    }
+    if (val.length > 5) val = val.slice(0, 5);
+    setTob(val);
+  };
 
   // Populate existing data when modal opens or user updates
   useEffect(() => {
@@ -73,7 +169,9 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
       setEmail(user.email || '');
       setPhone(user.phone || '');
       setDob(user.dateOfBirth || '');
-      setTob(user.timeOfBirth || '');
+      const parsedTob = parseTimeOfBirth(user.timeOfBirth || '');
+      setTob(parsedTob.time);
+      setTimePeriod(parsedTob.period);
       setPob(user.placeOfBirth || '');
       setGender((user.gender as any) || 'Male');
       setZodiacSign(user.zodiacSign || 'Aries');
@@ -123,7 +221,7 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
       const payload = {
         name: name.trim(),
         dateOfBirth: dob,
-        timeOfBirth: isTobApprox ? '12:00 (Approx)' : tob,
+        timeOfBirth: isTobApprox ? '12:00 (Approx)' : (tob.trim() ? (tob.includes('AM') || tob.includes('PM') ? tob.trim() : `${tob.trim()} ${timePeriod}`) : ''),
         placeOfBirth: pob.trim(),
         zodiacSign,
         gender,
@@ -201,9 +299,15 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
+    <div
+      data-lenis-prevent="true"
+      className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200"
+      onClick={handleDismiss}
+    >
       <div
-        className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl border border-amber-300/80 flex flex-col"
+        data-lenis-prevent="true"
+        onWheel={handleContainerWheel}
+        className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl bg-white shadow-2xl border border-amber-300/80 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Decorative Sacred Header */}
@@ -216,7 +320,7 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
           <div className="flex items-start justify-between relative z-10">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-200 text-[11px] font-bold tracking-wider uppercase mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <Compass className="w-3.5 h-3.5 text-amber-300" />
                 <span>{t('Vedic Janam Kundli Setup', 'वैदिक जन्म कुंडली सेटअप')}</span>
               </div>
               <h2 className="font-serif text-xl sm:text-2xl font-bold tracking-wide">
@@ -242,7 +346,13 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-5 sm:p-7 space-y-5 flex-1 overflow-y-auto">
+        <form
+          ref={formRef}
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          onSubmit={handleSubmit}
+          className="p-5 sm:p-7 space-y-4 flex-1 min-h-0 overflow-y-auto overscroll-contain modal-scrollbar pr-3 sm:pr-5"
+        >
           {error && (
             <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs sm:text-sm flex items-start gap-2.5">
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
@@ -257,222 +367,258 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
             </div>
           )}
 
-          {/* Section 1: Basic Identity */}
-          <div className="space-y-3.5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-amber-900 border-b border-amber-100 pb-1 flex items-center gap-1.5">
-              <span>✦</span> {t('Personal Details', 'व्यक्तिगत विवरण')}
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {/* Name */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  {t('Full Name', 'पूरा नाम')} <span className="text-rose-600">*</span>
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Paritosh Sahu"
-                    className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-hidden bg-stone-50/50"
-                  />
-                </div>
-              </div>
-
-              {/* Gender */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  {t('Gender', 'लिंग')} <span className="text-rose-600">*</span>
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['Male', 'Female', 'Other'] as const).map((g) => (
-                    <button
-                      key={g}
-                      type="button"
-                      onClick={() => setGender(g)}
-                      className={`py-2 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
-                        gender === g
-                          ? 'bg-[#5B0D15] text-white border-[#5B0D15] shadow-xs'
-                          : 'bg-white border-stone-200 text-stone-700 hover:bg-stone-50'
-                      }`}
-                    >
-                      {g === 'Male' ? t('Male', 'पुरुष') : g === 'Female' ? t('Female', 'महिला') : t('Other', 'अन्य')}
-                    </button>
-                  ))}
-                </div>
-              </div>
+          {/* Row 1: Full Name & Gender */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Full Name */}
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                {t('Full Name', 'पूरा नाम')} <span className="text-rose-600">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t('Full Name', 'पूरा नाम')}
+                className="w-full h-[46px] px-3.5 text-xs sm:text-sm rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-hidden bg-white text-stone-800 placeholder-stone-400 transition-all"
+              />
             </div>
 
-            {/* Contact Row: WhatsApp + Email */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {/* WhatsApp Phone */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  {t('WhatsApp / Mobile Number', 'व्हाट्सएप / मोबाइल नंबर')} <span className="text-rose-600">*</span>
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-600" />
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-stone-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-hidden bg-stone-50/50 font-mono"
-                  />
-                </div>
-                <p className="text-[10px] text-stone-500 mt-0.5">
-                  {t('Consultation call links & Kundli PDFs are shared here', 'परामर्श लिंक व कुंडली इसी नंबर पर भेजी जाती है')}
-                </p>
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  {t('Email Address', 'ईमेल पता')} <span className="text-stone-400 font-normal">({t('Optional', 'वैकल्पिक')})</span>
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="user@example.com"
-                    className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-hidden bg-stone-50/50"
-                  />
-                </div>
+            {/* Gender */}
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                {t('Gender', 'लिंग')} <span className="text-rose-600">*</span>
+              </label>
+              <div className="w-full h-[46px] px-4 flex items-center gap-6 rounded-xl border border-stone-200 bg-white">
+                {(['Male', 'Female'] as const).map((g) => (
+                  <label
+                    key={g}
+                    className="inline-flex items-center gap-2 cursor-pointer text-xs sm:text-sm font-medium text-stone-700 hover:text-stone-900 select-none"
+                  >
+                    <input
+                      type="radio"
+                      name="gender"
+                      value={g}
+                      checked={gender === g}
+                      onChange={() => setGender(g)}
+                      className="w-4 h-4 border-stone-300 text-[#5B0D15] focus:ring-[#5B0D15] accent-[#5B0D15] cursor-pointer"
+                    />
+                    <span>{g === 'Male' ? t('Male', 'पुरुष') : t('Female', 'महिला')}</span>
+                  </label>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Section 2: Vedic Astrological Birth Coordinates */}
-          <div className="space-y-3.5 pt-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-amber-900 border-b border-amber-100 pb-1 flex items-center gap-1.5">
-              <span>✦</span> {t('Birth Coordinates (Kundli Essentials)', 'जन्म विवरण (कुंडली निर्माण हेतु अनिवार्य)')}
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {/* DOB */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  {t('Date of Birth', 'जन्म तिथि')} <span className="text-rose-600">*</span>
-                </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-600" />
-                  <input
-                    type="date"
-                    required
-                    value={dob}
-                    onChange={(e) => setDob(e.target.value)}
-                    className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-hidden bg-stone-50/50 font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* TOB */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-semibold text-stone-700">
-                    {t('Time of Birth', 'जन्म समय')} <span className="text-rose-600">*</span>
-                  </label>
-                  <label className="text-[11px] text-stone-500 flex items-center gap-1 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isTobApprox}
-                      onChange={(e) => setIsTobApprox(e.target.checked)}
-                      className="rounded-sm border-stone-300 text-amber-600 focus:ring-amber-400"
-                    />
-                    <span>{t('Approximate time', 'अनुमानित समय')}</span>
-                  </label>
-                </div>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-600" />
-                  <input
-                    type="time"
-                    disabled={isTobApprox}
-                    value={tob}
-                    onChange={(e) => setTob(e.target.value)}
-                    className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-hidden bg-stone-50/50 font-mono disabled:opacity-50"
-                  />
-                </div>
-              </div>
-            </div>
-
+          {/* Row 2: Place of Birth & WhatsApp Number */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Place of Birth */}
             <div>
-              <label className="block text-xs font-semibold text-stone-700 mb-1">
-                {t('Place of Birth (City, State, Country)', 'जन्म स्थान (शहर, राज्य, देश)')} <span className="text-rose-600">*</span>
+              <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                {t('Place of Birth', 'जन्म स्थान')} <span className="text-rose-600">*</span>
               </label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-600" />
+              <input
+                type="text"
+                required
+                value={pob}
+                onChange={(e) => setPob(e.target.value)}
+                placeholder={t('Search and select place of birth', 'जन्म स्थान खोजें व चुनें')}
+                className="w-full h-[46px] px-3.5 text-xs sm:text-sm rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-hidden bg-white text-stone-800 placeholder-stone-400 transition-all"
+              />
+            </div>
+
+            {/* WhatsApp Number */}
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                {t('WhatsApp Number', 'व्हाट्सएप नंबर')} <span className="text-rose-600">*</span>
+              </label>
+              <div className="relative flex items-center h-[46px] rounded-xl border border-stone-200 bg-white overflow-hidden focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-200 transition-all">
+                <div className="flex items-center gap-1 px-3 text-xs sm:text-sm text-stone-700 font-medium border-r border-stone-200 shrink-0 bg-stone-50/60 h-full select-none">
+                  <span>🇮🇳</span>
+                  <span>+91</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-stone-400 ml-0.5" />
+                </div>
                 <input
-                  type="text"
-                  required
-                  value={pob}
-                  onChange={(e) => setPob(e.target.value)}
-                  placeholder="e.g. Varanasi, Uttar Pradesh, India"
-                  className="w-full pl-9 pr-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-hidden bg-stone-50/50"
+                  type="tel"
+                  value={phone.replace(/^\+91\s*/, '')}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    setPhone(raw ? `+91 ${raw}` : '');
+                  }}
+                  placeholder={t('WhatsApp Number', 'व्हाट्सएप नंबर')}
+                  className="w-full h-full px-3 text-xs sm:text-sm outline-hidden text-stone-800 placeholder-stone-400 bg-transparent"
                 />
               </div>
-              <p className="text-[10px] text-stone-500 mt-0.5">
-                {t('Required for precise latitude/longitude planetary calculations', 'अक्षांश एवं देशांतर द्वारा सटीक लग्न निर्धारण हेतु आवश्यक')}
+              <p className="text-[11px] text-amber-900/80 italic mt-1 font-serif">
+                {t('Your Report will be sent on this number', 'आपकी रिपोर्ट इसी नंबर पर भेजी जाएगी')}
               </p>
             </div>
+          </div>
 
-            {/* Zodiac Sign & Gotra */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {/* Zodiac / Moon Sign */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  {t('Zodiac / Moon Sign (Rashi)', 'राशि / चंद्र राशि')}
-                </label>
-                <select
-                  value={zodiacSign}
-                  onChange={(e) => setZodiacSign(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-hidden bg-stone-50/50"
-                >
-                  {ZODIAC_SIGNS.map((z) => (
-                    <option key={z.value} value={z.value}>
-                      {z.labelEn}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Gotra */}
-              <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  {t('Gotra (Lineage)', 'गोत्र')} <span className="text-stone-400 font-normal">({t('Optional', 'वैकल्पिक')})</span>
-                </label>
+          {/* Row 3: Date of Birth & Time of Birth */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Date of Birth */}
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                {t('Date of Birth', 'जन्म तिथि')} <span className="text-rose-600">*</span>
+              </label>
+              <div className="relative flex items-center h-[46px] rounded-xl border border-stone-200 bg-white focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-200 transition-all">
                 <input
-                  type="text"
-                  value={gotra}
-                  onChange={(e) => setGotra(e.target.value)}
-                  placeholder="e.g. Kashyap, Bhardwaj"
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-hidden bg-stone-50/50"
+                  type="date"
+                  required
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  className="w-full h-full px-3.5 text-xs sm:text-sm text-stone-800 outline-hidden bg-transparent rounded-xl"
                 />
               </div>
             </div>
 
-            {/* Primary Guidance Area */}
+            {/* Time of Birth */}
             <div>
-              <label className="block text-xs font-semibold text-stone-700 mb-1">
-                {t('Primary Guidance Focus', 'परामर्श का मुख्य विषय')}
+              <div className="flex items-center gap-1 mb-1.5">
+                <label className="text-xs font-semibold text-stone-700">
+                  {t('Time of Birth', 'जन्म समय')}
+                </label>
+                <span
+                  className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-stone-300 text-[10px] text-stone-600 font-bold cursor-help"
+                  title={t('Accurate time is essential for Lagna chart calculation', 'सटीक लग्न निर्धारण हेतु आवश्यक')}
+                >
+                  i
+                </span>
+                <span className="text-rose-600 text-xs">*</span>
+              </div>
+              <div className="relative flex items-center justify-between h-[46px] px-3.5 rounded-xl border border-stone-200 bg-white focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-200 transition-all">
+                <input
+                  type="text"
+                  disabled={isTobApprox}
+                  value={tob}
+                  onChange={handleTobChange}
+                  placeholder="HH : MM"
+                  className="w-full h-full text-xs sm:text-sm text-stone-800 outline-hidden bg-transparent placeholder-stone-400 disabled:opacity-50 font-mono tracking-wider"
+                />
+                <div className="flex items-center gap-1 shrink-0 ml-2">
+                  <button
+                    type="button"
+                    disabled={isTobApprox}
+                    onClick={() => setTimePeriod('AM')}
+                    className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                      timePeriod === 'AM'
+                        ? 'bg-[#FFF6E9] border-amber-400 text-amber-900 shadow-2xs'
+                        : 'bg-stone-50 border-stone-200 text-stone-500 hover:text-stone-800 hover:bg-stone-100'
+                    }`}
+                  >
+                    AM
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isTobApprox}
+                    onClick={() => setTimePeriod('PM')}
+                    className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                      timePeriod === 'PM'
+                        ? 'bg-[#FFF6E9] border-amber-400 text-amber-900 shadow-2xs'
+                        : 'bg-stone-50 border-stone-200 text-stone-500 hover:text-stone-800 hover:bg-stone-100'
+                    }`}
+                  >
+                    PM
+                  </button>
+                </div>
+              </div>
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <input
+                  type="checkbox"
+                  id="approxTimeCheckbox"
+                  checked={isTobApprox}
+                  onChange={(e) => setIsTobApprox(e.target.checked)}
+                  className="w-4 h-4 rounded-sm border-stone-300 text-[#5B0D15] focus:ring-[#5B0D15] accent-[#5B0D15] cursor-pointer"
+                />
+                <label
+                  htmlFor="approxTimeCheckbox"
+                  className="text-xs text-stone-600 cursor-pointer select-none"
+                >
+                  {t("I don’t know accurate time", "मुझे सटीक समय ज्ञात नहीं है")}
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 4: Email Address (Full Width) */}
+          <div>
+            <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+              {t('Email Address', 'ईमेल पता')}
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="email@example.com"
+              className="w-full h-[46px] px-3.5 text-xs sm:text-sm rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-hidden bg-white text-stone-800 placeholder-stone-400 transition-all"
+            />
+          </div>
+
+          {/* Row 5: Vedic Rashi & Gotra */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Zodiac / Moon Sign */}
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                {t('Zodiac / Moon Sign (Rashi)', 'राशि / चंद्र राशि')}
               </label>
               <select
-                value={primaryQuery}
-                onChange={(e) => setPrimaryQuery(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-hidden bg-stone-50/50"
+                value={zodiacSign}
+                onChange={(e) => setZodiacSign(e.target.value)}
+                className="w-full h-[46px] px-3.5 text-xs sm:text-sm rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-hidden bg-white text-stone-800 transition-all"
               >
-                <option value="Career & Wealth">{t('Career, Business & Wealth (करियर व धन लाभ)', 'Career, Business & Wealth (करियर व धन लाभ)')}</option>
-                <option value="Marriage & Love">{t('Marriage, Match Making & Love (विवाह व प्रेम संबंध)', 'Marriage, Match Making & Love (विवाह व प्रेम संबंध)')}</option>
-                <option value="Health & Longevity">{t('Health, Healing & Protection (स्वास्थ्य व दीर्घायु)', 'Health, Healing & Protection (स्वास्थ्य व दीर्घायु)')}</option>
-                <option value="Family & Children">{t('Family Peace & Children (संतान व गृह शांति)', 'Family Peace & Children (संतान व गृह शांति)')}</option>
-                <option value="Spiritual & Moksha">{t('Spiritual Growth & Kundli Dosh (आध्यात्मिक व दोष निवारण)', 'Spiritual Growth & Kundli Dosh (आध्यात्मिक व दोष निवारण)')}</option>
+                {ZODIAC_SIGNS.map((z) => (
+                  <option key={z.value} value={z.value}>
+                    {z.labelEn}
+                  </option>
+                ))}
               </select>
             </div>
+
+            {/* Gotra */}
+            <div>
+              <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+                {t('Gotra (Lineage)', 'गोत्र')}{' '}
+                <span className="text-stone-400 font-normal">
+                  ({t('Optional', 'वैकल्पिक')})
+                </span>
+              </label>
+              <input
+                type="text"
+                value={gotra}
+                onChange={(e) => setGotra(e.target.value)}
+                placeholder="e.g. Kashyap, Bhardwaj"
+                className="w-full h-[46px] px-3.5 text-xs sm:text-sm rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-hidden bg-white text-stone-800 placeholder-stone-400 transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Row 6: Primary Guidance Focus */}
+          <div>
+            <label className="block text-xs font-semibold text-stone-700 mb-1.5">
+              {t('Primary Guidance Focus', 'परामर्श का मुख्य विषय')}
+            </label>
+            <select
+              value={primaryQuery}
+              onChange={(e) => setPrimaryQuery(e.target.value)}
+              className="w-full h-[46px] px-3.5 text-xs sm:text-sm rounded-xl border border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-hidden bg-white text-stone-800 transition-all"
+            >
+              <option value="Career & Wealth">
+                {t('Career, Business & Wealth (करियर व धन लाभ)', 'Career, Business & Wealth (करियर व धन लाभ)')}
+              </option>
+              <option value="Marriage & Love">
+                {t('Marriage, Match Making & Love (विवाह व प्रेम संबंध)', 'Marriage, Match Making & Love (विवाह व प्रेम संबंध)')}
+              </option>
+              <option value="Health & Longevity">
+                {t('Health, Healing & Protection (स्वास्थ्य व दीर्घायु)', 'Health, Healing & Protection (स्वास्थ्य व दीर्घायु)')}
+              </option>
+              <option value="Family & Children">
+                {t('Family Peace & Children (संतान व गृह शांति)', 'Family Peace & Children (संतान व गृह शांति)')}
+              </option>
+              <option value="Spiritual & Moksha">
+                {t('Spiritual Growth & Kundli Dosh (आध्यात्मिक व दोष निवारण)', 'Spiritual Growth & Kundli Dosh (आध्यात्मिक व दोष निवारण)')}
+              </option>
+            </select>
           </div>
 
           {/* Privacy Note */}
@@ -508,7 +654,7 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4 text-amber-300" />
+                  
                   <span>{t('Save & Unlock Janam Kundli', 'सहेजें व कुंडली अनलॉक करें')}</span>
                 </>
               )}

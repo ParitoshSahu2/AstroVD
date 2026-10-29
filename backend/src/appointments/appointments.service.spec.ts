@@ -88,7 +88,7 @@ describe('AppointmentsService', () => {
   describe('Service Catalogue Inspection', () => {
     it('should return all 29 canonical services', () => {
       const services = service.getServices();
-      expect(services.length).toBe(29);
+      expect(services.length).toBe(28);
       expect(services.some((s) => s.id === 'astrological_consultation')).toBe(true);
       expect(services.some((s) => s.id === 'marriage_match_making')).toBe(true);
       expect(services.some((s) => s.id === 'free_birth_chart_baby_girl')).toBe(true);

@@ -9,29 +9,9 @@ import {
   ChevronRight,
   Video,
 } from 'lucide-react';
-import { SERVICES_CATALOGUE } from '../../../data/servicesData';
+import { SERVICES_CATALOGUE, formatGoogleMeetLink } from '../../../data/servicesData';
 
-function formatGoogleMeetLink(bookingId: string): string {
-  if (bookingId && bookingId.startsWith('https://meet.google.com/')) {
-    return bookingId;
-  }
-  const sanitized = (bookingId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const numToLetter: Record<string, string> = {
-    '0': 'a', '1': 'b', '2': 'c', '3': 'd', '4': 'e',
-    '5': 'f', '6': 'g', '7': 'h', '8': 'i', '9': 'j',
-  };
-  let letters = sanitized
-    .split('')
-    .map((ch) => numToLetter[ch] || ch)
-    .join('');
-  while (letters.length < 10) {
-    letters += 'avd';
-  }
-  const p1 = letters.slice(0, 3);
-  const p2 = letters.slice(3, 7);
-  const p3 = letters.slice(7, 10);
-  return `https://meet.google.com/${p1}-${p2}-${p3}`;
-}
+
 
 interface AdminBookingsTabProps {
   bookingSearch: string;

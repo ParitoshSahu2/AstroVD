@@ -61,6 +61,10 @@ export const Navbar: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
 
+  // Profile completion reminders and ribbons are strictly reserved for normal seekers (USER) - never ADMIN or SUPERADMIN
+  const isNormalSeeker = user && user.role !== 'ADMIN' && user.role !== 'SUPERADMIN';
+  const isProfileIncomplete = isNormalSeeker && (!user.dateOfBirth || !user.placeOfBirth || !user.timeOfBirth);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -171,8 +175,9 @@ export const Navbar: React.FC = () => {
     const handleAuthEvent = (e: any) => {
       syncUser();
       const eventUser = e?.detail?.user || JSON.parse(localStorage.getItem('astro_user') || 'null');
+      const isSeeker = eventUser && eventUser.role !== 'ADMIN' && eventUser.role !== 'SUPERADMIN';
       if (
-        eventUser &&
+        isSeeker &&
         (!eventUser.dateOfBirth || !eventUser.placeOfBirth || !eventUser.timeOfBirth)
       ) {
         setTimeout(() => setProfileModalOpen(true), 400);
@@ -181,13 +186,14 @@ export const Navbar: React.FC = () => {
 
     syncUser();
 
-    // Check on mount if user is logged in with incomplete profile
+    // Check on mount if normal seeker is logged in with incomplete profile (never for admin)
     const savedUser = localStorage.getItem('astro_user');
     if (savedUser) {
       try {
         const u = JSON.parse(savedUser);
-        if (u && (!u.dateOfBirth || !u.placeOfBirth || !u.timeOfBirth)) {
-          // Open reminder popup on session start
+        const isSeeker = u && u.role !== 'ADMIN' && u.role !== 'SUPERADMIN';
+        if (isSeeker && (!u.dateOfBirth || !u.placeOfBirth || !u.timeOfBirth)) {
+          // Open reminder popup on session start only for normal seekers
           setTimeout(() => setProfileModalOpen(true), 1200);
         }
       } catch (err) {}
@@ -725,7 +731,7 @@ export const Navbar: React.FC = () => {
                           {t('Notifications', 'सूचनाएं')}
                         </span>
                         <span className="px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">
-                          3 new
+                          {isProfileIncomplete ? '3 new' : '2 new'}
                         </span>
                       </div>
                       <button
@@ -737,8 +743,8 @@ export const Navbar: React.FC = () => {
                     </div>
 
                     <div className="py-2 space-y-2 max-h-72 overflow-y-auto">
-                      {/* Actionable Profile Incomplete Notification Card */}
-                      {(!user?.dateOfBirth || !user?.placeOfBirth || !user?.timeOfBirth) && (
+                      {/* Actionable Profile Incomplete Notification Card (Normal Seekers only) */}
+                      {isProfileIncomplete && (
                         <div
                           onClick={() => {
                             setNotificationOpen(false);
@@ -766,19 +772,6 @@ export const Navbar: React.FC = () => {
                           </span>
                         </div>
                       )}
-                      <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-200/70 text-xs">
-                        <div className="flex items-center justify-between font-bold text-[#5B0D15] mb-1">
-                          <span>🪙 {t('Spiritual Welcome Bonus', 'स्वागत बोनस')}</span>
-                          <span className="text-[10px] text-stone-400 font-normal">Just now</span>
-                        </div>
-                        <p className="text-[11px] text-stone-600 leading-snug">
-                          {t(
-                            '150 spiritual credits were added to your Astro Wallet for consultations.',
-                            'परामर्श हेतु आपके वॉलेट में 150 क्रेडिट जोड़े गए हैं।'
-                          )}
-                        </p>
-                      </div>
-
                       <div className="p-2.5 rounded-xl hover:bg-stone-50 border border-transparent hover:border-stone-200 transition-colors text-xs">
                         <div className="flex items-center justify-between font-semibold text-stone-800 mb-1">
                           <span>🪐 {t('Planetary Transit Alert', 'ग्रह गोचर सूचना')}</span>
@@ -1160,8 +1153,8 @@ export const Navbar: React.FC = () => {
         </div>
       </header>
 
-      {/* Top Persistent Reminder Ribbon when profile is incomplete */}
-      {mounted && user && (!user.dateOfBirth || !user.placeOfBirth || !user.timeOfBirth) && (
+      {/* Top Persistent Reminder Ribbon when profile is incomplete (Normal Seekers only - never ADMIN) */}
+      {mounted && isProfileIncomplete && (
         <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-[#5B0D15] via-[#851622] to-[#5B0D15] text-white text-xs py-2 px-4 shadow-md border-b border-amber-400/40">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 w-full">
             <div className="flex items-center gap-2">
@@ -1197,7 +1190,8 @@ export const Navbar: React.FC = () => {
         onClose={() => setAuthModalOpen(false)}
         onLoginSuccess={(userData) => {
           setUser(userData);
-          if (!userData?.dateOfBirth || !userData?.placeOfBirth || !userData?.timeOfBirth) {
+          const isSeeker = userData && userData.role !== 'ADMIN' && userData.role !== 'SUPERADMIN';
+          if (isSeeker && (!userData?.dateOfBirth || !userData?.placeOfBirth || !userData?.timeOfBirth)) {
             setTimeout(() => setProfileModalOpen(true), 400);
           }
         }}
