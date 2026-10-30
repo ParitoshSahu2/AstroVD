@@ -8,14 +8,14 @@ import { useLanguage } from '../context/LanguageContext';
 interface PageHeaderProps {
   breadcrumb: string;
   title: string;
-  subtitle: string;
+  subtitle?: string;
   compact?: boolean;
 }
 
 export const PageHeader: React.FC<PageHeaderProps> = ({
   breadcrumb,
   title,
-  subtitle,
+  subtitle = '',
   compact = false,
 }) => {
   const { t } = useLanguage();
@@ -53,9 +53,11 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         </h1>
 
         {/* Subtitle */}
-        <p className="text-stone-300 text-xs sm:text-sm lg:text-[15px] max-w-3xl leading-relaxed">
-          {subtitle}
-        </p>
+        {subtitle ? (
+          <p className="text-stone-300 text-xs sm:text-sm lg:text-[15px] max-w-3xl leading-relaxed">
+            {subtitle}
+          </p>
+        ) : null}
 
       </div>
     </div>

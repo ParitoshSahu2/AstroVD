@@ -25,7 +25,6 @@ import {
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 const AuthModal = dynamic(() => import('./AuthModal').then((mod) => mod.AuthModal), { ssr: false });
-import { CompleteProfileModal } from './CompleteProfileModal';
 import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
 import { performLogout } from '../lib/auth';
@@ -46,14 +45,12 @@ export const Navbar: React.FC = () => {
     liveCartCount = 0;
   }
 
-  const [visible, setVisible] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileSearchQuery, setMobileSearchQuery] = useState('');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
-  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
@@ -71,12 +68,10 @@ export const Navbar: React.FC = () => {
   const searchRef = useRef<HTMLDivElement>(null);
   const aboutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Scroll visibility & glassmorphic state
+  // Scroll glassmorphic state - navbar stays permanently visible at the top during scroll
   useEffect(() => {
-    let lastScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
     let ticking = false;
-    let prevScrolled = lastScrollY > 20;
-    let prevVisible = true;
+    let prevScrolled = typeof window !== 'undefined' ? window.scrollY > 20 : false;
 
     const handleScroll = () => {
       if (!ticking) {
@@ -88,21 +83,6 @@ export const Navbar: React.FC = () => {
             prevScrolled = nextScrolled;
             setScrolled(nextScrolled);
           }
-
-          let nextVisible = prevVisible;
-          if (currentScrollY < 40) {
-            nextVisible = true;
-          } else if (currentScrollY > lastScrollY + 12) {
-            nextVisible = false;
-          } else if (currentScrollY < lastScrollY - 10) {
-            nextVisible = true;
-          }
-
-          if (nextVisible !== prevVisible) {
-            prevVisible = nextVisible;
-            setVisible(nextVisible);
-          }
-          lastScrollY = currentScrollY;
           ticking = false;
         });
         ticking = true;
@@ -113,9 +93,9 @@ export const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Speculatively warm up primary navigation routes during browser idle time for instant transitions
+  // Warm up primary navigation routes immediately for instantaneous millisecond transitions
   useEffect(() => {
-    const warmRoutes = ['/services', '/products', '/appointment', '/blog', '/gallery', '/about', '/contact'];
+    const warmRoutes = ['/services', '/products', '/appointment', '/blog', '/gallery', '/about', '/contact', '/cart'];
     const timer = setTimeout(() => {
       warmRoutes.forEach((route) => {
         try {
@@ -124,7 +104,7 @@ export const Navbar: React.FC = () => {
           // ignore
         }
       });
-    }, 1000);
+    }, 50);
     return () => clearTimeout(timer);
   }, [router]);
 
@@ -170,28 +150,9 @@ export const Navbar: React.FC = () => {
 
     const handleAuthEvent = (e: any) => {
       syncUser();
-      const eventUser = e?.detail?.user || JSON.parse(localStorage.getItem('astro_user') || 'null');
-      if (
-        eventUser &&
-        (!eventUser.dateOfBirth || !eventUser.placeOfBirth || !eventUser.timeOfBirth)
-      ) {
-        setTimeout(() => setProfileModalOpen(true), 400);
-      }
     };
 
     syncUser();
-
-    // Check on mount if user is logged in with incomplete profile
-    const savedUser = localStorage.getItem('astro_user');
-    if (savedUser) {
-      try {
-        const u = JSON.parse(savedUser);
-        if (u && (!u.dateOfBirth || !u.placeOfBirth || !u.timeOfBirth)) {
-          // Open reminder popup on session start
-          setTimeout(() => setProfileModalOpen(true), 1200);
-        }
-      } catch (err) {}
-    }
 
     window.addEventListener('astro-auth-change', handleAuthEvent);
     window.addEventListener('storage', syncUser);
@@ -374,9 +335,7 @@ export const Navbar: React.FC = () => {
   return (
     <>
       <header
-        className={`fixed top-3 sm:top-5 left-0 right-0 z-50 flex justify-center px-3 sm:px-6 md:px-8 pointer-events-none transition-all duration-300 transform ${
-          visible ? 'translate-y-0 opacity-100' : '-translate-y-28 opacity-0 pointer-events-none'
-        }`}
+        className="fixed top-3 sm:top-5 left-0 right-0 z-50 flex justify-center px-3 sm:px-6 md:px-8 pointer-events-none transition-all duration-300 transform translate-y-0 opacity-100"
       >
         <div className="w-full max-w-6xl pointer-events-auto">
           {/* Glassmorphic Capsule Nav Bar */}
@@ -678,16 +637,16 @@ export const Navbar: React.FC = () => {
               {/* Hindi / English Language Pill */}
               <button
                 onClick={toggleLanguage}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50/40 hover:bg-amber-50/80 text-xs font-bold border border-amber-300/90 text-[#3B1E22] hover:text-[#5B0D15] shadow-xs hover:shadow-sm transition-all duration-200 cursor-pointer active:scale-95"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-xs border border-stone-200/90 hover:border-amber-300/80 text-stone-600 hover:text-[#5B0D15] shadow-2xs transition-all duration-200 cursor-pointer active:scale-95"
                 title={language === 'en' ? 'हिन्दी में पढ़ें' : 'Read in English'}
                 aria-label="Toggle Language"
               >
-                <Globe className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                <span className={language === 'en' ? 'text-[#800000] font-black' : 'text-stone-400 font-medium'}>
+                <Globe className="w-3.5 h-3.5 text-stone-400 shrink-0 stroke-[1.5]" />
+                <span className={language === 'en' ? 'text-[#800000] font-semibold' : 'text-stone-400 font-normal'}>
                   EN
                 </span>
-                <span className="text-amber-400 text-[10px]">/</span>
-                <span className={language === 'hi' ? 'text-[#800000] font-black' : 'text-stone-400 font-medium'}>
+                <span className="text-stone-300 text-[10px] font-light select-none">/</span>
+                <span className={language === 'hi' ? 'text-[#800000] font-semibold' : 'text-stone-400 font-normal'}>
                   हिन्दी
                 </span>
               </button>
@@ -737,35 +696,6 @@ export const Navbar: React.FC = () => {
                     </div>
 
                     <div className="py-2 space-y-2 max-h-72 overflow-y-auto">
-                      {/* Actionable Profile Incomplete Notification Card */}
-                      {(!user?.dateOfBirth || !user?.placeOfBirth || !user?.timeOfBirth) && (
-                        <div
-                          onClick={() => {
-                            setNotificationOpen(false);
-                            setProfileModalOpen(true);
-                          }}
-                          className="p-3 rounded-xl bg-gradient-to-r from-amber-100/90 via-rose-50 to-amber-50 border border-amber-300 text-xs cursor-pointer hover:shadow-md transition-all group"
-                        >
-                          <div className="flex items-center justify-between font-bold text-[#800000] mb-1">
-                            <span className="flex items-center gap-1.5">
-                              
-                              {t('Complete Your Kundli Profile', 'जन्म विवरण पूर्ण करें')}
-                            </span>
-                            <span className="text-[9px] text-rose-700 bg-rose-100 border border-rose-200 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                              {t('Action Needed', 'अनिवार्य')}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-stone-700 leading-snug">
-                            {t(
-                              'Add your Date, Time, and Place of birth for accurate Janam Kundli and planetary predictions.',
-                              'सटीक जन्म कुंडली एवं दशा फल हेतु जन्म समय, तिथि व स्थान दर्ज करें।'
-                            )}
-                          </p>
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#800000] group-hover:underline mt-1.5">
-                            {t('Complete Profile Now →', 'अभी प्रोफाइल पूर्ण करें →')}
-                          </span>
-                        </div>
-                      )}
                       <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-200/70 text-xs">
                         <div className="flex items-center justify-between font-bold text-[#5B0D15] mb-1">
                           <span>🪙 {t('Spiritual Welcome Bonus', 'स्वागत बोनस')}</span>
@@ -878,26 +808,26 @@ export const Navbar: React.FC = () => {
                       }}
                     >
                       {/* Identity Card */}
-                      <div className="flex items-center gap-3 p-2.5 bg-gradient-to-r from-amber-50/80 via-rose-50/40 to-amber-50/50 rounded-xl border border-amber-200/60 mb-2.5">
+                      <div className="flex items-center gap-3 p-3 bg-stone-50/80 rounded-xl border border-stone-200/80 mb-2">
                         <div
                           className={`w-10 h-10 rounded-full ${getAvatarBackground(
                             user.role
-                          )} font-bold flex items-center justify-center shadow-sm border ring-2 shrink-0 ${
+                          )} font-semibold flex items-center justify-center shadow-2xs border border-white/80 ring-1 ring-stone-200 shrink-0 ${
                             getInitials(user.name).length > 1
                               ? 'text-xs tracking-tight'
-                              : 'text-sm font-extrabold'
+                              : 'text-sm font-bold'
                           }`}
                         >
                           {getInitials(user.name)}
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold text-[#3B1E22] truncate">{user.name}</span>
-                            <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-300/70 uppercase tracking-wider">
-                              {user.role || 'Member'}
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <div className="flex items-center justify-between gap-1.5">
+                            <span className="text-xs font-semibold text-stone-900 truncate tracking-tight">{user.name}</span>
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-amber-50 text-amber-900 border border-amber-200/80 uppercase tracking-wider shrink-0">
+                              {user.role === 'ADMIN' ? 'Admin' : user.role === 'SUPERADMIN' ? 'Superadmin' : (user.role || 'Member')}
                             </span>
                           </div>
-                          <p className="text-[11px] text-stone-500 truncate">{user.email}</p>
+                          <p className="text-[11px] text-stone-500 font-normal truncate">{user.email}</p>
                         </div>
                       </div>
 
@@ -909,10 +839,10 @@ export const Navbar: React.FC = () => {
                             href="/admin"
                             prefetch={true}
                             onClick={() => setProfileDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-purple-50 text-purple-900 border border-purple-200 font-bold hover:bg-purple-100 transition-colors mb-1"
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#5B0D15]/5 hover:bg-[#5B0D15]/10 text-[#5B0D15] border border-[#5B0D15]/15 font-semibold text-xs transition-colors mb-1.5"
                           >
-                            <ShieldCheck className="w-4 h-4 text-purple-700" />
-                            <span>👑 Admin Control Panel</span>
+                            <ShieldCheck className="w-4 h-4 text-[#5B0D15] shrink-0" />
+                            <span>Admin Control Panel</span>
                           </Link>
                         )}
                         {user.role !== 'ADMIN' && user.role !== 'SUPERADMIN' && (
@@ -1103,31 +1033,36 @@ export const Navbar: React.FC = () => {
 
               {mounted && user ? (
                 <div className="pt-2 border-t border-stone-200 space-y-2">
-                  <div className="flex items-center gap-3 p-2.5 bg-white/70 rounded-2xl border border-amber-200/60">
+                  <div className="flex items-center gap-3 p-3 bg-stone-50/80 rounded-xl border border-stone-200/80">
                     <div
                       className={`w-9 h-9 rounded-full ${getAvatarBackground(
                         user.role
-                      )} font-bold flex items-center justify-center shrink-0 border ring-2 ${
+                      )} font-semibold flex items-center justify-center shrink-0 border border-white/80 ring-1 ring-stone-200 ${
                         getInitials(user.name).length > 1
                           ? 'text-[10px] tracking-tight'
-                          : 'text-xs font-extrabold'
+                          : 'text-xs font-bold'
                       }`}
                     >
                       {getInitials(user.name)}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs font-bold text-[#3B1E22] truncate">{user.name}</div>
-                      <div className="text-[11px] text-stone-500 font-medium truncate">{user.email || 'Verified Seeker'}</div>
+                    <div className="min-w-0 flex-1 space-y-0.5">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="text-xs font-semibold text-stone-900 truncate tracking-tight">{user.name}</span>
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-amber-50 text-amber-900 border border-amber-200/80 uppercase tracking-wider shrink-0">
+                          {user.role === 'ADMIN' ? 'Admin' : user.role === 'SUPERADMIN' ? 'Superadmin' : (user.role || 'Member')}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-stone-500 font-normal truncate">{user.email || 'Verified Seeker'}</div>
                     </div>
                   </div>
                   {(user.role === 'ADMIN' || user.role === 'SUPERADMIN') && (
                     <Link
                       href="/admin"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="w-full py-2.5 px-4 rounded-xl bg-purple-50 text-purple-900 border border-purple-200 font-bold text-xs flex items-center justify-center gap-2 shadow-sm"
+                      className="w-full py-2.5 px-4 rounded-xl bg-[#5B0D15]/5 text-[#5B0D15] border border-[#5B0D15]/15 font-semibold text-xs flex items-center justify-center gap-2 shadow-2xs"
                     >
-                      <ShieldCheck className="w-3.5 h-3.5 text-purple-700" />
-                      <span>👑 Admin Control Panel</span>
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#5B0D15]" />
+                      <span>Admin Control Panel</span>
                     </Link>
                   )}
                   <button
@@ -1160,36 +1095,6 @@ export const Navbar: React.FC = () => {
         </div>
       </header>
 
-      {/* Top Persistent Reminder Ribbon when profile is incomplete */}
-      {mounted && user && (!user.dateOfBirth || !user.placeOfBirth || !user.timeOfBirth) && (
-        <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-[#5B0D15] via-[#851622] to-[#5B0D15] text-white text-xs py-2 px-4 shadow-md border-b border-amber-400/40">
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 w-full">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
-              <span className="font-semibold text-amber-300">
-                {t('Action Required:', 'आवश्यक सूचना:')}
-              </span>
-              <span className="hidden sm:inline text-amber-100">
-                {t(
-                  'Your Vedic Kundli profile is incomplete! Add your Date, Time & Place of birth for accurate planetary predictions.',
-                  'आपकी जन्म कुंडली प्रोफाइल अधूरी है! सटीक भविष्यफल हेतु जन्म तिथि, समय व स्थान दर्ज करें।'
-                )}
-              </span>
-              <span className="sm:hidden text-amber-100 truncate">
-                {t('Complete your birth profile for Kundli', 'जन्म प्रोफाइल पूर्ण करें')}
-              </span>
-            </div>
-
-            <button
-              onClick={() => setProfileModalOpen(true)}
-              className="px-3.5 py-1 rounded-full bg-amber-400 hover:bg-amber-300 text-[#5B0D15] font-extrabold text-[11px] shadow-sm hover:scale-105 transition-all cursor-pointer shrink-0"
-            >
-              {t('Complete Profile Now', 'अभी पूर्ण करें')} →
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Auth Modal for Sign Up / Login */}
       <AuthModal
         isOpen={authModalOpen}
@@ -1197,19 +1102,6 @@ export const Navbar: React.FC = () => {
         onClose={() => setAuthModalOpen(false)}
         onLoginSuccess={(userData) => {
           setUser(userData);
-          if (!userData?.dateOfBirth || !userData?.placeOfBirth || !userData?.timeOfBirth) {
-            setTimeout(() => setProfileModalOpen(true), 400);
-          }
-        }}
-      />
-
-      {/* Complete Profile Modal */}
-      <CompleteProfileModal
-        isOpen={profileModalOpen}
-        onClose={() => setProfileModalOpen(false)}
-        user={user}
-        onSuccess={(updatedUser) => {
-          setUser(updatedUser);
         }}
       />
     </>

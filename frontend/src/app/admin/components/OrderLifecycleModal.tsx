@@ -72,7 +72,9 @@ export default function OrderLifecycleModal({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80">
               <span className="text-[10px] text-amber-800 font-bold uppercase tracking-wider block">Total Amount</span>
-              <span className="font-serif text-lg font-black text-[#5B0D15] block mt-0.5">₹{activeOrder.totalAmount}</span>
+              <span className="font-sans text-lg font-semibold text-[#5B0D15] tabular-nums tracking-tight block mt-0.5">
+                ₹{Number(activeOrder.totalAmount).toLocaleString('en-IN')}
+              </span>
             </div>
             <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80">
               <span className="text-[10px] text-emerald-800 font-bold uppercase tracking-wider block">Payment Status</span>

@@ -54,6 +54,7 @@ export default function GalleryPage() {
   const [itemToEdit, setItemToEdit] = useState<any | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionToast, setActionToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<GalleryItem | null>(null);
 
   const backendUrl = (
     process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
@@ -123,15 +124,18 @@ export default function GalleryPage() {
     return () => clearTimeout(timer);
   }, [actionToast]);
 
-  const handleDeleteItem = async (item: GalleryItem, e: React.MouseEvent) => {
+  const handleDeleteItem = (item: GalleryItem, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm(`Are you sure you want to permanently delete "${item.title}"?`)) {
-      return;
-    }
+    setItemToDelete(item);
+  };
+
+  const handleConfirmDeleteItem = async () => {
+    if (!itemToDelete) return;
 
     const token = getAuthToken();
     if (!token) return;
 
+    const item = itemToDelete;
     // Optimistically remove from state immediately
     setGalleryItems((prev) => prev.filter((i) => i.id !== item.id));
 
@@ -153,9 +157,11 @@ export default function GalleryPage() {
         type: 'success',
         message: `"${item.title}" was deleted successfully.`,
       });
+      setItemToDelete(null);
       fetchGalleryItems();
     } catch (err: any) {
       setActionToast({ type: 'error', message: err.message || 'Error deleting photo.' });
+      setItemToDelete(null);
       fetchGalleryItems();
     } finally {
       setActionLoading(false);
@@ -402,28 +408,37 @@ export default function GalleryPage() {
           <div
             role="status"
             aria-live="polite"
-            className="fixed bottom-6 right-6 z-50 max-w-sm sm:max-w-md w-auto animate-fadeIn transition-all duration-300"
+            className="fixed bottom-6 right-6 z-50 max-w-sm sm:max-w-md w-full sm:w-auto animate-fadeIn transition-all duration-300 pointer-events-auto"
           >
-            <div
-              className={`px-4 py-3 rounded-2xl text-xs sm:text-sm font-medium flex items-center gap-3 shadow-2xl backdrop-blur-md border ${
-                actionToast.type === 'success'
-                  ? 'bg-[#1C2820]/95 text-emerald-100 border-emerald-500/50 shadow-emerald-950/30'
-                  : 'bg-[#2D1217]/95 text-rose-100 border-rose-500/50 shadow-rose-950/30'
-              }`}
-            >
-              {actionToast.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              ) : (
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-              )}
-              <span className="leading-snug flex-1">{actionToast.message}</span>
+            <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] border border-stone-200/90 flex items-start gap-3.5 ring-1 ring-black/5">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                  actionToast.type === 'success'
+                    ? 'bg-emerald-50 text-emerald-600 border-emerald-200/80'
+                    : 'bg-rose-50 text-rose-600 border-rose-200/80'
+                }`}
+              >
+                {actionToast.type === 'success' ? (
+                  <CheckCircle2 className="w-5 h-5" />
+                ) : (
+                  <AlertCircle className="w-5 h-5" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0 pt-0.5">
+                <p className="text-xs font-bold text-stone-900 tracking-tight">
+                  {actionToast.type === 'success' ? 'Successful' : 'Attention Needed'}
+                </p>
+                <p className="text-xs text-stone-600 leading-relaxed font-normal mt-0.5 break-words">
+                  {actionToast.message}
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setActionToast(null)}
-                className="text-stone-400 hover:text-white font-bold p-1 hover:bg-white/10 rounded-full transition-colors cursor-pointer shrink-0"
+                className="p-1 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer shrink-0 mt-0.5"
                 aria-label="Dismiss notification"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -791,6 +806,92 @@ export default function GalleryPage() {
           itemToEdit={itemToEdit}
           onSaved={handleItemSaved}
         />
+      )}
+
+      {/* Custom Delete Confirmation Modal */}
+      {itemToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="relative w-full max-w-md bg-white rounded-3xl border border-rose-200 shadow-2xl overflow-hidden flex flex-col">
+            <div className="px-6 py-5 bg-gradient-to-r from-rose-900 via-rose-800 to-[#5B0D15] text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-200 border border-rose-300/40 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-5 h-5 text-rose-300" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-rose-100">
+                    Delete Gallery Item
+                  </h3>
+                  <p className="text-[11px] text-rose-200">
+                    Are you sure you want to permanently delete this?
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setItemToDelete(null)}
+                disabled={actionLoading}
+                className="p-1.5 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-amber-200/80 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500">Item Title:</span>
+                  <span className="font-bold text-[#3B1E22] truncate max-w-[220px]">{itemToDelete.title}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500">Category:</span>
+                  <span className="font-semibold text-stone-800">{itemToDelete.categoryLabel || itemToDelete.category}</span>
+                </div>
+                {itemToDelete.location && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-stone-500">Location:</span>
+                    <span className="font-semibold text-stone-800">{itemToDelete.location}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <p className="text-[11px] text-rose-800 leading-relaxed">
+                  This image and its details will be permanently removed from the gallery showcase.
+                </p>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setItemToDelete(null)}
+                  disabled={actionLoading}
+                  className="px-5 py-2.5 rounded-xl border border-stone-300 text-stone-600 hover:bg-stone-50 text-xs font-semibold cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDeleteItem}
+                  disabled={actionLoading}
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-700 to-rose-900 hover:opacity-95 disabled:opacity-50 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  {actionLoading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Permanently Delete</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       <Footer />

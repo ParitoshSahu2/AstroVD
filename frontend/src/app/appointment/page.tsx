@@ -74,17 +74,12 @@ function AppointmentContent() {
   const tomorrowStr = tomorrow.toISOString().split('T')[0];
   const todayStr = new Date().toISOString().split('T')[0];
 
-  const DEFAULT_FALLBACK_SLOTS = PUBLISHED_TIME_SLOTS.map((time) => ({
-    time,
-    isAvailable: true,
-  }));
-
   const [date, setDate] = useState<string>(tomorrowStr);
-  const [timeSlot, setTimeSlot] = useState<string>('11:00 AM');
+  const [timeSlot, setTimeSlot] = useState<string>('');
   const [availableSlots, setAvailableSlots] = useState<
     Array<{ time: string; isAvailable: boolean; reason?: string }>
-  >(DEFAULT_FALLBACK_SLOTS);
-  const [loadingSlots, setLoadingSlots] = useState<boolean>(false);
+  >([]);
+  const [loadingSlots, setLoadingSlots] = useState<boolean>(true);
   const [isDateBlocked, setIsDateBlocked] = useState<boolean>(false);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
 
@@ -141,19 +136,22 @@ function AppointmentContent() {
     }
   }, []);
 
-  // Fetch real available slots whenever selectedServiceId or date changes
+  // Fetch real available slots whenever selectedServiceId or date changes, with live polling & cache-busting
   useEffect(() => {
     let isCancelled = false;
     const fetchSlots = async () => {
-      setLoadingSlots(true);
-      setErrorMsg(null);
-      setIsDateBlocked(false);
-      setBlockedReason(null);
       try {
         const res = await fetch(
           `${backendUrl}/api/appointments/slots?serviceId=${encodeURIComponent(
             selectedServiceId,
-          )}&date=${encodeURIComponent(date)}`,
+          )}&date=${encodeURIComponent(date)}&_t=${Date.now()}`,
+          {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              Pragma: 'no-cache',
+            },
+          },
         );
         if (res.ok) {
           const data = await res.json();
@@ -163,42 +161,40 @@ function AppointmentContent() {
               setBlockedReason(data.blockedReason || null);
               setAvailableSlots([]);
               setTimeSlot('');
-            } else if (data.slots && data.slots.length > 0) {
+            } else if (data.slots && Array.isArray(data.slots)) {
               setIsDateBlocked(false);
               setBlockedReason(null);
+              // Only display published slots returned by backend
               setAvailableSlots(data.slots);
-              // If current timeSlot is not available, default to the first available one
-              const currentSlotAvailable = data.slots.some(
+
+              // If current selected timeSlot is not among available published slots, pick first available
+              const isCurrentAvailable = data.slots.some(
                 (s: any) => s.time === timeSlot && s.isAvailable,
               );
-              if (!currentSlotAvailable) {
+              if (!isCurrentAvailable) {
                 const firstAvailable = data.slots.find((s: any) => s.isAvailable);
-                if (firstAvailable) {
-                  setTimeSlot(firstAvailable.time);
-                } else {
-                  setTimeSlot('');
-                }
+                setTimeSlot(firstAvailable ? firstAvailable.time : '');
               }
             } else {
               setIsDateBlocked(false);
               setBlockedReason(null);
-              setAvailableSlots(DEFAULT_FALLBACK_SLOTS);
-              if (!timeSlot) setTimeSlot('11:00 AM');
+              setAvailableSlots([]);
+              setTimeSlot('');
             }
           }
         } else {
           if (!isCancelled) {
             setIsDateBlocked(false);
-            setAvailableSlots(DEFAULT_FALLBACK_SLOTS);
-            if (!timeSlot) setTimeSlot('11:00 AM');
+            setAvailableSlots([]);
+            setTimeSlot('');
           }
         }
       } catch (err) {
         console.warn('Failed to load slots from backend', err);
         if (!isCancelled) {
           setIsDateBlocked(false);
-          setAvailableSlots(DEFAULT_FALLBACK_SLOTS);
-          if (!timeSlot) setTimeSlot('11:00 AM');
+          setAvailableSlots([]);
+          setTimeSlot('');
         }
       } finally {
         if (!isCancelled) setLoadingSlots(false);
@@ -206,11 +202,30 @@ function AppointmentContent() {
     };
 
     if (selectedServiceId && date) {
+      setLoadingSlots(true);
       fetchSlots();
     }
 
+    // Auto-sync polling every 4 seconds to reflect Admin publish/unpublish changes live
+    const pollInterval = setInterval(() => {
+      if (!isCancelled && selectedServiceId && date) {
+        fetchSlots();
+      }
+    }, 4000);
+
+    const onFocus = () => {
+      if (!isCancelled && selectedServiceId && date) {
+        fetchSlots();
+      }
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
+
     return () => {
       isCancelled = true;
+      clearInterval(pollInterval);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
     };
   }, [selectedServiceId, date, backendUrl]);
 
@@ -301,7 +316,34 @@ function AppointmentContent() {
         throw new Error(data.message || 'Failed to complete appointment reservation.');
       }
 
-      setConfirmedBooking(data.booking);
+      const bookingPayload = data.booking || {};
+      const finalBookingId = bookingPayload.id || `AVD-${Date.now().toString().slice(-6)}`;
+      const meetLink =
+        bookingPayload.meetLink && bookingPayload.meetLink.includes('meet.google.com')
+          ? bookingPayload.meetLink
+          : formatGoogleMeetLink(finalBookingId);
+
+      const resolvedBooking = {
+        ...bookingPayload,
+        id: finalBookingId,
+        meetLink,
+      };
+
+      setConfirmedBooking(resolvedBooking);
+      if (typeof window !== 'undefined') {
+        try {
+          const existing = JSON.parse(localStorage.getItem('astro_consultations') || '[]');
+          const filtered = Array.isArray(existing)
+            ? existing.filter((b: any) => b && b.id !== finalBookingId && b.id !== '9ead962f-2896-4652-a8f9-2651723508fd')
+            : [];
+          filtered.unshift(resolvedBooking);
+          localStorage.setItem('astro_consultations', JSON.stringify(filtered));
+          localStorage.setItem(
+            'astrovd_recent_activity',
+            JSON.stringify({ type: 'booking', id: finalBookingId, time: Date.now() }),
+          );
+        } catch (e) {}
+      }
     } catch (err: any) {
       if (
         err.message?.includes('fetch') ||
@@ -333,6 +375,7 @@ function AppointmentContent() {
             const existing = JSON.parse(localStorage.getItem('astro_consultations') || '[]');
             existing.unshift(fallbackBooking);
             localStorage.setItem('astro_consultations', JSON.stringify(existing));
+            localStorage.setItem('astrovd_recent_activity', JSON.stringify({ type: 'booking', id: fallbackBookingId, time: Date.now() }));
           } catch (e) {}
         }
 
@@ -565,7 +608,14 @@ function AppointmentContent() {
               {/* Action Buttons */}
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Link
-                  href="/dashboard?tab=consultations"
+                  href={`/dashboard?highlightBooking=${encodeURIComponent(confirmedBooking.id || confirmedBooking._id || '')}&tab=consultations`}
+                  onClick={() => {
+                    try {
+                      if (typeof window !== 'undefined') {
+                        sessionStorage.setItem('astro_highlight_booking', JSON.stringify(confirmedBooking));
+                      }
+                    } catch (e) {}
+                  }}
                   className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs font-bold shadow-md shadow-rose-950/20 transition-all flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <span>{t('View in My Consultations →', 'मेरी परामर्श सूची देखें →')}</span>
@@ -638,7 +688,14 @@ function AppointmentContent() {
                         {t('Time Extension: ₹50/min', 'समय विस्तार: ₹50/मिनट')}
                       </span>
                     </div>
-                    <span className="font-serif font-extrabold text-lg text-[#5B0D15]">
+                    <span
+                      className="product-price-style text-xl sm:text-2xl font-bold"
+                      style={{
+                        fontFamily: "'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                        fontWeight: 700,
+                        color: activeService.price.includes('FREE') ? '#047857' : '#212121',
+                      }}
+                    >
                       {language === 'hi' && activeService.price.includes('FREE')
                         ? '100% निःशुल्क'
                         : activeService.price}
@@ -889,26 +946,36 @@ function AppointmentContent() {
                                 key={slot.time}
                                 type="button"
                                 disabled={!slot.isAvailable}
-                                onClick={() => setTimeSlot(slot.time)}
-                                className={`py-2 px-2 rounded-xl text-xs font-semibold transition-all border flex flex-col items-center justify-center gap-0.5 cursor-pointer ${
+                                onClick={() => slot.isAvailable && setTimeSlot(slot.time)}
+                                className={`py-2 px-2.5 rounded-xl text-xs font-semibold transition-all border flex flex-col items-center justify-center gap-1 select-none ${
                                   !slot.isAvailable
-                                    ? 'bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed opacity-60'
+                                    ? 'bg-stone-100/90 text-stone-400 border-stone-200/90 cursor-not-allowed shadow-none'
                                     : isSelected
-                                    ? 'bg-[#5B0D15] text-white border-[#5B0D15] shadow-md ring-2 ring-amber-300'
-                                    : 'bg-white hover:bg-amber-50 text-stone-800 border-stone-200 hover:border-amber-300'
+                                    ? 'bg-[#5B0D15] text-white border-[#5B0D15] shadow-md ring-2 ring-amber-300 cursor-pointer'
+                                    : 'bg-white hover:bg-amber-50 text-stone-800 border-stone-200 hover:border-amber-300 cursor-pointer shadow-2xs'
                                 }`}
                               >
-                                <span className="font-bold text-xs">{slot.time}</span>
                                 <span
-                                  className={`text-[9px] uppercase tracking-wider font-extrabold ${
-                                    !slot.isAvailable
-                                      ? 'text-stone-400'
-                                      : isSelected
-                                      ? 'text-amber-300'
-                                      : 'text-emerald-700'
+                                  className={`font-bold text-xs ${
+                                    !slot.isAvailable ? 'text-stone-400 line-through decoration-stone-300' : ''
                                   }`}
                                 >
-                                  {slot.isAvailable ? t('Available', 'उपलब्ध') : slot.reason || t('Reserved', 'आरक्षित')}
+                                  {slot.time}
+                                </span>
+                                <span
+                                  className={`text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded ${
+                                    !slot.isAvailable
+                                      ? 'bg-stone-200 text-stone-500'
+                                      : isSelected
+                                      ? 'text-amber-300'
+                                      : 'text-emerald-700 bg-emerald-50'
+                                  }`}
+                                >
+                                  {slot.isAvailable
+                                    ? t('Available', 'उपलब्ध')
+                                    : slot.reason?.includes('Reserved') || slot.reason?.includes('Booked')
+                                    ? t('Reserved', 'आरक्षित')
+                                    : t('Reserved', 'आरक्षित')}
                                 </span>
                               </button>
                             );

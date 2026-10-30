@@ -513,33 +513,50 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
+                  {/* Persistent In-Cart Quantity Indicator (+1, +2, etc.) */}
+                  {quantityInCart > 0 && (
+                    <div className="absolute top-2.5 right-2.5 z-20 px-2.5 py-1 rounded-full bg-[#5B0D15] text-amber-200 text-xs font-bold shadow-md border border-amber-300/80 flex items-center gap-1.5 animate-fadeIn">
+                      <ShoppingCart className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                      <span>+{quantityInCart}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* 2. White Card Content Area - Snug spacing directly leading into price and button */}
                 <div className="p-4 pt-3.5 flex-1 flex flex-col justify-between">
                   <div>
-                    {/* 1. Category / Energy Subtitle Tag - Clean single line */}
-                    <span
-                      className="text-[9.5px] sm:text-[10px] xl:text-[10.5px] font-bold uppercase tracking-[0.05em] text-[#C05621] block truncate mb-1"
-                      title={prodTag}
-                    >
-                      {prodTag}
-                    </span>
-
-                    {/* 2. Product Name in Elegant Title Case Serif */}
+                    {/* First text of product: Matching reference image line 1 (Urbano Fashion) */}
                     <h3
                       onClick={() => {
                         setModalQty(1);
                         setSelectedProduct(item);
                       }}
-                      className="font-serif font-bold text-[16.5px] sm:text-[17.5px] text-[#2A1810] group-hover:text-[#800000] transition-colors leading-snug cursor-pointer line-clamp-1 tracking-tight"
+                      className="product-card-brand-title cursor-pointer truncate"
+                      style={{
+                        fontFamily: "'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                        fontSize: '16px',
+                        fontWeight: 700,
+                        lineHeight: '1.2',
+                        color: '#282c3f',
+                      }}
                       title={prodName}
                     >
                       {prodName}
                     </h3>
 
-                    {/* 3. Product Description in Warm Slate Stone */}
-                    <p className="text-[12px] text-[#5C554E] leading-relaxed mt-1 line-clamp-2 font-normal">
+                    {/* Second text of product: Matching reference image line 2 (Men Pure Cotton T-shirt) */}
+                    <p
+                      className="product-card-desc-subtitle truncate"
+                      style={{
+                        fontFamily: "'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                        fontSize: '14px',
+                        fontWeight: 400,
+                        lineHeight: '1.3',
+                        color: '#535766',
+                        marginTop: '2px',
+                      }}
+                      title={prodDesc}
+                    >
                       {prodDesc}
                     </p>
                   </div>
@@ -547,11 +564,27 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                   {/* 3. Bottom Card Bar: Price & Action Buttons - Closely connected with snug gap */}
                   <div className="mt-3 pt-2.5 border-t border-[#F2ECE1] flex items-center justify-between">
                     <div className="flex items-baseline gap-1.5">
-                      <span className="font-serif font-bold text-base sm:text-lg text-[#800000]">
+                      <span
+                        className="product-price-style text-[19px] sm:text-[20px]"
+                        style={{
+                          fontFamily: "'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                          fontWeight: 700,
+                          fontSize: '19px',
+                          color: '#212121',
+                        }}
+                      >
                         {item.price}
                       </span>
                       {item.originalPrice && (
-                        <span className="text-[11px] text-stone-400 line-through">
+                        <span
+                          className="product-original-price-style text-[13px] sm:text-[14px]"
+                          style={{
+                            fontFamily: "'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                            fontSize: '13.5px',
+                            color: '#878787',
+                            textDecoration: 'line-through',
+                          }}
+                        >
                           {item.originalPrice}
                         </span>
                       )}
@@ -612,8 +645,8 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                             <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
                           </button>
 
-                          <span className="w-7 text-center font-bold text-xs text-amber-100 select-none">
-                            {quantityInCart}
+                          <span className="min-w-[28px] px-1 text-center font-extrabold text-xs text-amber-200 select-none">
+                            +{quantityInCart}
                           </span>
 
                           <button
@@ -770,150 +803,248 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
       </div>
 
       {/* ================= REDUCED WIDTH PRODUCT DETAILS MODAL ================= */}
-      {selectedProduct && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 md:p-6 overflow-y-auto animate-fadeIn"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setSelectedProduct(null)}
-        >
-          {/* Modal Container with Contained Width */}
+      {selectedProduct && (() => {
+        const selectedProductCartItem = items.find((i) => i.id === selectedProduct.id);
+        const selectedProductQtyInCart = selectedProductCartItem ? selectedProductCartItem.quantity : 0;
+
+        return (
           <div
-            onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-4xl max-h-[90vh] bg-[#FAF7F2] rounded-3xl border border-amber-300/80 shadow-2xl flex flex-col md:flex-row overflow-hidden my-auto"
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 md:p-6 overflow-y-auto animate-fadeIn"
+            role="dialog"
+            aria-modal="true"
+            onClick={() => setSelectedProduct(null)}
           >
-            {/* Modal Close Button */}
-            <button
-              onClick={() => setSelectedProduct(null)}
-              className="absolute top-3.5 right-3.5 z-40 w-10 h-10 rounded-full bg-stone-900/80 hover:bg-stone-900 text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xl border border-white/20"
-              aria-label="Close product view"
-              title={t('Close (Esc)', 'बंद करें (Esc)')}
+            {/* Modal Container with Contained Width */}
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-4xl max-h-[90vh] bg-[#FAF7F2] rounded-3xl border border-amber-300/80 shadow-2xl flex flex-col md:flex-row overflow-hidden my-auto"
             >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Product Image Side - Contained & balanced */}
-            <div className="relative w-full md:w-5/12 min-h-[260px] sm:min-h-[320px] md:min-h-full shrink-0 overflow-hidden bg-stone-100">
-              <Image
-                src={selectedProduct.image}
-                alt={language === 'hi' && selectedProduct.nameHi ? selectedProduct.nameHi : selectedProduct.name}
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 42vw"
-                className="object-cover object-center w-full h-full select-none"
-              />
-            </div>
-
-            {/* Details & Actions Side */}
-            <div className="w-full md:w-7/12 p-5 sm:p-6 md:p-7 flex flex-col justify-between overflow-y-auto bg-[#FAF7F2] border-t md:border-t-0 md:border-l border-amber-200/80 space-y-3">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold tracking-[0.2em] text-[#800000] uppercase block">
-                  {language === 'hi' && selectedProduct.tagHi ? selectedProduct.tagHi : selectedProduct.tag}
-                </span>
-                <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-                  {t('Govt Lab Certified', 'सरकारी लैब द्वारा प्रमाणित')}
-                </span>
-              </div>
-              <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#2A1810] tracking-tight leading-snug">
-                {formatTitleCase(language === 'hi' && selectedProduct.nameHi ? selectedProduct.nameHi : selectedProduct.name)}
-              </h3>
-              <div className="flex items-center gap-3">
-                <span className="font-serif text-2xl sm:text-3xl font-bold text-[#800000]">{selectedProduct.price}</span>
-                <span className="text-stone-400 line-through text-sm sm:text-base">{selectedProduct.originalPrice}</span>
-              </div>
-              <p className="text-xs sm:text-sm text-stone-600 leading-relaxed line-clamp-3">
-                {language === 'hi' && selectedProduct.descHi ? selectedProduct.descHi : selectedProduct.desc}
-              </p>
-
-              {/* Sacred Astro Attributes */}
-              <div className="grid grid-cols-2 gap-2.5 pt-1 text-xs">
-                <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80">
-                  <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Ruling Planet', 'स्वामी ग्रह')}</span>
-                  <span className="font-semibold text-stone-900 text-xs truncate block">
-                    {language === 'hi' && selectedProduct.planetHi ? selectedProduct.planetHi : selectedProduct.planet}
-                  </span>
-
-
-                </div>
-                <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80">
-                  <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Active Chakra', 'सक्रिय चक्र')}</span>
-                  <span className="font-semibold text-stone-900 text-xs truncate block">
-                    {language === 'hi' && selectedProduct.chakraHi ? selectedProduct.chakraHi : selectedProduct.chakra}
-                  </span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80">
-                  <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Auspicious Day', 'शुभ धारण वार')}</span>
-                  <span className="font-semibold text-stone-900 text-xs truncate block">
-                    {language === 'hi' && selectedProduct.dayToWearHi ? selectedProduct.dayToWearHi : selectedProduct.dayToWear}
-                  </span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80">
-                  <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Bead Spec', 'मनका विवरण')}</span>
-                  <span className="font-semibold text-stone-900 text-xs truncate block">
-                    {language === 'hi' && selectedProduct.beadSizeHi ? selectedProduct.beadSizeHi : selectedProduct.beadSize}
-                  </span>
-                </div>
-              </div>
-
-              {/* Product-Specific Sacred Energizing Mantra Container */}
-              <div className="p-3 sm:p-4 rounded-2xl bg-amber-50/90 border border-amber-300/80 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-[#800000] uppercase tracking-wider flex items-center gap-1.5 font-serif">
-                    
-                    {t('Energizing Beej Mantra', 'धारण एवं सिद्ध बीज मंत्र')}
-                  </span>
-                  <span className="text-[10px] font-semibold text-amber-900 bg-amber-200/60 px-2 py-0.5 rounded-full border border-amber-300/60">
-                    {t('108 Chants', '108 जाप')}
-                  </span>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-white border border-amber-200/90 text-center shadow-2xs">
-                  <p className="font-serif font-bold text-xs sm:text-[14px] text-[#5B0D15] tracking-wide select-all">
-                    {selectedProduct.mantra}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between text-[10.5px] sm:text-xs text-stone-600 px-1">
-                  <span className="truncate">
-                    <span className="text-amber-700 font-bold">• {t('Muhurta:', 'शुभ मुहूर्त:')} </span>
-                    <span>{language === 'hi' && selectedProduct.dayToWearHi ? selectedProduct.dayToWearHi : selectedProduct.dayToWear}</span>
-                  </span>
-                  <span className="shrink-0 text-[10px] font-medium text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200/70">
-                    {t('Chant while wearing', 'धारण करते समय जपें')}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Single Checkout button directly visible in viewport */}
-            <div className="pt-2">
-
+              {/* Modal Close Button */}
               <button
-                type="button"
-                onClick={() => {
-                  const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
-                  if (!token) {
-                    router.push(`/login?redirect=${encodeURIComponent('/cart')}`);
-                    return;
-                  }
-                  addItem(selectedProduct, modalQty);
-                  setSelectedProduct(null);
-                  router.push('/cart');
-                }}
-                className="w-full py-3.5 px-6 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:via-amber-400 hover:to-amber-500 text-[#2A0E13] font-serif font-bold text-sm sm:text-base shadow-[0_8px_25px_rgba(245,199,126,0.38)] hover:shadow-[0_12px_32px_rgba(245,199,126,0.55)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer group border border-amber-300/60"
+                onClick={() => setSelectedProduct(null)}
+                className="absolute top-3.5 right-3.5 z-40 w-10 h-10 rounded-full bg-stone-900/80 hover:bg-stone-900 text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xl border border-white/20"
+                aria-label="Close product view"
+                title={t('Close (Esc)', 'बंद करें (Esc)')}
               >
-                
-                <span>
-                  {t('Check out', 'चेकआउट करें')} • ₹{(parsePriceNumber(selectedProduct.price) * modalQty).toLocaleString('en-IN')}
-                </span>
-                <ArrowRight className="w-4 h-4 text-[#2A0E13] group-hover:translate-x-1 transition-transform" />
+                <X className="w-5 h-5" />
               </button>
+
+              {/* Product Image Side - Contained & balanced */}
+              <div className="relative w-full md:w-5/12 min-h-[260px] sm:min-h-[320px] md:min-h-full shrink-0 overflow-hidden bg-stone-100">
+                <Image
+                  src={selectedProduct.image}
+                  alt={language === 'hi' && selectedProduct.nameHi ? selectedProduct.nameHi : selectedProduct.name}
+                  fill
+                  priority
+                  sizes="(max-width: 768px) 100vw, 42vw"
+                  className="object-cover object-center w-full h-full select-none"
+                />
+                {/* Persistent In-Cart Quantity Indicator (+1, +2, etc.) */}
+                {selectedProductQtyInCart > 0 && (
+                  <div className="absolute top-3.5 left-3.5 z-30 px-3.5 py-1.5 rounded-full bg-[#5B0D15] text-amber-200 border-2 border-amber-400 font-bold text-xs shadow-xl flex items-center gap-1.5 animate-fadeIn backdrop-blur-md">
+                    <ShoppingCart className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                    <span className="text-white font-extrabold text-xs sm:text-sm">+{selectedProductQtyInCart}</span>
+                    <span>{t('in Sacred Cart', 'पवित्र कार्ट में')}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Details & Actions Side */}
+              <div className="w-full md:w-7/12 p-5 sm:p-6 md:p-7 flex flex-col justify-between overflow-y-auto bg-[#FAF7F2] border-t md:border-t-0 md:border-l border-amber-200/80 space-y-3">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  {(language === 'hi' && selectedProduct.tagHi ? selectedProduct.tagHi : selectedProduct.tag) ? (
+                    <span className="text-[11px] font-bold tracking-[0.2em] text-[#800000] uppercase block">
+                      {language === 'hi' && selectedProduct.tagHi ? selectedProduct.tagHi : selectedProduct.tag}
+                    </span>
+                  ) : <span />}
+                  <span className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    {t('Govt Lab Certified', 'सरकारी लैब द्वारा प्रमाणित')}
+                  </span>
+                </div>
+                <h3 className="font-bold text-2xl sm:text-3xl text-[#1E2229] tracking-tight leading-snug">
+                  {formatTitleCase(language === 'hi' && selectedProduct.nameHi ? selectedProduct.nameHi : selectedProduct.name)}
+                </h3>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span
+                    className="product-price-style text-3xl sm:text-[34px] font-bold"
+                    style={{
+                      fontFamily: "'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                      fontWeight: 700,
+                      fontSize: '34px',
+                      color: '#212121',
+                    }}
+                  >
+                    {selectedProduct.price}
+                  </span>
+                  <span
+                    className="product-original-price-style text-lg sm:text-xl"
+                    style={{
+                      fontFamily: "'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                      color: '#878787',
+                      textDecoration: 'line-through',
+                    }}
+                  >
+                    {selectedProduct.originalPrice}
+                  </span>
+                  {selectedProductQtyInCart > 0 && (
+                    <span className="ml-auto px-3 py-1 rounded-full text-xs font-bold bg-[#5B0D15] text-amber-200 border border-amber-400/80 shadow-xs flex items-center gap-1.5 animate-fadeIn">
+                      <ShoppingCart className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                      <span className="font-extrabold text-white">+{selectedProductQtyInCart}</span>
+                      <span>{t('in Cart', 'कार्ट में शामिल')}</span>
+                    </span>
+                  )}
+                </div>
+                <p className="text-[13.5px] sm:text-sm text-[#535766] leading-relaxed line-clamp-3">
+                  {language === 'hi' && selectedProduct.descHi ? selectedProduct.descHi : selectedProduct.desc}
+                </p>
+
+                {/* Sacred Astro Attributes */}
+                <div className="grid grid-cols-2 gap-2.5 pt-1 text-xs">
+                  <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80">
+                    <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Ruling Planet', 'स्वामी ग्रह')}</span>
+                    <span className="font-semibold text-stone-900 text-xs truncate block">
+                      {language === 'hi' && selectedProduct.planetHi ? selectedProduct.planetHi : selectedProduct.planet}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80">
+                    <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Active Chakra', 'सक्रिय चक्र')}</span>
+                    <span className="font-semibold text-stone-900 text-xs truncate block">
+                      {language === 'hi' && selectedProduct.chakraHi ? selectedProduct.chakraHi : selectedProduct.chakra}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80">
+                    <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Auspicious Day', 'शुभ धारण वार')}</span>
+                    <span className="font-semibold text-stone-900 text-xs truncate block">
+                      {language === 'hi' && selectedProduct.dayToWearHi ? selectedProduct.dayToWearHi : selectedProduct.dayToWear}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/80">
+                    <span className="text-stone-500 text-[10px] uppercase font-bold block">{t('Bead Spec', 'मनका विवरण')}</span>
+                    <span className="font-semibold text-stone-900 text-xs truncate block">
+                      {language === 'hi' && selectedProduct.beadSizeHi ? selectedProduct.beadSizeHi : selectedProduct.beadSize}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Product-Specific Sacred Energizing Mantra Container */}
+                <div className="p-3 sm:p-4 rounded-2xl bg-amber-50/90 border border-amber-300/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-[#800000] uppercase tracking-wider flex items-center gap-1.5 font-serif">
+                      {t('Energizing Beej Mantra', 'धारण एवं सिद्ध बीज मंत्र')}
+                    </span>
+                    <span className="text-[10px] font-semibold text-amber-900 bg-amber-200/60 px-2 py-0.5 rounded-full border border-amber-300/60">
+                      {t('108 Chants', '108 जाप')}
+                    </span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-white border border-amber-200/90 text-center shadow-2xs">
+                    <p className="font-serif font-bold text-xs sm:text-[14px] text-[#5B0D15] tracking-wide select-all">
+                      {selectedProduct.mantra}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10.5px] sm:text-xs text-stone-600 px-1">
+                    <span className="truncate">
+                      <span className="text-amber-700 font-bold">• {t('Muhurta:', 'शुभ मुहूर्त:')} </span>
+                      <span>{language === 'hi' && selectedProduct.dayToWearHi ? selectedProduct.dayToWearHi : selectedProduct.dayToWear}</span>
+                    </span>
+                    <span className="shrink-0 text-[10px] font-medium text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200/70">
+                      {t('Chant while wearing', 'धारण करते समय जपें')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons in modal */}
+              <div className="pt-2 space-y-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  {selectedProductQtyInCart === 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleAddToCart(selectedProduct, 1);
+                      }}
+                      className="flex-1 py-3 px-6 rounded-full bg-[#5B0D15] hover:bg-[#78121d] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-98"
+                    >
+                      <ShoppingCart className="w-4 h-4 text-amber-300" />
+                      <span>{t('Add to Sacred Cart', 'पवित्र कार्ट में जोड़ें')}</span>
+                    </button>
+                  ) : (
+                    /* Persistent Quantity Stepper */
+                    <div className="flex-1 flex items-center justify-between bg-[#5B0D15] text-white rounded-full px-2 py-1.5 shadow-md border border-amber-400/40">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (selectedProductQtyInCart <= 1) {
+                            removeItem(selectedProduct.id);
+                          } else {
+                            updateQuantity(selectedProduct.id, selectedProductQtyInCart - 1);
+                          }
+                        }}
+                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 text-white font-bold cursor-pointer transition-colors active:scale-90"
+                        aria-label={t('Decrease quantity', 'मात्रा घटाएं')}
+                      >
+                        <Minus className="w-4 h-4 stroke-[2.5]" />
+                      </button>
+
+                      <div className="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-amber-100 select-none px-2">
+                        <ShoppingCart className="w-4 h-4 text-amber-300" />
+                        <span className="text-white font-extrabold text-sm sm:text-base">+{selectedProductQtyInCart}</span>
+                        <span>{t('in Sacred Cart', 'कार्ट में')}</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          updateQuantity(selectedProduct.id, selectedProductQtyInCart + 1);
+                        }}
+                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 text-white font-bold cursor-pointer transition-colors active:scale-90"
+                        aria-label={t('Increase quantity', 'मात्रा बढ़ाएं')}
+                      >
+                        <Plus className="w-4 h-4 stroke-[2.5]" />
+                      </button>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
+                      if (!token) {
+                        router.push(`/login?redirect=${encodeURIComponent('/cart')}`);
+                        return;
+                      }
+                      if (selectedProductQtyInCart === 0) {
+                        addItem(selectedProduct, 1);
+                      }
+                      setSelectedProduct(null);
+                      router.push('/cart');
+                    }}
+                    className="flex-1 py-3 px-6 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:via-amber-400 hover:to-amber-500 text-[#2A0E13] font-serif font-bold text-xs sm:text-sm shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer group border border-amber-300/60"
+                  >
+                    <span>
+                      {selectedProductQtyInCart > 0 ? t('Proceed to Checkout', 'चेकआउट पर जाएं') : t('Instant Checkout', 'तुरंत ऑर्डर करें')}
+                    </span>
+                    <ArrowRight className="w-4 h-4 text-[#2A0E13] group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+
+                <div className="text-center pt-0.5">
+                  <Link
+                    href={`/products/${encodeURIComponent(selectedProduct.id)}`}
+                    onClick={() => setSelectedProduct(null)}
+                    className="text-xs font-semibold text-[#5B0D15] hover:underline inline-flex items-center gap-1"
+                  >
+                    <span>{t('View Complete Sacred Details Page →', 'विस्तृत सिद्ध विवरण पेज देखें →')}</span>
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    )}
+        );
+      })()}
 
       {/* Floating Bottom Cart Bar for quick access - only on product page, never on homepage */}
       {allowCheckoutBar && totalCount > 0 && (
@@ -952,16 +1083,16 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
             <div className="h-6 w-px bg-gradient-to-b from-transparent via-amber-400/40 to-transparent shrink-0 ml-1" />
           </div>
 
-          {/* Black Pill CTA Button: Exactly matching reference design */}
+          {/* Gold Luxury CTA Button: Restored to original golden style */}
           <Link
             href="/cart"
-            className="px-5 py-2.5 rounded-full bg-black hover:bg-stone-900 text-white font-sans font-bold text-xs sm:text-sm shadow-xl transition-all flex items-center gap-2 shrink-0 cursor-pointer whitespace-nowrap group-hover:scale-[1.02] active:scale-95"
+            className="px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 hover:from-amber-200 hover:to-amber-400 text-[#240A0F] font-sans font-bold text-xs sm:text-sm shadow-xl hover:shadow-2xl transition-all flex items-center gap-2 shrink-0 cursor-pointer whitespace-nowrap group-hover:scale-[1.02] active:scale-95 border border-amber-300/80"
           >
             {!isCheckoutBarHovered && (
-              <ShoppingCart className="w-3.5 h-3.5 text-white animate-fadeIn shrink-0" />
+              <ShoppingCart className="w-3.5 h-3.5 text-[#240A0F] animate-fadeIn shrink-0" />
             )}
             <span>Proceed To Checkout</span>
-            <ChevronRight className="w-4 h-4 text-white stroke-[2.5] group-hover:translate-x-1 transition-transform" />
+            <ChevronRight className="w-4 h-4 text-[#240A0F] stroke-[2.5] group-hover:translate-x-1 transition-transform" />
           </Link>
         </aside>
       )}

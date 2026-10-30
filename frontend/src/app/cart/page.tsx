@@ -21,6 +21,7 @@ import {
   Tag,
   Heart,
   ArrowRight,
+  ArrowLeft,
   ChevronLeft,
   ChevronRight,
   Check,
@@ -96,7 +97,7 @@ const RECOMMENDED_PRODUCTS: RecommendedProduct[] = [
     priceFormatted: '₹ 1,299',
     image: '/products/prod-tiger-eye-macro.jpg',
     category: 'products',
-    tag: 'Solar Energy & Wealth',
+    tag: 'Courage & Wealth',
   },
   {
     id: 'rec-black-tourmaline',
@@ -227,6 +228,7 @@ export default function CartPage() {
   const [checkoutStep, setCheckoutStep] = useState<'address' | 'payment'>('address');
   const [isChangingAddress, setIsChangingAddress] = useState(false);
   const [isAddingNewAddress, setIsAddingNewAddress] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
 
   // New Address form
   const [newAddressForm, setNewAddressForm] = useState({
@@ -302,21 +304,64 @@ export default function CartPage() {
 
   const activeAddress = savedAddresses.find((a) => a.id === selectedAddressId) || savedAddresses[0] || DEFAULT_RECOMMENDED_ADDRESSES[0];
 
+  const handleStartEditAddress = (addr: SavedAddress) => {
+    setEditingAddressId(addr.id);
+    setNewAddressForm({
+      fullName: addr.fullName,
+      phone: addr.phone,
+      address: addr.address,
+      city: addr.city,
+      state: addr.state,
+      pincode: addr.pincode,
+      label: addr.label,
+    });
+    setIsAddingNewAddress(true);
+    setCheckoutStep('address');
+  };
+
+  const handleDeleteAddress = (idToDelete: string) => {
+    const updated = savedAddresses.filter((a) => a.id !== idToDelete);
+    setSavedAddresses(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('astro_saved_addresses', JSON.stringify(updated));
+    }
+    if (selectedAddressId === idToDelete && updated.length > 0) {
+      setSelectedAddressId(updated[0].id);
+    }
+  };
+
   const handleSaveNewAddress = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAddressForm.fullName || !newAddressForm.phone || !newAddressForm.address || !newAddressForm.pincode) {
       return;
     }
-    const newId = `addr-${Date.now()}`;
-    const newEntry: SavedAddress = {
-      id: newId,
-      ...newAddressForm,
-    };
-    const updated = [newEntry, ...savedAddresses];
-    setSavedAddresses(updated);
-    setSelectedAddressId(newId);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('astro_saved_addresses', JSON.stringify(updated));
+    if (editingAddressId) {
+      const updated = savedAddresses.map((a) =>
+        a.id === editingAddressId
+          ? {
+              ...a,
+              ...newAddressForm,
+            }
+          : a
+      );
+      setSavedAddresses(updated);
+      setSelectedAddressId(editingAddressId);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('astro_saved_addresses', JSON.stringify(updated));
+      }
+      setEditingAddressId(null);
+    } else {
+      const newId = `addr-${Date.now()}`;
+      const newEntry: SavedAddress = {
+        id: newId,
+        ...newAddressForm,
+      };
+      const updated = [newEntry, ...savedAddresses];
+      setSavedAddresses(updated);
+      setSelectedAddressId(newId);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('astro_saved_addresses', JSON.stringify(updated));
+      }
     }
     setIsAddingNewAddress(false);
     setIsChangingAddress(false);
@@ -531,7 +576,7 @@ export default function CartPage() {
   const handleProceedToPayment = () => {
     if (items.length === 0) return;
     setCurrentStep(2);
-    setCheckoutStep('payment');
+    setCheckoutStep('address');
     setIsChangingAddress(false);
     setIsAddingNewAddress(false);
     setIsCheckoutModalOpen(true);
@@ -630,6 +675,11 @@ export default function CartPage() {
 
     setTimeout(() => {
       setCompletedOrderNumber(generatedOrder);
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('astrovd_recent_activity', JSON.stringify({ type: 'order', id: generatedOrder, time: Date.now() }));
+        } catch (e) {}
+      }
       setIsSubmitting(false);
       setIsCheckoutModalOpen(false);
       setCurrentStep(3);
@@ -833,8 +883,15 @@ export default function CartPage() {
 
                               {/* Price */}
                               <div className="text-right min-w-[85px]">
-                                <div className="font-sans font-semibold text-base sm:text-lg text-[#111827] tracking-tight">
-                                  ₹ {(item.price * item.quantity).toLocaleString('en-IN')}
+                                <div
+                                  className="product-price-style text-base sm:text-lg"
+                                  style={{
+                                    fontFamily: "'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                                    fontWeight: 700,
+                                    color: '#212121',
+                                  }}
+                                >
+                                  ₹{(item.price * item.quantity).toLocaleString('en-IN')}
                                 </div>
                               </div>
 
@@ -928,14 +985,21 @@ export default function CartPage() {
                           </span>
 
                           {/* Title */}
-                          <h4 className="font-sans font-semibold text-sm sm:text-base text-[#2A1810] mt-1.5 line-clamp-1 group-hover:text-[#800000] transition-colors">
+                          <h4 className="font-sans font-semibold text-lg sm:text-xl text-[#2A1810] tracking-tight mt-1.5 line-clamp-1 group-hover:text-[#800000] transition-colors">
                             {formatTitleCase(prod.name)}
                           </h4>
 
                           {/* Price & Add Button */}
                           <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#F0EAE1]">
-                            <span className="font-sans font-semibold text-base sm:text-lg text-[#111827] tracking-tight">
-                              ₹ {prod.price.toLocaleString('en-IN')}
+                            <span
+                              className="product-price-style text-base sm:text-lg"
+                              style={{
+                                fontFamily: "'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                                fontWeight: 700,
+                                color: '#212121',
+                              }}
+                            >
+                              ₹{prod.price.toLocaleString('en-IN')}
                             </span>
                             <button
                               onClick={() => handleAddRecommended(prod)}
@@ -1082,43 +1146,17 @@ export default function CartPage() {
                     <span className="font-bold text-base sm:text-lg text-[#111827]">
                       Total payable
                     </span>
-                    <span className="font-bold text-base sm:text-lg text-[#111827]">
+                    <span
+                      className="product-price-style text-xl sm:text-2xl font-bold"
+                      style={{
+                        fontFamily: "'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                        fontWeight: 700,
+                        color: '#212121',
+                      }}
+                    >
                       ₹{orderTotal.toLocaleString('en-IN')}
                     </span>
                   </div>
-                </div>
-
-
-                {/* Delivery Address Recommendation Preview Card in Cart */}
-                <div className="bg-[#FAF7F2] border border-[#ECE5DC] rounded-2xl p-3.5 flex items-start justify-between gap-3 text-xs shadow-2xs">
-                  <div className="flex items-start gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-xl bg-white border border-[#E5DAC8] flex items-center justify-center text-[#8C6239] shrink-0 mt-0.5 shadow-2xs">
-                      <MapPin className="w-4 h-4 text-[#8C6239]" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-semibold text-[#2A1810] text-xs">Deliver to: {activeAddress.fullName}</span>
-                        <span className="text-[10px] font-bold text-[#8C6239] bg-white border border-[#EFE5D8] px-1.5 py-0.5 rounded-full uppercase">
-                          {activeAddress.label}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#736B63] truncate mt-0.5">
-                        {activeAddress.address}, {activeAddress.city} - {activeAddress.pincode}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCheckoutStep('address');
-                      setIsAddingNewAddress(false);
-                      setIsCheckoutModalOpen(true);
-                    }}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#8C6239] hover:text-[#3E1F18] border border-[#E5DAC8] bg-white hover:bg-[#FAF5EE] px-2.5 py-1 rounded-lg transition-all shrink-0 cursor-pointer shadow-2xs"
-                  >
-                    <Edit3 className="w-3 h-3" />
-                    <span>Change</span>
-                  </button>
                 </div>
 
                 {/* Big Proceed To Checkout Button matching exact reference design */}
@@ -1141,90 +1179,166 @@ export default function CartPage() {
         )}
       </main>
 
-      {/* Checkout & Payment Modal (Step 2) */}
+      {/* Checkout & Payment Full-Page Experience */}
       {isCheckoutModalOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-hidden overscroll-none animate-in fade-in duration-200"
-          onClick={() => {
-            setIsCheckoutModalOpen(false);
-            setCurrentStep(1);
-          }}
+          className="fixed inset-0 z-50 bg-[#FAF7F2] w-full h-full min-h-screen flex flex-col overflow-hidden animate-in fade-in duration-200"
           onWheel={(e) => e.stopPropagation()}
         >
-          <div
-            className={`bg-white rounded-2xl sm:rounded-3xl border border-gray-200 w-full shadow-2xl relative my-auto max-h-[92vh] sm:max-h-[88vh] flex flex-col overflow-hidden min-h-0 overscroll-contain transition-all duration-300 ${
-              checkoutStep === 'address'
-                ? 'max-w-xl sm:max-w-2xl'
-                : 'max-w-5xl xl:max-w-6xl'
-            }`}
-            onClick={(e) => e.stopPropagation()}
-            onWheel={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-[#F0EBE3] shrink-0 bg-white">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-[#FAF5EE] border border-[#E5DAC8] flex items-center justify-center text-[#800000] shrink-0 shadow-2xs">
-                  {checkoutStep === 'address' ? <MapPin className="w-4 h-4 text-[#800000]" /> : <ShieldCheck className="w-4 h-4 text-[#800000]" />}
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-sans font-semibold text-base sm:text-lg text-[#2A1810] tracking-tight truncate">
+          {/* Full-Width Luxury Checkout Header */}
+          <header className="w-full bg-white border-b border-[#E5DAC8] px-4 sm:px-8 lg:px-12 py-4 flex items-center justify-between shrink-0 shadow-xs sticky top-0 z-20">
+            {/* Left: Back button + Divider + Elegant Title & Subtitle */}
+            <div className="flex items-center gap-3 sm:gap-5 min-w-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCheckoutModalOpen(false);
+                  setCurrentStep(1);
+                }}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#6E5D4F] hover:text-[#800000] bg-[#FAF5EE] hover:bg-[#F2E8DC] border border-[#E5DAC8] hover:border-[#800000]/40 transition-all cursor-pointer shadow-2xs group shrink-0"
+              >
+                <ArrowLeft className="w-4 h-4 text-[#800000] group-hover:-translate-x-0.5 transition-transform" />
+                <span className="hidden sm:inline">Back to Cart</span>
+              </button>
+
+              <div className="h-8 w-[1px] bg-[#E5DAC8] hidden sm:block shrink-0" />
+
+              <div className="min-w-0">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h1 className="font-sans font-semibold text-lg sm:text-xl text-[#2A1810] tracking-tight">
                     {checkoutStep === 'address' ? 'Select Delivery Address' : 'Payment & Checkout'}
-                  </h3>
-                  <p className="text-xs text-[#736B63] font-sans mt-0.5 truncate">
-                    {checkoutStep === 'address'
-                      ? 'Choose saved address or add a new delivery location.'
-                      : 'All transactions are secure and encrypted'}
-                  </p>
+                  </h1>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/80 shadow-2xs">
+                    <Lock className="w-3 h-3 text-emerald-600" />
+                    <span>256-Bit SSL Secure</span>
+                  </span>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-3 shrink-0">
-                {/* Step progress pills */}
-                <div className="hidden sm:flex items-center gap-1.5 text-xs font-semibold">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCheckoutStep('address');
-                      setIsAddingNewAddress(false);
-                    }}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all cursor-pointer ${
-                      checkoutStep === 'address'
-                        ? 'border-[#800000] bg-[#800000] text-amber-100 shadow-2xs'
-                        : 'border-[#E5DAC8] bg-[#FAF5EE] text-[#8C6239] hover:bg-white'
-                    }`}
-                  >
-                    {checkoutStep === 'payment' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <span>1</span>}
-                    <span>Address</span>
-                  </button>
-                  <span className="text-[#C5BBAE]">─</span>
-                  <div
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all ${
-                      checkoutStep === 'payment'
-                        ? 'border-[#800000] bg-[#800000] text-amber-100 shadow-2xs'
-                        : 'border-[#ECE5DC] bg-[#FAF7F2] text-[#A69B8F]'
-                    }`}
-                  >
-                    <span>2</span>
-                    <span>Payment</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setIsCheckoutModalOpen(false);
-                    setCurrentStep(1);
-                  }}
-                  className="text-[#736B63] hover:text-[#2A1810] p-1.5 rounded-lg hover:bg-[#FAF7F2] transition-colors shrink-0 cursor-pointer"
-                  aria-label="Close modal"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <p className="text-xs text-[#786C60] font-sans mt-0.5 truncate hidden md:block">
+                  {checkoutStep === 'address'
+                    ? 'Select your saved delivery address or enter a new sacred delivery location'
+                    : 'All transactions are secure, encrypted, and backed by Vedic Authentic Guarantee'}
+                </p>
               </div>
             </div>
 
-            {/* Modal Body: Either Address Selection OR Payment & Confirmed Address */}
-            {checkoutStep === 'address' ? (
-              <div className="flex flex-col flex-1 min-h-0 overflow-hidden text-xs sm:text-sm">
+            {/* Center: Stepper (Visible on Desktop) */}
+            <div className="hidden lg:flex items-center gap-3 bg-[#FAF7F2] border border-[#E5DAC8] px-4 py-2 rounded-2xl shadow-2xs">
+              {/* Step 1: Address */}
+              <button
+                type="button"
+                onClick={() => {
+                  setCheckoutStep('address');
+                  setIsAddingNewAddress(false);
+                }}
+                className={`inline-flex items-center gap-2 text-xs transition-all cursor-pointer ${
+                  checkoutStep === 'address'
+                    ? 'text-[#800000]'
+                    : 'text-[#6E5D4F] hover:text-[#2A1810]'
+                }`}
+              >
+                <div
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    checkoutStep === 'address'
+                      ? 'bg-gradient-to-br from-[#800000] to-[#5C0612] text-amber-100 shadow-xs ring-2 ring-[#800000]/20'
+                      : checkoutStep === 'payment'
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-white border border-[#C5BBAE] text-[#736B63]'
+                  }`}
+                >
+                  {checkoutStep === 'payment' ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : '1'}
+                </div>
+                <span className={checkoutStep === 'address' ? 'font-bold text-[#800000]' : 'font-medium'}>
+                  Address
+                </span>
+              </button>
+
+              {/* Connecting Bar */}
+              <div className="w-10 h-[2px] rounded-full bg-[#E5DAC8] overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-300 ${
+                    checkoutStep === 'payment' ? 'w-full bg-[#800000]' : 'w-0'
+                  }`}
+                />
+              </div>
+
+              {/* Step 2: Payment */}
+              <div
+                className={`inline-flex items-center gap-2 text-xs transition-all ${
+                  checkoutStep === 'payment'
+                    ? 'text-[#800000]'
+                    : 'text-[#8C7E72]'
+                }`}
+              >
+                <div
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    checkoutStep === 'payment'
+                      ? 'bg-gradient-to-br from-[#800000] to-[#5C0612] text-amber-100 shadow-xs ring-2 ring-[#800000]/20'
+                      : 'bg-white border border-[#D5C9B8] text-[#8C7E72]'
+                  }`}
+                >
+                  2
+                </div>
+                <span className={checkoutStep === 'payment' ? 'font-bold text-[#800000]' : 'font-medium'}>
+                  Payment
+                </span>
+              </div>
+            </div>
+
+            {/* Right: Mobile Stepper + Close Button */}
+            <div className="flex items-center gap-3 shrink-0">
+              {/* Stepper on smaller screens (< lg) */}
+              <div className="flex lg:hidden items-center gap-1.5 text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCheckoutStep('address');
+                    setIsAddingNewAddress(false);
+                  }}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs transition-all cursor-pointer ${
+                    checkoutStep === 'address'
+                      ? 'border-[#800000] bg-gradient-to-r from-[#800000] to-[#5C0612] text-amber-100 shadow-xs'
+                      : 'border-[#E5DAC8] bg-[#FAF5EE] text-[#800000]'
+                  }`}
+                >
+                  {checkoutStep === 'payment' ? <Check className="w-3 h-3 text-emerald-600" /> : <span className="font-bold">1</span>}
+                  <span>Address</span>
+                </button>
+                <span className="text-[#C5BBAE]">─</span>
+                <div
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-xs transition-all ${
+                    checkoutStep === 'payment'
+                      ? 'border-[#800000] bg-gradient-to-r from-[#800000] to-[#5C0612] text-amber-100 shadow-xs'
+                      : 'border-[#ECE5DC] bg-[#FAF7F2] text-[#A69B8F]'
+                  }`}
+                >
+                  <span className="font-bold">2</span>
+                  <span>Payment</span>
+                </div>
+              </div>
+
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCheckoutModalOpen(false);
+                  setCurrentStep(1);
+                }}
+                className="w-9 h-9 rounded-xl border border-[#E5DAC8] bg-[#FAF5EE] hover:bg-white text-[#736B63] hover:text-[#2A1810] flex items-center justify-center transition-all cursor-pointer shadow-2xs hover:shadow-xs"
+                aria-label="Exit Checkout"
+                title="Return to Cart"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </header>
+
+          {/* Main Body: Either Address Selection OR Payment & Confirmed Address */}
+          {checkoutStep === 'address' ? (
+            <div 
+              className="flex-1 overflow-y-auto overscroll-contain py-6 sm:py-10 px-4 sm:px-6 bg-[#FAF7F2]"
+              onWheel={(e) => e.stopPropagation()}
+            >
+              <div className="max-w-3xl mx-auto bg-white rounded-2xl sm:rounded-3xl border border-[#E5DAC8] shadow-sm overflow-hidden flex flex-col">
                 <div 
                   className="overflow-y-auto p-5 sm:p-7 space-y-4 flex-1 min-h-0 overscroll-contain"
                   onWheel={(e) => e.stopPropagation()}
@@ -1242,7 +1356,19 @@ export default function CartPage() {
                         </div>
                         <button
                           type="button"
-                          onClick={() => setIsAddingNewAddress(true)}
+                          onClick={() => {
+                            setEditingAddressId(null);
+                            setNewAddressForm({
+                              fullName: '',
+                              phone: '',
+                              address: '',
+                              city: '',
+                              state: '',
+                              pincode: '',
+                              label: 'Home',
+                            });
+                            setIsAddingNewAddress(true);
+                          }}
                           className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#800000] hover:text-[#5C0612] transition-colors cursor-pointer bg-[#FAF5EE] hover:bg-[#F2E8DC] border border-[#E5DAC8] px-3.5 py-1.5 rounded-xl shrink-0 shadow-2xs"
                         >
                           <Plus className="w-4 h-4 text-[#800000]" />
@@ -1263,8 +1389,8 @@ export default function CartPage() {
                                   : 'border-[#ECE5DC] bg-white hover:border-[#D8CEBF] hover:bg-[#FAF7F2]'
                               }`}
                             >
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex items-start gap-3">
+                              <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
+                                <div className="flex items-start gap-3 min-w-0">
                                   <div
                                     className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
                                       isSelected
@@ -1274,7 +1400,7 @@ export default function CartPage() {
                                   >
                                     {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                                   </div>
-                                  <div>
+                                  <div className="min-w-0">
                                     <div className="flex items-center gap-2 flex-wrap">
                                       <span className="font-semibold text-sm sm:text-base text-[#2A1810]">
                                         {addr.fullName}
@@ -1295,38 +1421,105 @@ export default function CartPage() {
                                     <p className="text-xs text-[#736B63] mt-1 font-medium">
                                       Mobile: <span className="text-[#2A1810]">{addr.phone}</span>
                                     </p>
+
+                                    {/* Action Buttons: Edit and Delete */}
+                                    <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-[#F0EBE3]">
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleStartEditAddress(addr);
+                                        }}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-white hover:bg-[#F2E8DC] text-[#800000] hover:text-[#5C0612] border border-[#E5DAC8] hover:border-[#800000]/40 transition-all cursor-pointer shadow-2xs"
+                                        title="Edit this address"
+                                      >
+                                        <Edit3 className="w-3.5 h-3.5" />
+                                        <span>Edit</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteAddress(addr.id);
+                                        }}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-white hover:bg-rose-50 text-rose-600 hover:text-rose-800 border border-rose-200 hover:border-rose-300 transition-all cursor-pointer shadow-2xs"
+                                        title="Delete this address"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                                        <span>Delete</span>
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
 
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedAddressId(addr.id);
-                                    setCheckoutStep('payment');
-                                  }}
-                                  className={`px-4 py-2 text-xs font-semibold rounded-xl shrink-0 transition-all cursor-pointer shadow-2xs ${
-                                    isSelected
-                                      ? 'bg-gradient-to-r from-[#800000] via-[#5C0612] to-[#3E1F18] hover:from-[#660000] hover:to-[#2B140F] text-amber-100 hover:text-white shadow-sm'
-                                      : 'bg-[#FAF5EE] hover:bg-[#800000] text-[#800000] hover:text-white border border-[#E5DAC8]'
-                                  }`}
-                                >
-                                  Deliver Here
-                                </button>
+                                <div className="flex sm:flex-col items-center sm:items-end gap-2 shrink-0 ml-auto sm:ml-0">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedAddressId(addr.id);
+                                      setCheckoutStep('payment');
+                                    }}
+                                    className={`px-4 py-2 text-xs font-semibold rounded-xl shrink-0 transition-all cursor-pointer shadow-2xs ${
+                                      isSelected
+                                        ? 'bg-gradient-to-r from-[#800000] via-[#5C0612] to-[#3E1F18] hover:from-[#660000] hover:to-[#2B140F] text-amber-100 hover:text-white shadow-sm'
+                                        : 'bg-[#FAF5EE] hover:bg-[#800000] text-[#800000] hover:text-white border border-[#E5DAC8]'
+                                    }`}
+                                  >
+                                    Deliver Here
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           );
                         })}
+
+                        {savedAddresses.length === 0 && (
+                          <div className="text-center py-10 px-4 bg-[#FAF7F2] rounded-2xl border border-dashed border-[#E5DAC8]">
+                            <div className="w-10 h-10 rounded-full bg-[#FAF5EE] border border-[#E5DAC8] flex items-center justify-center text-[#800000] mx-auto mb-2.5 shadow-2xs">
+                              <MapPin className="w-5 h-5" />
+                            </div>
+                            <h4 className="font-semibold text-sm text-[#2A1810]">No Saved Addresses</h4>
+                            <p className="text-xs text-[#736B63] mt-1">
+                              Please add a delivery address to proceed with your order.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingAddressId(null);
+                                setNewAddressForm({
+                                  fullName: '',
+                                  phone: '',
+                                  address: '',
+                                  city: '',
+                                  state: '',
+                                  pincode: '',
+                                  label: 'Home',
+                                });
+                                setIsAddingNewAddress(true);
+                              }}
+                              className="mt-3.5 inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-[#800000] to-[#5C0612] text-amber-100 hover:text-white font-semibold text-xs rounded-xl shadow-xs cursor-pointer"
+                            >
+                              <Plus className="w-4 h-4" />
+                              <span>Add New Address</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </>
                   ) : (
-                    /* New Address Entry Form */
+                    /* New/Edit Address Entry Form */
                     <form onSubmit={handleSaveNewAddress} className="space-y-4">
                       <div className="flex items-center justify-between pb-2 border-b border-[#F0EBE3]">
-                        <h4 className="font-semibold text-sm text-[#2A1810]">Add Delivery Address</h4>
+                        <h4 className="font-semibold text-sm text-[#2A1810]">
+                          {editingAddressId ? 'Edit Delivery Address' : 'Add Delivery Address'}
+                        </h4>
                         <button
                           type="button"
-                          onClick={() => setIsAddingNewAddress(false)}
+                          onClick={() => {
+                            setIsAddingNewAddress(false);
+                            setEditingAddressId(null);
+                          }}
                           className="text-xs font-semibold text-[#800000] hover:text-[#5C0612] hover:underline cursor-pointer"
                         >
                           Cancel
@@ -1456,7 +1649,7 @@ export default function CartPage() {
                         type="submit"
                         className="w-full py-3.5 bg-gradient-to-r from-[#800000] via-[#5C0612] to-[#3E1F18] hover:from-[#660000] hover:to-[#2B140F] text-amber-100 hover:text-white font-semibold text-xs sm:text-sm rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-2"
                       >
-                        <span>Save & Deliver to this Address</span>
+                        <span>{editingAddressId ? 'Update & Deliver to this Address' : 'Save & Deliver to this Address'}</span>
                         <ArrowRight className="w-4 h-4 text-amber-300" />
                       </button>
                     </form>
@@ -1484,15 +1677,16 @@ export default function CartPage() {
                   </div>
                 )}
               </div>
-            ) : (
-              /* 2-COLUMN VIEW MATCHING USER REFERENCE IMAGE */
-              <div 
-                className="overflow-y-auto p-4 sm:p-6 lg:p-7 overscroll-contain flex-1 min-h-0"
-                onWheel={(e) => e.stopPropagation()}
-              >
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-                  {/* Left Column (7 cols): Select Payment Option */}
-                  <div className="lg:col-span-7 space-y-4">
+            </div>
+          ) : (
+            /* WHOLE PAGE 2-COLUMN VIEW FOR PAYMENT & CHECKOUT */
+            <div 
+              className="overflow-y-auto p-4 sm:p-6 lg:p-8 xl:p-12 overscroll-contain flex-1 min-h-0 bg-[#FAF7F2]"
+              onWheel={(e) => e.stopPropagation()}
+            >
+              <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+                {/* Left Column (7 cols): Select Payment Option */}
+                <div className="lg:col-span-7 bg-white rounded-2xl sm:rounded-3xl border border-[#E5DAC8] p-5 sm:p-7 lg:p-8 shadow-xs space-y-5">
                     {/* Header */}
                     <div>
                       <h2 className="font-sans font-semibold text-lg sm:text-xl text-[#2A1810] tracking-tight">
@@ -1520,13 +1714,23 @@ export default function CartPage() {
                           </p>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setCheckoutStep('address')}
-                        className="text-xs font-semibold text-[#800000] hover:text-[#5C0612] px-3 py-1.5 rounded-xl bg-white hover:bg-[#F2E8DC] border border-[#E5DAC8] hover:border-[#800000]/40 transition-all shrink-0 cursor-pointer shadow-2xs"
-                      >
-                        Change
-                      </button>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditAddress(activeAddress)}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-[#800000] hover:text-[#5C0612] px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#F2E8DC] border border-[#E5DAC8] hover:border-[#800000]/40 transition-all cursor-pointer shadow-2xs"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCheckoutStep('address')}
+                          className="text-xs font-semibold text-[#800000] hover:text-[#5C0612] px-3 py-1.5 rounded-xl bg-white hover:bg-[#F2E8DC] border border-[#E5DAC8] hover:border-[#800000]/40 transition-all shrink-0 cursor-pointer shadow-2xs"
+                        >
+                          Change
+                        </button>
+                      </div>
                     </div>
 
                     {/* Payment Form with 4 Options */}
@@ -2072,17 +2276,26 @@ export default function CartPage() {
                     </form>
                   </div>
 
-                  {/* Right Column (5 cols): Your cart + Order summary matching image */}
-                  <div className="lg:col-span-5 bg-gradient-to-br from-[#F5F7FF] via-[#F8FAFF] to-[#FAF8FF] border border-[#E0E7FF]/70 rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col gap-4 shadow-sm">
+                  {/* Right Column (5 cols): Your cart + Order summary */}
+                  <div className="lg:col-span-5 bg-white border border-[#E5DAC8] rounded-2xl sm:rounded-3xl p-5 sm:p-7 flex flex-col gap-5 shadow-xs">
                     {/* Header */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between pb-2 border-b border-[#F0EBE3]">
                       <h3 className="font-sans font-semibold text-lg sm:text-xl text-[#2A1810] tracking-tight">
                         Your cart <span className="text-[#800000]">({items.length})</span>
                       </h3>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCheckoutModalOpen(false);
+                          setCurrentStep(1);
+                        }}
+                        className="text-xs font-semibold text-[#800000] hover:text-[#5C0612] hover:underline cursor-pointer"
+                      >
+                        Edit Cart
+                      </button>
                     </div>
-
                     {/* Cart item cards */}
-                    <div className="space-y-3 max-h-64 sm:max-h-72 overflow-y-auto pr-1">
+                    <div className="space-y-3">
                       {items.map((item) => (
                         <div
                           key={item.id}
@@ -2096,13 +2309,20 @@ export default function CartPage() {
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-xs sm:text-sm text-gray-900 truncate">
+                            <h4 className="font-sans font-semibold text-lg sm:text-xl text-[#2A1810] tracking-tight truncate">
                               {formatTitleCase(item.name)}
                             </h4>
                             <span className="text-xs text-gray-500 block mt-0.5">
                               Qty : {item.quantity}
                             </span>
-                            <div className="font-sans font-semibold text-sm sm:text-base text-[#2A1810] tracking-tight mt-1">
+                            <div
+                              className="product-price-style text-sm sm:text-base mt-1"
+                              style={{
+                                fontFamily: "'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                                fontWeight: 700,
+                                color: '#212121',
+                              }}
+                            >
                               ₹{(item.price * item.quantity).toLocaleString('en-IN')}
                             </div>
                           </div>
@@ -2186,7 +2406,14 @@ export default function CartPage() {
                       </div>
                       <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
                         <span className="font-sans font-semibold text-base sm:text-lg text-[#2A1810] tracking-tight">Total</span>
-                        <span className="font-sans font-semibold text-lg sm:text-xl text-[#2A1810] tracking-tight">
+                        <span
+                          className="product-price-style text-xl sm:text-2xl font-bold"
+                          style={{
+                            fontFamily: "'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                            fontWeight: 700,
+                            color: '#212121',
+                          }}
+                        >
                           ₹{orderTotal.toLocaleString('en-IN')}
                         </span>
                       </div>
@@ -2195,7 +2422,6 @@ export default function CartPage() {
                 </div>
               </div>
             )}
-          </div>
         </div>
       )}
 

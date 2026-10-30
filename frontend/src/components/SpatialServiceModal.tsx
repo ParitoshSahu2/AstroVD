@@ -183,9 +183,16 @@ export const SpatialServiceModal: React.FC<SpatialServiceModalProps> = ({
               {t('Dakshina / Offering', 'दक्षिणा / न्योछावर')}
             </span>
             <div className="flex items-baseline gap-2">
-              <span className={`font-serif text-xl sm:text-2xl font-bold ${
-                service.price.includes('FREE') ? 'text-emerald-700' : 'text-[#5B0D15]'
-              }`}>
+              <span
+                className={`product-price-style text-2xl sm:text-3xl font-bold ${
+                  service.price.includes('FREE') ? 'text-emerald-700' : ''
+                }`}
+                style={{
+                  fontFamily: "'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                  fontWeight: 700,
+                  color: service.price.includes('FREE') ? '#047857' : '#212121',
+                }}
+              >
                 {language === 'hi' && service.price.includes('FREE') ? '100% निःशुल्क' : service.price}
               </span>
               <span className="text-xs text-amber-800 font-semibold">

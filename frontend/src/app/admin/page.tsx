@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
@@ -169,39 +169,145 @@ export default function AdminPage() {
   const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'bookings' | 'orders' | 'availability' | 'activity'>('overview');
   const [globalSearch, setGlobalSearch] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  function getRelativeTime(dateStr?: string): string {
+    if (!dateStr) return 'Recently';
+    try {
+      const diffMs = Date.now() - new Date(dateStr).getTime();
+      if (isNaN(diffMs) || diffMs < 0) return 'Just now';
+      const diffSec = Math.floor(diffMs / 1000);
+      if (diffSec < 60) return 'Just now';
+      const diffMin = Math.floor(diffSec / 60);
+      if (diffMin < 60) return `${diffMin}m ago`;
+      const diffHr = Math.floor(diffMin / 60);
+      if (diffHr < 24) return `${diffHr}h ago`;
+      const diffDays = Math.floor(diffHr / 24);
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays}d ago`;
+      return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch {
+      return 'Recently';
+    }
+  }
+
+  const notificationsListRef = useRef<any[]>([]);
   const [notificationsList, setNotificationsList] = useState<{
     id: string;
     title: string;
     description: string;
     time?: string;
+    rawDate?: string;
     read: boolean;
     actionTab?: string;
-  }[]>([
-    {
-      id: 'notif-1',
-      title: 'Pending astrologer approval',
-      description: '1 astrologer is awaiting approval.',
-      time: '10m ago',
-      read: false,
-      actionTab: 'pandits',
-    },
-    {
-      id: 'notif-2',
-      title: 'Upcoming consultation',
-      description: 'Scheduled for today at 2:00 PM.',
-      time: '1h ago',
-      read: false,
-      actionTab: 'appointments',
-    },
-    {
-      id: 'notif-3',
-      title: 'New system activity',
-      description: 'Audit logs recorded new events.',
-      time: '2h ago',
-      read: false,
-      actionTab: 'activity',
-    },
-  ]);
+    type?: 'booking' | 'order' | 'system';
+  }[]>([]);
+
+  const fetchAdminNotifications = async () => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    try {
+      const [bookingsRes, ordersRes] = await Promise.all([
+        fetch(`${backendUrl}/api/admin/bookings?limit=10&page=1`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => null),
+        fetch(`${backendUrl}/api/admin/orders?limit=10&page=1`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => null),
+      ]);
+
+      const dynamicNotifs: {
+        id: string;
+        title: string;
+        description: string;
+        time?: string;
+        rawDate?: string;
+        read: boolean;
+        actionTab?: string;
+        type: 'booking' | 'order' | 'system';
+      }[] = [];
+
+      let readSet = new Set<string>();
+      try {
+        const stored = typeof window !== 'undefined' ? localStorage.getItem('astrovd_admin_read_notifs') : null;
+        if (stored) {
+          readSet = new Set(JSON.parse(stored));
+        }
+      } catch (e) {}
+
+      // Process consultation bookings
+      if (bookingsRes && bookingsRes.ok) {
+        const bData = await bookingsRes.json();
+        const bList = bData.bookings || [];
+        bList.forEach((b: any) => {
+          const custName = b.customer?.name || b.user?.name || 'Customer';
+          const serviceName = b.serviceTitle || b.serviceType || 'Consultation';
+          const costStr = b.totalCost === 0 ? 'FREE' : `₹${Number(b.totalCost).toLocaleString('en-IN')}`;
+          const notifId = `booking-${b.id}`;
+
+          dynamicNotifs.push({
+            id: notifId,
+            title: `🗓️ New Booking: ${serviceName}`,
+            description: `${custName} booked ${serviceName} on ${b.scheduledDate} at ${b.scheduledTime} (${costStr})`,
+            time: getRelativeTime(b.createdAt),
+            rawDate: b.createdAt,
+            read: readSet.has(notifId),
+            actionTab: 'appointments',
+            type: 'booking',
+          });
+        });
+      }
+
+      // Process product shopping orders
+      if (ordersRes && ordersRes.ok) {
+        const oData = await ordersRes.json();
+        const oList = oData.orders || [];
+        oList.forEach((o: any) => {
+          const custName = o.customer?.name || o.shippingAddress?.recipient || 'Customer';
+          const orderRef = o.orderReference || `#ORD-${o.id.slice(0, 8).toUpperCase()}`;
+          const totalStr = `₹${Number(o.totalAmount).toLocaleString('en-IN')}`;
+          const itemCount = o.itemCount || o.items?.length || 1;
+          const notifId = `order-${o.id}`;
+
+          dynamicNotifs.push({
+            id: notifId,
+            title: `📦 New Product Order ${orderRef}`,
+            description: `${custName} ordered ${itemCount} items (${totalStr}) • ${o.shippingAddress?.city || 'India'}`,
+            time: getRelativeTime(o.createdAt),
+            rawDate: o.createdAt,
+            read: readSet.has(notifId),
+            actionTab: 'orders',
+            type: 'order',
+          });
+        });
+      }
+
+      // Sort by newest date
+      dynamicNotifs.sort((a, b) => {
+        const tA = a.rawDate ? new Date(a.rawDate).getTime() : 0;
+        const tB = b.rawDate ? new Date(b.rawDate).getTime() : 0;
+        return tB - tA;
+      });
+
+      // Detect newly arrived bookings or orders while admin is on the page
+      if (notificationsListRef.current.length > 0 && dynamicNotifs.length > 0) {
+        const prevIds = new Set(notificationsListRef.current.map((n) => n.id));
+        const newUnseen = dynamicNotifs.filter((n) => !prevIds.has(n.id) && !n.read);
+        if (newUnseen.length > 0) {
+          const latest = newUnseen[0];
+          setNotification({
+            type: 'success',
+            message: `${latest.title} — ${latest.description.slice(0, 75)}...`,
+          });
+        }
+      }
+
+      notificationsListRef.current = dynamicNotifs;
+      setNotificationsList(dynamicNotifs);
+    } catch (err) {
+      console.error('Failed to fetch admin notifications:', err);
+    }
+  };
 
   const unreadNotificationsCount = notificationsList.filter((n) => !n.read).length;
 
@@ -209,6 +315,13 @@ export default function AdminPage() {
     setNotificationsList((prev) =>
       prev.map((n) => (n.id === item.id ? { ...n, read: true } : n))
     );
+    try {
+      const stored = localStorage.getItem('astrovd_admin_read_notifs');
+      const set = stored ? new Set(JSON.parse(stored)) : new Set<string>();
+      set.add(item.id);
+      localStorage.setItem('astrovd_admin_read_notifs', JSON.stringify(Array.from(set)));
+    } catch (e) {}
+
     setNotificationsOpen(false);
 
     if (item.actionTab) {
@@ -222,6 +335,10 @@ export default function AdminPage() {
 
   const handleMarkAllNotificationsRead = () => {
     setNotificationsList((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      const allIds = notificationsList.map((n) => n.id);
+      localStorage.setItem('astrovd_admin_read_notifs', JSON.stringify(allIds));
+    } catch (e) {}
   };
 
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -298,6 +415,8 @@ export default function AdminPage() {
   const [initScheduleModalOpen, setInitScheduleModalOpen] = useState(false);
   const [initScheduleDays, setInitScheduleDays] = useState(7);
   const [initScheduleLoading, setInitScheduleLoading] = useState(false);
+  const [slotToDelete, setSlotToDelete] = useState<any | null>(null);
+  const [deleteSlotLoading, setDeleteSlotLoading] = useState(false);
 
   const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
 
@@ -564,6 +683,32 @@ export default function AdminPage() {
     }
   }, [adminTab, orderStatusFilter, orderDateFilter, isAdmin]);
 
+  // Periodic polling & cross-tab sync for Admin Consultation & Product notifications
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    fetchAdminNotifications();
+
+    const interval = setInterval(() => {
+      fetchAdminNotifications();
+    }, 15000);
+
+    const handleStorageEvent = (e: StorageEvent) => {
+      if (e.key === 'astrovd_recent_activity') {
+        fetchAdminNotifications();
+        if (adminTab === 'bookings') fetchBookingsList(1);
+        if (adminTab === 'orders') fetchOrdersList(1);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageEvent);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageEvent);
+    };
+  }, [isAdmin, adminTab]);
+
   // Handle Search submit for users
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -678,9 +823,17 @@ export default function AdminPage() {
 
     setAvailabilityLoading(true);
     try {
-      const res = await fetch(`${backendUrl}/api/admin/availability?date=${encodeURIComponent(targetDate)}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${backendUrl}/api/admin/availability?date=${encodeURIComponent(targetDate)}&_t=${Date.now()}`,
+        {
+          cache: 'no-store',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+          },
+        },
+      );
 
       if (res.ok) {
         const data = await res.json();
@@ -804,6 +957,18 @@ export default function AdminPage() {
     const token = getAuthToken();
     if (!token) return;
 
+    const nextPublished = !slot.isPublished;
+    // Optimistically toggle in local UI immediately
+    setAvailabilityData((prev: any) => {
+      if (!prev || !prev.slots) return prev;
+      return {
+        ...prev,
+        slots: prev.slots.map((s: any) =>
+          s.id === slot.id ? { ...s, isPublished: nextPublished } : s,
+        ),
+      };
+    });
+
     try {
       const res = await fetch(`${backendUrl}/api/admin/availability/slots/${slot.id}`, {
         method: 'PATCH',
@@ -812,7 +977,7 @@ export default function AdminPage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          isPublished: !slot.isPublished,
+          isPublished: nextPublished,
         }),
       });
 
@@ -823,15 +988,25 @@ export default function AdminPage() {
 
       setNotification({
         type: 'success',
-        message: `Slot at ${slot.startTime} is now ${!slot.isPublished ? 'published & visible to users' : 'unpublished & hidden'}!`,
+        message: `Slot at ${slot.startTime} is now ${nextPublished ? 'published & visible to seekers' : 'unpublished & hidden'}!`,
       });
       fetchAvailability(availabilityDate);
     } catch (err: any) {
+      // Rollback on failure
+      setAvailabilityData((prev: any) => {
+        if (!prev || !prev.slots) return prev;
+        return {
+          ...prev,
+          slots: prev.slots.map((s: any) =>
+            s.id === slot.id ? { ...s, isPublished: slot.isPublished } : s,
+          ),
+        };
+      });
       setNotification({ type: 'error', message: err.message || 'Error toggling publish state.' });
     }
   };
 
-  const handleDeleteSlot = async (slot: any) => {
+  const handleDeleteSlot = (slot: any) => {
     if (!slot.canDelete) {
       setNotification({
         type: 'error',
@@ -840,15 +1015,17 @@ export default function AdminPage() {
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete the slot on ${slot.date} at ${slot.startTime}?`)) {
-      return;
-    }
+    setSlotToDelete(slot);
+  };
 
+  const handleConfirmDeleteSlot = async () => {
+    if (!slotToDelete) return;
     const token = getAuthToken();
     if (!token) return;
 
+    setDeleteSlotLoading(true);
     try {
-      const res = await fetch(`${backendUrl}/api/admin/availability/slots/${slot.id}`, {
+      const res = await fetch(`${backendUrl}/api/admin/availability/slots/${slotToDelete.id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -859,9 +1036,12 @@ export default function AdminPage() {
       }
 
       setNotification({ type: 'success', message: data.message || 'Slot deleted successfully.' });
+      setSlotToDelete(null);
       fetchAvailability(availabilityDate);
     } catch (err: any) {
       setNotification({ type: 'error', message: err.message || 'Error deleting slot.' });
+    } finally {
+      setDeleteSlotLoading(false);
     }
   };
 
@@ -1561,17 +1741,12 @@ export default function AdminPage() {
                   <div className="space-y-0.5">
                     <button
                       type="button"
-                      onClick={() => handleSidebarTabClick('wallet')}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
-                    >
-                      <Wallet className="w-4 h-4 text-stone-400 shrink-0" />
-                      <span>Wallet &amp; Ledger</span>
-                    </button>
-
-                    <button
-                      type="button"
                       onClick={() => handleSidebarTabClick('payments')}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                        adminTab === 'orders'
+                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                      }`}
                     >
                       <CreditCard className="w-4 h-4 text-stone-400 shrink-0" />
                       <span>Payments</span>
@@ -1615,6 +1790,15 @@ export default function AdminPage() {
                       <ImageIcon className="w-4 h-4 text-stone-400 shrink-0" />
                       <span>Gallery</span>
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSidebarTabClick('activity')}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
+                    >
+                      <History className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Activity</span>
+                    </button>
                   </div>
                 </div>
 
@@ -1635,7 +1819,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Group 6: SETTINGS & AUDIT */}
+                {/* Group 6: SETTINGS */}
                 <div>
                   <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
                     Settings
@@ -1648,19 +1832,6 @@ export default function AdminPage() {
                     >
                       <Settings className="w-4 h-4 text-stone-400 shrink-0" />
                       <span>Settings</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setAdminTab('activity')}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                        adminTab === 'activity'
-                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
-                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
-                      }`}
-                    >
-                      <History className="w-4 h-4 text-stone-400 shrink-0" />
-                      <span>Audit Activity</span>
                     </button>
                   </div>
                 </div>
@@ -1816,24 +1987,27 @@ export default function AdminPage() {
                     </button>
 
                     {notificationsOpen && (
-                      <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-30 space-y-3 animate-fadeIn">
-                        <div className="flex items-center justify-between pb-2 border-b border-stone-100">
-                          <span className="text-xs font-bold text-stone-900">Notifications</span>
+                      <div className="absolute right-0 top-12 w-84 sm:w-96 bg-white/98 backdrop-blur-md rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] border border-stone-200/90 p-4 z-30 space-y-3 animate-fadeIn ring-1 ring-black/5">
+                        <div className="flex items-center justify-between pb-2.5 border-b border-stone-100">
                           <div className="flex items-center gap-2">
-                            {unreadNotificationsCount > 0 ? (
-                              <span className="text-[10px] font-bold text-[#E11D48] bg-rose-50 px-2 py-0.5 rounded-full">
+                            <span className="text-xs font-bold text-stone-900 tracking-tight">Activity Notifications</span>
+                            {unreadNotificationsCount > 0 && (
+                              <span className="text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200/80 px-2 py-0.5 rounded-full">
                                 {unreadNotificationsCount} new
                               </span>
-                            ) : (
-                              <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                                All read
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {unreadNotificationsCount === 0 && (
+                              <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
+                                All caught up
                               </span>
                             )}
                             {unreadNotificationsCount > 0 && (
                               <button
                                 type="button"
                                 onClick={handleMarkAllNotificationsRead}
-                                className="text-[10px] text-stone-500 hover:text-stone-900 underline cursor-pointer"
+                                className="text-[10px] font-semibold text-stone-500 hover:text-stone-900 transition-colors cursor-pointer"
                               >
                                 Mark all read
                               </button>
@@ -1841,37 +2015,49 @@ export default function AdminPage() {
                           </div>
                         </div>
 
-                        <div className="space-y-1.5 text-xs max-h-72 overflow-y-auto">
-                          {notificationsList.map((item) => (
-                            <div
-                              key={item.id}
-                              onClick={() => handleNotificationClick(item)}
-                              className={`p-2.5 rounded-xl cursor-pointer border transition-all flex items-start gap-2.5 ${
-                                item.read
-                                  ? 'bg-transparent hover:bg-stone-50 border-transparent text-stone-500'
-                                  : 'bg-amber-50/50 hover:bg-amber-50/80 border-amber-200/60 text-stone-900 font-medium'
-                              }`}
-                            >
-                              <span
-                                className={`w-2 h-2 rounded-full mt-1.5 shrink-0 transition-colors ${
-                                  item.read ? 'bg-transparent' : 'bg-[#E11D48]'
+                        <div className="space-y-1.5 text-xs max-h-84 overflow-y-auto pr-0.5">
+                          {notificationsList.length === 0 ? (
+                            <div className="py-8 text-center text-xs text-stone-400 space-y-2">
+                              <div className="w-10 h-10 rounded-full bg-stone-100 text-stone-400 flex items-center justify-center mx-auto">
+                                <Bell className="w-5 h-5" />
+                              </div>
+                              <p className="font-semibold text-stone-700 text-xs">No Notifications</p>
+                              <p className="text-[11px] text-stone-400 max-w-[220px] mx-auto leading-relaxed">
+                                Devotee consultation bookings and sacred store orders will appear here.
+                              </p>
+                            </div>
+                          ) : (
+                            notificationsList.map((item) => (
+                              <div
+                                key={item.id}
+                                onClick={() => handleNotificationClick(item)}
+                                className={`p-3 rounded-xl cursor-pointer border transition-all flex items-start gap-2.5 ${
+                                  item.read
+                                    ? 'bg-transparent hover:bg-stone-50/80 border-transparent text-stone-500'
+                                    : 'bg-stone-50/80 hover:bg-stone-100/80 border-stone-200/70 text-stone-900'
                                 }`}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-1">
-                                  <div className={`truncate ${item.read ? 'font-normal text-stone-600' : 'font-bold text-stone-900'}`}>
-                                    {item.title}
+                              >
+                                <span
+                                  className={`w-2 h-2 rounded-full mt-1.5 shrink-0 transition-colors ${
+                                    item.read ? 'bg-transparent' : 'bg-[#5B0D15]'
+                                  }`}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between gap-1">
+                                    <div className={`truncate text-xs ${item.read ? 'font-medium text-stone-700' : 'font-bold text-stone-900'}`}>
+                                      {item.title}
+                                    </div>
+                                    {item.time && (
+                                      <span className="text-[10px] font-normal text-stone-400 shrink-0">{item.time}</span>
+                                    )}
                                   </div>
-                                  {item.time && (
-                                    <span className="text-[10px] text-stone-400 shrink-0">{item.time}</span>
-                                  )}
-                                </div>
-                                <div className="text-[11px] text-stone-500 leading-snug line-clamp-2">
-                                  {item.description}
+                                  <div className="text-[11px] text-stone-500 leading-relaxed line-clamp-2 mt-0.5">
+                                    {item.description}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
+                            ))
+                          )}
                         </div>
                       </div>
                     )}
@@ -1944,28 +2130,37 @@ export default function AdminPage() {
               <div
                 role="status"
                 aria-live="polite"
-                className="fixed bottom-6 right-6 z-50 max-w-sm sm:max-w-md w-auto animate-fadeIn transition-all duration-300"
+                className="fixed bottom-6 right-6 z-50 max-w-sm sm:max-w-md w-full sm:w-auto animate-fadeIn transition-all duration-300 pointer-events-auto"
               >
-                <div
-                  className={`px-4 py-3 rounded-2xl text-xs sm:text-sm font-medium flex items-center gap-3 shadow-2xl backdrop-blur-md border ${
-                    notification.type === 'success'
-                      ? 'bg-[#1C2820]/95 text-emerald-100 border-emerald-500/50 shadow-emerald-950/30'
-                      : 'bg-[#2D1217]/95 text-rose-100 border-rose-500/50 shadow-rose-950/30'
-                  }`}
-                >
-                  {notification.type === 'success' ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  ) : (
-                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                  )}
-                  <span className="leading-snug flex-1">{notification.message}</span>
+                <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] border border-stone-200/90 flex items-start gap-3.5 ring-1 ring-black/5">
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                      notification.type === 'success'
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200/80'
+                        : 'bg-rose-50 text-rose-600 border-rose-200/80'
+                    }`}
+                  >
+                    {notification.type === 'success' ? (
+                      <CheckCircle2 className="w-5 h-5" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 pt-0.5">
+                    <p className="text-xs font-bold text-stone-900 tracking-tight">
+                      {notification.type === 'success' ? 'Successful' : 'Attention Needed'}
+                    </p>
+                    <p className="text-xs text-stone-600 leading-relaxed font-normal mt-0.5 break-words">
+                      {notification.message}
+                    </p>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setNotification(null)}
-                    className="text-stone-400 hover:text-white font-bold p-1 hover:bg-white/10 rounded-full transition-colors cursor-pointer shrink-0"
+                    className="p-1 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer shrink-0 mt-0.5"
                     aria-label="Dismiss notification"
                   >
-                    ✕
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -2250,6 +2445,10 @@ export default function AdminPage() {
         setInitScheduleDays={setInitScheduleDays}
         initScheduleLoading={initScheduleLoading}
         handleInitStandardSchedule={handleInitStandardSchedule}
+        slotToDelete={slotToDelete}
+        setSlotToDelete={setSlotToDelete}
+        deleteSlotLoading={deleteSlotLoading}
+        handleConfirmDeleteSlot={handleConfirmDeleteSlot}
       />
 
       <AuthModal

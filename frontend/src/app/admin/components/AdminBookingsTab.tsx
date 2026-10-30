@@ -8,6 +8,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Video,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { SERVICES_CATALOGUE } from '../../../data/servicesData';
 
@@ -70,6 +72,31 @@ export default function AdminBookingsTab({
   fetchBookingsList,
   onSelectBooking,
 }: AdminBookingsTabProps) {
+  const [copiedId, setCopiedId] = React.useState<string | null>(null);
+
+  const handleCopyId = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!id) return;
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(id);
+    } else {
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = id;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      } catch (err) {
+        console.error('Fallback copy failed', err);
+      }
+    }
+    setCopiedId(id);
+    setTimeout(() => {
+      setCopiedId((prev) => (prev === id ? null : prev));
+    }, 2000);
+  };
+
   return (
     <div className="space-y-6">
       {/* Filter & Search Bar for Bookings */}
@@ -195,16 +222,16 @@ export default function AdminBookingsTab({
           </div>
         ) : (
           <div className="w-full min-w-0 overflow-x-auto">
-            <table className="w-full min-w-[1050px] table-fixed text-left text-xs">
+            <table className="w-full min-w-[960px] table-fixed text-left text-xs">
               <thead>
-                <tr className="border-b border-stone-200 text-stone-400 uppercase tracking-wider font-semibold">
-                  <th className="py-3 px-3 w-[15%] font-medium">Booking ID / Date</th>
-                  <th className="py-3 px-3 w-[21%] font-medium">Customer Details</th>
-                  <th className="py-3 px-3 w-[21%] font-medium">Service &amp; Pandit</th>
-                  <th className="py-3 px-3 w-[15%] font-medium">Scheduled Slot</th>
-                  <th className="py-3 px-3 text-right w-[8%] font-medium">Dakshina</th>
-                  <th className="py-3 px-3 text-center w-[8%] font-medium">Status</th>
-                  <th className="py-3 px-3 text-right w-[12%] font-medium">Action</th>
+                <tr className="border-b border-stone-200 text-stone-400 uppercase tracking-wider font-semibold text-[11px]">
+                  <th className="py-2.5 sm:py-3 px-2 sm:px-3 w-[14%] font-medium whitespace-nowrap">Booking ID / Date</th>
+                  <th className="py-2.5 sm:py-3 px-2 sm:px-3 w-[17%] font-medium whitespace-nowrap">Customer Details</th>
+                  <th className="py-2.5 sm:py-3 px-2 sm:px-3 w-[17%] font-medium whitespace-nowrap">Service &amp; Pandit</th>
+                  <th className="py-2.5 sm:py-3 px-2 sm:px-3 w-[14%] font-medium whitespace-nowrap">Scheduled Slot</th>
+                  <th className="py-2.5 sm:py-3 px-2 sm:px-3 text-center w-[11%] font-medium whitespace-nowrap">Dakshina</th>
+                  <th className="py-2.5 sm:py-3 px-2 sm:px-3 text-center w-[12%] font-medium whitespace-nowrap">Status</th>
+                  <th className="py-2.5 sm:py-3 px-2 sm:px-3 text-right w-[15%] font-medium whitespace-nowrap">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -212,103 +239,151 @@ export default function AdminBookingsTab({
                   const isConfirmed = b.status === 'CONFIRMED';
                   const isCompleted = b.status === 'COMPLETED';
                   const isCancelled = b.status === 'CANCELLED';
+                  const isPendingPayment = b.status === 'PENDING_PAYMENT' || b.status === 'PENDING';
 
                   const custName = b.customer?.name || 'Customer';
                   const custEmail = b.customer?.email || 'No email';
                   const custPhone = b.customer?.phone || 'No phone';
                   const bookingDate = `Booked ${new Date(b.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+                  const compactId = b.id && b.id.length > 15 ? `${b.id.slice(0, 14)}…` : b.id;
 
                   return (
                     <tr key={b.id} className="hover:bg-amber-50/40 transition-colors">
-                      <td className="py-3.5 px-3">
-                        <span className="font-mono text-stone-800 font-bold block truncate" title={b.id}>
-                          {b.id.slice(0, 13)}...
-                        </span>
-                        <span className="text-[10px] text-stone-400 block truncate" title={bookingDate}>
+                      <td className="py-2.5 sm:py-3 px-2 sm:px-3 align-middle overflow-hidden">
+                        <div className="flex items-center gap-1 min-w-0">
+                          <span
+                            className="font-mono text-stone-800 font-bold block truncate text-xs cursor-default"
+                            title={`Full Booking ID: ${b.id}`}
+                          >
+                            {compactId}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => handleCopyId(e, b.id)}
+                            className={`p-0.5 rounded transition-colors shrink-0 cursor-pointer ${
+                              copiedId === b.id
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'
+                            }`}
+                            title={copiedId === b.id ? 'Copied full ID!' : 'Copy full ID'}
+                            aria-label="Copy full ID"
+                          >
+                            {copiedId === b.id ? (
+                              <Check className="w-3 h-3 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </button>
+                        </div>
+                        <span className="text-[10px] text-stone-400 block truncate mt-0.5" title={bookingDate}>
                           {bookingDate}
                         </span>
                       </td>
 
-                      <td className="py-3.5 px-3">
+                      <td className="py-2.5 sm:py-3 px-2 sm:px-3 align-middle overflow-hidden">
                         <div className="min-w-0">
-                          <span className="font-bold text-[#3B1E22] block truncate" title={custName}>
+                          <span className="font-bold text-[#3B1E22] block truncate text-xs cursor-default" title={custName}>
                             {custName}
                           </span>
-                          <span className="text-stone-500 text-[11px] block truncate" title={custEmail}>
+                          <span className="text-stone-500 text-[11px] block truncate font-mono cursor-default" title={custEmail}>
                             {custEmail}
                           </span>
-                          <span className="text-amber-800 font-medium text-[11px] flex items-center gap-1 truncate" title={custPhone}>
-                            <Phone className="w-3 h-3 text-emerald-600 shrink-0" />
-                            <span className="truncate">{custPhone}</span>
-                          </span>
+                          {custPhone && custPhone !== 'No phone' && (
+                            <span className="text-amber-800 font-medium text-[11px] flex items-center gap-1 truncate cursor-default" title={custPhone}>
+                              <Phone className="w-3 h-3 text-emerald-600 shrink-0" />
+                              <span className="truncate">{custPhone}</span>
+                            </span>
+                          )}
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-3">
+                      <td className="py-2.5 sm:py-3 px-2 sm:px-3 align-middle overflow-hidden">
                         <div className="min-w-0">
-                          <span className="font-semibold text-stone-900 block truncate" title={b.serviceTitle}>
+                          <span className="font-semibold text-stone-900 block truncate text-xs cursor-default" title={b.serviceTitle}>
                             {b.serviceTitle}
                           </span>
-                          <span className="text-[10px] text-stone-500 block truncate" title={b.astrologer?.name || 'Pandit'}>
-                            {b.astrologer?.name}
+                          <span className="text-[10px] text-stone-500 block truncate cursor-default" title={b.astrologer?.name || 'Dr. Pandit Vishal Dubey'}>
+                            {b.astrologer?.name || 'Dr. Pandit Vishal Dubey'}
                           </span>
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-3">
-                        <span className="font-bold text-[#5B0D15] block truncate" title={b.scheduledDate}>
-                          {b.scheduledDate}
-                        </span>
-                        <span className="text-stone-700 font-semibold text-[11px] block truncate" title={`${b.scheduledTime} IST`}>
-                          {b.scheduledTime} IST
-                        </span>
+                      <td className="py-2.5 sm:py-3 px-2 sm:px-3 align-middle overflow-hidden">
+                        <div className="min-w-0">
+                          <span className="font-bold text-[#5B0D15] block truncate text-xs cursor-default" title={b.scheduledDate}>
+                            {b.scheduledDate}
+                          </span>
+                          <span className="text-stone-700 font-semibold text-[11px] block truncate cursor-default" title={`${b.scheduledTime} IST`}>
+                            {b.scheduledTime} IST
+                          </span>
+                        </div>
                       </td>
 
-                      <td className="py-3.5 px-3 text-right font-bold font-serif text-[#5B0D15] truncate" title={b.totalCost === 0 ? 'FREE' : `₹${b.totalCost}`}>
-                        {b.totalCost === 0 ? 'FREE' : `₹${b.totalCost}`}
+                      <td
+                        className="py-2.5 sm:py-3 px-2 sm:px-3 text-center font-semibold text-[#5B0D15] text-sm sm:text-[14.5px] font-sans tabular-nums tracking-tight truncate align-middle whitespace-nowrap"
+                        title={b.totalCost === 0 ? 'FREE' : `₹${b.totalCost}`}
+                      >
+                        {b.totalCost === 0 ? 'FREE' : `₹${Number(b.totalCost).toLocaleString('en-IN')}`}
                       </td>
 
-                      <td className="py-3.5 px-3 text-center">
+                      <td className="py-2.5 sm:py-3 px-2 sm:px-3 text-center align-middle whitespace-nowrap">
                         <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-[10.5px] font-semibold truncate max-w-full text-center ${
+                          className={`inline-flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border shadow-2xs whitespace-nowrap ${
                             isCancelled
-                              ? 'bg-rose-50 text-rose-700 border border-rose-200/60'
-                              : isConfirmed || isCompleted
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                              : 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                              ? 'bg-rose-50 text-rose-700 border-rose-200'
+                              : isCompleted
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : isConfirmed
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                              : isPendingPayment
+                              ? 'bg-amber-50/90 text-amber-900 border-amber-300/80'
+                              : 'bg-stone-50 text-stone-700 border-stone-200'
                           }`}
-                          title={
-                            isCancelled
-                              ? 'Cancelled'
-                              : isConfirmed || isCompleted
-                              ? 'Paid'
-                              : 'Pending'
-                          }
+                          title={`Booking Status: ${b.status || 'PENDING'}`}
                         >
-                          {isCancelled
-                            ? 'Cancelled'
-                            : isConfirmed || isCompleted
-                            ? 'Paid'
-                            : 'Pending'}
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                              isCancelled
+                                ? 'bg-rose-500'
+                                : isCompleted
+                                ? 'bg-blue-500'
+                                : isConfirmed
+                                ? 'bg-emerald-600 animate-pulse'
+                                : isPendingPayment
+                                ? 'bg-amber-500 animate-pulse'
+                                : 'bg-stone-400'
+                            }`}
+                          />
+                          <span>
+                            {isPendingPayment
+                              ? 'Pending Payment'
+                              : isConfirmed
+                              ? 'Confirmed'
+                              : isCompleted
+                              ? 'Completed'
+                              : isCancelled
+                              ? 'Cancelled'
+                              : b.status || 'Pending'}
+                          </span>
                         </span>
                       </td>
 
-                      <td className="py-3.5 px-3 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                      <td className="py-2.5 sm:py-3 px-2 sm:px-3 text-right align-middle whitespace-nowrap">
+                        <div className="inline-flex items-center justify-end gap-2 whitespace-nowrap">
                           <a
                             href={b.meetLink && b.meetLink.includes('meet.google.com') ? b.meetLink : formatGoogleMeetLink(b.id)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs transition-colors flex items-center gap-1 shrink-0"
+                            className="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs shadow-xs transition-colors inline-flex items-center gap-1.5 shrink-0 cursor-pointer"
                             title="Start Google Meet with Devotee"
                           >
-                            <Video className="w-3.5 h-3.5" />
-                            <span>Start Meet</span>
+                            <Video className="w-3.5 h-3.5 shrink-0" />
+                            <span>Meet</span>
                           </a>
 
                           <button
                             onClick={() => onSelectBooking(b)}
-                            className="px-2.5 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-[#5B0D15] font-semibold text-xs shadow-sm transition-colors cursor-pointer shrink-0 truncate max-w-full"
+                            className="px-2.5 py-1 rounded-lg border border-amber-300 bg-amber-50/90 hover:bg-amber-100 text-[#5B0D15] font-semibold text-xs shadow-xs transition-colors cursor-pointer shrink-0"
                             title="Inspect & Manage"
                           >
                             Manage

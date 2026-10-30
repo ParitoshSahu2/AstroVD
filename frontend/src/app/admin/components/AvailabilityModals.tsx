@@ -8,7 +8,22 @@ import {
   AlertCircle,
   RefreshCw,
   CheckCircle2,
+  Clock,
+  Trash2,
 } from 'lucide-react';
+
+function splitTimeAndPeriod(timeStr: string) {
+  const clean = (timeStr || '').trim();
+  const match = clean.match(/^(\d{1,2}(?::\d{0,2})?)(?:\s*(AM|PM))?$/i);
+  if (match) {
+    const time = match[1] || '';
+    const period = (match[2] || (clean.toUpperCase().includes('PM') ? 'PM' : 'AM')).toUpperCase() as 'AM' | 'PM';
+    return { time, period };
+  }
+  const isPM = clean.toUpperCase().includes('PM');
+  const time = clean.replace(/AM|PM/gi, '').trim();
+  return { time, period: (isPM ? 'PM' : 'AM') as 'AM' | 'PM' };
+}
 
 interface AvailabilityModalsProps {
   availabilityDate: string;
@@ -52,6 +67,10 @@ interface AvailabilityModalsProps {
   setInitScheduleDays: (n: number) => void;
   initScheduleLoading: boolean;
   handleInitStandardSchedule: (e: React.FormEvent) => void;
+  slotToDelete: any | null;
+  setSlotToDelete: (s: any | null) => void;
+  deleteSlotLoading: boolean;
+  handleConfirmDeleteSlot: () => void;
 }
 
 export default function AvailabilityModals({
@@ -96,6 +115,10 @@ export default function AvailabilityModals({
   setInitScheduleDays,
   initScheduleLoading,
   handleInitStandardSchedule,
+  slotToDelete,
+  setSlotToDelete,
+  deleteSlotLoading,
+  handleConfirmDeleteSlot,
 }: AvailabilityModalsProps) {
   return (
     <>
@@ -138,16 +161,52 @@ export default function AvailabilityModals({
 
               <div>
                 <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  Start Time (e.g. 10:00 AM, 02:30 PM):
+                  Start Time:
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={newSlotTime}
-                  onChange={(e) => setNewSlotTime(e.target.value)}
-                  placeholder="10:00 AM"
-                  className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    required
+                    value={splitTimeAndPeriod(newSlotTime).time}
+                    onChange={(e) => {
+                      const curPeriod = splitTimeAndPeriod(newSlotTime).period;
+                      const val = e.target.value.replace(/AM|PM/gi, '').trim();
+                      setNewSlotTime(`${val} ${curPeriod}`.trim());
+                    }}
+                    placeholder="10:00"
+                    className="flex-1 px-3 py-2 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]"
+                  />
+                  <div className="flex rounded-xl bg-stone-100 p-1 border border-stone-200 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const curTime = splitTimeAndPeriod(newSlotTime).time || '10:00';
+                        setNewSlotTime(`${curTime} AM`);
+                      }}
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        splitTimeAndPeriod(newSlotTime).period === 'AM'
+                          ? 'bg-[#5B0D15] text-amber-100 shadow-xs'
+                          : 'text-stone-600 hover:text-stone-900'
+                      }`}
+                    >
+                      AM
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const curTime = splitTimeAndPeriod(newSlotTime).time || '10:00';
+                        setNewSlotTime(`${curTime} PM`);
+                      }}
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        splitTimeAndPeriod(newSlotTime).period === 'PM'
+                          ? 'bg-[#5B0D15] text-amber-100 shadow-xs'
+                          : 'text-stone-600 hover:text-stone-900'
+                      }`}
+                    >
+                      PM
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -251,14 +310,53 @@ export default function AvailabilityModals({
                 <label className="block text-xs font-semibold text-stone-700 mb-1">
                   Start Time:
                 </label>
-                <input
-                  type="text"
-                  required
-                  disabled={slotToEdit.isBooked}
-                  value={editSlotTime}
-                  onChange={(e) => setEditSlotTime(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white disabled:bg-stone-100 disabled:text-stone-500 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    required
+                    disabled={slotToEdit.isBooked}
+                    value={splitTimeAndPeriod(editSlotTime).time}
+                    onChange={(e) => {
+                      const curPeriod = splitTimeAndPeriod(editSlotTime).period;
+                      const val = e.target.value.replace(/AM|PM/gi, '').trim();
+                      setEditSlotTime(`${val} ${curPeriod}`.trim());
+                    }}
+                    placeholder="10:00"
+                    className="flex-1 px-3 py-2 rounded-xl border border-stone-300 bg-white disabled:bg-stone-100 disabled:text-stone-500 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]"
+                  />
+                  <div className="flex rounded-xl bg-stone-100 p-1 border border-stone-200 shrink-0">
+                    <button
+                      type="button"
+                      disabled={slotToEdit.isBooked}
+                      onClick={() => {
+                        const curTime = splitTimeAndPeriod(editSlotTime).time || '10:00';
+                        setEditSlotTime(`${curTime} AM`);
+                      }}
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                        splitTimeAndPeriod(editSlotTime).period === 'AM'
+                          ? 'bg-[#5B0D15] text-amber-100 shadow-xs'
+                          : 'text-stone-600 hover:text-stone-900'
+                      }`}
+                    >
+                      AM
+                    </button>
+                    <button
+                      type="button"
+                      disabled={slotToEdit.isBooked}
+                      onClick={() => {
+                        const curTime = splitTimeAndPeriod(editSlotTime).time || '10:00';
+                        setEditSlotTime(`${curTime} PM`);
+                      }}
+                      className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                        splitTimeAndPeriod(editSlotTime).period === 'PM'
+                          ? 'bg-[#5B0D15] text-amber-100 shadow-xs'
+                          : 'text-stone-600 hover:text-stone-900'
+                      }`}
+                    >
+                      PM
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -452,6 +550,105 @@ export default function AvailabilityModals({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* DELETE SLOT CONFIRMATION MODAL */}
+      {slotToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="relative w-full max-w-md bg-white rounded-3xl border border-rose-200 shadow-2xl overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="px-6 py-5 bg-gradient-to-r from-rose-900 via-rose-800 to-[#5B0D15] text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-200 border border-rose-300/40 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-5 h-5 text-rose-300" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-rose-100">
+                    Delete Consultation Slot
+                  </h3>
+                  <p className="text-[11px] text-rose-200">
+                    Are you sure you want to delete this slot?
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSlotToDelete(null)}
+                disabled={deleteSlotLoading}
+                className="p-1.5 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-amber-200/80 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500 font-medium">Date:</span>
+                  <span className="font-bold text-[#3B1E22]">{slotToDelete.date}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500 font-medium">Time Window:</span>
+                  <span className="font-mono font-bold text-base text-[#5B0D15]">{slotToDelete.startTime}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500 font-medium">Duration:</span>
+                  <span className="font-semibold text-stone-800">{slotToDelete.durationMinutes} minutes</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500 font-medium">Visibility:</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      slotToDelete.isPublished
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                        : 'bg-stone-100 text-stone-600 border border-stone-200'
+                    }`}
+                  >
+                    {slotToDelete.isPublished ? 'Published to Seekers' : 'Unpublished (Draft)'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs space-y-1">
+                <p className="font-bold flex items-center gap-1.5 text-rose-950">
+                  <AlertCircle className="w-3.5 h-3.5 text-rose-700" />
+                  <span>Important Confirmation</span>
+                </p>
+                <p className="text-[11px] text-rose-800 leading-relaxed">
+                  This consultation window will be permanently removed from the schedule. Seekers will no longer be able to view or reserve this slot.
+                </p>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSlotToDelete(null)}
+                  disabled={deleteSlotLoading}
+                  className="px-5 py-2.5 rounded-xl border border-stone-300 text-stone-600 hover:bg-stone-50 text-xs font-semibold cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDeleteSlot}
+                  disabled={deleteSlotLoading}
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-700 to-rose-900 hover:opacity-95 disabled:opacity-50 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  {deleteSlotLoading ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Deleting Slot...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Yes, Delete Slot</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

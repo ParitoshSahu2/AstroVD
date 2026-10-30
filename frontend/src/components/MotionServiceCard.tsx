@@ -109,8 +109,16 @@ export const MotionServiceCard: React.FC<MotionServiceCardProps> = ({
             <span className="text-[9px] text-stone-500 uppercase font-bold tracking-wider block leading-none">
               {t('Dakshina', 'न्योछावर')}
             </span>
-            <span className={`font-serif font-bold text-sm sm:text-base ${item.price.includes('FREE') ? 'text-emerald-700 font-extrabold' : 'text-[#5B0D15]'
-              }`}>
+            <span
+              className={`product-price-style text-[18px] sm:text-[19px] ${
+                item.price.includes('FREE') ? 'text-emerald-700 font-extrabold' : ''
+              }`}
+              style={{
+                fontFamily: "'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+                fontWeight: 700,
+                color: item.price.includes('FREE') ? '#047857' : '#212121',
+              }}
+            >
               {language === 'hi' && item.price.includes('FREE') ? '100% निःशुल्क' : item.price}
             </span>
           </div>

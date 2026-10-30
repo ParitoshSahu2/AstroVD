@@ -157,9 +157,9 @@ export default function AdminOrdersTab({
                   <th className="py-3 px-3.5 w-[17%] font-medium whitespace-nowrap">Customer Details</th>
                   <th className="py-3 px-3.5 w-[16%] font-medium whitespace-nowrap">Items &amp; Relics</th>
                   <th className="py-3 px-3.5 w-[13%] font-medium whitespace-nowrap">Destination</th>
-                  <th className="py-3 px-3.5 text-right w-[9%] font-medium whitespace-nowrap">Order Total</th>
+                  <th className="py-3 px-3.5 text-center w-[10%] font-medium whitespace-nowrap">Order Total</th>
                   <th className="py-3 px-3.5 text-center w-[8%] font-medium whitespace-nowrap">Payment</th>
-                  <th className="py-3 px-4 text-center w-[12%] font-medium whitespace-nowrap">Fulfillment</th>
+                  <th className="py-3 px-4 text-center w-[11%] font-medium whitespace-nowrap">Fulfillment</th>
                   <th className="py-3 px-4 text-center w-[11%] font-medium whitespace-nowrap">Action</th>
                 </tr>
               </thead>
@@ -235,8 +235,11 @@ export default function AdminOrdersTab({
                         </span>
                       </td>
 
-                      <td className="py-3.5 px-3 text-right font-bold font-serif text-[#5B0D15] text-sm truncate" title={`₹${o.totalAmount}`}>
-                        ₹{o.totalAmount}
+                      <td
+                        className="py-3.5 px-3 text-center font-semibold text-[#5B0D15] text-sm sm:text-[14.5px] font-sans tabular-nums tracking-tight truncate align-middle whitespace-nowrap"
+                        title={`₹${o.totalAmount}`}
+                      >
+                        ₹{Number(o.totalAmount).toLocaleString('en-IN')}
                       </td>
 
                       <td className="py-3.5 px-3 text-center">
