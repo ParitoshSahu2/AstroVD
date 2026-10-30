@@ -13,7 +13,7 @@ import {
   KeyRound,
   RotateCw,
   ArrowLeft,
-  Sparkles,
+  Compass,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import {
@@ -445,7 +445,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       setSuccessMsg(
         data.message ||
-          'Verification successful! Welcome bonus of ₹150 credits added to your wallet.',
+          'Verification successful! Welcome to AstroVD.',
       );
 
       // Save token and user state strictly after successful verification
@@ -544,8 +544,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {mode === 'verify_otp' ? (
             <>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-semibold mb-1">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                <span>₹150 Welcome Credits Pending</span>
+                <Compass className="w-3.5 h-3.5 text-amber-700" />
+                <span>{t('Verification Pending', 'सत्यापन शेष')}</span>
               </div>
               <h3 className="text-2xl font-bold text-[#3B1E22] font-serif">
                 {verificationChannel === 'PHONE'
@@ -555,12 +555,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <p className="text-xs text-stone-600">
                 {verificationChannel === 'PHONE'
                   ? t(
-                      'Enter the 6-digit code sent via SMS to activate your account and claim ₹150 spiritual welcome credits.',
-                      'अपना खाता सक्रिय करने और ₹150 स्वागत बोनस प्राप्त करने के लिए SMS कोड दर्ज करें।',
+                      'Enter the 6-digit code sent via SMS to activate your account.',
+                      'अपना खाता सक्रिय करने के लिए SMS कोड दर्ज करें।',
                     )
                   : t(
-                      'Enter the 6-digit code sent to your email to activate your account and claim ₹150 spiritual welcome credits.',
-                      'अपना खाता सक्रिय करने और ₹150 स्वागत बोनस प्राप्त करने के लिए ईमेल कोड दर्ज करें।',
+                      'Enter the 6-digit code sent to your email to activate your account.',
+                      'अपना खाता सक्रिय करने के लिए ईमेल कोड दर्ज करें।',
                     )}
               </p>
             </>
@@ -598,8 +598,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <p className="text-xs text-stone-600">
                 {mode === 'register'
                   ? t(
-                      'Receive ₹150 welcome credits upon verification!',
-                      'सत्यापन पर ₹150 का स्वागत बोनस प्राप्त करें!',
+                      'Create your account to access authentic Vedic consultations.',
+                      'वैदिक परामर्श एवं मार्गदर्शन हेतु अपना खाता बनाएं।',
                     )
                   : t(
                       'Sign in to access your saved charts and live astrologer rooms.',
@@ -754,7 +754,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <>
                   <CheckCircle2 className="w-4 h-4 text-[#D4AF37]" />
                   <span className="relative z-10">
-                    {t('Verify & Claim ₹150 Credits', 'सत्यापित करें और ₹150 बोनस पाएं')}
+                    {t('Verify & Activate Account', 'सत्यापित और सक्रिय करें')}
                   </span>
                 </>
               )}

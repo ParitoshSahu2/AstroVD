@@ -1,7 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsIn } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsIn, IsNumber, Min, Max } from 'class-validator';
 
 export class BookAppointmentDto {
+  @ApiPropertyOptional({
+    description: 'Consultation duration in minutes (e.g. 15, 30, 45, 60)',
+    example: 30,
+  })
+  @IsOptional()
+  durationMinutes?: number;
   @ApiProperty({
     description: 'Stable canonical service ID (e.g. astrological_consultation)',
     example: 'astrological_consultation',

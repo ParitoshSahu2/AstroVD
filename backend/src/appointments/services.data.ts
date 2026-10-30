@@ -363,8 +363,60 @@ export const SERVICES_CATALOGUE: ServiceCatalogueItem[] = [
 export const PUBLISHED_TIME_SLOTS = [
   '10:00 AM',
   '11:00 AM',
+  '12:00 PM',
   '02:00 PM',
   '04:00 PM',
   '06:00 PM',
-  '08:00 PM',
 ];
+
+export const GURUJI_WORKING_HOURS = {
+  startHour: 10,
+  endHour: 19,
+  startMinutes: 10 * 60,
+  endMinutes: 19 * 60,
+  label: '10:00 AM – 07:00 PM IST',
+};
+
+export function parseTimeToMinutes(timeStr: string): number {
+  if (!timeStr || typeof timeStr !== 'string') return -1;
+  const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return -1;
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3].toUpperCase();
+  if (period === 'PM' && hours < 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+}
+
+export function formatMinutesToTimeStr(totalMinutes: number): string {
+  const hours24 = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  const period = hours24 >= 12 ? 'PM' : 'AM';
+  const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
+  const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
+  return `${pad(hours12)}:${pad(minutes)} ${period}`;
+}
+
+export function isWithinGurujiWorkingHours(timeStr: string, durationMinutes = 30): boolean {
+  const startMin = parseTimeToMinutes(timeStr);
+  if (startMin < 0) return false;
+  const safeDuration = durationMinutes > 0 ? durationMinutes : 30;
+  return (
+    startMin >= GURUJI_WORKING_HOURS.startMinutes &&
+    startMin + safeDuration <= GURUJI_WORKING_HOURS.endMinutes
+  );
+}
+
+export function generateWorkingHourSlots(durationMinutes = 30): string[] {
+  const safeDuration = Math.max(10, Math.min(240, durationMinutes || 30));
+  const slots: string[] = [];
+  for (
+    let m = GURUJI_WORKING_HOURS.startMinutes;
+    m + safeDuration <= GURUJI_WORKING_HOURS.endMinutes;
+    m += safeDuration
+  ) {
+    slots.push(formatMinutesToTimeStr(m));
+  }
+  return slots;
+}

@@ -58,6 +58,10 @@ export const Navbar: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
 
+  // Profile completion reminders and ribbons are strictly reserved for normal seekers (USER) - never ADMIN or SUPERADMIN
+  const isNormalSeeker = user && user.role !== 'ADMIN' && user.role !== 'SUPERADMIN';
+  const isProfileIncomplete = isNormalSeeker && (!user.dateOfBirth || !user.placeOfBirth || !user.timeOfBirth);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -150,10 +154,37 @@ export const Navbar: React.FC = () => {
 
     const handleAuthEvent = (e: any) => {
       syncUser();
+<<<<<<< HEAD
+=======
+      const eventUser = e?.detail?.user || JSON.parse(localStorage.getItem('astro_user') || 'null');
+      const isSeeker = eventUser && eventUser.role !== 'ADMIN' && eventUser.role !== 'SUPERADMIN';
+      if (
+        isSeeker &&
+        (!eventUser.dateOfBirth || !eventUser.placeOfBirth || !eventUser.timeOfBirth)
+      ) {
+        setTimeout(() => setProfileModalOpen(true), 400);
+      }
+>>>>>>> e9f558bf120eca6a6a8c150bcdc56dad70fea398
     };
 
     syncUser();
 
+<<<<<<< HEAD
+=======
+    // Check on mount if normal seeker is logged in with incomplete profile (never for admin)
+    const savedUser = localStorage.getItem('astro_user');
+    if (savedUser) {
+      try {
+        const u = JSON.parse(savedUser);
+        const isSeeker = u && u.role !== 'ADMIN' && u.role !== 'SUPERADMIN';
+        if (isSeeker && (!u.dateOfBirth || !u.placeOfBirth || !u.timeOfBirth)) {
+          // Open reminder popup on session start only for normal seekers
+          setTimeout(() => setProfileModalOpen(true), 1200);
+        }
+      } catch (err) {}
+    }
+
+>>>>>>> e9f558bf120eca6a6a8c150bcdc56dad70fea398
     window.addEventListener('astro-auth-change', handleAuthEvent);
     window.addEventListener('storage', syncUser);
 
@@ -684,7 +715,7 @@ export const Navbar: React.FC = () => {
                           {t('Notifications', 'सूचनाएं')}
                         </span>
                         <span className="px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">
-                          3 new
+                          {isProfileIncomplete ? '3 new' : '2 new'}
                         </span>
                       </div>
                       <button
@@ -696,6 +727,7 @@ export const Navbar: React.FC = () => {
                     </div>
 
                     <div className="py-2 space-y-2 max-h-72 overflow-y-auto">
+<<<<<<< HEAD
                       <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-200/70 text-xs">
                         <div className="flex items-center justify-between font-bold text-[#5B0D15] mb-1">
                           <span>🪙 {t('Spiritual Welcome Bonus', 'स्वागत बोनस')}</span>
@@ -709,6 +741,37 @@ export const Navbar: React.FC = () => {
                         </p>
                       </div>
 
+=======
+                      {/* Actionable Profile Incomplete Notification Card (Normal Seekers only) */}
+                      {isProfileIncomplete && (
+                        <div
+                          onClick={() => {
+                            setNotificationOpen(false);
+                            setProfileModalOpen(true);
+                          }}
+                          className="p-3 rounded-xl bg-gradient-to-r from-amber-100/90 via-rose-50 to-amber-50 border border-amber-300 text-xs cursor-pointer hover:shadow-md transition-all group"
+                        >
+                          <div className="flex items-center justify-between font-bold text-[#800000] mb-1">
+                            <span className="flex items-center gap-1.5">
+                              
+                              {t('Complete Your Kundli Profile', 'जन्म विवरण पूर्ण करें')}
+                            </span>
+                            <span className="text-[9px] text-rose-700 bg-rose-100 border border-rose-200 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                              {t('Action Needed', 'अनिवार्य')}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-stone-700 leading-snug">
+                            {t(
+                              'Add your Date, Time, and Place of birth for accurate Janam Kundli and planetary predictions.',
+                              'सटीक जन्म कुंडली एवं दशा फल हेतु जन्म समय, तिथि व स्थान दर्ज करें।'
+                            )}
+                          </p>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#800000] group-hover:underline mt-1.5">
+                            {t('Complete Profile Now →', 'अभी प्रोफाइल पूर्ण करें →')}
+                          </span>
+                        </div>
+                      )}
+>>>>>>> e9f558bf120eca6a6a8c150bcdc56dad70fea398
                       <div className="p-2.5 rounded-xl hover:bg-stone-50 border border-transparent hover:border-stone-200 transition-colors text-xs">
                         <div className="flex items-center justify-between font-semibold text-stone-800 mb-1">
                           <span>🪐 {t('Planetary Transit Alert', 'ग्रह गोचर सूचना')}</span>
@@ -1095,6 +1158,39 @@ export const Navbar: React.FC = () => {
         </div>
       </header>
 
+<<<<<<< HEAD
+=======
+      {/* Top Persistent Reminder Ribbon when profile is incomplete (Normal Seekers only - never ADMIN) */}
+      {mounted && isProfileIncomplete && (
+        <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-[#5B0D15] via-[#851622] to-[#5B0D15] text-white text-xs py-2 px-4 shadow-md border-b border-amber-400/40">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 w-full">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
+              <span className="font-semibold text-amber-300">
+                {t('Action Required:', 'आवश्यक सूचना:')}
+              </span>
+              <span className="hidden sm:inline text-amber-100">
+                {t(
+                  'Your Vedic Kundli profile is incomplete! Add your Date, Time & Place of birth for accurate planetary predictions.',
+                  'आपकी जन्म कुंडली प्रोफाइल अधूरी है! सटीक भविष्यफल हेतु जन्म तिथि, समय व स्थान दर्ज करें।'
+                )}
+              </span>
+              <span className="sm:hidden text-amber-100 truncate">
+                {t('Complete your birth profile for Kundli', 'जन्म प्रोफाइल पूर्ण करें')}
+              </span>
+            </div>
+
+            <button
+              onClick={() => setProfileModalOpen(true)}
+              className="px-3.5 py-1 rounded-full bg-amber-400 hover:bg-amber-300 text-[#5B0D15] font-extrabold text-[11px] shadow-sm hover:scale-105 transition-all cursor-pointer shrink-0"
+            >
+              {t('Complete Profile Now', 'अभी पूर्ण करें')} →
+            </button>
+          </div>
+        </div>
+      )}
+
+>>>>>>> e9f558bf120eca6a6a8c150bcdc56dad70fea398
       {/* Auth Modal for Sign Up / Login */}
       <AuthModal
         isOpen={authModalOpen}
@@ -1102,6 +1198,23 @@ export const Navbar: React.FC = () => {
         onClose={() => setAuthModalOpen(false)}
         onLoginSuccess={(userData) => {
           setUser(userData);
+<<<<<<< HEAD
+=======
+          const isSeeker = userData && userData.role !== 'ADMIN' && userData.role !== 'SUPERADMIN';
+          if (isSeeker && (!userData?.dateOfBirth || !userData?.placeOfBirth || !userData?.timeOfBirth)) {
+            setTimeout(() => setProfileModalOpen(true), 400);
+          }
+        }}
+      />
+
+      {/* Complete Profile Modal */}
+      <CompleteProfileModal
+        isOpen={profileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+        user={user}
+        onSuccess={(updatedUser) => {
+          setUser(updatedUser);
+>>>>>>> e9f558bf120eca6a6a8c150bcdc56dad70fea398
         }}
       />
     </>

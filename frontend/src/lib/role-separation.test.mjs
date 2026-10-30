@@ -150,4 +150,18 @@ describe('User & Admin Role Separation & Data Isolation Tests', () => {
       "AuthService.register must strictly assign role: 'USER'",
     );
   });
+
+  it('TEST-09: Navbar strictly restricts profile completion reminders to USER and never ADMIN or SUPERADMIN', () => {
+    const navbarPath = path.resolve('src/components/Navbar.tsx');
+    const content = fs.readFileSync(navbarPath, 'utf-8');
+
+    assert.ok(
+      content.includes("user.role !== 'ADMIN' && user.role !== 'SUPERADMIN'"),
+      'Navbar must guard profile completion checks from ADMIN and SUPERADMIN accounts',
+    );
+    assert.ok(
+      content.includes('isProfileIncomplete'),
+      'Navbar must use isProfileIncomplete helper to conditionally render reminders',
+    );
+  });
 });

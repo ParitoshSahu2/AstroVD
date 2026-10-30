@@ -71,7 +71,7 @@ export const MotionServiceCard: React.FC<MotionServiceCardProps> = ({
             {/* Special Ritual Badge */}
             {displayBadge && (
               <div className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 via-rose-600 to-amber-600 text-white font-extrabold text-[10px] uppercase tracking-wider shadow-md flex items-center gap-1 z-10">
-                
+
                 <span>{displayBadge}</span>
               </div>
             )}

@@ -16,7 +16,7 @@ import {
   AlertCircle,
   Loader2,
   ArrowRight,
-  Sparkles,
+  Compass,
   KeyRound,
   RotateCw,
 } from 'lucide-react';
@@ -275,15 +275,15 @@ function SignupForm() {
       {/* Sacred Icon Top */}
       <div className="text-center space-y-2">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#7A1824] via-[#5B0D15] to-[#3B1E22] text-amber-200 flex items-center justify-center mx-auto shadow-lg border border-amber-300/40">
-          <Sparkles className="w-7 h-7 text-amber-300" />
+          <Compass className="w-7 h-7 text-amber-300" />
         </div>
         <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#4A151B]">
           {isVerifyingOtp ? t('Verify Account', 'खाता सत्यापित करें') : t('Create an Account', 'नया खाता बनाएं')}
         </h1>
         <p className="text-xs sm:text-sm text-stone-500">
           {isVerifyingOtp
-            ? t('Enter the 6-digit verification code to claim ₹150 welcome bonus.', '₹150 का स्वागत बोनस प्राप्त करने के लिए 6-अंकीय कोड दर्ज करें।')
-            : t('Receive ₹150 welcome credits upon verification!', 'सत्यापन पर ₹150 का स्वागत बोनस प्राप्त करें!')}
+            ? t('Enter the 6-digit verification code sent to your email / phone.', 'अपने ईमेल / फोन पर भेजा गया 6-अंकीय सत्यापन कोड दर्ज करें।')
+            : t('Join our consecrated Vedic astrology and spiritual guidance community.', 'हमारे वैदिक ज्योतिष एवं आध्यात्मिक मार्गदर्शन समुदाय से जुड़ें।')}
         </p>
       </div>
 

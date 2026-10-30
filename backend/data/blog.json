@@ -1,5 +1,1220 @@
 [
   {
+    "id": "audit-log-test-blog-mvtfk873",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-29T10:58:39.615Z",
+    "updatedAt": "2026-10-29T10:58:39.620Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvtfk83f",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-29T10:58:39.485Z",
+    "updatedAt": "2026-10-29T10:58:39.531Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvterrhl",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-29T10:36:31.593Z",
+    "updatedAt": "2026-10-29T10:36:31.596Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvterrdg",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-29T10:36:31.445Z",
+    "updatedAt": "2026-10-29T10:36:31.492Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvteqz7l",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-29T10:35:54.945Z",
+    "updatedAt": "2026-10-29T10:35:54.948Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvteqz3i",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-29T10:35:54.800Z",
+    "updatedAt": "2026-10-29T10:35:54.844Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvtcmrir",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-29T09:36:39.124Z",
+    "updatedAt": "2026-10-29T09:36:39.132Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvtcmrbn",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-29T09:36:38.870Z",
+    "updatedAt": "2026-10-29T09:36:38.946Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvt9vyvw",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-29T08:19:49.725Z",
+    "updatedAt": "2026-10-29T08:19:49.731Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvt9vyr1",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-29T08:19:49.552Z",
+    "updatedAt": "2026-10-29T08:19:49.601Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvt9f609",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-29T08:06:45.801Z",
+    "updatedAt": "2026-10-29T08:06:45.807Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvt9f5v5",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-29T08:06:45.619Z",
+    "updatedAt": "2026-10-29T08:06:45.676Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvt9areq",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-29T08:03:20.258Z",
+    "updatedAt": "2026-10-29T08:03:20.263Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvt9ar9y",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-29T08:03:20.088Z",
+    "updatedAt": "2026-10-29T08:03:20.135Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvt95601",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-29T07:58:59.234Z",
+    "updatedAt": "2026-10-29T07:58:59.238Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvt955vb",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-29T07:58:59.066Z",
+    "updatedAt": "2026-10-29T07:58:59.114Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvt91oeu",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-29T07:56:16.470Z",
+    "updatedAt": "2026-10-29T07:56:16.478Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvt91oa9",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-29T07:56:16.306Z",
+    "updatedAt": "2026-10-29T07:56:16.351Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvt8yuf9",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-29T07:54:04.293Z",
+    "updatedAt": "2026-10-29T07:54:04.303Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvt8yu9p",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-29T07:54:04.095Z",
+    "updatedAt": "2026-10-29T07:54:04.150Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvt8wdjk",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-29T07:52:09.104Z",
+    "updatedAt": "2026-10-29T07:52:09.106Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvt8wdhx",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-29T07:52:09.046Z",
+    "updatedAt": "2026-10-29T07:52:09.062Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvt8urvt",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-29T07:50:54.377Z",
+    "updatedAt": "2026-10-29T07:50:54.379Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvt8uru6",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-29T07:50:54.319Z",
+    "updatedAt": "2026-10-29T07:50:54.336Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvt8kre1",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-29T07:43:07.178Z",
+    "updatedAt": "2026-10-29T07:43:07.180Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvt8krbh",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-29T07:43:07.087Z",
+    "updatedAt": "2026-10-29T07:43:07.112Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvt6rt41",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-29T06:52:36.770Z",
+    "updatedAt": "2026-10-29T06:52:36.771Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvt6rt0n",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-29T06:52:36.656Z",
+    "updatedAt": "2026-10-29T06:52:36.713Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
+    "id": "audit-log-test-blog-mvt4nijh",
+    "title": "Audit Log Test Blog",
+    "titleHi": "Audit Log Test Blog",
+    "category": "Test Category",
+    "categoryHi": "Test Category",
+    "author": "Admin Test",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Vedic Jyotishacharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "5 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Audit Log Test Blog",
+    "excerptHi": "Audit Log Test Blog",
+    "content": [
+      "Testing audit"
+    ],
+    "contentHi": [
+      "Audit Log Test Blog"
+    ],
+    "keyTakeaways": [],
+    "keyTakeawaysHi": [],
+    "isPublished": false,
+    "createdAt": "2026-10-29T05:53:17.213Z",
+    "updatedAt": "2026-10-29T05:53:17.216Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "super-1",
+      "name": "Yash Deep (Superadmin)",
+      "email": "yash@astrovd.com"
+    }
+  },
+  {
+    "id": "solar-eclipse-2026-remedial-rituals-mvt4nig2",
+    "title": "Updated Planetary Transits 2026 Guide",
+    "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+    "category": "Rituals & Upay",
+    "categoryHi": "अनुष्ठान एवं उपाय",
+    "author": "Pandit Vishal Dubey",
+    "authorHi": "डॉ. पंडित विशाल दुबे",
+    "authorRole": "Chief Acharya",
+    "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+    "date": "Oct 29, 2026",
+    "dateHi": "आज",
+    "readTime": "12 min read",
+    "readTimeHi": "5 मिनट पठन",
+    "image": "/services/kundli.jpg",
+    "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+    "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+    "content": [
+      "Observe silent japa during the peak eclipse hours."
+    ],
+    "contentHi": [
+      "ग्रहण के दौरान जप और दान की विधियां।"
+    ],
+    "keyTakeaways": [
+      "Avoid eating during eclipse",
+      "Perform Shiva japa"
+    ],
+    "keyTakeawaysHi": [],
+    "isPublished": true,
+    "createdAt": "2026-10-29T05:53:17.094Z",
+    "updatedAt": "2026-10-29T05:53:17.131Z",
+    "createdBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    },
+    "updatedBy": {
+      "id": "admin-1",
+      "name": "Admin Test",
+      "email": "admin@astrovd.com"
+    }
+  },
+  {
     "id": "planetary-transits-2026",
     "title": "Major Planetary Transits of 2026: Navigating Jupiter and Saturn’s Cosmic Shift",
     "titleHi": "वर्ष 2026 के प्रमुख ग्रह गोचर: देवगुरु बृहस्पति एवं शनिदेव का राशि परिवर्तन",
