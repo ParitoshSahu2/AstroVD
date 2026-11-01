@@ -58,6 +58,27 @@ html.lenis, html.lenis body {
   pointer-events: none;
 }
 
+/* Scroll Lock & Overscroll Containment Foundation */
+html.scroll-locked,
+body.scroll-locked {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+/* Ensure modal overlays, scrollable containers and dialogs prevent scroll chaining */
+[data-lenis-prevent],
+.modal-scroll-container {
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-backdrop-contain {
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: none;
+}
+
 
 /* Authentic Translucent Frosted Glass Effect Matching Reference Image */
 .nav-glassmorphism {

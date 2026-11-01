@@ -14,6 +14,8 @@ import {
   RotateCw,
   ArrowLeft,
   Compass,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import {
@@ -25,6 +27,7 @@ import {
   forgotPasswordMobile,
   resetPasswordMobile,
 } from '../lib/api';
+import { useScrollLock } from '../lib/scrollLock';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -57,6 +60,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [phone, setPhone] = useState('');
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [zodiacSign, setZodiacSign] = useState('Scorpio');
 
   // OTP Verification State
@@ -81,6 +85,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [recoveryOtp, setRecoveryOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [recoveryCooldown, setRecoveryCooldown] = useState(0);
   const [recoveryLoading, setRecoveryLoading] = useState(false);
 
@@ -117,16 +123,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     return () => clearInterval(interval);
   }, [recoveryCooldown]);
 
-  // Lock body scroll when modal is open
+  // Lock body scroll and prevent background scroll chaining when modal is open
+  useScrollLock(isOpen);
+
+  // Close on Escape key
   useEffect(() => {
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow || '';
-      };
-    }
-  }, [isOpen]);
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        handleReset();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -521,11 +532,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
+      data-lenis-prevent="true"
+      onWheel={(e) => e.stopPropagation()}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn overflow-y-auto modal-backdrop-contain overscroll-contain"
       onClick={onClose}
     >
       <div
-        className="bg-[#FFFDF9] border border-[#D4AF37]/50 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative space-y-6"
+        data-lenis-prevent="true"
+        onWheel={(e) => e.stopPropagation()}
+        className="bg-[#FFFDF9] border border-[#D4AF37]/50 rounded-3xl p-6 sm:p-8 max-w-md w-full max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain shadow-2xl relative space-y-6 modal-scroll-container"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -997,7 +1012,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <div className="relative">
                 <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
-                  type="password"
+                  type={showNewPassword ? 'text' : 'password'}
                   required
                   disabled={loading}
                   value={newPassword}
@@ -1005,9 +1020,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     setNewPassword(e.target.value);
                     if (error) setError('');
                   }}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-900 text-xs focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] shadow-sm disabled:opacity-60"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-900 text-xs focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] shadow-sm disabled:opacity-60"
                   placeholder="••••••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 transition-colors p-1 rounded-md focus:outline-none cursor-pointer"
+                  title={showNewPassword ? t('Hide password', 'पासवर्ड छुपाएं') : t('Show password', 'पासवर्ड दिखाएं')}
+                  aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showNewPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -1018,7 +1046,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <div className="relative">
                 <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   required
                   disabled={loading}
                   value={confirmPassword}
@@ -1026,9 +1054,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     setConfirmPassword(e.target.value);
                     if (error) setError('');
                   }}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-900 text-xs focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] shadow-sm disabled:opacity-60"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-900 text-xs focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] shadow-sm disabled:opacity-60"
                   placeholder="••••••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 transition-colors p-1 rounded-md focus:outline-none cursor-pointer"
+                  title={showConfirmPassword ? t('Hide password', 'पासवर्ड छुपाएं') : t('Show password', 'पासवर्ड दिखाएं')}
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -1266,7 +1307,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <div className="relative">
                 <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   disabled={loading}
                   value={password}
@@ -1274,9 +1315,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     setPassword(e.target.value);
                     if (error) setError('');
                   }}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-900 text-xs focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] shadow-sm disabled:opacity-60"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-900 text-xs focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] shadow-sm disabled:opacity-60"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 transition-colors p-1 rounded-md focus:outline-none cursor-pointer"
+                  title={showPassword ? t('Hide password', 'पासवर्ड छुपाएं') : t('Show password', 'पासवर्ड दिखाएं')}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
               </div>
             </div>
 

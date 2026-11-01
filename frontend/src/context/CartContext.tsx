@@ -144,8 +144,30 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       const newKey = getCartStorageKey(currentUser);
       setActiveStorageKey(newKey);
-      const newItems = loadCartFromStorage(newKey);
-      setItems(newItems);
+
+      const guestItems = loadCartFromStorage('astro_cart_guest');
+      let userItems = loadCartFromStorage(newKey);
+
+      if (guestItems.length > 0) {
+        // Merge guest items into user's authenticated cart without losing either
+        const map = new Map<string, CartItem>();
+        for (const item of userItems) {
+          map.set(item.id, { ...item });
+        }
+        for (const gItem of guestItems) {
+          if (map.has(gItem.id)) {
+            const existing = map.get(gItem.id)!;
+            existing.quantity += gItem.quantity;
+          } else {
+            map.set(gItem.id, { ...gItem });
+          }
+        }
+        userItems = Array.from(map.values());
+        localStorage.setItem(newKey, JSON.stringify(userItems));
+        localStorage.removeItem('astro_cart_guest');
+      }
+
+      setItems(userItems);
     };
 
     window.addEventListener('astro-auth-change', handleAuthChange);

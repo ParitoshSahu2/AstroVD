@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { X, Sparkles, Clock, UserCheck, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { ServiceItem } from '../data/servicesData';
+import { useScrollLock } from '../lib/scrollLock';
 
 interface SpatialServiceModalProps {
   service: ServiceItem | null;
@@ -33,24 +34,15 @@ export const SpatialServiceModal: React.FC<SpatialServiceModalProps> = ({
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
 
+  useScrollLock(isOpen);
+
   useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      window.addEventListener('keydown', handleKeyDown);
-      if (typeof window !== 'undefined' && (window as any).__lenis) {
-        (window as any).__lenis.stop();
-      }
-    }
-    return () => {
-      document.body.style.overflow = '';
-      window.removeEventListener('keydown', handleKeyDown);
-      if (typeof window !== 'undefined' && (window as any).__lenis) {
-        (window as any).__lenis.start();
-      }
-    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
   if (!isOpen || !service) return null;
@@ -64,7 +56,11 @@ export const SpatialServiceModal: React.FC<SpatialServiceModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-md animate-fadeIn">
+    <div
+      data-lenis-prevent="true"
+      onWheel={(e) => e.stopPropagation()}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-md animate-fadeIn modal-backdrop-contain overscroll-contain"
+    >
       {/* Background click to dismiss */}
       <div className="absolute inset-0" onClick={onClose} />
 
@@ -72,7 +68,7 @@ export const SpatialServiceModal: React.FC<SpatialServiceModalProps> = ({
       <div
         data-lenis-prevent="true"
         onWheel={handleContainerWheel}
-        className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl bg-gradient-to-b from-[#FDFBF7] to-white text-[#2A1810] border-2 border-amber-300/90 shadow-2xl transition-all duration-300 flex flex-col"
+        className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl bg-gradient-to-b from-[#FDFBF7] to-white text-[#2A1810] border-2 border-amber-300/90 shadow-2xl transition-all duration-300 flex flex-col overscroll-contain modal-scroll-container"
         style={{
           boxShadow: '0 25px 60px -15px rgba(42, 24, 16, 0.3), 0 0 35px rgba(245, 158, 11, 0.25)',
         }}

@@ -25,6 +25,10 @@ import {
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 const AuthModal = dynamic(() => import('./AuthModal').then((mod) => mod.AuthModal), { ssr: false });
+const CompleteProfileModal = dynamic(
+  () => import('./CompleteProfileModal').then((mod) => mod.CompleteProfileModal),
+  { ssr: false }
+);
 import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
 import { performLogout } from '../lib/auth';
@@ -51,6 +55,7 @@ export const Navbar: React.FC = () => {
   const [mobileSearchQuery, setMobileSearchQuery] = useState('');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('register');
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [aboutDropdownOpen, setAboutDropdownOpen] = useState(false);
@@ -154,8 +159,6 @@ export const Navbar: React.FC = () => {
 
     const handleAuthEvent = (e: any) => {
       syncUser();
-<<<<<<< HEAD
-=======
       const eventUser = e?.detail?.user || JSON.parse(localStorage.getItem('astro_user') || 'null');
       const isSeeker = eventUser && eventUser.role !== 'ADMIN' && eventUser.role !== 'SUPERADMIN';
       if (
@@ -164,13 +167,10 @@ export const Navbar: React.FC = () => {
       ) {
         setTimeout(() => setProfileModalOpen(true), 400);
       }
->>>>>>> e9f558bf120eca6a6a8c150bcdc56dad70fea398
     };
 
     syncUser();
 
-<<<<<<< HEAD
-=======
     // Check on mount if normal seeker is logged in with incomplete profile (never for admin)
     const savedUser = localStorage.getItem('astro_user');
     if (savedUser) {
@@ -183,8 +183,6 @@ export const Navbar: React.FC = () => {
         }
       } catch (err) {}
     }
-
->>>>>>> e9f558bf120eca6a6a8c150bcdc56dad70fea398
     window.addEventListener('astro-auth-change', handleAuthEvent);
     window.addEventListener('storage', syncUser);
 
@@ -366,7 +364,7 @@ export const Navbar: React.FC = () => {
   return (
     <>
       <header
-        className="fixed top-3 sm:top-5 left-0 right-0 z-50 flex justify-center px-3 sm:px-6 md:px-8 pointer-events-none transition-all duration-300 transform translate-y-0 opacity-100"
+        className={`fixed ${mounted && isProfileIncomplete ? 'top-11 sm:top-12' : 'top-3 sm:top-5'} left-0 right-0 z-50 flex justify-center px-3 sm:px-6 md:px-8 pointer-events-none transition-all duration-300 transform translate-y-0 opacity-100`}
       >
         <div className="w-full max-w-6xl pointer-events-auto">
           {/* Glassmorphic Capsule Nav Bar */}
@@ -727,21 +725,6 @@ export const Navbar: React.FC = () => {
                     </div>
 
                     <div className="py-2 space-y-2 max-h-72 overflow-y-auto">
-<<<<<<< HEAD
-                      <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-200/70 text-xs">
-                        <div className="flex items-center justify-between font-bold text-[#5B0D15] mb-1">
-                          <span>🪙 {t('Spiritual Welcome Bonus', 'स्वागत बोनस')}</span>
-                          <span className="text-[10px] text-stone-400 font-normal">Just now</span>
-                        </div>
-                        <p className="text-[11px] text-stone-600 leading-snug">
-                          {t(
-                            '150 spiritual credits were added to your Astro Wallet for consultations.',
-                            'परामर्श हेतु आपके वॉलेट में 150 क्रेडिट जोड़े गए हैं।'
-                          )}
-                        </p>
-                      </div>
-
-=======
                       {/* Actionable Profile Incomplete Notification Card (Normal Seekers only) */}
                       {isProfileIncomplete && (
                         <div
@@ -753,7 +736,6 @@ export const Navbar: React.FC = () => {
                         >
                           <div className="flex items-center justify-between font-bold text-[#800000] mb-1">
                             <span className="flex items-center gap-1.5">
-                              
                               {t('Complete Your Kundli Profile', 'जन्म विवरण पूर्ण करें')}
                             </span>
                             <span className="text-[9px] text-rose-700 bg-rose-100 border border-rose-200 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
@@ -771,7 +753,19 @@ export const Navbar: React.FC = () => {
                           </span>
                         </div>
                       )}
->>>>>>> e9f558bf120eca6a6a8c150bcdc56dad70fea398
+
+                      <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-200/70 text-xs">
+                        <div className="flex items-center justify-between font-bold text-[#5B0D15] mb-1">
+                          <span>🪙 {t('Spiritual Welcome Bonus', 'स्वागत बोनस')}</span>
+                          <span className="text-[10px] text-stone-400 font-normal">Just now</span>
+                        </div>
+                        <p className="text-[11px] text-stone-600 leading-snug">
+                          {t(
+                            '150 spiritual credits were added to your Astro Wallet for consultations.',
+                            'परामर्श हेतु आपके वॉलेट में 150 क्रेडिट जोड़े गए हैं।'
+                          )}
+                        </p>
+                      </div>
                       <div className="p-2.5 rounded-xl hover:bg-stone-50 border border-transparent hover:border-stone-200 transition-colors text-xs">
                         <div className="flex items-center justify-between font-semibold text-stone-800 mb-1">
                           <span>🪐 {t('Planetary Transit Alert', 'ग्रह गोचर सूचना')}</span>
@@ -1158,8 +1152,6 @@ export const Navbar: React.FC = () => {
         </div>
       </header>
 
-<<<<<<< HEAD
-=======
       {/* Top Persistent Reminder Ribbon when profile is incomplete (Normal Seekers only - never ADMIN) */}
       {mounted && isProfileIncomplete && (
         <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-[#5B0D15] via-[#851622] to-[#5B0D15] text-white text-xs py-2 px-4 shadow-md border-b border-amber-400/40">
@@ -1190,7 +1182,6 @@ export const Navbar: React.FC = () => {
         </div>
       )}
 
->>>>>>> e9f558bf120eca6a6a8c150bcdc56dad70fea398
       {/* Auth Modal for Sign Up / Login */}
       <AuthModal
         isOpen={authModalOpen}
@@ -1198,8 +1189,6 @@ export const Navbar: React.FC = () => {
         onClose={() => setAuthModalOpen(false)}
         onLoginSuccess={(userData) => {
           setUser(userData);
-<<<<<<< HEAD
-=======
           const isSeeker = userData && userData.role !== 'ADMIN' && userData.role !== 'SUPERADMIN';
           if (isSeeker && (!userData?.dateOfBirth || !userData?.placeOfBirth || !userData?.timeOfBirth)) {
             setTimeout(() => setProfileModalOpen(true), 400);
@@ -1214,7 +1203,6 @@ export const Navbar: React.FC = () => {
         user={user}
         onSuccess={(updatedUser) => {
           setUser(updatedUser);
->>>>>>> e9f558bf120eca6a6a8c150bcdc56dad70fea398
         }}
       />
     </>

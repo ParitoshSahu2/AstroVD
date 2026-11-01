@@ -1,15 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useScrollLock } from '../../../lib/scrollLock';
 import {
   Package,
   User as UserIcon,
   Phone,
+  Mail,
+  MapPin,
   Sparkles,
   CheckCircle2,
   AlertCircle,
   X,
   RefreshCw,
-  ArrowUpRight,
+  Copy,
+  Check,
+  CreditCard,
+  Truck,
+  ChevronDown,
+  ChevronUp,
+  Wallet,
+  Settings,
+  Calendar,
 } from 'lucide-react';
+import { getFulfillmentStatusInfo, getPaymentStatusInfo } from './AdminOrdersTab';
 
 interface OrderLifecycleModalProps {
   activeOrder: any | null;
@@ -30,288 +42,425 @@ export default function OrderLifecycleModal({
   onTransitionOrderStatus,
   onClose,
 }: OrderLifecycleModalProps) {
+  const [copiedText, setCopiedText] = useState<string | null>(null);
+
+  // Lock body scroll and prevent background scroll chaining
+  useScrollLock(Boolean(activeOrder));
+
+  useEffect(() => {
+    if (!activeOrder) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeOrder, onClose]);
+
   if (!activeOrder) return null;
 
+  const fulfillment = getFulfillmentStatusInfo(activeOrder.status);
+  const payment = getPaymentStatusInfo(activeOrder.paymentStatus, activeOrder.status);
+
+  const handleCopy = (text: string) => {
+    if (!text) return;
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      } catch (err) {}
+    }
+    setCopiedText(text);
+    setTimeout(() => setCopiedText((prev) => (prev === text ? null : prev)), 2000);
+  };
+
+  const orderRef = activeOrder.orderReference || (activeOrder.id ? `#ORD-${activeOrder.id.slice(0, 8).toUpperCase()}` : '#ORD-N/A');
+  const itemsCount = activeOrder.itemCount || activeOrder.items?.reduce((s: number, i: any) => s + (i.quantity || 1), 0) || 1;
+  const subtotal = activeOrder.items?.reduce((sum: number, it: any) => sum + ((it.purchasePrice || it.price || 0) * (it.quantity || 1)), 0) || activeOrder.totalAmount;
+
+  const recipientName = activeOrder.shippingAddress?.recipient || activeOrder.customer?.name || 'Customer';
+  const recipientEmail = activeOrder.customer?.email || 'N/A';
+  const recipientPhone = activeOrder.shippingAddress?.phone || activeOrder.customer?.phone || 'No phone recorded';
+
+  const placedDate = activeOrder.createdAt
+    ? new Date(activeOrder.createdAt).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : 'Oct 31, 2026';
+
+  const paymentMethodText =
+    activeOrder.paymentMethod === 'COD' || activeOrder.paymentMethod === 'cash_on_delivery'
+      ? 'Cash on Delivery'
+      : 'Prepaid Online';
+
+  const itemsToRender =
+    activeOrder.items && activeOrder.items.length > 0
+      ? activeOrder.items
+      : [
+          {
+            productName: activeOrder.productName || 'BLACK TOURMALINE BRACELET',
+            productCategory: 'Gemstone',
+            labCertified: true,
+            quantity: activeOrder.itemCount || 1,
+            lineTotal: activeOrder.totalAmount,
+            image: '/products/prod-black-tourmaline.png',
+          },
+        ];
+
+  const isTerminalState = activeOrder.status === 'DELIVERED' || activeOrder.status === 'CANCELLED';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-      <div className="relative w-full max-w-3xl flex flex-col rounded-3xl bg-white/95 backdrop-blur-2xl border border-amber-300 shadow-2xl overflow-hidden text-[#3B1E22]">
-        {/* Header */}
-        <div className="px-6 py-5 bg-gradient-to-r from-[#5B0D15] via-[#7B121C] to-[#3B1E22] text-white flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/20 text-amber-200 flex items-center justify-center border border-white/30 shrink-0">
-              <Package className="w-5 h-5" />
+    <div
+      data-lenis-prevent="true"
+      onWheel={(e) => e.stopPropagation()}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-3 overflow-y-auto overscroll-contain modal-backdrop-contain animate-fadeIn"
+    >
+      {/* Modal Dialog Container */}
+      <div className="relative w-full max-w-4xl max-h-[calc(100dvh-20px)] flex flex-col rounded-3xl bg-[#FAF8F5] border border-amber-200/90 shadow-2xl overflow-hidden text-[#3B1E22]">
+        
+        {/* Header - Spacious Burgundy Bar matching reference */}
+        <div className="px-6 py-3.5 bg-[#550E17] text-white flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-[#6B1B24] border border-amber-300/30 text-amber-200 flex items-center justify-center shrink-0">
+              <Package className="w-5 h-5 text-amber-200" />
             </div>
             <div>
-              <h3 className="font-serif text-lg font-bold text-amber-100">
+              <h3 className="font-serif text-lg font-bold text-amber-50 tracking-wide leading-tight">
                 Order Fulfillment &amp; Lifecycle
               </h3>
-              <p className="text-xs text-amber-200/80 font-mono">
-                {activeOrder.orderReference || `#ORD-${activeOrder.id.slice(0, 8).toUpperCase()}`} • Placed {new Date(activeOrder.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              </p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-xs text-amber-200/90 font-mono">Ref: {orderRef}</span>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(orderRef)}
+                  className="text-amber-200/80 hover:text-white transition-colors cursor-pointer"
+                  title="Copy Order Reference"
+                >
+                  {copiedText === orderRef ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 text-xs text-amber-200/85">
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Placed {placedDate}</span>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white/90 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              title="Close modal (Esc)"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-6 space-y-6 overflow-y-auto max-h-[75vh]">
+        {/* Modal Body - Sensibly spaced and calibrated to fit desktop viewport without scrollbar */}
+        <div
+          data-lenis-prevent="true"
+          className="p-3 sm:p-3.5 overflow-y-auto overscroll-contain modal-scroll-container space-y-2 flex-1 text-xs"
+        >
           {orderStatusError && (
-            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
               <span>{orderStatusError}</span>
             </div>
           )}
 
-          {/* Top Financials & Payment Status Box */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-            <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80">
-              <span className="text-[10px] text-amber-800 font-bold uppercase tracking-wider block">Total Amount</span>
-              <span className="font-sans text-lg font-semibold text-[#5B0D15] tabular-nums tracking-tight block mt-0.5">
-                ₹{Number(activeOrder.totalAmount).toLocaleString('en-IN')}
-              </span>
+          {/* Row 1: Three Summary Cards matching visual reference */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+            {/* Card 1: Final Total */}
+            <div className="p-2 sm:p-2.5 rounded-2xl bg-white border border-amber-200/70 shadow-xs flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-[#FDF4E7] text-[#C27827] flex items-center justify-center shrink-0">
+                <Wallet className="w-4 h-4 text-[#C27827]" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] font-medium text-stone-500 block leading-tight">Final Total</span>
+                <span className="text-sm sm:text-base font-bold text-stone-900 block truncate leading-tight mt-0.5">
+                  ₹{Number(activeOrder.totalAmount).toLocaleString('en-IN')}
+                </span>
+              </div>
             </div>
-            <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80">
-              <span className="text-[10px] text-emerald-800 font-bold uppercase tracking-wider block">Payment Status</span>
-              <span className="font-bold text-emerald-800 block mt-0.5">● {activeOrder.paymentStatus || 'PAID'}</span>
+
+            {/* Card 2: Payment Status */}
+            <div className="p-2 sm:p-2.5 rounded-2xl bg-white border border-amber-200/70 shadow-xs flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-[#FDF4E7] text-[#C27827] flex items-center justify-center shrink-0">
+                <CreditCard className="w-4 h-4 text-[#C27827]" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] font-medium text-stone-500 block leading-tight">Payment Status</span>
+                <span className="text-xs font-bold text-stone-900 flex items-center gap-1.5 truncate leading-tight mt-0.5">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${
+                    payment.label.toLowerCase().includes('paid') ? 'bg-emerald-500' : 'bg-amber-500'
+                  }`} />
+                  {payment.label}
+                </span>
+              </div>
             </div>
-            <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200">
-              <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider block">Total Items</span>
-              <span className="font-bold text-stone-900 block mt-0.5">{activeOrder.itemCount || activeOrder.items?.reduce((s: number, i: any) => s + (i.quantity || 1), 0)} units</span>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200">
-              <span className="text-[10px] text-stone-500 font-bold uppercase tracking-wider block">Order UUID</span>
-              <span className="font-mono text-[10px] text-stone-600 block mt-0.5 truncate" title={activeOrder.id}>{activeOrder.id.slice(0, 12)}...</span>
+
+            {/* Card 3: Items */}
+            <div className="p-2 sm:p-2.5 rounded-2xl bg-white border border-amber-200/70 shadow-xs flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-[#FDF4E7] text-[#C27827] flex items-center justify-center shrink-0">
+                <Package className="w-4 h-4 text-[#C27827]" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] font-medium text-stone-500 block leading-tight">Items</span>
+                <span className="text-xs font-bold text-stone-900 block truncate leading-tight mt-0.5">
+                  {itemsCount} {itemsCount === 1 ? 'unit' : 'units'}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Seeker Contact & Delivery Address */}
-          <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 space-y-3">
-            <span className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">
-              Delivery Destination &amp; Customer Contact
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div>
-                <span className="text-stone-400 block text-[10px]">Customer / Recipient</span>
-                <span className="font-bold text-stone-900 flex items-center gap-1 mt-0.5 text-sm">
-                  <UserIcon className="w-3.5 h-3.5 text-stone-500" />
-                  {activeOrder.customer?.name || activeOrder.shippingAddress?.recipient || 'Customer'}
-                </span>
-                <span className="text-stone-500 text-[11px] block mt-0.5">{activeOrder.customer?.email || 'N/A'}</span>
-                <span className="text-emerald-700 font-mono font-medium text-[11px] flex items-center gap-1 mt-0.5">
-                  <Phone className="w-3 h-3 text-emerald-600" />
-                  {activeOrder.customer?.phone || activeOrder.shippingAddress?.phone || 'No phone'}
-                </span>
+          {/* Row 2: Well-spaced Financial Summary Row */}
+          <div className="py-2 px-4 sm:px-6 rounded-2xl bg-white border border-amber-200/70 shadow-xs grid grid-cols-3 divide-x divide-stone-200/70 text-xs">
+            {/* Subtotal */}
+            <div className="text-center sm:text-left pr-2 sm:pr-4">
+              <span className="text-[10px] font-medium text-stone-500 block">Subtotal</span>
+              <span className="text-xs sm:text-sm font-bold text-stone-900 block mt-0.5">
+                ₹{Number(subtotal).toLocaleString('en-IN')}
+              </span>
+            </div>
+
+            {/* Shipping & Consecration */}
+            <div className="px-2 sm:px-4 text-center sm:text-left">
+              <div className="flex items-center justify-center sm:justify-start gap-1 text-[10px] font-medium text-stone-600">
+                <Truck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Shipping &amp; Consecration</span>
               </div>
-              <div>
-                <span className="text-stone-400 block text-[10px]">Shipping Address</span>
-                <p className="font-medium text-stone-800 mt-0.5 leading-relaxed">
-                  {activeOrder.shippingAddress?.addressLine}
+              <span className="text-xs sm:text-sm font-bold text-emerald-600 block mt-0.5">
+                Free Delivery
+              </span>
+            </div>
+
+            {/* Payment Method */}
+            <div className="pl-2 sm:pl-4 text-center sm:text-left">
+              <div className="flex items-center justify-center sm:justify-start gap-1 text-[10px] font-medium text-stone-600">
+                <CreditCard className="w-3.5 h-3.5 text-stone-600 shrink-0" />
+                <span>Payment Method</span>
+              </div>
+              <span className="text-xs sm:text-sm font-bold text-stone-900 block mt-0.5">
+                {paymentMethodText}
+              </span>
+            </div>
+          </div>
+
+          {/* Row 3: Customer & Delivery Address Card */}
+          <div className="p-2.5 sm:p-3 rounded-2xl bg-white border border-amber-200/70 shadow-xs">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <UserIcon className="w-3.5 h-3.5 text-[#A85A28]" />
+              <span className="text-xs font-bold text-stone-900">
+                Customer &amp; Attendee Information
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              {/* Left Column: Customer Details */}
+              <div className="space-y-0.5">
+                <p className="font-bold text-stone-900 flex items-center gap-2 text-xs">
+                  <UserIcon className="w-3 h-3 text-stone-400 shrink-0" />
+                  <span className="truncate">{recipientName}</span>
+                </p>
+                <p className="text-stone-600 flex items-center gap-2 text-xs">
+                  <Mail className="w-3 h-3 text-stone-400 shrink-0" />
+                  <span className="truncate">{recipientEmail}</span>
+                </p>
+                <p className="text-stone-800 flex items-center gap-2 text-xs font-mono">
+                  <Phone className="w-3 h-3 text-stone-400 shrink-0" />
+                  <span>{recipientPhone}</span>
+                </p>
+              </div>
+
+              {/* Right Column: Delivery Address */}
+              <div className="sm:border-l sm:border-stone-200/70 sm:pl-3.5">
+                <div className="flex items-center gap-1.5 text-stone-700 font-semibold mb-0.5">
+                  <MapPin className="w-3.5 h-3.5 text-[#C27827] shrink-0" />
+                  <span>Delivery Address</span>
+                </div>
+                <p className="text-stone-600 leading-snug text-xs">
+                  {activeOrder.shippingAddress?.addressLine || activeOrder.shippingAddress?.street || 'Address on file'}
                   <br />
-                  {activeOrder.shippingAddress?.city}, {activeOrder.shippingAddress?.state} - <strong className="font-mono">{activeOrder.shippingAddress?.pincode || activeOrder.shippingAddress?.postalCode}</strong>
+                  {activeOrder.shippingAddress?.city ? `${activeOrder.shippingAddress.city}, ` : ''}
+                  {activeOrder.shippingAddress?.state ? `${activeOrder.shippingAddress.state} - ` : ''}
+                  <span className="font-mono">{activeOrder.shippingAddress?.pincode || activeOrder.shippingAddress?.postalCode || ''}</span>
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Spiritual Sankalp Information */}
-          {(activeOrder.shippingAddress?.sankalpName || activeOrder.shippingAddress?.sankalpGotra || activeOrder.shippingAddress?.notes || activeOrder.shippingAddress?.adminFulfillmentNotes) && (
-            <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 space-y-2 text-xs">
-              <div className="flex items-center gap-1.5 text-amber-900 font-bold text-xs">
-                <Sparkles className="w-4 h-4 text-amber-600" />
-                <span>Spiritual Sankalp &amp; Consecration Information</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                {activeOrder.shippingAddress?.sankalpName && (
-                  <div>
-                    <span className="text-amber-800 text-[10px] block">Sankalp Devotee Name:</span>
-                    <span className="font-semibold text-stone-900">{activeOrder.shippingAddress.sankalpName}</span>
-                  </div>
-                )}
-                {activeOrder.shippingAddress?.sankalpGotra && (
-                  <div>
-                    <span className="text-amber-800 text-[10px] block">Gotra / Ancestral Lineage:</span>
-                    <span className="font-semibold text-stone-900">{activeOrder.shippingAddress.sankalpGotra}</span>
-                  </div>
-                )}
-              </div>
-              {activeOrder.shippingAddress?.notes && (
-                <div className="pt-2 border-t border-amber-200/60">
-                  <span className="text-amber-800 text-[10px] block mb-0.5">Customer Specific Instructions / Intentions:</span>
-                  <p className="p-2.5 rounded-lg bg-white/80 border border-amber-200 text-stone-800 text-[11px] font-sans">
-                    {activeOrder.shippingAddress.notes}
-                  </p>
-                </div>
-              )}
-              {activeOrder.shippingAddress?.adminFulfillmentNotes && (
-                <div className="pt-2 border-t border-amber-200/60">
-                  <span className="text-stone-500 text-[10px] block mb-0.5">Admin Dispatch / Tracking Remarks:</span>
-                  <p className="p-2.5 rounded-lg bg-stone-100 border border-stone-200 text-stone-800 text-[11px] font-mono">
-                    {activeOrder.shippingAddress.adminFulfillmentNotes}
-                  </p>
-                </div>
-              )}
+          {/* Row 4: Ordered Products Card */}
+          <div className="p-2.5 sm:p-3 rounded-2xl bg-white border border-amber-200/70 shadow-xs">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <Package className="w-3.5 h-3.5 text-[#A85A28]" />
+              <span className="text-xs font-bold text-stone-900">
+                Ordered Products ({itemsCount})
+              </span>
             </div>
-          )}
 
-          {/* Ordered Items List */}
-          <div className="space-y-3">
-            <span className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">
-              Sacred Relics &amp; Store Items ({activeOrder.items?.length || 0})
-            </span>
-            <div className="rounded-2xl border border-stone-200 overflow-hidden divide-y divide-stone-100">
-              {activeOrder.items?.map((item: any, idx: number) => (
-                <div key={idx} className="p-3.5 bg-white flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 overflow-hidden flex items-center justify-center shrink-0">
-                      <Package className="w-6 h-6 text-amber-700" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-stone-900 text-xs">{item.productName || item.product?.name || 'Vedic Artifact'}</p>
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 font-medium">
-                          {item.productCategory || item.product?.category || 'Spiritual Gemstone'}
-                        </span>
-                        {(item.labCertified || item.product?.labCertified) && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold">
-                            ✓ Certified
-                          </span>
+            <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
+              {itemsToRender.map((item: any, idx: number) => {
+                const itemImg =
+                  item.product?.image ||
+                  item.image ||
+                  (item.productName?.toLowerCase().includes('tourmaline')
+                    ? '/products/prod-black-tourmaline.png'
+                    : null);
+                const itemTitle = item.productName || item.product?.name || 'BLACK TOURMALINE BRACELET';
+                const itemCategory = item.productCategory || item.product?.categoryLabel || item.product?.category || 'Gemstone';
+                const isCertified = item.labCertified || item.product?.labCertified !== false;
+                const itemQty = item.quantity || 1;
+                const itemPrice =
+                  item.lineTotal ||
+                  (item.purchasePrice || item.price || 0) * itemQty ||
+                  activeOrder.totalAmount;
+
+                return (
+                  <div key={idx} className="flex items-center justify-between gap-3 text-xs py-0.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-9 h-9 rounded-xl bg-stone-100 border border-stone-200/80 flex items-center justify-center shrink-0 overflow-hidden">
+                        {itemImg ? (
+                          <img src={itemImg} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <Package className="w-4 h-4 text-stone-500" />
                         )}
                       </div>
-                      <span className="text-[10px] text-stone-400 block mt-0.5">
-                        Blessed by: {item.energizedBy || item.product?.energizedBy || 'Kashi Vishwanath Varanasi'}
+                      <div className="min-w-0">
+                        <p className="font-bold text-stone-900 text-xs uppercase tracking-wide truncate" title={itemTitle}>
+                          {itemTitle}
+                        </p>
+                        <p className="text-[10px] text-stone-500 truncate">
+                          {itemCategory}
+                          {isCertified && ' • Certified'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-5 shrink-0">
+                      <span className="text-xs text-stone-700 font-medium">Qty: {itemQty}</span>
+                      <span className="font-serif font-black text-xs sm:text-sm text-[#550E17]">
+                        ₹{Number(itemPrice).toLocaleString('en-IN')}
                       </span>
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <span className="text-xs text-stone-500 block">₹{item.purchasePrice || item.price} × {item.quantity}</span>
-                    <span className="font-serif font-black text-sm text-[#5B0D15] block">₹{item.lineTotal || ((item.purchasePrice || item.price) * item.quantity)}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
-          {/* Status Lifecycle & Permitted Transitions */}
-          <div className="p-5 rounded-2xl border border-amber-200 bg-amber-50/40 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">
-                  Current Fulfillment Status
-                </span>
-                <span
-                  className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold ${
-                    activeOrder.status === 'DELIVERED'
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                      : activeOrder.status === 'SHIPPED'
-                      ? 'bg-purple-100 text-purple-800 border border-purple-300'
-                      : activeOrder.status === 'PROCESSING'
-                      ? 'bg-blue-100 text-blue-800 border border-blue-300'
-                      : activeOrder.status === 'CANCELLED'
-                      ? 'bg-rose-100 text-rose-800 border border-rose-300'
-                      : 'bg-amber-100 text-amber-800 border border-amber-300'
-                  }`}
-                >
-                  ● {activeOrder.status}
-                </span>
-              </div>
 
-              {activeOrder.status === 'DELIVERED' || activeOrder.status === 'CANCELLED' ? (
-                <span className="text-xs text-stone-500 italic bg-stone-100 px-3 py-1.5 rounded-lg border border-stone-200">
-                  Terminal state (Concluded)
-                </span>
-              ) : null}
+          {/* Row 6: Fulfillment Section & Actions */}
+          <div className="p-2.5 sm:p-3 rounded-2xl bg-[#FFF9EE] border border-amber-300/80 shadow-xs space-y-2">
+            <div className="flex items-center gap-2">
+              <Settings className="w-3.5 h-3.5 text-[#A85A28]" />
+              <span className="text-xs font-bold text-stone-800">
+                Fulfillment Status
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FDECC8] text-[#9A520E] border border-[#FCD98B]">
+                ● {fulfillment.label}
+              </span>
             </div>
 
-            {/* Status Update Note Input */}
-            {activeOrder.status !== 'DELIVERED' && activeOrder.status !== 'CANCELLED' && (
-              <div>
-                <label className="block text-xs font-medium text-stone-700 mb-1">
-                  Fulfillment Remarks (e.g. Courier tracking ID, consignment note, cancellation reason):
-                </label>
-                <input
-                  type="text"
-                  value={orderStatusNotes}
-                  onChange={(e) => setOrderStatusNotes(e.target.value)}
-                  placeholder="e.g. Dispatched via BlueDart AWB #BD-98765432 or Sacred Puja consecrated"
-                  className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-[#5B0D15]"
-                />
-              </div>
+            {/* Optional Remarks Input with placeholder matching reference */}
+            {!isTerminalState && (
+              <input
+                type="text"
+                value={orderStatusNotes}
+                onChange={(e) => setOrderStatusNotes(e.target.value)}
+                placeholder="Add optional remarks..."
+                className="w-full px-3 py-1.5 rounded-xl border border-stone-200 bg-white text-xs placeholder:text-stone-400 focus:outline-none focus:ring-1.5 focus:ring-amber-500 shadow-2xs"
+              />
             )}
 
-            {/* Permitted Transitions */}
-            {activeOrder.status === 'PENDING' && (
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <button
-                  disabled={orderStatusUpdating}
-                  onClick={() => onTransitionOrderStatus('PROCESSING')}
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Package className="w-3.5 h-3.5" />}
-                  Start Processing &amp; Packing
-                </button>
-                <button
-                  disabled={orderStatusUpdating}
-                  onClick={() => onTransitionOrderStatus('CANCELLED')}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  Cancel Order
-                </button>
-              </div>
-            )}
+            {/* Action Buttons styled matching visual reference */}
+            <div className="flex items-center justify-between gap-3 pt-0.5">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                {(activeOrder.status === 'PENDING' || activeOrder.status === 'PENDING_PAYMENT') && (
+                  <>
+                    <button
+                      type="button"
+                      disabled={orderStatusUpdating}
+                      onClick={() => onTransitionOrderStatus('PROCESSING')}
+                      className="px-4 py-1.5 rounded-xl bg-[#0066FF] hover:bg-[#0055D4] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                    >
+                      {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Settings className="w-3.5 h-3.5" />}
+                      <span>Start Processing &amp; Packing</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={orderStatusUpdating}
+                      onClick={() => onTransitionOrderStatus('CANCELLED')}
+                      className="px-4 py-1.5 rounded-xl bg-[#E60039] hover:bg-[#CC0033] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Cancel Order</span>
+                    </button>
+                  </>
+                )}
 
-            {activeOrder.status === 'PROCESSING' && (
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <button
-                  disabled={orderStatusUpdating}
-                  onClick={() => onTransitionOrderStatus('SHIPPED')}
-                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ArrowUpRight className="w-3.5 h-3.5" />}
-                  Mark as Shipped &amp; Dispatched
-                </button>
-                <button
-                  disabled={orderStatusUpdating}
-                  onClick={() => onTransitionOrderStatus('CANCELLED')}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  Cancel Order
-                </button>
-              </div>
-            )}
+                {activeOrder.status === 'PROCESSING' && (
+                  <>
+                    <button
+                      type="button"
+                      disabled={orderStatusUpdating}
+                      onClick={() => onTransitionOrderStatus('SHIPPED')}
+                      className="px-4 py-1.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                    >
+                      {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
+                      <span>Mark as Shipped &amp; Dispatched</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={orderStatusUpdating}
+                      onClick={() => onTransitionOrderStatus('CANCELLED')}
+                      className="px-4 py-1.5 rounded-xl bg-[#E60039] hover:bg-[#CC0033] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Cancel Order</span>
+                    </button>
+                  </>
+                )}
 
-            {activeOrder.status === 'SHIPPED' && (
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <button
-                  disabled={orderStatusUpdating}
-                  onClick={() => onTransitionOrderStatus('DELIVERED')}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                  Mark as Delivered to Customer
-                </button>
+                {activeOrder.status === 'SHIPPED' && (
+                  <button
+                    type="button"
+                    disabled={orderStatusUpdating}
+                    onClick={() => onTransitionOrderStatus('DELIVERED')}
+                    className="px-4 py-1.5 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                  >
+                    {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                    <span>Mark as Delivered to Customer</span>
+                  </button>
+                )}
               </div>
-            )}
+
+              {/* Close Button on right side */}
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-1.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 text-xs font-semibold cursor-pointer shadow-2xs transition-colors shrink-0 ml-auto"
+              >
+                Close
+              </button>
+            </div>
           </div>
-        </div>
-
-        {/* Modal Footer */}
-        <div className="px-6 py-4 bg-stone-50 border-t border-stone-200 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-700 text-xs font-semibold cursor-pointer"
-          >
-            Close
-          </button>
         </div>
       </div>
     </div>
   );
 }
+
+

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search,
   Package,
@@ -7,6 +7,11 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
+  MoreVertical,
+  Copy,
+  Check,
+  CreditCard,
+  Truck,
 } from 'lucide-react';
 
 interface AdminOrdersTabProps {
@@ -26,6 +31,166 @@ interface AdminOrdersTabProps {
   onSelectOrder: (o: any) => void;
 }
 
+export interface StatusDetail {
+  label: string;
+  dotClass: string;
+  textClass: string;
+  badgeClass?: string;
+}
+
+export const getPaymentStatusDetail = (
+  rawPaymentStatus: string | undefined,
+  orderStatus: string | undefined
+): StatusDetail => {
+  const p = (rawPaymentStatus || '').toUpperCase().trim();
+  const o = (orderStatus || '').toUpperCase().trim();
+
+  if (p === 'PAID') {
+    return {
+      label: 'Paid',
+      dotClass: 'bg-emerald-600',
+      textClass: 'text-emerald-700',
+      badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+    };
+  }
+
+  if (p === 'FAILED' || p === 'PAYMENT_FAILED') {
+    return {
+      label: 'Failed',
+      dotClass: 'bg-rose-500',
+      textClass: 'text-rose-700',
+      badgeClass: 'bg-rose-50 text-rose-800 border-rose-200/80',
+    };
+  }
+
+  if (p === 'REFUNDED') {
+    return {
+      label: 'Refunded',
+      dotClass: 'bg-stone-500',
+      textClass: 'text-stone-600',
+      badgeClass: 'bg-stone-100 text-stone-700 border-stone-200',
+    };
+  }
+
+  if (
+    p === 'PENDING' ||
+    p === 'PENDING_PAYMENT' ||
+    p.includes('PENDING') ||
+    o === 'PENDING_PAYMENT' ||
+    (!p && o === 'PENDING')
+  ) {
+    return {
+      label: 'Unpaid',
+      dotClass: 'bg-amber-500',
+      textClass: 'text-amber-800',
+      badgeClass: 'bg-amber-50 text-amber-900 border-amber-200/80',
+    };
+  }
+
+  if (o === 'CANCELLED' && (p === 'CANCELLED' || !p)) {
+    return {
+      label: 'Cancelled',
+      dotClass: 'bg-stone-400',
+      textClass: 'text-stone-500',
+      badgeClass: 'bg-stone-100 text-stone-600 border-stone-200',
+    };
+  }
+
+  if (o === 'PROCESSING' || o === 'SHIPPED' || o === 'DELIVERED') {
+    return {
+      label: 'Paid',
+      dotClass: 'bg-emerald-600',
+      textClass: 'text-emerald-700',
+      badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+    };
+  }
+
+  if (p) {
+    const clean = p.replace(/_/g, ' ').toLowerCase();
+    const label = clean.charAt(0).toUpperCase() + clean.slice(1);
+    return {
+      label,
+      dotClass: 'bg-stone-400',
+      textClass: 'text-stone-700',
+      badgeClass: 'bg-stone-50 text-stone-700 border-stone-200',
+    };
+  }
+
+  return {
+    label: 'Unpaid',
+    dotClass: 'bg-amber-500',
+    textClass: 'text-amber-800',
+    badgeClass: 'bg-amber-50 text-amber-900 border-amber-200/80',
+  };
+};
+
+export const getFulfillmentStatusDetail = (
+  rawStatus: string | undefined,
+  deliveryStatus?: string | undefined
+): StatusDetail => {
+  const s = (deliveryStatus || rawStatus || '').toUpperCase().trim();
+
+  switch (s) {
+    case 'DELIVERED':
+      return {
+        label: 'Delivered',
+        dotClass: 'bg-teal-600',
+        textClass: 'text-teal-800',
+        badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+      };
+    case 'SHIPPED':
+      return {
+        label: 'Shipped',
+        dotClass: 'bg-purple-600',
+        textClass: 'text-purple-800',
+        badgeClass: 'bg-purple-50 text-purple-800 border-purple-200/80',
+      };
+    case 'PROCESSING':
+      return {
+        label: 'Processing',
+        dotClass: 'bg-sky-600',
+        textClass: 'text-sky-800',
+        badgeClass: 'bg-sky-50 text-sky-800 border-sky-200/80',
+      };
+    case 'CANCELLED':
+      return {
+        label: 'Cancelled',
+        dotClass: 'bg-rose-500',
+        textClass: 'text-rose-700',
+        badgeClass: 'bg-rose-50 text-rose-800 border-rose-200/80',
+      };
+    case 'PENDING':
+    case 'PENDING_PAYMENT':
+      return {
+        label: 'Pending',
+        dotClass: 'bg-amber-500',
+        textClass: 'text-amber-800',
+        badgeClass: 'bg-amber-50 text-amber-900 border-amber-200/80',
+      };
+    default:
+      if (s) {
+        const clean = s.replace(/_/g, ' ').toLowerCase();
+        const label = clean.charAt(0).toUpperCase() + clean.slice(1);
+        return {
+          label,
+          dotClass: 'bg-stone-400',
+          textClass: 'text-stone-700',
+          badgeClass: 'bg-stone-50 text-stone-700 border-stone-200',
+        };
+      }
+      return {
+        label: 'Pending',
+        dotClass: 'bg-amber-500',
+        textClass: 'text-amber-800',
+        badgeClass: 'bg-amber-50 text-amber-900 border-amber-200/80',
+      };
+  }
+};
+
+// Aliases for backwards compatibility with any other imports
+export const getFulfillmentStatusInfo = getFulfillmentStatusDetail;
+export const getPaymentStatusInfo = getPaymentStatusDetail;
+
 export default function AdminOrdersTab({
   orderSearch,
   setOrderSearch,
@@ -42,6 +207,50 @@ export default function AdminOrdersTab({
   fetchOrdersList,
   onSelectOrder,
 }: AdminOrdersTabProps) {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setActiveMenuId(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const handleCopyId = (e: React.MouseEvent, text: string) => {
+    e.stopPropagation();
+    if (!text) return;
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      } catch (err) {}
+    }
+    setCopiedId(text);
+    setTimeout(() => setCopiedId((prev) => (prev === text ? null : prev)), 2000);
+  };
+
+  const formatOrderDate = (dateVal: string | Date | undefined) => {
+    if (!dateVal) return 'Date TBD';
+    try {
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return String(dateVal);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = d.toLocaleDateString('en-US', { month: 'short' });
+      const year = d.getFullYear();
+      return `${day} ${month} ${year}`;
+    } catch {
+      return String(dateVal);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Filter & Search Bar for Orders */}
@@ -149,145 +358,443 @@ export default function AdminOrdersTab({
             </p>
           </div>
         ) : (
-          <div className="w-full min-w-0 overflow-x-auto">
-            <table className="w-full min-w-[1150px] table-fixed text-left text-xs">
-              <thead>
-                <tr className="border-b border-stone-200 text-stone-400 uppercase tracking-wider font-semibold">
-                  <th className="py-3 px-3.5 w-[14%] font-medium whitespace-nowrap">Order Ref / Date</th>
-                  <th className="py-3 px-3.5 w-[17%] font-medium whitespace-nowrap">Customer Details</th>
-                  <th className="py-3 px-3.5 w-[16%] font-medium whitespace-nowrap">Items &amp; Relics</th>
-                  <th className="py-3 px-3.5 w-[13%] font-medium whitespace-nowrap">Destination</th>
-                  <th className="py-3 px-3.5 text-center w-[10%] font-medium whitespace-nowrap">Order Total</th>
-                  <th className="py-3 px-3.5 text-center w-[8%] font-medium whitespace-nowrap">Payment</th>
-                  <th className="py-3 px-4 text-center w-[11%] font-medium whitespace-nowrap">Fulfillment</th>
-                  <th className="py-3 px-4 text-center w-[11%] font-medium whitespace-nowrap">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100">
-                {ordersList.map((o) => {
-                  const isPending = o.status === 'PENDING';
-                  const isProcessing = o.status === 'PROCESSING';
-                  const isShipped = o.status === 'SHIPPED';
-                  const isDelivered = o.status === 'DELIVERED';
-                  const isCancelled = o.status === 'CANCELLED';
+          <div className="w-full min-w-0">
+            {/* Desktop & Tablet View: Clean 6-Column Table (No Horizontal Scrolling) */}
+            <div className="hidden md:block w-full">
+              <table className="w-full table-fixed text-left text-xs divide-y divide-stone-100">
+                <thead>
+                  <tr className="border-b border-stone-200/80 text-stone-400 uppercase tracking-wider font-semibold text-[10px]">
+                    <th className="py-2.5 px-3.5 w-[14%] font-medium truncate">Order ID / Date</th>
+                    <th className="py-2.5 px-3.5 w-[20%] font-medium truncate">Customer</th>
+                    <th className="py-2.5 px-3.5 w-[21%] font-medium truncate">Items</th>
+                    <th className="py-2.5 px-3.5 w-[12%] font-medium truncate">Order Total</th>
+                    <th className="py-2.5 px-3.5 w-[24%] font-medium truncate" title="Payment & Fulfillment Status">Status</th>
+                    <th className="py-2.5 px-3.5 w-[9%] font-medium text-right uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {ordersList.map((o, index) => {
+                    const fulfillment = getFulfillmentStatusDetail(o.status, o.deliveryStatus);
+                    const payment = getPaymentStatusDetail(o.paymentStatus, o.status);
 
-                  const orderRef = o.orderReference || `#ORD-${o.id.slice(0, 8).toUpperCase()}`;
-                  const orderDate = new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                  const custName = o.customer?.name || o.shippingAddress?.recipient || 'Customer';
-                  const custEmail = o.customer?.email || 'Guest Checkout';
-                  const custPhone = o.customer?.phone || o.shippingAddress?.phone || 'No phone';
-                  const destCityState = `${o.shippingAddress?.city || 'Varanasi'}, ${o.shippingAddress?.state || 'UP'}`;
-                  const destPin = `PIN: ${o.shippingAddress?.pincode || o.shippingAddress?.postalCode || 'N/A'}`;
+                    const orderRef = o.orderReference || (o.id ? `#ORD-${o.id.slice(0, 8).toUpperCase()}` : '#ORD-N/A');
+                    const shortId = o.orderReference ? o.orderReference : `#${o.id ? o.id.slice(0, 8).toUpperCase() : 'N/A'}`;
+                    const orderDate = formatOrderDate(o.createdAt);
+                    const custName = o.customer?.name || o.shippingAddress?.recipient || 'Customer';
+                    const custEmail = o.customer?.email || 'Guest Checkout';
+                    const custPhone = o.customer?.phone || o.shippingAddress?.phone || 'No phone';
 
-                  return (
-                    <tr key={o.id} className="hover:bg-amber-50/40 transition-colors">
-                      <td className="py-3.5 px-3">
-                        <span className="font-mono text-[#5B0D15] font-bold block truncate" title={orderRef}>
-                          {orderRef}
-                        </span>
-                        <span className="text-[10px] text-stone-400 block truncate" title={orderDate}>
-                          {orderDate}
-                        </span>
-                      </td>
+                    const primaryItem = o.items?.[0];
+                    const primaryItemName = primaryItem ? (primaryItem.productName || primaryItem.product?.name || 'Vedic Relic') : 'Sacred Product';
+                    const primaryQty = primaryItem?.quantity || 1;
+                    const additionalItems = (o.items?.length || 0) > 1 ? o.items.length - 1 : 0;
+                    const totalUnits = o.itemCount || o.items?.reduce((s: number, i: any) => s + (i.quantity || 1), 0) || primaryQty;
 
-                      <td className="py-3.5 px-3">
-                        <div className="min-w-0">
-                          <span className="font-bold text-[#3B1E22] block truncate" title={custName}>
-                            {custName}
+                    const isNearBottom = index >= ordersList.length - 2 && ordersList.length > 2;
+
+                    return (
+                      <tr
+                        key={o.id}
+                        onClick={() => onSelectOrder(o)}
+                        className="hover:bg-stone-50/70 transition-colors cursor-pointer group"
+                        title="Click to view full order details"
+                      >
+                        {/* 1. Order ID / Date */}
+                        <td className="py-2.5 px-3.5 align-middle overflow-hidden">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span
+                              className="font-mono text-stone-800 font-semibold text-xs block truncate group-hover:text-[#5B0D15] transition-colors"
+                              title={`Full Reference: ${orderRef}`}
+                            >
+                              {shortId}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => handleCopyId(e, orderRef)}
+                              className={`p-1 rounded transition-colors shrink-0 cursor-pointer ${
+                                copiedId === orderRef
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'
+                              }`}
+                              title={copiedId === orderRef ? 'Copied ID!' : 'Copy order ID'}
+                              aria-label="Copy order ID"
+                            >
+                              {copiedId === orderRef ? (
+                                <Check className="w-3 h-3 text-emerald-600" />
+                              ) : (
+                                <Copy className="w-3 h-3" />
+                              )}
+                            </button>
+                          </div>
+                          <span className="text-[11px] text-stone-400 block truncate mt-0.5" title={`Placed: ${orderDate}`}>
+                            {orderDate}
                           </span>
-                          <span className="text-stone-500 text-[11px] block truncate" title={custEmail}>
-                            {custEmail}
-                          </span>
-                          <span className="text-amber-800 font-medium text-[11px] flex items-center gap-1 truncate" title={custPhone}>
-                            <Phone className="w-3 h-3 text-emerald-600 shrink-0" />
-                            <span className="truncate">{custPhone}</span>
-                          </span>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className="py-3.5 px-3">
-                        <div className="flex items-center gap-1 min-w-0">
-                          {o.items?.slice(0, 1).map((it: any, idx: number) => {
-                            const itemName = `${it.productName || it.product?.name || 'Vedic Relic'} × ${it.quantity}`;
-                            return (
-                              <span key={idx} className="px-2 py-0.5 rounded-md bg-stone-100 text-stone-700 text-[10px] font-medium border border-stone-200 truncate inline-block min-w-0" title={itemName}>
-                                {itemName}
+                        {/* 2. Customer */}
+                        <td className="py-2.5 px-3.5 align-middle overflow-hidden">
+                          <div className="min-w-0 pr-1">
+                            <span
+                              className="font-semibold text-stone-900 block truncate text-xs leading-snug"
+                              title={custName}
+                            >
+                              {custName}
+                            </span>
+                            <div className="flex items-center gap-1 text-stone-500 text-[11px] mt-0.5 truncate">
+                              {custPhone && custPhone !== 'No phone' ? (
+                                <>
+                                  <Phone className="w-3 h-3 text-stone-400 shrink-0" />
+                                  <span className="font-mono truncate" title={custPhone}>{custPhone}</span>
+                                </>
+                              ) : (
+                                <span className="text-stone-400 truncate text-[11px]" title={custEmail}>{custEmail}</span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* 3. Items */}
+                        <td className="py-2.5 px-3.5 align-middle overflow-hidden">
+                          <div className="min-w-0 pr-2">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span
+                                className="font-medium text-stone-900 block truncate text-xs leading-snug"
+                                title={`${primaryItemName} (Qty: ${primaryQty})`}
+                              >
+                                {primaryItemName}
                               </span>
-                            );
-                          })}
-                          {o.items?.length > 1 && (
-                            <span className="px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-bold shrink-0" title={`${o.items.length - 1} more items`}>
-                              +{o.items.length - 1}
+                              {additionalItems > 0 && (
+                                <span
+                                  className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-stone-100 text-stone-600 border border-stone-200/80 shrink-0"
+                                  title={`${additionalItems} more item${additionalItems > 1 ? 's' : ''}`}
+                                >
+                                  +{additionalItems} more
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-stone-400 block truncate mt-0.5" title={`${totalUnits} unit(s) total`}>
+                              {totalUnits} {totalUnits === 1 ? 'unit' : 'units'} total
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* 4. Order Total */}
+                        <td className="py-2.5 px-3.5 align-middle overflow-hidden">
+                          <div className="min-w-0">
+                            <span
+                              className="font-semibold text-stone-900 block truncate text-xs tabular-nums tracking-tight"
+                              title={`₹${Number(o.totalAmount).toLocaleString('en-IN')}`}
+                            >
+                              ₹{Number(o.totalAmount).toLocaleString('en-IN')}
+                            </span>
+                            <span className="text-[11px] text-stone-400 block truncate mt-0.5" title={o.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Prepaid Online'}>
+                              {o.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Prepaid Online'}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* 5. Status: Side-by-side Payment and Fulfillment Badges on a single horizontal line */}
+                        <td className="py-2.5 px-3.5 align-middle overflow-hidden">
+                          <div className="flex items-center gap-1.5 flex-nowrap whitespace-nowrap">
+                            {/* Payment Badge */}
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium border shrink-0 ${payment.badgeClass}`}
+                              title={`Payment Status: ${payment.label}`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${payment.dotClass}`} />
+                              <span>{payment.label}</span>
+                            </span>
+
+                            {/* Fulfillment Badge */}
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium border shrink-0 ${fulfillment.badgeClass}`}
+                              title={`Fulfillment Status: ${fulfillment.label}`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${fulfillment.dotClass}`} />
+                              <span>{fulfillment.label}</span>
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* 6. Actions (Single Compact Three-Dot Menu '⋮') */}
+                        <td className="py-2.5 px-3.5 text-right align-middle">
+                          <div className="relative inline-block text-left">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuId((prev) => (prev === o.id ? null : o.id));
+                              }}
+                              className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                activeMenuId === o.id
+                                  ? 'bg-stone-100 text-stone-900 border-stone-300'
+                                  : 'border-transparent text-stone-400 hover:text-stone-700 hover:bg-stone-100 hover:border-stone-200'
+                              }`}
+                              title="Order actions"
+                              aria-label={`Actions for order ${shortId}`}
+                              aria-haspopup="true"
+                              aria-expanded={activeMenuId === o.id}
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
+
+                            {activeMenuId === o.id && (
+                              <>
+                                <div
+                                  className="fixed inset-0 z-30"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveMenuId(null);
+                                  }}
+                                />
+                                <div
+                                  onClick={(e) => e.stopPropagation()}
+                                  className={`absolute right-0 z-40 w-48 rounded-2xl bg-white/95 backdrop-blur-xl border border-stone-200 shadow-xl py-1 text-xs text-stone-700 animate-fadeIn ${
+                                    isNearBottom ? 'bottom-full mb-1' : 'top-full mt-1'
+                                  }`}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveMenuId(null);
+                                      onSelectOrder(o);
+                                    }}
+                                    className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-stone-100/80 hover:text-stone-900 transition-colors cursor-pointer"
+                                  >
+                                    <Eye className="w-3.5 h-3.5 text-stone-400" />
+                                    <span>View Order Details</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveMenuId(null);
+                                      onSelectOrder(o);
+                                    }}
+                                    className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-amber-50 hover:text-amber-900 text-stone-700 transition-colors cursor-pointer"
+                                  >
+                                    <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                                    <span>Update Fulfillment Status</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveMenuId(null);
+                                      onSelectOrder(o);
+                                    }}
+                                    className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-stone-50 text-stone-700 transition-colors cursor-pointer"
+                                  >
+                                    <Truck className="w-3.5 h-3.5 text-blue-600" />
+                                    <span>View Shipping Details</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveMenuId(null);
+                                      onSelectOrder(o);
+                                    }}
+                                    className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-stone-50 text-stone-700 transition-colors cursor-pointer"
+                                  >
+                                    <CreditCard className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>View Payment Details</span>
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile View: Compact Responsive Order Cards (No Horizontal Scrolling) */}
+            <div className="md:hidden space-y-3">
+              {ordersList.map((o, index) => {
+                const fulfillment = getFulfillmentStatusInfo(o.status);
+                const payment = getPaymentStatusInfo(o.paymentStatus, o.status);
+
+                const orderRef = o.orderReference || (o.id ? `#ORD-${o.id.slice(0, 8).toUpperCase()}` : '#ORD-N/A');
+                const shortId = o.orderReference ? o.orderReference : `#${o.id ? o.id.slice(0, 8).toUpperCase() : 'N/A'}`;
+                const orderDate = formatOrderDate(o.createdAt);
+                const custName = o.customer?.name || o.shippingAddress?.recipient || 'Customer';
+                const custPhone = o.customer?.phone || o.shippingAddress?.phone || 'No phone';
+
+                const primaryItem = o.items?.[0];
+                const primaryItemName = primaryItem ? (primaryItem.productName || primaryItem.product?.name || 'Vedic Relic') : 'Sacred Product';
+                const primaryQty = primaryItem?.quantity || 1;
+                const additionalItems = (o.items?.length || 0) > 1 ? o.items.length - 1 : 0;
+                const totalUnits = o.itemCount || o.items?.reduce((s: number, i: any) => s + (i.quantity || 1), 0) || primaryQty;
+
+                const isNearBottom = index >= ordersList.length - 2 && ordersList.length > 2;
+
+                return (
+                  <div
+                    key={o.id}
+                    onClick={() => onSelectOrder(o)}
+                    className="p-3.5 rounded-2xl bg-white border border-stone-200/90 shadow-2xs hover:border-amber-400 transition-all cursor-pointer space-y-2.5"
+                    title="Click to view details"
+                  >
+                    {/* Header: Short ID, Date, Status Badges & Menu */}
+                    <div className="flex items-center justify-between border-b border-stone-100 pb-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-mono text-stone-800 font-semibold text-xs">
+                          {shortId}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => handleCopyId(e, orderRef)}
+                          className="p-1 rounded text-stone-400 hover:text-stone-700"
+                          title="Copy Full Reference"
+                        >
+                          {copiedId === orderRef ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                        </button>
+                        <span className="text-[11px] text-stone-400">
+                          • {orderDate}
+                        </span>
+                      </div>
+
+                      {/* Three-Dot Menu Button */}
+                      <div className="relative inline-block text-left">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveMenuId((prev) => (prev === o.id ? null : o.id));
+                          }}
+                          className="p-1 rounded-md text-stone-400 hover:text-stone-700 hover:bg-stone-100"
+                          title="Actions"
+                        >
+                          <MoreVertical className="w-3.5 h-3.5" />
+                        </button>
+
+                          {activeMenuId === o.id && (
+                            <>
+                              <div
+                                className="fixed inset-0 z-30"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveMenuId(null);
+                                }}
+                              />
+                              <div
+                                onClick={(e) => e.stopPropagation()}
+                                className={`absolute right-0 z-40 w-44 rounded-xl bg-white border border-stone-200 shadow-xl py-1 text-xs text-stone-700 animate-fadeIn ${
+                                  isNearBottom ? 'bottom-full mb-1' : 'top-full mt-1'
+                                }`}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    onSelectOrder(o);
+                                  }}
+                                  className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-stone-50"
+                                >
+                                  <Eye className="w-3.5 h-3.5 text-stone-400" />
+                                  <span>View Details</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    onSelectOrder(o);
+                                  }}
+                                  className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-stone-50"
+                                >
+                                  <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+                                  <span>Update Status</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    onSelectOrder(o);
+                                  }}
+                                  className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-stone-50"
+                                >
+                                  <Truck className="w-3.5 h-3.5 text-blue-600" />
+                                  <span>Shipping Details</span>
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                    {/* Customer & Items Details */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-[10px] text-stone-400 block">Customer</span>
+                        <span className="font-semibold text-stone-900 truncate block">{custName}</span>
+                        <div className="text-[11px] text-stone-500 flex items-center gap-1 mt-0.5 truncate">
+                          <Phone className="w-3 h-3 text-stone-400 shrink-0" />
+                          <span className="font-mono truncate">{custPhone}</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-stone-400 block">Ordered Items</span>
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className="font-medium text-stone-900 truncate">{primaryItemName}</span>
+                          {additionalItems > 0 && (
+                            <span className="text-[9px] font-semibold text-stone-600 bg-stone-100 border border-stone-200/80 px-1 rounded">
+                              +{additionalItems} more
                             </span>
                           )}
                         </div>
-                        <span className="text-[10px] text-stone-400 block mt-0.5 truncate" title={`${o.itemCount || o.items?.reduce((s: number, i: any) => s + (i.quantity || 1), 0)} units total`}>
-                          {o.itemCount || o.items?.reduce((s: number, i: any) => s + (i.quantity || 1), 0)} units total
+                        <span className="text-[11px] text-stone-400 truncate block">
+                          {totalUnits} {totalUnits === 1 ? 'unit' : 'units'} total
                         </span>
-                      </td>
+                      </div>
+                    </div>
 
-                      <td className="py-3.5 px-3 text-stone-600">
-                        <span className="font-medium text-stone-800 block text-[11px] truncate" title={destCityState}>
-                          {destCityState}
-                        </span>
-                        <span className="text-[10px] text-stone-400 block truncate" title={destPin}>
-                          {destPin}
-                        </span>
-                      </td>
-
-                      <td
-                        className="py-3.5 px-3 text-center font-semibold text-[#5B0D15] text-sm sm:text-[14.5px] font-sans tabular-nums tracking-tight truncate align-middle whitespace-nowrap"
-                        title={`₹${o.totalAmount}`}
-                      >
-                        ₹{Number(o.totalAmount).toLocaleString('en-IN')}
-                      </td>
-
-                      <td className="py-3.5 px-3 text-center">
+                    {/* Status & Total Details */}
+                    <div className="flex items-center justify-between text-xs pt-2 border-t border-stone-100">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {/* Payment Badge */}
                         <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-[10.5px] font-semibold truncate max-w-full text-center ${
-                            isPending || (!o.paymentStatus && o.status === 'PENDING')
-                              ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
-                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                          }`}
-                          title={isPending || (!o.paymentStatus && o.status === 'PENDING') ? 'Pending' : 'Paid'}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border shrink-0 ${payment.badgeClass}`}
+                          title={`Payment Status: ${payment.label}`}
                         >
-                          {isPending || (!o.paymentStatus && o.status === 'PENDING') ? 'Pending' : 'Paid'}
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${payment.dotClass}`} />
+                          <span>{payment.label}</span>
                         </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold truncate max-w-full text-center ${
-                            isDelivered
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                              : isShipped
-                              ? 'bg-purple-50 text-purple-700 border border-purple-200/60'
-                              : isProcessing
-                              ? 'bg-blue-50 text-blue-700 border border-blue-200/60'
-                              : isCancelled
-                              ? 'bg-rose-50 text-rose-700 border border-rose-200/60'
-                              : 'bg-amber-50 text-amber-700 border border-amber-200/60'
-                          }`}
-                          title={o.status || 'Pending'}
-                        >
-                          {o.status ? o.status.charAt(0) + o.status.slice(1).toLowerCase() : 'Pending'}
-                        </span>
-                      </td>
 
-                      <td className="py-3.5 px-4 text-center">
+                        {/* Fulfillment Badge */}
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border shrink-0 ${fulfillment.badgeClass}`}
+                          title={`Fulfillment Status: ${fulfillment.label}`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${fulfillment.dotClass}`} />
+                          <span>{fulfillment.label}</span>
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-stone-900 text-xs block tabular-nums">
+                          ₹{Number(o.totalAmount).toLocaleString('en-IN')}
+                        </span>
                         <button
-                          onClick={() => onSelectOrder(o)}
-                          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-300 bg-white hover:bg-amber-50 text-[#5B0D15] font-semibold text-[11px] shadow-xs transition-all cursor-pointer mx-auto shrink-0"
-                          title="Manage Order"
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectOrder(o);
+                          }}
+                          className="h-6 px-2.5 rounded-md border border-stone-200 hover:border-stone-300 bg-white hover:bg-stone-50 text-stone-700 font-medium text-[11px] transition-colors cursor-pointer"
                         >
-                          <Eye className="w-3.5 h-3.5 shrink-0" />
-                          <span>Manage</span>
+                          Details
                         </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 

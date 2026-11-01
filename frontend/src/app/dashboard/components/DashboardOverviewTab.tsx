@@ -21,7 +21,7 @@ import {
   Truck,
 } from 'lucide-react';
 import { UserProfile, DashboardTab, formatZodiacName, getUserInitials } from '../types';
-import { DEFAULT_SAMPLE_ORDERS, resolveProductImage } from '../utils';
+import { resolveProductImage } from '../utils';
 
 interface DashboardOverviewTabProps {
   profile: UserProfile;
@@ -67,7 +67,7 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
 
   // Flatten orders so each product has its own dedicated container
   const recentProductItems = useMemo(() => {
-    return (orders && orders.length > 0 ? orders : DEFAULT_SAMPLE_ORDERS)
+    return (Array.isArray(orders) ? orders : [])
       .flatMap((ord: any, ordIdx: number) => {
         const rawId = String(ord.id || ord._id || ord.orderNumber || `AVD-ORD-${ordIdx + 1}`);
         const status = (ord.status || 'DELIVERED').toUpperCase();

@@ -49,7 +49,7 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
   const [selectedTrackOrder, setSelectedTrackOrder] = useState<any | null>(null);
   const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<any | null>(null);
 
-  const displayOrders = orders && orders.length > 0 ? orders : DEFAULT_SAMPLE_ORDERS;
+  const displayOrders = Array.isArray(orders) ? orders : [];
 
   const handleCopyId = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -61,12 +61,14 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
   // Flatten every order so each product gets its OWN distinct container card
   const allProductItems = displayOrders.flatMap((ord: any, ordIdx: number) => {
     const rawId = String(ord.id || ord._id || ord.orderNumber || `AVD-ORD-${ordIdx + 1}`);
-    const displayOrderNum = ord.orderNumber || (rawId.startsWith('#') ? rawId : `#${rawId}`);
+    const displayOrderNum = ord.orderNumber || (rawId.startsWith('#') ? rawId : `#${rawId.length > 12 ? rawId.slice(0, 8).toUpperCase() : rawId}`);
 
-    const status = (ord.status || 'DELIVERED').toUpperCase();
+    const status = (ord.status || 'PENDING_PAYMENT').toUpperCase();
     const isDelivered = status === 'DELIVERED';
     const isShipped = status === 'SHIPPED' || status === 'IN_TRANSIT';
-    const isProcessing = !isDelivered && !isShipped;
+    const isProcessing = status === 'PROCESSING';
+    const isPendingPayment = status === 'PENDING_PAYMENT' || status === 'PENDING';
+    const isCancelled = status === 'CANCELLED';
 
     const dateStr =
       ord.deliveryDate ||
@@ -92,7 +94,11 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
         ? `Delivered on ${dateStr}`
         : isShipped
         ? `Expected Delivery by ${dateStr}`
-        : `Consecration in Progress`);
+        : isCancelled
+        ? `Order Cancelled`
+        : isProcessing
+        ? `Consecration in Progress`
+        : `Order Placed (${placedDate})`);
 
     const rawSubtext =
       ord.deliverySubtext ||
@@ -100,7 +106,11 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
         ? 'Your item has been delivered'
         : isShipped
         ? 'Your item is in transit'
-        : 'Pran-Pratishtha underway');
+        : isCancelled
+        ? 'This order was cancelled'
+        : isProcessing
+        ? 'Pran-Pratishtha underway'
+        : 'Order placed — awaiting payment confirmation');
 
     const deliverySubtext =
       rawSubtext.toLowerCase().includes('pran-pratishtha') && rawSubtext.length > 25
@@ -136,6 +146,8 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
       isDelivered,
       isShipped,
       isProcessing,
+      isPendingPayment,
+      isCancelled,
       deliveryHeading,
       deliverySubtext,
       shippingCity,
@@ -372,6 +384,18 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
                         <span>Consecration</span>
+                      </span>
+                    )}
+                    {entry.isPendingPayment && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                        <span>Pending</span>
+                      </span>
+                    )}
+                    {entry.isCancelled && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-stone-100 text-stone-600 border border-stone-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-stone-400" />
+                        <span>Cancelled</span>
                       </span>
                     )}
 

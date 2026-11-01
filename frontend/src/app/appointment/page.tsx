@@ -9,6 +9,7 @@ import { Footer } from '../../components/Footer';
 import { PageHeader } from '../../components/PageHeader';
 import dynamic from 'next/dynamic';
 const AuthModal = dynamic(() => import('../../components/AuthModal').then((mod) => mod.AuthModal), { ssr: false });
+import { useScrollLock } from '../../lib/scrollLock';
 import {
   Calendar,
   Clock,
@@ -25,6 +26,13 @@ import {
   ChevronDown,
   Info,
   Lock,
+  User,
+  Check,
+  X,
+  Edit3,
+  ArrowLeft,
+  HeartHandshake,
+  Sparkles,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import {
@@ -63,16 +71,12 @@ function AppointmentContent() {
   const tomorrowStr = tomorrow.toISOString().split('T')[0];
   const todayStr = new Date().toISOString().split('T')[0];
 
-<<<<<<< HEAD
-=======
   const durationMinutes = 30;
 
   const DEFAULT_FALLBACK_SLOTS = generateWorkingHourSlots(30).map((time: string) => ({
     time,
     isAvailable: true,
   }));
-
->>>>>>> e9f558bf120eca6a6a8c150bcdc56dad70fea398
   const [date, setDate] = useState<string>(tomorrowStr);
   const [timeSlot, setTimeSlot] = useState<string>('');
   const [availableSlots, setAvailableSlots] = useState<
@@ -82,23 +86,52 @@ function AppointmentContent() {
   const [isDateBlocked, setIsDateBlocked] = useState<boolean>(false);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
 
-  // Form details
+  // Form details - Customer/Attendee who will attend the consultation
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [birthDetails, setBirthDetails] = useState('');
+  const [isBookingForSomeoneElse, setIsBookingForSomeoneElse] = useState(false);
+
+  // Authenticated account owner (kept separately from attendee details)
+  const [accountUser, setAccountUser] = useState<{ id?: string; name?: string; phone?: string; email?: string } | null>(null);
 
   // UI state
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [confirmedBooking, setConfirmedBooking] = useState<any | null>(null);
+  const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [serviceSwitchOpen, setServiceSwitchOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Lock body scroll and prevent background scroll chaining during confirmation dialog
+  useScrollLock(confirmationModalOpen);
+
+  useEffect(() => {
+    if (!confirmationModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setConfirmationModalOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [confirmationModalOpen]);
 
   useEffect(() => {
     const checkAuth = () => {
       const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
       setIsLoggedIn(!!token);
+      if (typeof window !== 'undefined') {
+        const storedUser = localStorage.getItem('astro_user');
+        if (storedUser) {
+          try {
+            setAccountUser(JSON.parse(storedUser));
+          } catch (e) {
+            setAccountUser(null);
+          }
+        } else {
+          setAccountUser(null);
+        }
+      }
     };
     checkAuth();
     window.addEventListener('astro-auth-change', checkAuth);
@@ -121,19 +154,8 @@ function AppointmentContent() {
     }
   }, [queryServiceId]);
 
-  // Load authenticated user profile from localStorage if available
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedUser = localStorage.getItem('astro_user');
-      if (storedUser) {
-        try {
-          const user = JSON.parse(storedUser);
-          if (user.name && !name) setName(user.name);
-          if (user.phone && !phone) setPhone(user.phone);
-        } catch (e) {}
-      }
-    }
-  }, []);
+  // NOTE: Requirement 1: Do NOT automatically fill booking form with logged-in user's name & phone.
+  // The user explicitly enters or confirms the attendee customer details.
 
   // Fetch real available slots whenever selectedServiceId or date changes, with live polling & cache-busting
   useEffect(() => {
@@ -160,7 +182,7 @@ function AppointmentContent() {
               setBlockedReason(data.blockedReason || null);
               setAvailableSlots([]);
               setTimeSlot('');
-            } else if (data.slots && Array.isArray(data.slots)) {
+            } else if (data.slots && Array.isArray(data.slots) && data.slots.length > 0) {
               setIsDateBlocked(false);
               setBlockedReason(null);
               // Only display published slots returned by backend
@@ -177,35 +199,26 @@ function AppointmentContent() {
             } else {
               setIsDateBlocked(false);
               setBlockedReason(null);
-<<<<<<< HEAD
-              setAvailableSlots([]);
-              setTimeSlot('');
-=======
               const dynFallback = generateWorkingHourSlots(durationMinutes).map((time: string) => ({ time, isAvailable: true }));
               setAvailableSlots(dynFallback);
               if (!timeSlot || !dynFallback.some((s: any) => s.time === timeSlot)) setTimeSlot(dynFallback[0]?.time || '10:00 AM');
->>>>>>> e9f558bf120eca6a6a8c150bcdc56dad70fea398
             }
           }
         } else {
           if (!isCancelled) {
             setIsDateBlocked(false);
-<<<<<<< HEAD
-            setAvailableSlots([]);
-            setTimeSlot('');
-=======
             const dynFallback = generateWorkingHourSlots(durationMinutes).map((time: string) => ({ time, isAvailable: true }));
             setAvailableSlots(dynFallback);
             if (!timeSlot || !dynFallback.some((s: any) => s.time === timeSlot)) setTimeSlot(dynFallback[0]?.time || '10:00 AM');
->>>>>>> e9f558bf120eca6a6a8c150bcdc56dad70fea398
           }
         }
       } catch (err) {
         console.warn('Failed to load slots from backend', err);
         if (!isCancelled) {
           setIsDateBlocked(false);
-          setAvailableSlots([]);
-          setTimeSlot('');
+          const dynFallback = generateWorkingHourSlots(durationMinutes).map((time: string) => ({ time, isAvailable: true }));
+          setAvailableSlots(dynFallback);
+          if (!timeSlot || !dynFallback.some((s: any) => s.time === timeSlot)) setTimeSlot(dynFallback[0]?.time || '10:00 AM');
         }
       } finally {
         if (!isCancelled) setLoadingSlots(false);
@@ -250,7 +263,8 @@ function AppointmentContent() {
   const displayDesc = tr ? tr.descHi : activeService.desc;
   const displayBadge = tr && tr.badgeHi ? tr.badgeHi : activeService.badge;
 
-  const handleBooking = async (e: React.FormEvent) => {
+  // Validate customer attendee details and open confirmation modal
+  const handleInitiateBooking = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
@@ -265,17 +279,44 @@ function AppointmentContent() {
       return;
     }
 
-    if (!name.trim()) {
-      setErrorMsg(t('Please enter your full name.', 'कृपया अपना पूरा नाम दर्ज करें।'));
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setErrorMsg(
+        isBookingForSomeoneElse
+          ? t('Please enter the customer / attendee full name.', 'कृपया उस व्यक्ति का नाम दर्ज करें जिसके लिए आप परामर्श बुक कर रहे हैं।')
+          : t('Please enter customer full name.', 'कृपया ग्राहक का पूरा नाम दर्ज करें।')
+      );
+      return;
+    }
+    if (trimmedName.length < 2) {
+      setErrorMsg(t('Customer name must be at least 2 characters.', 'ग्राहक का नाम कम से कम 2 अक्षरों का होना चाहिए।'));
+      return;
+    }
+    if (/^[0-9\s+_-]+$/.test(trimmedName)) {
+      setErrorMsg(t('Customer name cannot consist solely of numbers.', 'नाम में केवल अंक नहीं हो सकते।'));
       return;
     }
 
-    if (!phone.trim()) {
+    const trimmedPhone = phone.trim();
+    if (!trimmedPhone) {
       setErrorMsg(
-        t(
-          'Please enter your authentic contact phone number.',
-          'कृपया अपना प्रामाणिक संपर्क मोबाइल नंबर दर्ज करें।',
-        ),
+        isBookingForSomeoneElse
+          ? t('Please enter the attendee contact mobile number.', 'कृपया उस व्यक्ति का संपर्क मोबाइल नंबर दर्ज करें जिनके लिए परामर्श बुक किया जा रहा है।')
+          : t('Please enter your authentic contact phone number.', 'कृपया अपना प्रामाणिक संपर्क मोबाइल नंबर दर्ज करें।')
+      );
+      return;
+    }
+
+    const cleanDigits = trimmedPhone.replace(/\D/g, '');
+    if (cleanDigits.length < 10) {
+      setErrorMsg(
+        t('Please enter a valid 10-digit mobile number.', 'कृपया एक मान्य 10-अंकीय मोबाइल नंबर दर्ज करें।')
+      );
+      return;
+    }
+    if (/^(\d)\1{9,}$/.test(cleanDigits) || cleanDigits === '9876543210' || cleanDigits === '0123456789') {
+      setErrorMsg(
+        t('Dummy mobile numbers are not allowed. Please enter an authentic mobile number.', 'कृपया प्रामाणिक मोबाइल नंबर दर्ज करें (डमी नंबर मान्य नहीं है)।')
       );
       return;
     }
@@ -302,7 +343,27 @@ function AppointmentContent() {
       return;
     }
 
+    // Step 2 & 4: Open confirmation summary step before submitting booking
+    setConfirmationModalOpen(true);
+  };
+
+  // Final submission once confirmed by the user in the confirmation dialog
+  const executeFinalBooking = async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
+    if (!token) {
+      setConfirmationModalOpen(false);
+      setAuthModalOpen(true);
+      setErrorMsg(
+        t(
+          'Please sign in or create an account to confirm and reserve your consultation.',
+          'अपने परामर्श सत्र को आरक्षित करने हेतु कृपया पहले साइन इन करें।',
+        ),
+      );
+      return;
+    }
+
     setLoading(true);
+    setErrorMsg(null);
 
     try {
       const res = await fetch(`${backendUrl}/api/appointments/book`, {
@@ -318,7 +379,9 @@ function AppointmentContent() {
           durationMinutes: durationMinutes,
           consultationType: consultType,
           contactPhone: phone.trim(),
-          customerName: name.trim() || undefined,
+          customerPhone: phone.trim(),
+          customerName: name.trim(),
+          isBookingForSomeoneElse: isBookingForSomeoneElse,
           notes: birthDetails.trim() || undefined,
         }),
       });
@@ -329,7 +392,10 @@ function AppointmentContent() {
       }
 
       const bookingPayload = data.booking || {};
-      const finalBookingId = bookingPayload.id || `AVD-${Date.now().toString().slice(-6)}`;
+      const finalBookingId = bookingPayload.id;
+      if (!finalBookingId) {
+        throw new Error('Appointment booking response missing authoritative ID from server.');
+      }
       const meetLink =
         bookingPayload.meetLink && bookingPayload.meetLink.includes('meet.google.com')
           ? bookingPayload.meetLink
@@ -339,9 +405,16 @@ function AppointmentContent() {
         ...bookingPayload,
         id: finalBookingId,
         meetLink,
+        customerName: bookingPayload.customerName || name.trim(),
+        customerPhone: bookingPayload.customerPhone || phone.trim(),
+        contactPhone: bookingPayload.customerPhone || phone.trim(),
+        isBookingForSomeoneElse: Boolean(bookingPayload.isBookingForSomeoneElse ?? isBookingForSomeoneElse),
+        accountOwnerName: accountUser?.name || undefined,
       };
 
       setConfirmedBooking(resolvedBooking);
+      setConfirmationModalOpen(false);
+
       if (typeof window !== 'undefined') {
         try {
           const existing = JSON.parse(localStorage.getItem('astro_consultations') || '[]');
@@ -357,56 +430,21 @@ function AppointmentContent() {
         } catch (e) {}
       }
     } catch (err: any) {
-      if (
-        err.message?.includes('fetch') ||
-        err.message?.includes('Failed to fetch') ||
-        err.message?.includes('NetworkError') ||
-        err.message?.includes('Internal server error') ||
-        err.message?.includes('database server')
-      ) {
-        const fallbackBookingId = `AVD-${Date.now().toString().slice(-6)}`;
-        const fallbackBooking = {
-          id: fallbackBookingId,
-          serviceId: activeService.id,
-          serviceTitle: activeService.title,
-          servicePrice: activeService.price,
-          scheduledDate: date,
-          scheduledTime: timeSlot,
-          status: 'CONFIRMED',
-          durationMinutes: durationMinutes || activeService.durationMinutes,
-          totalCost: activeService.priceNumber,
-          consultationType: consultType,
-          customerName: name.trim(),
-          contactPhone: phone.trim(),
-          meetLink: formatGoogleMeetLink(fallbackBookingId),
-          createdAt: new Date().toISOString(),
-        };
-
-        if (typeof window !== 'undefined') {
-          try {
-            const existing = JSON.parse(localStorage.getItem('astro_consultations') || '[]');
-            existing.unshift(fallbackBooking);
-            localStorage.setItem('astro_consultations', JSON.stringify(existing));
-            localStorage.setItem('astrovd_recent_activity', JSON.stringify({ type: 'booking', id: fallbackBookingId, time: Date.now() }));
-          } catch (e) {}
+      console.error('Appointment reservation failed:', err);
+      setErrorMsg(err.message || 'Failed to complete appointment reservation. Please try again.');
+      setConfirmationModalOpen(false);
+      // Refresh slots in case of collision
+      try {
+        const slotsRes = await fetch(
+          `${backendUrl}/api/appointments/slots?serviceId=${encodeURIComponent(
+            selectedServiceId,
+          )}&date=${encodeURIComponent(date)}`,
+        );
+        if (slotsRes.ok) {
+          const slotsData = await slotsRes.json();
+          if (slotsData.slots) setAvailableSlots(slotsData.slots);
         }
-
-        setConfirmedBooking(fallbackBooking);
-      } else {
-        setErrorMsg(err.message || 'Error reserving appointment. Please try again.');
-        // Refresh slots in case of collision
-        try {
-          const slotsRes = await fetch(
-            `${backendUrl}/api/appointments/slots?serviceId=${encodeURIComponent(
-              selectedServiceId,
-            )}&date=${encodeURIComponent(date)}`,
-          );
-          if (slotsRes.ok) {
-            const slotsData = await slotsRes.json();
-            if (slotsData.slots) setAvailableSlots(slotsData.slots);
-          }
-        } catch (e) {}
-      }
+      } catch (e) {}
     } finally {
       setLoading(false);
     }
@@ -517,18 +555,28 @@ function AppointmentContent() {
                 <p className="text-xs sm:text-sm text-stone-600 max-w-md mx-auto leading-relaxed">
                   {language === 'hi' ? (
                     <>
-                      आपका <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> सत्र दिनांक{' '}
+                      {confirmedBooking.isBookingForSomeoneElse ? (
+                        <>
+                          <strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> जी के लिए{' '}
+                        </>
+                      ) : null}
+                      <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> सत्र दिनांक{' '}
                       <strong>{confirmedBooking.scheduledDate}</strong> को{' '}
                       <strong>{confirmedBooking.scheduledTime}</strong> पर आरक्षित हो गया है। हमारी
-                      टीम संपर्क सूत्र <strong>{confirmedBooking.contactPhone}</strong> पर
+                      टीम संपर्क सूत्र <strong>{confirmedBooking.customerPhone || confirmedBooking.contactPhone}</strong> पर
                       सत्र विवरण प्रेषित करेगी।
                     </>
                   ) : (
                     <>
+                      {confirmedBooking.isBookingForSomeoneElse ? (
+                        <>
+                          Consultation for <strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong>:{' '}
+                        </>
+                      ) : null}
                       Your <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> session is confirmed for{' '}
                       <strong>{confirmedBooking.scheduledDate}</strong> at{' '}
                       <strong>{confirmedBooking.scheduledTime}</strong>. AstroVD Team will
-                      reach out to <strong>{confirmedBooking.contactPhone}</strong> with session details.
+                      reach out to <strong>{confirmedBooking.customerPhone || confirmedBooking.contactPhone}</strong> with session details.
                     </>
                   )}
                 </p>
@@ -536,9 +584,40 @@ function AppointmentContent() {
 
               {/* Elegant Reservation Summary Pass / Ticket */}
               <div className="rounded-2xl bg-[#FAF8F5] border border-stone-200/80 p-5 text-left text-xs space-y-3.5 shadow-2xs">
+                {/* Attendee Details */}
                 <div className="flex justify-between items-center pb-2.5 border-b border-stone-200/60">
                   <span className="text-stone-500 flex items-center gap-1.5">
-                    
+                    <User className="w-3.5 h-3.5 text-stone-400" />
+                    <span>{t('Customer / Attendee:', 'परामर्शार्थी / ग्राहक:')}</span>
+                  </span>
+                  <div className="text-right">
+                    <span className="font-bold text-stone-900 block">
+                      {confirmedBooking.customerName || name}
+                    </span>
+                    <span className="text-[11px] text-[#5B0D15] font-mono block">
+                      {confirmedBooking.customerPhone || confirmedBooking.contactPhone || phone}
+                    </span>
+                  </div>
+                </div>
+
+                {/* If booked for someone else, indicate Account Owner */}
+                {confirmedBooking.isBookingForSomeoneElse && (
+                  <div className="flex justify-between items-center pb-2.5 border-b border-stone-200/60 bg-amber-50/60 -mx-2 px-2 py-1.5 rounded-xl border border-amber-200/80">
+                    <span className="text-amber-900 font-semibold flex items-center gap-1.5 text-[11px]">
+                      <HeartHandshake className="w-3.5 h-3.5 text-amber-700" />
+                      <span>{t('Booked For Family / Friend', 'परिवार / मित्र हेतु बुक किया गया')}</span>
+                    </span>
+                    <span className="text-[11px] text-stone-600 font-medium">
+                      {t('By Account: ', 'खाता: ')}
+                      <strong className="text-stone-800">
+                        {confirmedBooking.accountOwnerName || accountUser?.name || 'Your Account'}
+                      </strong>
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex justify-between items-center pb-2.5 border-b border-stone-200/60">
+                  <span className="text-stone-500 flex items-center gap-1.5">
                     <span>{t('Spiritual Service:', 'वैदिक सेवा:')}</span>
                   </span>
                   <span className="font-bold text-[#5B0D15] text-right truncate max-w-[240px]">
@@ -691,7 +770,7 @@ function AppointmentContent() {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleBooking} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <form onSubmit={handleInitiateBooking} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* LEFT COLUMN (5 cols): Live Service Showcase Card & Sanctuary Reassurances */}
             <div className="lg:col-span-5 space-y-6">
               <div className="flex items-center justify-between">
@@ -844,34 +923,121 @@ function AppointmentContent() {
                 </div>
               </div>
 
-              {/* 2. SEEKER CONTACT DETAILS (NAME AND PHONE NUMBER) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    {t('Full Name', 'पूरा नाम')} <span className="text-rose-600">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder={t('Enter your full name', 'अपना पूरा नाम दर्ज करें')}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl border border-stone-300 text-xs focus:outline-none focus:border-amber-500 bg-white"
-                  />
+              {/* 2. CONFIRM CUSTOMER DETAILS & "I'M BOOKING FOR SOMEONE ELSE" OPTION */}
+              <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/90 space-y-3.5 shadow-2xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/60 pb-2.5">
+                  <div>
+                    <label className="text-xs font-bold text-stone-900 flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-amber-700" />
+                      <span>{t('Customer / Attendee Details', 'परामर्शार्थी / ग्राहक विवरण')}</span>
+                      <span className="text-rose-600">*</span>
+                    </label>
+                    <p className="text-[11px] text-stone-600 mt-0.5">
+                      {isBookingForSomeoneElse
+                        ? t(
+                            'Enter the name and mobile number of the person attending the consultation.',
+                            'उस व्यक्ति का नाम एवं मोबाइल नंबर दर्ज करें जो परामर्श में भाग लेंगे।'
+                          )
+                        : t(
+                            'Enter the name and mobile number for this consultation.',
+                            'इस परामर्श सत्र हेतु अपना या ग्राहक का नाम एवं संपर्क नंबर दर्ज करें।'
+                          )}
+                    </p>
+                  </div>
+
+                  {/* Optional voluntary helper for self bookings (Never auto-filled by default) */}
+                  {!isBookingForSomeoneElse && accountUser?.name && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (accountUser.name) setName(accountUser.name);
+                        if (accountUser.phone) setPhone(accountUser.phone);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-amber-300 text-[11px] font-semibold text-amber-900 hover:bg-amber-100/70 transition-colors cursor-pointer w-fit"
+                      title={t('Click to fill with your logged-in account details', 'अपने खाते के विवरण भरने के लिए क्लिक करें')}
+                    >
+                      <Sparkles className="w-3 h-3 text-amber-600" />
+                      <span>{t('Fill my account details', 'मेरे खाते के विवरण भरें')}</span>
+                    </button>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    {t('WhatsApp / Contact Number', 'व्हाट्सएप / मोबाइल नंबर')} <span className="text-rose-600">*</span>
-                  </label>
+                {/* Checkbox: "I'm booking for someone else" */}
+                <label className="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-amber-200 cursor-pointer hover:border-amber-400 transition-colors select-none">
                   <input
-                    type="tel"
-                    required
-                    placeholder="+91 98260 12345"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl border border-stone-300 text-xs focus:outline-none focus:border-amber-500 bg-white"
+                    type="checkbox"
+                    checked={isBookingForSomeoneElse}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setIsBookingForSomeoneElse(checked);
+                      // If toggling to booking for someone else, clear fields so user can input fresh details
+                      if (checked) {
+                        setName('');
+                        setPhone('');
+                      }
+                    }}
+                    className="mt-0.5 h-4 w-4 rounded border-amber-300 text-[#5B0D15] focus:ring-[#5B0D15] cursor-pointer"
                   />
+                  <div className="text-xs space-y-0.5">
+                    <span className="font-bold text-[#2A1810] flex items-center gap-1.5">
+                      <HeartHandshake className="w-3.5 h-3.5 text-amber-700" />
+                      <span>{t("I'm booking for someone else", 'मैं किसी अन्य व्यक्ति के लिए बुक कर रहा हूँ')}</span>
+                    </span>
+                    <p className="text-[11px] text-stone-500 leading-snug">
+                      {t(
+                        'Check this if booking for family, friends, or relatives. Panditji will conduct the session for them, while the booking remains safely tracked in your account.',
+                        'यदि परिवार, मित्र या किसी संबंधी के लिए बुक कर रहे हैं तो इसे चुनें। गुरुजी उनके लिए परामर्श करेंगे, जबकि बुकिंग आपके खाते में सुरक्षित रहेगी।'
+                      )}
+                    </p>
+                  </div>
+                </label>
+
+                {/* Customer Name & Mobile Inputs */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                      {isBookingForSomeoneElse
+                        ? t('Attendee Full Name', 'उपस्थित होने वाले का पूरा नाम')
+                        : t('Customer Full Name', 'ग्राहक का पूरा नाम')}{' '}
+                      <span className="text-rose-600">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={
+                        isBookingForSomeoneElse
+                          ? t('e.g. Amit Sharma', 'उदा. अमित शर्मा')
+                          : t('Enter customer name', 'ग्राहक का नाम दर्ज करें')
+                      }
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl border border-stone-300 text-xs focus:outline-none focus:border-amber-500 bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 mb-1">
+                      {isBookingForSomeoneElse
+                        ? t('Attendee Mobile / WhatsApp', 'उपस्थित होने वाले का मोबाइल / व्हाट्सएप')
+                        : t('Customer Mobile / WhatsApp', 'ग्राहक का मोबाइल / व्हाट्सएप')}{' '}
+                      <span className="text-rose-600">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder={
+                        isBookingForSomeoneElse
+                          ? t('e.g. 9123456780', 'उदा. 9123456780')
+                          : '+91 98260 12345'
+                      }
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl border border-stone-300 text-xs focus:outline-none focus:border-amber-500 bg-white"
+                    />
+                    <span className="text-[10px] text-stone-400 mt-0.5 block">
+                      {t('10-digit mobile or +91 standard number', '10 अंकों का मान्य मोबाइल या +91 नंबर')}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -997,53 +1163,6 @@ function AppointmentContent() {
                         className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-xs font-semibold text-stone-800 bg-white focus:outline-none focus:border-amber-500 transition-all cursor-pointer shadow-xs appearance-none pr-10 disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed"
                       >
                         {availableSlots.length > 0 ? (
-<<<<<<< HEAD
-                          availableSlots.map((slot) => {
-                            const isSelected = timeSlot === slot.time && slot.isAvailable;
-                            return (
-                              <button
-                                key={slot.time}
-                                type="button"
-                                disabled={!slot.isAvailable}
-                                onClick={() => slot.isAvailable && setTimeSlot(slot.time)}
-                                className={`py-2 px-2.5 rounded-xl text-xs font-semibold transition-all border flex flex-col items-center justify-center gap-1 select-none ${
-                                  !slot.isAvailable
-                                    ? 'bg-stone-100/90 text-stone-400 border-stone-200/90 cursor-not-allowed shadow-none'
-                                    : isSelected
-                                    ? 'bg-[#5B0D15] text-white border-[#5B0D15] shadow-md ring-2 ring-amber-300 cursor-pointer'
-                                    : 'bg-white hover:bg-amber-50 text-stone-800 border-stone-200 hover:border-amber-300 cursor-pointer shadow-2xs'
-                                }`}
-                              >
-                                <span
-                                  className={`font-bold text-xs ${
-                                    !slot.isAvailable ? 'text-stone-400 line-through decoration-stone-300' : ''
-                                  }`}
-                                >
-                                  {slot.time}
-                                </span>
-                                <span
-                                  className={`text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded ${
-                                    !slot.isAvailable
-                                      ? 'bg-stone-200 text-stone-500'
-                                      : isSelected
-                                      ? 'text-amber-300'
-                                      : 'text-emerald-700 bg-emerald-50'
-                                  }`}
-                                >
-                                  {slot.isAvailable
-                                    ? t('Available', 'उपलब्ध')
-                                    : slot.reason?.includes('Reserved') || slot.reason?.includes('Booked')
-                                    ? t('Reserved', 'आरक्षित')
-                                    : t('Reserved', 'आरक्षित')}
-                                </span>
-                              </button>
-                            );
-                          })
-                        ) : loadingSlots ? (
-                          <div className="col-span-2 sm:col-span-3 py-3 text-center text-xs text-stone-500">
-                            {t('Loading slots...', 'स्लॉट लोड हो रहे हैं...')}
-                          </div>
-=======
                           availableSlots.map((slot) => (
                             <option
                               key={slot.time}
@@ -1054,7 +1173,6 @@ function AppointmentContent() {
                               {slot.time} — {slot.isAvailable ? t('Available', 'उपलब्ध') : slot.reason || t('Reserved', 'आरक्षित')}
                             </option>
                           ))
->>>>>>> e9f558bf120eca6a6a8c150bcdc56dad70fea398
                         ) : (
                           <option value="">
                             {loadingSlots ? t('Loading time slots...', 'समय स्लॉट लोड हो रहे हैं...') : t('No time slots available', 'कोई समय स्लॉट उपलब्ध नहीं')}
@@ -1133,7 +1251,7 @@ function AppointmentContent() {
                   ) : (
                     <>
                       <span>
-                        {t('Book the Appointment →', 'परामर्श बुक करें →')}
+                        {t('Review & Confirm Booking Details →', 'बुकिंग विवरण जांचें एवं पुष्टि करें →')}
                       </span>
                     </>
                   )}
@@ -1144,13 +1262,181 @@ function AppointmentContent() {
         )}
       </main>
 
+      {/* Confirmation Step Modal: Asks user to confirm attendee name & mobile before reservation/payment */}
+      {confirmationModalOpen && (
+        <div
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn modal-backdrop-contain overscroll-contain overflow-y-auto"
+          onClick={() => setConfirmationModalOpen(false)}
+        >
+          <div
+            data-lenis-prevent="true"
+            onWheel={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto overscroll-contain modal-scroll-container bg-[#FCF8ED] border border-amber-300 rounded-3xl shadow-2xl p-6 sm:p-7 space-y-5 animate-scaleUp"
+          >
+            
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b border-amber-200/80 pb-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-full bg-amber-100 text-[#5B0D15]">
+                    <Shield className="w-5 h-5 text-amber-700" />
+                  </div>
+                  <h3 className="font-serif font-bold text-lg text-[#2A1810]">
+                    {t('Confirm Consultation Details', 'परामर्श विवरण की पुष्टि करें')}
+                  </h3>
+                </div>
+                <p className="text-xs text-stone-600">
+                  {t(
+                    'Please review whose name and mobile number will be used for this booking.',
+                    'कृपया पुष्टि करें कि इस परामर्श सत्र हेतु किसका नाम एवं मोबाइल नंबर पंजीकृत किया जाए।'
+                  )}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setConfirmationModalOpen(false)}
+                className="text-stone-400 hover:text-stone-700 p-1 rounded-full hover:bg-amber-100/60 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Attendee / Customer Box */}
+            <div className="p-4 rounded-2xl bg-white border border-amber-200 shadow-xs space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-amber-700" />
+                  <span>{t('Consultation Customer / Attendee', 'परामर्शार्थी / ग्राहक')}</span>
+                </span>
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${
+                  isBookingForSomeoneElse
+                    ? 'bg-purple-50 text-purple-800 border-purple-200'
+                    : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                }`}>
+                  {isBookingForSomeoneElse
+                    ? t('Booking for Someone Else', 'अन्य व्यक्ति के लिए')
+                    : t('Booking for Self', 'स्वयं के लिए')}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div className="p-2.5 rounded-xl bg-amber-50/50 border border-amber-100">
+                  <span className="text-[10px] text-stone-500 uppercase font-semibold block">
+                    {t('Attendee Name', 'उपस्थित होने वाले का नाम')}
+                  </span>
+                  <span className="text-sm font-bold text-stone-900 block truncate">
+                    {name.trim()}
+                  </span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-amber-50/50 border border-amber-100">
+                  <span className="text-[10px] text-stone-500 uppercase font-semibold block">
+                    {t('Attendee Mobile', 'संपर्क मोबाइल नंबर')}
+                  </span>
+                  <span className="text-sm font-bold text-[#5B0D15] font-mono block truncate">
+                    {phone.trim()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Account Owner Association Box */}
+            <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs space-y-1">
+              <div className="flex items-center justify-between text-stone-700 font-semibold">
+                <span className="flex items-center gap-1.5">
+                  <UserCheck className="w-3.5 h-3.5 text-stone-500" />
+                  <span>{t('Managed Under Account:', 'खाता धारक (जिस खाते में सुरक्षित रहेगा):')}</span>
+                </span>
+                <span className="text-stone-900 font-bold truncate max-w-[200px]">
+                  {accountUser?.name || 'Your Account'}
+                </span>
+              </div>
+              <p className="text-[11px] text-stone-500 leading-snug">
+                {t(
+                  'This booking will appear in your "My Bookings" dashboard. Panditji and appointment records will address the attendee above.',
+                  'यह परामर्श आपके My Bookings डैशबोर्ड में दिखाई देगा। पूज्य गुरुजी के रिकॉर्ड में ऊपर दर्ज ग्राहक का विवरण रहेगा।'
+                )}
+              </p>
+            </div>
+
+            {/* Consultation Summary */}
+            <div className="p-3.5 rounded-2xl bg-amber-100/50 border border-amber-200 text-xs space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-stone-600">{t('Spiritual Service:', 'वैदिक सेवा:')}</span>
+                <span className="font-bold text-[#5B0D15] truncate max-w-[220px]">
+                  {activeService.title}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-stone-600">{t('Date & Time:', 'दिनांक एवं समय:')}</span>
+                <span className="font-bold text-stone-800">
+                  {date} • {timeSlot} IST
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-stone-600">{t('Consultation Mode:', 'परामर्श माध्यम:')}</span>
+                <span className="font-semibold text-stone-800 uppercase">
+                  {consultType === 'video'
+                    ? t('Video Call (Google Meet)', 'वीडियो कॉल (गूगल मीट)')
+                    : consultType === 'call'
+                    ? t('Audio Call', 'ऑडियो कॉल')
+                    : t('In Person', 'प्रत्यक्ष भेंट')}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-1.5 border-t border-amber-200/80">
+                <span className="text-stone-700 font-semibold">{t('Dakshina / Offering:', 'दक्षिणा / न्योछावर:')}</span>
+                <span className="text-base font-extrabold text-[#5B0D15]">
+                  {activeService.price}
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmationModalOpen(false)}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-full border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 text-xs font-semibold transition-all hover:border-stone-400 cursor-pointer"
+              >
+                ← {t('Edit Details', 'विवरण बदलें')}
+              </button>
+
+              <button
+                type="button"
+                disabled={loading}
+                onClick={executeFinalBooking}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-gradient-to-r from-[#B8873E] via-[#A67530] to-[#8C5D1F] hover:from-[#c59348] hover:to-[#9a6925] disabled:opacity-50 text-white font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {loading ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-white" />
+                    <span>{t('Reserving Slot...', 'स्लॉट आरक्षित किया जा रहा है...')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-white" />
+                    <span>{t('Confirm & Reserve Consultation →', 'पुष्टि करें एवं आरक्षित करें →')}</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
       {/* Auth Modal if unauthenticated */}
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         onLoginSuccess={(userData) => {
-          if (userData?.name) setName(userData.name);
-          if (userData?.phone) setPhone(userData.phone);
+          if (userData) {
+            setAccountUser(userData);
+            setIsLoggedIn(true);
+          }
           setAuthModalOpen(false);
         }}
         initialMode="login"

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { getAuthToken } from '../../lib/auth';
+import { useScrollLock } from '../../lib/scrollLock';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { useCart, CartItem } from '../../context/CartContext';
@@ -41,6 +42,8 @@ import {
   Percent,
   ChevronDown,
   ChevronUp,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 
 interface RecommendedProduct {
@@ -55,58 +58,58 @@ interface RecommendedProduct {
 
 const RECOMMENDED_PRODUCTS: RecommendedProduct[] = [
   {
-    id: 'rec-rudraksha-mala',
-    name: 'Rudraksha Mala',
-    price: 1499,
-    priceFormatted: '₹ 1,499',
-    image: '/products/rudraksha-mala.jpg',
-    category: 'products',
-    tag: 'Spiritual Beads',
-  },
-  {
-    id: 'rec-rose-quartz',
-    name: 'Rose Quartz Crystal',
-    price: 999,
-    priceFormatted: '₹ 999',
-    image: '/products/prod-rose-quartz.png',
-    category: 'products',
-    tag: 'Wellness Products',
-  },
-  {
-    id: 'rec-shree-yantra',
-    name: 'Shree Yantra',
-    price: 2499,
-    priceFormatted: '₹ 2,499',
-    image: '/products/shree-yantra.jpg',
-    category: 'products',
-    tag: 'Sacred Geometry',
-  },
-  {
-    id: 'rec-herbal-wellness',
-    name: 'Herbal Wellness Kit',
-    price: 1299,
-    priceFormatted: '₹ 1,299',
-    image: '/products/herbal-wellness.jpg',
-    category: 'products',
-    tag: 'Ayurvedic Care',
-  },
-  {
-    id: 'rec-tiger-eye',
+    id: 'tiger_eye',
     name: 'Tiger Eye Bracelet',
     price: 1299,
     priceFormatted: '₹ 1,299',
     image: '/products/prod-tiger-eye-macro.jpg',
-    category: 'products',
+    category: 'wealth',
     tag: 'Courage & Wealth',
   },
   {
-    id: 'rec-black-tourmaline',
+    id: 'black_tourmaline',
     name: 'Black Tourmaline Bracelet',
+    price: 1499,
+    priceFormatted: '₹ 1,499',
+    image: '/products/prod-black-tourmaline.png',
+    category: 'protection',
+    tag: 'Aura Protection',
+  },
+  {
+    id: 'golden_pyrite',
+    name: 'Golden Pyrite Bracelet',
+    price: 1599,
+    priceFormatted: '₹ 1,599',
+    image: '/products/prod-pyrite.png',
+    category: 'wealth',
+    tag: 'Money Magnet',
+  },
+  {
+    id: 'rose_quartz',
+    name: 'Rose Quartz Crystal Bracelet',
     price: 1199,
     priceFormatted: '₹ 1,199',
-    image: '/products/prod-black-tourmaline.png',
-    category: 'products',
-    tag: 'Aura Protection',
+    image: '/products/prod-rose-quartz.png',
+    category: 'love',
+    tag: 'Love & Peace',
+  },
+  {
+    id: 'green_aventurine',
+    name: 'Green Aventurine Bracelet',
+    price: 1299,
+    priceFormatted: '₹ 1,299',
+    image: '/products/prod-aventurine.png',
+    category: 'wealth',
+    tag: 'Fortune & Luck',
+  },
+  {
+    id: 'carnelian',
+    name: 'Carnelian Fire Bracelet',
+    price: 1349,
+    priceFormatted: '₹ 1,349',
+    image: '/products/prod-carnelian.png',
+    category: 'wealth',
+    tag: 'Vitality & Courage',
   },
 ];
 
@@ -192,6 +195,8 @@ export default function CartPage() {
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedOrderNumber, setCompletedOrderNumber] = useState<string>('');
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [idempotencyKey, setIdempotencyKey] = useState<string>('');
 
   // Floating order confirmation notification state
   const [orderNotification, setOrderNotification] = useState<{
@@ -428,27 +433,8 @@ export default function CartPage() {
     return () => window.removeEventListener('astro-auth-change', handleAuthChange);
   }, [clearCart, router]);
 
-  // Prevent background scrolling when checkout & payment modal is open
-  useEffect(() => {
-    if (isCheckoutModalOpen) {
-      const originalHtmlOverflow = document.documentElement.style.overflow;
-      const originalBodyOverflow = document.body.style.overflow;
-      const originalPaddingRight = document.body.style.paddingRight;
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.overflow = 'hidden';
-      if (scrollbarWidth > 0) {
-        document.body.style.paddingRight = `${scrollbarWidth}px`;
-      }
-      
-      return () => {
-        document.documentElement.style.overflow = originalHtmlOverflow || '';
-        document.body.style.overflow = originalBodyOverflow || '';
-        document.body.style.paddingRight = originalPaddingRight || '';
-      };
-    }
-  }, [isCheckoutModalOpen]);
+  // Prevent background scrolling and scroll chaining when checkout & payment modal is open
+  useScrollLock(isCheckoutModalOpen);
 
   // Wishlist toggle
   const toggleWishlist = (id: string) => {
@@ -572,9 +558,16 @@ export default function CartPage() {
     DEFAULT_SAMPLE_ITEMS.forEach((item) => addItem(item, item.quantity));
   };
 
-  // Handle checkout form submit
+  // Handle checkout form submit with mandatory login verification
   const handleProceedToPayment = () => {
     if (items.length === 0) return;
+    const token = getAuthToken();
+    if (!token) {
+      router.push('/login?redirect=/cart');
+      return;
+    }
+    setCheckoutError(null);
+    setIdempotencyKey(`demo-ord-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`);
     setCurrentStep(2);
     setCheckoutStep('address');
     setIsChangingAddress(false);
@@ -584,122 +577,84 @@ export default function CartPage() {
 
   const handleCompleteOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCheckoutError(null);
     setIsSubmitting(true);
 
-    const generatedOrder = `AVD-${Math.floor(100000 + Math.random() * 900000)}`;
-    const paymentMethodLabel =
-      shippingForm.paymentMethod === 'cod'
-        ? 'Cash on Delivery'
-        : shippingForm.paymentMethod === 'card'
-        ? 'Credit / Debit Card'
-        : shippingForm.paymentMethod === 'netbanking'
-        ? `Net Banking (${selectedBank})`
-        : 'UPI / QR Code';
-
-    const newOrder = {
-      id: generatedOrder,
-      orderNumber: generatedOrder,
-      createdAt: new Date().toISOString(),
-      status: 'PROCESSING',
-      deliveryStatus: 'In Consecration & Dispatch',
-      totalAmount: orderTotal,
-      paymentMethod: paymentMethodLabel,
-      paymentStatus: shippingForm.paymentMethod === 'cod' ? 'Pending upon Delivery' : 'Paid',
-      shippingAddress: {
-        recipient: activeAddress?.fullName || shippingForm.fullName || 'Valued Seeker',
-        addressLine: activeAddress?.address || shippingForm.address || 'Sacred Varanasi Sanctum',
-        city: activeAddress?.city || shippingForm.city || 'Varanasi',
-        state: activeAddress?.state || shippingForm.state || 'Uttar Pradesh',
-        postalCode: activeAddress?.pincode || shippingForm.pincode || '221001',
-        phone: activeAddress?.phone || shippingForm.phone || '+91 98765 43210',
-      },
-      items: items.map((it) => ({
-        id: it.id,
-        quantity: it.quantity,
-        price: it.price,
-        product: {
-          id: it.id,
-          name: it.name,
-          price: it.price,
-          image: it.image,
-        },
-      })),
-    };
-
-    // Save to localStorage so orders persist and display immediately on User Dashboard
-    try {
-      const storedOrders = localStorage.getItem('astro_placed_orders');
-      const existing = storedOrders ? JSON.parse(storedOrders) : [];
-      const updated = [newOrder, ...existing.filter((o: any) => o.orderNumber !== generatedOrder)];
-      localStorage.setItem('astro_placed_orders', JSON.stringify(updated));
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('astro-order-placed', { detail: newOrder }));
-        window.dispatchEvent(new Event('storage'));
-      }
-    } catch (err) {
-      console.error('Failed to save order to localStorage:', err);
-    }
-
-    // Synchronize to backend if seeker is authenticated
     const token = getAuthToken();
-    if (token) {
-      try {
-        fetch(`${backendUrl}/api/orders`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            items: items.map((it) => ({
-              productId: it.id,
-              quantity: it.quantity,
-            })),
-            shippingAddress: {
-              recipient: activeAddress?.fullName || 'Seeker',
-              addressLine: activeAddress?.address || 'Main Road',
-              city: activeAddress?.city || 'Varanasi',
-              state: activeAddress?.state || 'Uttar Pradesh',
-              pincode: activeAddress?.pincode || '221001',
-              phone: activeAddress?.phone || '+91 98765 43210',
-            },
-            paymentMethod: shippingForm.paymentMethod,
-          }),
-        }).catch((err) => {
-          console.warn('Backend order synchronization skipped:', err);
-        });
-      } catch (err) {
-        console.warn('Network error syncing order:', err);
-      }
+    if (!token) {
+      setIsSubmitting(false);
+      router.push('/login?redirect=/cart');
+      return;
     }
 
-    setTimeout(() => {
-      setCompletedOrderNumber(generatedOrder);
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('astrovd_recent_activity', JSON.stringify({ type: 'order', id: generatedOrder, time: Date.now() }));
-        } catch (e) {}
+    const currentIdempotencyKey = idempotencyKey || `demo-ord-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+    try {
+      const res = await fetch(`${backendUrl}/api/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          items: items.map((it) => ({
+            productId: it.id,
+            quantity: it.quantity,
+          })),
+          shippingAddress: {
+            recipient: activeAddress?.fullName || 'Valued Seeker',
+            addressLine: activeAddress?.address || 'Sacred Varanasi Sanctum',
+            city: activeAddress?.city || 'Varanasi',
+            state: activeAddress?.state || 'Uttar Pradesh',
+            pincode: activeAddress?.pincode || '221001',
+            phone: activeAddress?.phone || '+91 98765 43210',
+            notes: activeAddress?.label || 'Home',
+            idempotencyKey: currentIdempotencyKey,
+          },
+          paymentMethod: shippingForm.paymentMethod,
+          couponCode: appliedCoupon?.code,
+          idempotencyKey: currentIdempotencyKey,
+        }),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        const errMsg = errBody?.message || `Order creation failed (HTTP ${res.status}). Please check your items and retry.`;
+        throw new Error(errMsg);
       }
+
+      const responseData = await res.json();
+      const createdOrder = responseData.order || responseData;
+      const realOrderId = createdOrder.id || `ORD-${Date.now()}`;
+
+      setCompletedOrderNumber(realOrderId);
       setIsSubmitting(false);
       setIsCheckoutModalOpen(false);
       setCurrentStep(3);
+
       setOrderNotification({
         show: true,
-        orderNumber: generatedOrder,
+        orderNumber: realOrderId.length > 12 ? realOrderId.slice(0, 8).toUpperCase() : realOrderId,
         itemsCount: items.length,
-        amount: orderTotal,
+        amount: createdOrder.totalAmount || orderTotal,
       });
+
+      // Clear cart ONLY after successful backend database persistence
       clearCart();
-    }, 900);
+    } catch (err: any) {
+      console.error('Order submission failed:', err);
+      setCheckoutError(err.message || 'Failed to place order. Your cart items are preserved.');
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] flex flex-col font-sans selection:bg-[#3E1F18] selection:text-white">
       <Navbar />
 
-      {/* Main Content Area - Expanded to max-w-7xl / 1440px to position the Cart & Recommendation component prominently to the left */}
+      {/* Main Content Area */}
       <main className="flex-1 max-w-7xl xl:max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 pb-16">
-        {/* Step 3: Confirmation View */}
+        {/* Step 3: Order Confirmation View */}
         {currentStep === 3 ? (
           <div className="bg-white rounded-3xl border border-[#ECE5DC] p-8 sm:p-12 text-center max-w-2xl mx-auto shadow-sm my-8 space-y-6">
             <div className="w-16 h-16 bg-[#FAF5EE] border border-amber-200 text-[#3E1F18] rounded-full flex items-center justify-center mx-auto shadow-sm">
@@ -707,25 +662,44 @@ export default function CartPage() {
             </div>
 
             <div>
-              <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-amber-800 bg-amber-50 px-3 py-1 rounded-full border border-amber-200 mb-2">
-                Consecration Initiated
+              <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-3.5 py-1 rounded-full border border-emerald-200 mb-2">
+                Order Placed Successfully
               </span>
               <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#2A1810]">
-                Order Confirmed Successfully!
+                Thank You for Your Order!
               </h2>
               <p className="text-sm sm:text-base text-[#736B63] mt-2">
-                Thank you for choosing AstroVD. Your sacred booking reference is{' '}
-                <span className="font-bold text-[#3E1F18]">#{completedOrderNumber}</span>.
+                Your order has been placed and registered with reference{' '}
+                <span className="font-bold font-mono text-[#3E1F18]">#{completedOrderNumber}</span>.
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#ECE5DC] text-left text-xs sm:text-sm text-[#5C5248] space-y-2">
-              <div className="flex items-center gap-2 font-semibold text-[#2A1810]">
-                <Package className="w-4 h-4 text-amber-700" />
-                <span>Saved to Your Seeker Dashboard</span>
+            <div className="p-5 rounded-2xl bg-[#FAF7F2] border border-[#ECE5DC] text-left text-xs sm:text-sm text-[#5C5248] space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-[#ECE5DC]">
+                <span className="font-semibold text-[#2A1810]">Order Status:</span>
+                <span className="font-bold text-amber-900 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full text-xs flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+                  <span>Pending</span>
+                </span>
+              </div>
+              <div className="flex items-center justify-between pb-2 border-b border-[#ECE5DC]">
+                <span className="font-semibold text-[#2A1810]">Payment Method:</span>
+                <span className="font-semibold text-[#2A1810]">
+                  {shippingForm.paymentMethod === 'cod'
+                    ? 'Cash on Delivery (Pay upon Receipt)'
+                    : shippingForm.paymentMethod === 'upi'
+                    ? 'UPI Payment (Pending)'
+                    : shippingForm.paymentMethod === 'netbanking'
+                    ? 'Net Banking (Pending)'
+                    : 'Credit / Debit Card (Pending)'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 font-semibold text-[#2A1810] pt-1">
+                <Package className="w-4 h-4 text-[#800000]" />
+                <span>Order Confirmation & Updates</span>
               </div>
               <p className="text-xs text-[#736B63] leading-relaxed">
-                Your order is safely recorded in your Seeker Dashboard under the <strong>Astro Store Orders</strong> tab. Our Vedic pandits in Varanasi have initiated the sankalp and sacred energization rites prior to dispatch.
+                Your order details have been securely registered to your account. You can view the status, consecration updates, and delivery tracking anytime from your customer dashboard.
               </p>
             </div>
 
@@ -735,23 +709,14 @@ export default function CartPage() {
                 className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#3E1F18] via-[#4D241B] to-[#3E1F18] hover:from-[#2B140F] hover:to-[#2B140F] text-white font-serif font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Package className="w-4 h-4 text-amber-300" />
-                <span>View Order on Dashboard</span>
+                <span>View in My Orders (Dashboard)</span>
                 <ArrowRight className="w-4 h-4 text-amber-300" />
               </Link>
-              <button
-                onClick={() => {
-                  setCurrentStep(1);
-                  handleRestoreSampleItems();
-                }}
-                className="px-5 py-3 rounded-xl border border-[#ECE5DC] text-[#2A1810] font-medium text-xs sm:text-sm hover:bg-[#FAF7F2] transition-colors"
-              >
-                Reset Demo Cart
-              </button>
               <Link
-                href="/services"
+                href="/products"
                 className="px-5 py-3 rounded-xl border border-[#ECE5DC] text-[#736B63] hover:text-[#2A1810] font-medium text-xs sm:text-sm hover:bg-[#FAF7F2] transition-colors"
               >
-                Explore More Services
+                Continue Browsing Store
               </Link>
             </div>
           </div>
@@ -1182,7 +1147,8 @@ export default function CartPage() {
       {/* Checkout & Payment Full-Page Experience */}
       {isCheckoutModalOpen && (
         <div
-          className="fixed inset-0 z-50 bg-[#FAF7F2] w-full h-full min-h-screen flex flex-col overflow-hidden animate-in fade-in duration-200"
+          data-lenis-prevent="true"
+          className="fixed inset-0 z-50 bg-[#FAF7F2] w-full h-full min-h-screen flex flex-col overflow-hidden animate-in fade-in duration-200 overscroll-contain modal-scroll-container"
           onWheel={(e) => e.stopPropagation()}
         >
           {/* Full-Width Luxury Checkout Header */}
@@ -1689,13 +1655,35 @@ export default function CartPage() {
                 <div className="lg:col-span-7 bg-white rounded-2xl sm:rounded-3xl border border-[#E5DAC8] p-5 sm:p-7 lg:p-8 shadow-xs space-y-5">
                     {/* Header */}
                     <div>
-                      <h2 className="font-sans font-semibold text-lg sm:text-xl text-[#2A1810] tracking-tight">
-                        Select Payment Option
-                      </h2>
-                      <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-                        All transactions are secure and encrypted
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <h2 className="font-sans font-semibold text-lg sm:text-xl text-[#2A1810] tracking-tight">
+                          Demo Checkout & Simulated Payment
+                        </h2>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
+                          Showcase Demo
+                        </span>
+                      </div>
+                      <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed">
+                        ℹ️ <strong>Demonstration Project:</strong> No real money will be charged, and no real card numbers, CVVs, or UPI PINs are collected. Select any simulated payment method below to test the complete order workflow safely.
+                      </div>
                     </div>
+
+                    {/* Submission Error Banner */}
+                    {checkoutError && (
+                      <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center justify-between gap-2 shadow-2xs">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                          <span><strong>Submission Error:</strong> {checkoutError}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setCheckoutError(null)}
+                          className="text-red-500 hover:text-red-700 text-xs font-bold px-1"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
 
                     {/* Compact Delivery Address bar */}
                     <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#FAF5EE] border border-[#E5DAC8] text-xs shadow-2xs">
@@ -2022,7 +2010,7 @@ export default function CartPage() {
                         )}
                       </div>
 
-                      {/* 2. Credit Card (matches image fields exactly) */}
+                      {/* 2. Simulated Card Payment (Clean informational demo view) */}
                       <div
                         onClick={() => setShippingForm((prev) => ({ ...prev, paymentMethod: 'card' }))}
                         className={`rounded-2xl border transition-all cursor-pointer p-4 sm:p-4.5 ${
@@ -2043,7 +2031,7 @@ export default function CartPage() {
                               )}
                             </div>
                             <span className="font-semibold text-sm sm:text-base text-gray-900">
-                              Credit card
+                              Credit or Debit Card
                             </span>
                           </div>
                           {/* Card brand badges from image */}
@@ -2059,73 +2047,25 @@ export default function CartPage() {
                               RuPay
                             </span>
                             <span className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">
-                              Maestro
+                              Mastercard
                             </span>
                           </div>
                         </div>
 
                         <p className="text-xs text-gray-500 mt-1 pl-8">
-                          Pay securely using your Visa, Maestro, Discover, RuPay, or Mastercard card.
+                          Pay securely using Visa, Mastercard, RuPay, or Maestro.
                         </p>
 
                         {shippingForm.paymentMethod === 'card' && (
-                          <div className="mt-4 pt-3.5 border-t border-gray-100 space-y-3.5" onClick={(e) => e.stopPropagation()}>
-                            <div>
-                              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                                Card Number
-                              </label>
-                              <div className="relative">
-                                <input
-                                  type="text"
-                                  maxLength={19}
-                                  placeholder="1234 1234 1234 1234"
-                                  value={cardDetails.number}
-                                  onChange={(e) => setCardDetails((prev) => ({ ...prev, number: e.target.value }))}
-                                  className="w-full px-3.5 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/25 pr-10 font-mono"
-                                />
-                                <CreditCard className="w-4 h-4 text-gray-400 absolute right-3.5 top-3" />
+                          <div className="mt-4 pt-3.5 border-t border-gray-100 space-y-2" onClick={(e) => e.stopPropagation()}>
+                            <div className="p-3.5 bg-[#FAF5EE] border border-[#EBE3D7] rounded-xl text-xs text-[#5C5248] space-y-1">
+                              <div className="flex items-center gap-1.5 font-semibold text-[#2A1810]">
+                                <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                                <span>Secure Online Payment</span>
                               </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                              <div className="sm:col-span-6">
-                                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                                  Name on card
-                                </label>
-                                <input
-                                  type="text"
-                                  placeholder="Card name"
-                                  value={cardDetails.name}
-                                  onChange={(e) => setCardDetails((prev) => ({ ...prev, name: e.target.value }))}
-                                  className="w-full px-3.5 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/25"
-                                />
-                              </div>
-                              <div className="sm:col-span-3">
-                                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                                  Expire date
-                                </label>
-                                <input
-                                  type="text"
-                                  maxLength={5}
-                                  placeholder="MM / YY"
-                                  value={cardDetails.expiry}
-                                  onChange={(e) => setCardDetails((prev) => ({ ...prev, expiry: e.target.value }))}
-                                  className="w-full px-3.5 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/25 font-mono text-center"
-                                />
-                              </div>
-                              <div className="sm:col-span-3">
-                                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                                  CVV
-                                </label>
-                                <input
-                                  type="password"
-                                  maxLength={4}
-                                  placeholder="CVV"
-                                  value={cardDetails.cvv}
-                                  onChange={(e) => setCardDetails((prev) => ({ ...prev, cvv: e.target.value }))}
-                                  className="w-full px-3.5 py-2.5 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000]/25 font-mono text-center"
-                                />
-                              </div>
+                              <p className="text-[11px] text-[#736B63] leading-relaxed">
+                                Your order will be placed with Pending Payment status. You will receive an order confirmation and reference immediately.
+                              </p>
                             </div>
                           </div>
                         )}
@@ -2241,19 +2181,22 @@ export default function CartPage() {
                         )}
                       </div>
 
-                      {/* Primary Pay Button matching image */}
+                      {/* Primary Place Order Button */}
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#800000] via-[#5C0612] to-[#3E1F18] hover:from-[#660000] hover:to-[#2B140F] active:scale-[0.99] text-amber-100 hover:text-white font-semibold text-base shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer mt-5 disabled:opacity-75"
+                        className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-[#800000] via-[#5C0612] to-[#3E1F18] hover:from-[#660000] hover:to-[#2B140F] active:scale-[0.99] text-amber-100 hover:text-white font-semibold text-base shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer mt-5 disabled:opacity-75 disabled:cursor-not-allowed"
                       >
                         {isSubmitting ? (
-                          <span>Processing Payment...</span>
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin text-amber-200" />
+                            <span>Processing Order...</span>
+                          </span>
                         ) : (
                           <span>
                             {shippingForm.paymentMethod === 'cod'
                               ? `Confirm Order | ${formatRupee(orderTotal)}`
-                              : `Pay | ${formatRupee(orderTotal)}`}
+                              : `Place Order | ${formatRupee(orderTotal)}`}
                           </span>
                         )}
                       </button>

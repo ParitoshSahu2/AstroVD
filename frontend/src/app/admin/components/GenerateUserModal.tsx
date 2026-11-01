@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useScrollLock } from '../../../lib/scrollLock';
 import {
   UserPlus,
   X,
@@ -64,10 +65,26 @@ export default function GenerateUserModal({
   genLoading,
   onGenerateProfile,
 }: GenerateUserModalProps) {
+  // Lock body scroll and prevent background scroll chaining
+  useScrollLock(isOpen);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !genLoading) onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, genLoading, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+    <div
+      data-lenis-prevent="true"
+      onWheel={(e) => e.stopPropagation()}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overscroll-contain modal-backdrop-contain animate-fadeIn"
+    >
       <div className="relative w-full max-w-lg bg-white rounded-3xl border border-amber-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="px-6 py-5 bg-gradient-to-r from-[#5B0D15] via-[#4A0A21] to-[#3B1E22] text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -91,7 +108,7 @@ export default function GenerateUserModal({
           </button>
         </div>
 
-        <form onSubmit={onGenerateProfile} className="p-6 overflow-y-auto space-y-4">
+        <form onSubmit={onGenerateProfile} data-lenis-prevent="true" className="p-6 overflow-y-auto space-y-4 modal-scroll-container overscroll-contain">
           {genError && (
             <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2 font-medium">
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />

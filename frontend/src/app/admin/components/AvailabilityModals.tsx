@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useScrollLock } from '../../../lib/scrollLock';
 import {
   Plus,
   Edit3,
@@ -120,12 +121,55 @@ export default function AvailabilityModals({
   deleteSlotLoading,
   handleConfirmDeleteSlot,
 }: AvailabilityModalsProps) {
+  const isAnyModalOpen = Boolean(
+    createSlotModalOpen || editSlotModalOpen || blockDateModalOpen || initScheduleModalOpen || slotToDelete
+  );
+
+  // Lock body scroll and prevent background scroll chaining
+  useScrollLock(isAnyModalOpen);
+
+  useEffect(() => {
+    if (!isAnyModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (createSlotModalOpen) setCreateSlotModalOpen(false);
+        if (editSlotModalOpen) {
+          setEditSlotModalOpen(false);
+          setSlotToEdit(null);
+        }
+        if (blockDateModalOpen) setBlockDateModalOpen(false);
+        if (initScheduleModalOpen) setInitScheduleModalOpen(false);
+        if (slotToDelete && !deleteSlotLoading) setSlotToDelete(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    isAnyModalOpen,
+    createSlotModalOpen,
+    editSlotModalOpen,
+    blockDateModalOpen,
+    initScheduleModalOpen,
+    slotToDelete,
+    deleteSlotLoading,
+    setCreateSlotModalOpen,
+    setEditSlotModalOpen,
+    setSlotToEdit,
+    setBlockDateModalOpen,
+    setInitScheduleModalOpen,
+    setSlotToDelete,
+  ]);
+
   return (
     <>
       {/* CREATE SLOT MODAL */}
       {createSlotModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-          <div className="relative w-full max-w-md rounded-3xl bg-white border border-amber-300 shadow-2xl overflow-hidden text-[#3B1E22]">
+        <div
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto overscroll-contain modal-backdrop-contain animate-fadeIn"
+        >
+          <div className="relative w-full max-w-md rounded-3xl bg-white border border-amber-300 shadow-2xl overflow-hidden text-[#3B1E22] modal-scroll-container">
             <div className="px-6 py-4 bg-gradient-to-r from-[#5B0D15] via-[#7B121C] to-[#3B1E22] text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Plus className="w-5 h-5 text-amber-300" />
@@ -274,8 +318,12 @@ export default function AvailabilityModals({
 
       {/* EDIT SLOT MODAL */}
       {editSlotModalOpen && slotToEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-          <div className="relative w-full max-w-md rounded-3xl bg-white border border-amber-300 shadow-2xl overflow-hidden text-[#3B1E22]">
+        <div
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto overscroll-contain modal-backdrop-contain animate-fadeIn"
+        >
+          <div className="relative w-full max-w-md rounded-3xl bg-white border border-amber-300 shadow-2xl overflow-hidden text-[#3B1E22] modal-scroll-container">
             <div className="px-6 py-4 bg-gradient-to-r from-[#5B0D15] via-[#7B121C] to-[#3B1E22] text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Edit3 className="w-5 h-5 text-amber-300" />
@@ -427,8 +475,12 @@ export default function AvailabilityModals({
 
       {/* BLOCK DATE MODAL */}
       {blockDateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-          <div className="relative w-full max-w-md rounded-3xl bg-white border border-rose-300 shadow-2xl overflow-hidden text-[#3B1E22]">
+        <div
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto overscroll-contain modal-backdrop-contain animate-fadeIn"
+        >
+          <div className="relative w-full max-w-md rounded-3xl bg-white border border-rose-300 shadow-2xl overflow-hidden text-[#3B1E22] modal-scroll-container">
             <div className="px-6 py-4 bg-gradient-to-r from-rose-800 via-rose-900 to-[#3B1E22] text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Ban className="w-5 h-5 text-rose-300" />
@@ -485,8 +537,12 @@ export default function AvailabilityModals({
 
       {/* INITIALIZE STANDARD SCHEDULE MODAL */}
       {initScheduleModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-          <div className="relative w-full max-w-md rounded-3xl bg-white border border-amber-300 shadow-2xl overflow-hidden text-[#3B1E22]">
+        <div
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto overscroll-contain modal-backdrop-contain animate-fadeIn"
+        >
+          <div className="relative w-full max-w-md rounded-3xl bg-white border border-amber-300 shadow-2xl overflow-hidden text-[#3B1E22] modal-scroll-container">
             <div className="px-6 py-4 bg-gradient-to-r from-[#5B0D15] via-[#7B121C] to-[#3B1E22] text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-amber-300" />
@@ -555,8 +611,12 @@ export default function AvailabilityModals({
       )}
       {/* DELETE SLOT CONFIRMATION MODAL */}
       {slotToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-md bg-white rounded-3xl border border-rose-200 shadow-2xl overflow-hidden flex flex-col">
+        <div
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overscroll-contain modal-backdrop-contain animate-fadeIn"
+        >
+          <div className="relative w-full max-w-md bg-white rounded-3xl border border-rose-200 shadow-2xl overflow-hidden flex flex-col modal-scroll-container">
             {/* Header */}
             <div className="px-6 py-5 bg-gradient-to-r from-rose-900 via-rose-800 to-[#5B0D15] text-white flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">

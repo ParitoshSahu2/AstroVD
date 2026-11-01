@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useScrollLock } from '../../../lib/scrollLock';
 import {
   Trash2,
   X,
@@ -24,11 +25,27 @@ export default function DeleteUserModal({
   onClose,
   onConfirmDelete,
 }: DeleteUserModalProps) {
+  // Lock body scroll and prevent background scroll chaining
+  useScrollLock(isOpen && Boolean(userToDelete));
+
+  useEffect(() => {
+    if (!isOpen || !userToDelete) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !deleteLoading) onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, userToDelete, deleteLoading, onClose]);
+
   if (!isOpen || !userToDelete) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-md bg-white rounded-3xl border border-rose-200 shadow-2xl overflow-hidden flex flex-col">
+    <div
+      data-lenis-prevent="true"
+      onWheel={(e) => e.stopPropagation()}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overscroll-contain modal-backdrop-contain animate-fadeIn"
+    >
+      <div className="relative w-full max-w-md bg-white rounded-3xl border border-rose-200 shadow-2xl overflow-hidden flex flex-col modal-scroll-container">
         {/* Header */}
         <div className="px-6 py-5 bg-gradient-to-r from-rose-900 via-rose-800 to-[#5B0D15] text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">

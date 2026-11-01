@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useScrollLock } from '../../../lib/scrollLock';
 import {
   Edit3,
   X,
@@ -48,10 +49,26 @@ export default function EditAdminProfileModal({
   editLoading,
   onSaveProfile,
 }: EditAdminProfileModalProps) {
+  // Lock body scroll and prevent background scroll chaining
+  useScrollLock(isOpen);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !editLoading) onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, editLoading, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+    <div
+      data-lenis-prevent="true"
+      onWheel={(e) => e.stopPropagation()}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overscroll-contain modal-backdrop-contain animate-fadeIn"
+    >
       <div className="relative w-full max-w-lg bg-white rounded-3xl border border-amber-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="px-6 py-5 bg-gradient-to-r from-[#5B0D15] via-[#4A0A21] to-[#3B1E22] text-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -75,7 +92,7 @@ export default function EditAdminProfileModal({
           </button>
         </div>
 
-        <form onSubmit={onSaveProfile} className="p-6 overflow-y-auto space-y-4">
+        <form onSubmit={onSaveProfile} data-lenis-prevent="true" className="p-6 overflow-y-auto space-y-4 modal-scroll-container overscroll-contain">
           {/* Account Overview Tag */}
           <div className="p-3.5 rounded-2xl bg-[#FAF7F2] border border-amber-200/80 flex items-center justify-between text-xs">
             <div>

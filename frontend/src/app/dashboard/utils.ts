@@ -57,197 +57,24 @@ export function resolveProductImage(item: any): string {
   return '/products/prod-tiger-eye-macro.jpg';
 }
 
-export const DEFAULT_SAMPLE_ORDERS: any[] = [
-  {
-    id: 'AVD-ORD-89421',
-    orderNumber: '#AVD-ORD-89421',
-    productName: 'Natural Consecrated 7 Mukhi Nepali Rudraksha Mala',
-    items: [
-      {
-        id: 'it-1',
-        name: 'Natural Consecrated 7 Mukhi Nepali Rudraksha Mala',
-        image: '/products/rudraksha-mala.jpg',
-        price: 2499,
-        quantity: 1,
-        variant: '108 Beads • Varanasi Blessed',
-        subtitle: 'Blessing: Mahalakshmi & Saturn Alignment',
-      },
-    ],
-    totalAmount: 2499,
-    status: 'DELIVERED',
-    deliveryDate: 'Nov 24, 2025',
-    deliveryStatusText: 'Delivered on Nov 24, 2025',
-    deliverySubtext: 'Your consecrated parcel has been delivered to resident',
-    shippingAddress: {
-      recipient: 'Yash Patidar',
-      city: 'Indore',
-      state: 'Madhya Pradesh',
-      postalCode: '452001',
-    },
-    canReview: true,
-    createdAt: '2025-11-24T14:15:00.000Z',
-  },
-  {
-    id: 'AVD-ORD-78219',
-    orderNumber: '#AVD-ORD-78219',
-    productName: 'Black Tourmaline Aura Shield & Nazar Raksha Bracelet',
-    items: [
-      {
-        id: 'it-2',
-        name: 'Black Tourmaline Aura Shield & Nazar Raksha Bracelet',
-        image: '/products/prod-black-tourmaline.png',
-        price: 1499,
-        quantity: 1,
-        variant: '8mm Grade-AAA Natural Shield Beads',
-        subtitle: 'Consecration: Shani & Rahu Kavach',
-      },
-    ],
-    totalAmount: 1499,
-    status: 'DELIVERED',
-    deliveryDate: 'Nov 10, 2025',
-    deliveryStatusText: 'Delivered on Nov 10, 2025',
-    deliverySubtext: 'Your consecrated parcel has been delivered to resident',
-    shippingAddress: {
-      recipient: 'Yash Patidar',
-      city: 'Indore',
-      state: 'Madhya Pradesh',
-      postalCode: '452001',
-    },
-    canReview: true,
-    createdAt: '2025-11-10T11:20:00.000Z',
-  },
-  {
-    id: 'AVD-ORD-65123',
-    orderNumber: '#AVD-ORD-65123',
-    productName: 'Energized Golden Pyrite Wealth & Abundance Magnet Bracelet',
-    items: [
-      {
-        id: 'it-3',
-        name: 'Energized Golden Pyrite Wealth & Abundance Magnet Bracelet',
-        image: '/products/prod-pyrite.png',
-        price: 1599,
-        quantity: 1,
-        variant: '8mm Natural Pyrite • High Vibration',
-        subtitle: 'Solar Plexus & Cashflow Activation',
-      },
-    ],
-    totalAmount: 1599,
-    status: 'SHIPPED',
-    deliveryDate: 'Expected Tomorrow',
-    deliveryStatusText: 'In Transit • Expected Tomorrow',
-    deliverySubtext: 'Consignment cleared through Varanasi Hub',
-    shippingAddress: {
-      recipient: 'Yash Patidar',
-      city: 'Indore',
-      state: 'Madhya Pradesh',
-      postalCode: '452001',
-    },
-    canReview: false,
-    createdAt: '2025-11-26T16:45:00.000Z',
-  },
-  {
-    id: 'AVD-ORD-51042',
-    orderNumber: '#AVD-ORD-51042',
-    productName: 'Siddha Shri Sampoorna Maha Lakshmi & Kuber Yantra',
-    items: [
-      {
-        id: 'it-4',
-        name: 'Siddha Shri Sampoorna Maha Lakshmi & Kuber Yantra',
-        image: '/products/shree-yantra.jpg',
-        price: 1850,
-        quantity: 1,
-        variant: 'Pure Copper Plate (6x6 Inch)',
-        subtitle: 'Pran-Pratishtha in Sacred Fire Altar',
-      },
-    ],
-    totalAmount: 1850,
-    status: 'PROCESSING',
-    deliveryDate: 'Dispatches in 24h',
-    deliveryStatusText: 'Consecration in Progress',
-    deliverySubtext: 'Undergoing 108 Beej Mantra energization',
-    shippingAddress: {
-      recipient: 'Yash Patidar',
-      city: 'Indore',
-      state: 'Madhya Pradesh',
-      postalCode: '452001',
-    },
-    canReview: false,
-    createdAt: '2025-11-28T09:30:00.000Z',
-  },
-];
+export const DEFAULT_SAMPLE_ORDERS: any[] = [];
 
 export function getCombinedOrders(backendOrders: any[] = []): any[] {
-  let localOrders: any[] = [];
-  if (typeof window !== 'undefined') {
-    try {
-      const stored = localStorage.getItem('astro_placed_orders');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          localOrders = parsed;
-        }
-      }
-    } catch (e) {
-      console.error('Failed to parse astro_placed_orders:', e);
-    }
+  if (Array.isArray(backendOrders) && backendOrders.length > 0) {
+    return backendOrders;
   }
-
-  const combined = [...backendOrders];
-  for (const localOrd of localOrders) {
-    const exists = combined.some(
-      (b) =>
-        String(b.id || b._id) === String(localOrd.id || localOrd._id) ||
-        (b.createdAt && localOrd.createdAt && Math.abs(new Date(b.createdAt).getTime() - new Date(localOrd.createdAt).getTime()) < 3000)
-    );
-    if (!exists) {
-      combined.unshift(localOrd);
-    }
-  }
-
-  if (combined.length === 0) {
-    return DEFAULT_SAMPLE_ORDERS;
-  }
-
-  return combined;
+  return [];
 }
 
 export function getCombinedBookings(backendBookings: any[] = []): any[] {
-  let localBookings: any[] = [];
-  if (typeof window !== 'undefined') {
-    try {
-      const stored = localStorage.getItem('astro_consultations');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          localBookings = parsed.filter(
-            (b) => b && b.id !== '9ead962f-2896-4652-a8f9-2651723508fd'
-          );
-        }
-      }
-    } catch (e) {
-      console.error('Failed to parse astro_consultations:', e);
-    }
-  }
-
-  const combined = [
-    ...backendBookings.filter((b) => b && b.id !== '9ead962f-2896-4652-a8f9-2651723508fd'),
-  ];
-  for (const localB of localBookings) {
-    const exists = combined.some(
-      (b) =>
-        String(b.id || b._id) === String(localB.id || localB._id) ||
-        (b.scheduledDate === localB.scheduledDate && b.scheduledTime === localB.scheduledTime)
-    );
-    if (!exists) {
-      combined.unshift(localB);
-    }
-  }
-
-  return combined.map((b) => ({
-    ...b,
-    meetLink:
-      b.meetLink && b.meetLink.includes('meet.google.com')
-        ? b.meetLink
-        : formatGoogleMeetLink(b.id || b._id || ''),
-  }));
+  if (!Array.isArray(backendBookings)) return [];
+  return backendBookings
+    .filter((b) => b && b.id !== '9ead962f-2896-4652-a8f9-2651723508fd')
+    .map((b) => ({
+      ...b,
+      meetLink:
+        b.meetLink && b.meetLink.includes('meet.google.com')
+          ? b.meetLink
+          : formatGoogleMeetLink(b.id || b._id || ''),
+    }));
 }

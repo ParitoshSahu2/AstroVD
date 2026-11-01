@@ -10,6 +10,7 @@ import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { PageHeader } from '../../components/PageHeader';
 import { AuthModal } from '../../components/AuthModal';
+import { useScrollLock } from '../../lib/scrollLock';
 import {
   ShieldCheck,
   ShieldAlert,
@@ -344,6 +345,21 @@ export default function AdminPage() {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+
+  // Lock body scroll and prevent background scroll chaining for admin overlays
+  useScrollLock(mobileSidebarOpen || reportModalOpen);
+
+  useEffect(() => {
+    if (!mobileSidebarOpen && !reportModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (mobileSidebarOpen) setMobileSidebarOpen(false);
+        if (reportModalOpen) setReportModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileSidebarOpen, reportModalOpen]);
 
   // Admin Bookings List & Filter State
   const [bookingsList, setBookingsList] = useState<any[]>([]);
@@ -682,6 +698,14 @@ export default function AdminPage() {
       fetchOrdersList(1);
     }
   }, [adminTab, orderStatusFilter, orderDateFilter, isAdmin]);
+
+  // Initial load of orders and bookings for Overview tab statistics
+  useEffect(() => {
+    if (isAdmin) {
+      fetchOrdersList(1);
+      fetchBookingsList(1);
+    }
+  }, [isAdmin]);
 
   // Periodic polling & cross-tab sync for Admin Consultation & Product notifications
   useEffect(() => {
@@ -1852,12 +1876,16 @@ export default function AdminPage() {
 
             {/* ===================== MOBILE SIDEBAR DRAWER ===================== */}
             {mobileSidebarOpen && (
-              <div className="fixed inset-0 z-50 md:hidden flex">
+              <div
+                data-lenis-prevent="true"
+                onWheel={(e) => e.stopPropagation()}
+                className="fixed inset-0 z-50 md:hidden flex modal-backdrop-contain overscroll-contain"
+              >
                 <div
                   onClick={() => setMobileSidebarOpen(false)}
-                  className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs"
+                  className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs modal-backdrop-contain"
                 />
-                <div className="relative w-64 max-w-[80vw] bg-white text-stone-700 flex flex-col h-full shadow-2xl z-10">
+                <div className="relative w-64 max-w-[80vw] bg-white text-stone-700 flex flex-col h-full shadow-2xl z-10 modal-scroll-container">
                   <div className="p-4 flex items-center justify-between border-b border-stone-200">
                     <Link
                       href="/"
@@ -1882,7 +1910,7 @@ export default function AdminPage() {
                       <X className="w-5 h-5" />
                     </button>
                   </div>
-                  <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                  <div data-lenis-prevent="true" className="flex-1 overflow-y-auto p-3 space-y-2 modal-scroll-container overscroll-contain">
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('overview')}
@@ -2177,6 +2205,8 @@ export default function AdminPage() {
                 orderTotalCount={orderTotalCount}
                 ordersList={ordersList}
                 bookingsList={bookingsList}
+                ordersLoading={ordersLoading}
+                bookingsLoading={bookingsLoading}
                 onNavigateTab={(tab) => handleSidebarTabClick(tab)}
                 onInspectUser={handleInspectUser}
                 onCreateReport={() => setReportModalOpen(true)}
@@ -2234,7 +2264,7 @@ export default function AdminPage() {
                 fetchBookingsList={fetchBookingsList}
                 onSelectBooking={(booking) => {
                   setActiveBooking(booking);
-                  setStatusNotes(booking.notes || '');
+                  setStatusNotes('');
                   setStatusError(null);
                 }}
               />
@@ -2257,7 +2287,7 @@ export default function AdminPage() {
                 fetchOrdersList={fetchOrdersList}
                 onSelectOrder={(order) => {
                   setActiveOrder(order);
-                  setOrderStatusNotes(order.notes || '');
+                  setOrderStatusNotes('');
                   setOrderStatusError(null);
                 }}
               />
@@ -2459,8 +2489,15 @@ export default function AdminPage() {
 
       {/* EXECUTIVE PLATFORM REPORT MODAL */}
       {reportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-stone-200 space-y-6 max-h-[90vh] overflow-y-auto">
+        <div
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn modal-backdrop-contain overscroll-contain"
+        >
+          <div
+            data-lenis-prevent="true"
+            className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-stone-200 space-y-6 max-h-[90vh] overflow-y-auto modal-scroll-container overscroll-contain"
+          >
             <div className="flex items-center justify-between pb-4 border-b border-stone-200">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center">

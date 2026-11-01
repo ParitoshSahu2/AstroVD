@@ -45,12 +45,6 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
 
   const handleAddToCart = () => {
     if (!product) return;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
-    if (!token) {
-      router.push(`/login?redirect=/products/${encodeURIComponent(product.id)}`);
-      return;
-    }
-
     addItem(product, 1);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -58,12 +52,6 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
 
   const handleBuyNow = () => {
     if (!product) return;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
-    if (!token) {
-      router.push(`/login?redirect=/cart`);
-      return;
-    }
-
     if (quantityInCart === 0) {
       addItem(product, 1);
     }

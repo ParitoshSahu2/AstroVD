@@ -15,6 +15,8 @@ import {
   RotateCw,
   ArrowLeft,
   Sparkles,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import {
@@ -34,6 +36,8 @@ export default function ForgotPasswordPage() {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
   const [loading, setLoading] = useState(false);
@@ -245,7 +249,7 @@ export default function ForgotPasswordPage() {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
+                    type={showNewPassword ? 'text' : 'password'}
                     required
                     disabled={loading}
                     value={newPassword}
@@ -253,9 +257,22 @@ export default function ForgotPasswordPage() {
                       setNewPassword(e.target.value);
                       if (error) setError('');
                     }}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-900 text-xs focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] shadow-sm disabled:opacity-60"
+                    className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-900 text-xs focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] shadow-sm disabled:opacity-60"
                     placeholder="••••••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 transition-colors p-1 rounded-md focus:outline-none cursor-pointer"
+                    title={showNewPassword ? t('Hide password', 'पासवर्ड छुपाएं') : t('Show password', 'पासवर्ड दिखाएं')}
+                    aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
               </div>
 
@@ -266,7 +283,7 @@ export default function ForgotPasswordPage() {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
+                    type={showConfirmPassword ? 'text' : 'password'}
                     required
                     disabled={loading}
                     value={confirmPassword}
@@ -274,9 +291,22 @@ export default function ForgotPasswordPage() {
                       setConfirmPassword(e.target.value);
                       if (error) setError('');
                     }}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-900 text-xs focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] shadow-sm disabled:opacity-60"
+                    className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white border border-stone-300 text-stone-900 text-xs focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] shadow-sm disabled:opacity-60"
                     placeholder="••••••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 transition-colors p-1 rounded-md focus:outline-none cursor-pointer"
+                    title={showConfirmPassword ? t('Hide password', 'पासवर्ड छुपाएं') : t('Show password', 'पासवर्ड दिखाएं')}
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
               </div>
 

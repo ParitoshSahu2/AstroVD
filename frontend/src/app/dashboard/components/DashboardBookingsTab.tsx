@@ -408,6 +408,27 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                         <span>{slotTime} IST</span>
                       </span>
                     </div>
+
+                    {(booking.customerName || booking.customerPhone) && (
+                      <div className="flex items-center gap-2 text-xs text-stone-600 pt-1 flex-wrap">
+                        <span className="font-semibold text-stone-700">
+                          {t('Attendee', 'परामर्शार्थी')}:
+                        </span>
+                        <span className="font-bold text-[#5B0D15]">
+                          {booking.customerName || profile?.name || 'Devotee'}
+                        </span>
+                        {booking.customerPhone && (
+                          <span className="text-stone-500 font-mono text-[11px]">
+                            ({booking.customerPhone})
+                          </span>
+                        )}
+                        {booking.isBookingForSomeoneElse && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                            {t('Booked for family / friend', 'अन्य व्यक्ति हेतु बुक किया')}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* 3. Join Google Meet Button */}

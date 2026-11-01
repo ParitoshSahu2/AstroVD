@@ -19,6 +19,8 @@ import {
   Compass,
   KeyRound,
   RotateCw,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { getAuthToken, getStoredUser, setAuthSession } from '../../lib/auth';
@@ -35,6 +37,7 @@ function SignupForm() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -495,15 +498,28 @@ function SignupForm() {
             </label>
             <div className="relative">
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
                 minLength={6}
-                className="w-full text-xs sm:text-sm pl-10 pr-4 py-3 rounded-xl border border-stone-300 focus:border-[#5B0D15] focus:ring-2 focus:ring-amber-500/20 bg-stone-50/50 hover:bg-white transition-all outline-none"
+                className="w-full text-xs sm:text-sm pl-10 pr-11 py-3 rounded-xl border border-stone-300 focus:border-[#5B0D15] focus:ring-2 focus:ring-amber-500/20 bg-stone-50/50 hover:bg-white transition-all outline-none"
               />
               <Lock className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 transition-colors p-1 rounded-md focus:outline-none cursor-pointer"
+                title={showPassword ? t('Hide password', 'पासवर्ड छुपाएं') : t('Show password', 'पासवर्ड दिखाएं')}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
             </div>
           </div>
 

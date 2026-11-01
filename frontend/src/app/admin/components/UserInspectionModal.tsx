@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useScrollLock } from '../../../lib/scrollLock';
 import {
   X,
   RefreshCw,
@@ -61,10 +62,26 @@ export default function UserInspectionModal({
   deleteLoading,
   handleInitiateDelete,
 }: UserInspectionModalProps) {
+  // Lock body scroll and prevent background scroll chaining
+  useScrollLock(Boolean(selectedUserId));
+
+  useEffect(() => {
+    if (!selectedUserId) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedUserId, onClose]);
+
   if (!selectedUserId) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
+    <div
+      data-lenis-prevent="true"
+      onWheel={(e) => e.stopPropagation()}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto overscroll-contain modal-backdrop-contain animate-fadeIn"
+    >
       <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-3xl bg-white/95 backdrop-blur-2xl border border-amber-300 shadow-2xl overflow-hidden text-[#3B1E22]">
         {/* Header */}
         <div className="px-6 py-5 bg-gradient-to-r from-[#5B0D15] via-[#7B121C] to-[#3B1E22] text-white flex items-center justify-between shrink-0">
@@ -194,7 +211,7 @@ export default function UserInspectionModal({
             </div>
 
             {/* Tab Body */}
-            <div className="p-6 overflow-y-auto space-y-6 flex-1 max-h-[60vh]">
+            <div data-lenis-prevent="true" className="p-6 overflow-y-auto space-y-6 flex-1 max-h-[60vh] modal-scroll-container overscroll-contain">
               {/* TAB 1: WHAT THEY BOUGHT */}
               {inspectTab === 'purchases' && (
                 <div className="space-y-4">

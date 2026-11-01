@@ -31,6 +31,7 @@ import {
 import { PRODUCTS_CATALOG, ProductItem, formatTitleCase } from '../data/products';
 import { useLanguage } from '../context/LanguageContext';
 import { useCart, parsePriceNumber } from '../context/CartContext';
+import { useScrollLock } from '../lib/scrollLock';
 
 export const PRODUCTS_BATCH_SIZE = 8;
 
@@ -65,12 +66,6 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
   const allowCheckoutBar = showCheckoutBar !== undefined ? showCheckoutBar : (isProductPage && !isHomePage);
 
   const handleAddToCart = (item: ProductItem, qty: number = 1) => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
-    if (!token) {
-      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/products';
-      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
-      return;
-    }
     addItem(item, qty);
     setAddedProductId(item.id);
     setTimeout(() => {
@@ -114,23 +109,18 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
     };
   }, [limit]);
 
-  // Lock body scroll and listen for Escape key when product view is active
+  // Lock body scroll and prevent background scroll chaining when product view is active
+  useScrollLock(Boolean(selectedProduct));
+
   useEffect(() => {
-    if (selectedProduct) {
-      document.body.style.overflow = 'hidden';
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          setSelectedProduct(null);
-        }
-      };
-      window.addEventListener('keydown', handleKeyDown);
-      return () => {
-        document.body.style.overflow = 'unset';
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    } else {
-      document.body.style.overflow = 'unset';
-    }
+    if (!selectedProduct) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedProduct(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedProduct]);
 
   const filterCategories = [
@@ -809,15 +799,18 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
 
         return (
           <div
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 md:p-6 overflow-y-auto animate-fadeIn"
+            data-lenis-prevent="true"
+            onWheel={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 md:p-6 overflow-y-auto animate-fadeIn modal-backdrop-contain overscroll-contain"
             role="dialog"
             aria-modal="true"
             onClick={() => setSelectedProduct(null)}
           >
             {/* Modal Container with Contained Width */}
             <div
+              data-lenis-prevent="true"
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-4xl max-h-[90vh] bg-[#FAF7F2] rounded-3xl border border-amber-300/80 shadow-2xl flex flex-col md:flex-row overflow-hidden my-auto"
+              className="relative w-full max-w-4xl max-h-[90vh] bg-[#FAF7F2] rounded-3xl border border-amber-300/80 shadow-2xl flex flex-col md:flex-row overflow-hidden my-auto overscroll-contain modal-scroll-container"
             >
               {/* Modal Close Button */}
               <button
@@ -850,7 +843,10 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
               </div>
 
               {/* Details & Actions Side */}
-              <div className="w-full md:w-7/12 p-5 sm:p-6 md:p-7 flex flex-col justify-between overflow-y-auto bg-[#FAF7F2] border-t md:border-t-0 md:border-l border-amber-200/80 space-y-3">
+              <div
+                data-lenis-prevent="true"
+                className="w-full md:w-7/12 p-5 sm:p-6 md:p-7 flex flex-col justify-between overflow-y-auto overscroll-contain bg-[#FAF7F2] border-t md:border-t-0 md:border-l border-amber-200/80 space-y-3"
+              >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   {(language === 'hi' && selectedProduct.tagHi ? selectedProduct.tagHi : selectedProduct.tag) ? (
@@ -1010,11 +1006,6 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
-                      if (!token) {
-                        router.push(`/login?redirect=${encodeURIComponent('/cart')}`);
-                        return;
-                      }
                       if (selectedProductQtyInCart === 0) {
                         addItem(selectedProduct, 1);
                       }

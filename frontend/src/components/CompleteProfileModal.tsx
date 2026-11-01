@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { getAuthToken } from '../lib/auth';
+import { useScrollLock } from '../lib/scrollLock';
 
 interface CompleteProfileModalProps {
   isOpen: boolean;
@@ -69,20 +70,7 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
   const formRef = useRef<HTMLFormElement>(null);
 
   // Stop Lenis smooth scroll and disable background scroll while modal is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      if (typeof window !== 'undefined' && (window as any).__lenis) {
-        (window as any).__lenis.stop();
-      }
-    }
-    return () => {
-      document.body.style.overflow = '';
-      if (typeof window !== 'undefined' && (window as any).__lenis) {
-        (window as any).__lenis.start();
-      }
-    };
-  }, [isOpen]);
+  useScrollLock(isOpen);
 
   // Handle escape key
   useEffect(() => {
@@ -301,13 +289,14 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
   return (
     <div
       data-lenis-prevent="true"
-      className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200"
+      onWheel={(e) => e.stopPropagation()}
+      className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200 modal-backdrop-contain overscroll-contain"
       onClick={handleDismiss}
     >
       <div
         data-lenis-prevent="true"
         onWheel={handleContainerWheel}
-        className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl bg-white shadow-2xl border border-amber-300/80 flex flex-col"
+        className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-3xl bg-white shadow-2xl border border-amber-300/80 flex flex-col overscroll-contain modal-scroll-container"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Decorative Sacred Header */}

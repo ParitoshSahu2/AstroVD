@@ -25,6 +25,7 @@ import {
   XCircle,
   UserCheck,
   User as UserIcon,
+  RefreshCw,
 } from 'lucide-react';
 import { UserSummary } from '../types';
 
@@ -42,6 +43,8 @@ interface AdminOverviewTabProps {
   orderTotalCount: number;
   ordersList?: any[];
   bookingsList?: any[];
+  ordersLoading?: boolean;
+  bookingsLoading?: boolean;
   onNavigateTab: (tab: string) => void;
   onInspectUser: (userId: string) => void;
   onCreateReport?: () => void;
@@ -56,6 +59,8 @@ export default function AdminOverviewTab({
   orderTotalCount = 0,
   ordersList = [],
   bookingsList = [],
+  ordersLoading = false,
+  bookingsLoading = false,
   onNavigateTab,
   onInspectUser,
   onCreateReport,
@@ -79,70 +84,13 @@ export default function AdminOverviewTab({
     });
   }, []);
 
-  // Compute live counts with intelligent defaults matching mock
-  const registeredUsersCount = roleCounts.USER || users.filter((u) => u.role === 'USER').length || 4;
-  const activeAstrologersCount = roleCounts.ADMIN || users.filter((u) => u.role === 'ADMIN').length || 1;
-  const pendingApprovalsCount = 3;
-  const totalOrdersCount = orderTotalCount || ordersList.length || 12;
-
-  // Recent Orders matching the design image with live fallback
-  const rawOrders = [
-    {
-      id: '#ORD-1032',
-      customer: 'Rohit Sharma',
-      initials: 'RS',
-      avatarBg: 'bg-purple-100 text-purple-700',
-      product: 'Online Consultation',
-      amount: '₹499',
-      status: 'Paid',
-      statusClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
-      date: 'Oct 26, 2025',
-    },
-    {
-      id: '#ORD-1031',
-      customer: 'Priya Singh',
-      initials: 'PS',
-      avatarBg: 'bg-blue-100 text-blue-700',
-      product: 'Pooja Booking',
-      amount: '₹1,299',
-      status: 'Pending',
-      statusClass: 'bg-amber-50 text-amber-700 border border-amber-200/60',
-      date: 'Oct 26, 2025',
-    },
-    {
-      id: '#ORD-1030',
-      customer: 'Amit Verma',
-      initials: 'AV',
-      avatarBg: 'bg-teal-100 text-teal-700',
-      product: 'Gemstone',
-      amount: '₹2,499',
-      status: 'Paid',
-      statusClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
-      date: 'Oct 25, 2025',
-    },
-    {
-      id: '#ORD-1029',
-      customer: 'Neha Gupta',
-      initials: 'NG',
-      avatarBg: 'bg-rose-100 text-rose-700',
-      product: 'Consultation',
-      amount: '₹799',
-      status: 'Cancelled',
-      statusClass: 'bg-rose-50 text-rose-700 border border-rose-200/60',
-      date: 'Oct 24, 2025',
-    },
-    {
-      id: '#ORD-1028',
-      customer: 'Sandeep Kumar',
-      initials: 'SK',
-      avatarBg: 'bg-emerald-100 text-emerald-700',
-      product: 'Pooja Booking',
-      amount: '₹1,499',
-      status: 'Processing',
-      statusClass: 'bg-blue-50 text-blue-700 border border-blue-200/60',
-      date: 'Oct 23, 2025',
-    },
-  ];
+  // Compute live counts from authoritative backend records
+  const registeredUsersCount = roleCounts.USER ?? users.filter((u) => u.role === 'USER').length;
+  const activeAstrologersCount = roleCounts.ADMIN ?? users.filter((u) => u.role === 'ADMIN').length;
+  const pendingApprovalsCount =
+    (ordersList?.filter((o: any) => o.status === 'PENDING' || o.status === 'PENDING_PAYMENT').length || 0) +
+    (bookingsList?.filter((b: any) => b.status === 'PENDING' || b.status === 'PENDING_PAYMENT').length || 0);
+  const totalOrdersCount = orderTotalCount || (ordersList ? ordersList.length : 0);
 
   const displayOrders = useMemo(() => {
     if (ordersList && ordersList.length > 0) {
@@ -168,13 +116,13 @@ export default function AdminOverviewTab({
         const avatarBg = avatarColors[idx % avatarColors.length];
         const productName =
           ord.items?.[0]?.product?.name ||
-          (ord.serviceType ? `${ord.serviceType} Consultation` : 'Astrology Service');
+          (ord.serviceType ? `${ord.serviceType} Consultation` : 'Astrology Product');
         const formattedAmount = `₹${(ord.totalAmount || 0).toLocaleString('en-IN')}`;
-        const rawStatus = (ord.status || 'Paid').toString().toUpperCase();
-        let status = 'Paid';
+        const rawStatus = (ord.status || 'Pending').toString().toUpperCase();
+        let status = 'Completed';
         let statusClass = 'bg-emerald-50 text-emerald-700 border border-emerald-200/60';
         if (!ord.status || typeof ord.status !== 'string' || ord.status.trim() === '' || rawStatus.includes('PENDING')) {
-          status = 'Pending';
+          status = rawStatus.includes('PAYMENT') ? 'Pending Payment' : 'Pending';
           statusClass = 'bg-amber-50 text-amber-700 border border-amber-200/60';
         } else if (rawStatus.includes('CANCEL')) {
           status = 'Cancelled';
@@ -183,7 +131,7 @@ export default function AdminOverviewTab({
           status = 'Processing';
           statusClass = 'bg-blue-50 text-blue-700 border border-blue-200/60';
         } else {
-          status = 'Paid';
+          status = 'Completed';
           statusClass = 'bg-emerald-50 text-emerald-700 border border-emerald-200/60';
         }
         const date = ord.createdAt
@@ -195,7 +143,7 @@ export default function AdminOverviewTab({
           : 'Today';
 
         return {
-          id: ord.orderNumber || ord.orderReference || `#ORD-${1032 - idx}`,
+          id: ord.orderNumber || ord.orderReference || (ord.id ? `#${ord.id.slice(0, 8)}` : `#ORD-${idx + 1}`),
           customer: customerName,
           initials,
           avatarBg,
@@ -207,7 +155,7 @@ export default function AdminOverviewTab({
         };
       });
     }
-    return rawOrders;
+    return [];
   }, [ordersList]);
 
   // Recent Activity matching design image
@@ -501,85 +449,102 @@ export default function AdminOverviewTab({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-50">
-                  {displayOrders.map((ord) => (
-                    <tr
-                      key={ord.id}
-                      onClick={() => onNavigateTab('orders')}
-                      className="hover:bg-stone-50/70 cursor-pointer transition-colors group"
-                    >
-                      {/* Order ID: Fixed width, truncated with tooltip */}
-                      <td className="py-3 pr-2">
-                        <div
-                          className="font-bold text-[#8B1D2C] truncate"
-                          title={ord.id}
-                        >
-                          {ord.id}
+                  {ordersLoading ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-stone-400 text-xs">
+                        <div className="flex items-center justify-center gap-2">
+                          <RefreshCw className="w-4 h-4 animate-spin text-[#8B1D2C]" />
+                          <span>Loading customer orders...</span>
                         </div>
-                      </td>
-
-                      {/* Customer: Avatar + name truncated with tooltip */}
-                      <td className="py-3 px-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div
-                            className={`w-6 h-6 rounded-full ${ord.avatarBg} font-bold text-[10px] flex items-center justify-center shrink-0`}
-                          >
-                            {ord.initials}
-                          </div>
-                          <span
-                            className="font-semibold text-stone-800 truncate block"
-                            title={ord.customer}
-                          >
-                            {ord.customer}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Product / Service: Truncated with tooltip */}
-                      <td className="py-3 px-2">
-                        <div
-                          className="text-stone-600 truncate"
-                          title={ord.product}
-                        >
-                          {ord.product}
-                        </div>
-                      </td>
-
-                      {/* Amount: Truncated with tooltip */}
-                      <td className="py-3 px-2">
-                        <div
-                          className="font-bold text-stone-800 truncate"
-                          title={ord.amount}
-                        >
-                          {ord.amount}
-                        </div>
-                      </td>
-
-                      {/* Status: Badges kept visible & neatly contained */}
-                      <td className="py-3 px-2">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-[10.5px] font-semibold truncate max-w-full text-center ${ord.statusClass}`}
-                          title={ord.status}
-                        >
-                          {ord.status}
-                        </span>
-                      </td>
-
-                      {/* Date: Truncated with tooltip */}
-                      <td className="py-3 px-2">
-                        <div
-                          className="text-stone-400 truncate"
-                          title={ord.date}
-                        >
-                          {ord.date}
-                        </div>
-                      </td>
-
-                      {/* Action Chevron */}
-                      <td className="py-3 pl-1 text-right">
-                        <ChevronRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-transform inline-block" />
                       </td>
                     </tr>
-                  ))}
+                  ) : displayOrders.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-stone-500 text-xs">
+                        No customer orders recorded yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    displayOrders.map((ord) => (
+                      <tr
+                        key={ord.id}
+                        onClick={() => onNavigateTab('orders')}
+                        className="hover:bg-stone-50/70 cursor-pointer transition-colors group"
+                      >
+                        {/* Order ID: Fixed width, truncated with tooltip */}
+                        <td className="py-3 pr-2">
+                          <div
+                            className="font-bold text-[#8B1D2C] truncate"
+                            title={ord.id}
+                          >
+                            {ord.id}
+                          </div>
+                        </td>
+
+                        {/* Customer: Avatar + name truncated with tooltip */}
+                        <td className="py-3 px-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div
+                              className={`w-6 h-6 rounded-full ${ord.avatarBg} font-bold text-[10px] flex items-center justify-center shrink-0`}
+                            >
+                              {ord.initials}
+                            </div>
+                            <span
+                              className="font-semibold text-stone-800 truncate block"
+                              title={ord.customer}
+                            >
+                              {ord.customer}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Product / Service: Truncated with tooltip */}
+                        <td className="py-3 px-2">
+                          <div
+                            className="text-stone-600 truncate"
+                            title={ord.product}
+                          >
+                            {ord.product}
+                          </div>
+                        </td>
+
+                        {/* Amount: Truncated with tooltip */}
+                        <td className="py-3 px-2">
+                          <div
+                            className="font-bold text-stone-800 truncate"
+                            title={ord.amount}
+                          >
+                            {ord.amount}
+                          </div>
+                        </td>
+
+                        {/* Status: Badges kept visible & neatly contained */}
+                        <td className="py-3 px-2">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded-full text-[10.5px] font-semibold truncate max-w-full text-center ${ord.statusClass}`}
+                            title={ord.status}
+                          >
+                            {ord.status}
+                          </span>
+                        </td>
+
+                        {/* Date: Truncated with tooltip */}
+                        <td className="py-3 px-2">
+                          <div
+                            className="text-stone-400 truncate"
+                            title={ord.date}
+                          >
+                            {ord.date}
+                          </div>
+                        </td>
+
+                        {/* Action Chevron */}
+                        <td className="py-3 pl-1 text-right">
+                          <ChevronRight className="w-3.5 h-3.5 text-stone-300 group-hover:text-stone-600 group-hover:translate-x-0.5 transition-transform inline-block" />
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

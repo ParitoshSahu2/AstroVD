@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchAstrologers, bookConsultation } from '../lib/api';
+import { useScrollLock } from '../lib/scrollLock';
 import {
   PhoneCall,
   MessageSquare,
@@ -59,16 +60,17 @@ export const ConsultModal: React.FC<ConsultModalProps> = ({
     }
   }, [isOpen, user]);
 
-  // Lock body scroll when modal is open
+  // Lock body scroll and prevent background scroll chaining when modal is open
+  useScrollLock(isOpen);
+
   useEffect(() => {
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow || '';
-      };
-    }
-  }, [isOpen]);
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -130,8 +132,18 @@ export const ConsultModal: React.FC<ConsultModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-[#FFFDF9] border border-amber-300 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative space-y-6">
+    <div
+      data-lenis-prevent="true"
+      onWheel={(e) => e.stopPropagation()}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn modal-backdrop-contain overscroll-contain overflow-y-auto"
+      onClick={onClose}
+    >
+      <div
+        data-lenis-prevent="true"
+        onWheel={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-[#FFFDF9] border border-amber-300 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto overscroll-contain modal-scroll-container shadow-2xl relative space-y-6"
+      >
         <button
           onClick={onClose}
           className="absolute top-5 right-5 text-stone-400 hover:text-stone-800 p-1.5 rounded-lg hover:bg-stone-100 transition-colors cursor-pointer"

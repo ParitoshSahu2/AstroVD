@@ -1,15 +1,25 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { formatGoogleMeetLink } from '../../../data/servicesData';
+import { useScrollLock } from '../../../lib/scrollLock';
 import {
   Calendar,
   Clock,
   User as UserIcon,
   Phone,
+  Mail,
   CheckCircle2,
   AlertCircle,
   X,
   RefreshCw,
   Video,
+  Copy,
+  Check,
+  HeartHandshake,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+  ShieldCheck,
+  MessageSquare,
 } from 'lucide-react';
 
 interface BookingLifecycleModalProps {
@@ -22,8 +32,6 @@ interface BookingLifecycleModalProps {
   onClose: () => void;
 }
 
-
-
 export default function BookingLifecycleModal({
   activeBooking,
   statusNotes,
@@ -33,257 +41,409 @@ export default function BookingLifecycleModal({
   onTransitionStatus,
   onClose,
 }: BookingLifecycleModalProps) {
+  const [copiedId, setCopiedId] = useState(false);
+  const [expandNotes, setExpandNotes] = useState(false);
+
+  // Lock body scroll and prevent background scroll chaining
+  useScrollLock(Boolean(activeBooking));
+
+  useEffect(() => {
+    if (!activeBooking) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeBooking, onClose]);
+
   if (!activeBooking) return null;
 
+  const handleCopyId = (id: string) => {
+    if (!id) return;
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(id);
+    } else {
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = id;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      } catch (err) {}
+    }
+    setCopiedId(true);
+    setTimeout(() => setCopiedId(false), 2000);
+  };
+
+  const bookingId = String(activeBooking.id || '');
+  const shortBookingId = bookingId.length > 12 ? `${bookingId.slice(0, 8)}...${bookingId.slice(-4)}` : bookingId;
+
+  const custName = activeBooking.customerName || activeBooking.customer?.name || activeBooking.user?.name || 'Customer';
+  const custPhone = activeBooking.customerPhone || activeBooking.contactPhone || activeBooking.customer?.phone || activeBooking.user?.phone || 'No phone recorded';
+  const custEmail = activeBooking.customer?.email || activeBooking.user?.email || 'N/A';
+  const isForSomeoneElse = Boolean(activeBooking.isBookingForSomeoneElse || activeBooking.customer?.isBookingForSomeoneElse);
+  const accountOwner = activeBooking.customer?.accountOwnerName || activeBooking.user?.name;
+  const guideName = activeBooking.astrologer?.name || 'Dr. Pandit Vishal Dubey';
+
+  const meetUrl = activeBooking.meetLink && activeBooking.meetLink.includes('meet.google.com')
+    ? activeBooking.meetLink
+    : formatGoogleMeetLink(activeBooking.id);
+
+  const isTerminalState = activeBooking.status === 'COMPLETED' || activeBooking.status === 'CANCELLED';
+
+  const statusBadgeConfig: Record<string, { bg: string; text: string; border: string; label: string }> = {
+    CONFIRMED: { bg: 'bg-emerald-500/20', text: 'text-emerald-200', border: 'border-emerald-400/40', label: 'Confirmed' },
+    COMPLETED: { bg: 'bg-blue-500/20', text: 'text-blue-200', border: 'border-blue-400/40', label: 'Completed' },
+    CANCELLED: { bg: 'bg-rose-500/20', text: 'text-rose-200', border: 'border-rose-400/40', label: 'Cancelled' },
+    PENDING_PAYMENT: { bg: 'bg-amber-500/20', text: 'text-amber-200', border: 'border-amber-400/40', label: 'Pending Payment' },
+    PENDING: { bg: 'bg-amber-500/20', text: 'text-amber-200', border: 'border-amber-400/40', label: 'Pending' },
+  };
+
+  const currentBadge = statusBadgeConfig[activeBooking.status] || {
+    bg: 'bg-amber-500/20',
+    text: 'text-amber-200',
+    border: 'border-amber-400/40',
+    label: activeBooking.status,
+  };
+
+  // Extract actual customer/seeker remarks from notes string if mixed with automated pipe-separated metadata
+  const rawNotes = String(activeBooking.notes || '').trim();
+  const seekerRemarkMatch = rawNotes.match(/Seeker Notes:\s*([^|]+)/i);
+  const isAutoMetadataOnly = /^(Service:|Mode:|Customer:|Contact:|Extension Rate:)/i.test(rawNotes) && !seekerRemarkMatch;
+  const genuineRemark = seekerRemarkMatch ? seekerRemarkMatch[1].trim() : isAutoMetadataOnly ? '' : rawNotes;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto animate-fadeIn">
-      <div className="relative w-full max-w-2xl flex flex-col rounded-3xl bg-white/95 backdrop-blur-2xl border border-amber-300 shadow-2xl overflow-hidden text-[#3B1E22]">
-        {/* Header */}
-        <div className="px-6 py-5 bg-gradient-to-r from-[#5B0D15] via-[#7B121C] to-[#3B1E22] text-white flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/20 text-amber-200 flex items-center justify-center border border-white/30 shrink-0">
-              <Calendar className="w-5 h-5" />
+    <div
+      data-lenis-prevent="true"
+      onWheel={(e) => e.stopPropagation()}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-3 overflow-y-auto overscroll-contain modal-backdrop-contain animate-fadeIn"
+    >
+      {/* Modal Dialog Container: max-h-[calc(100dvh-20px)], max-w-4xl, tailored for 1366x768 single viewport fit */}
+      <div className="relative w-full max-w-4xl max-h-[calc(100dvh-20px)] flex flex-col rounded-2xl bg-[#FCFBF8] border border-amber-300/80 shadow-2xl overflow-hidden text-[#3B1E22]">
+        
+        {/* Compact Rich Burgundy Header: Single Ref ID with copy + single status badge */}
+        <div className="px-4 py-2.5 bg-gradient-to-r from-[#50080F] via-[#6B0D16] to-[#40080D] text-white flex items-center justify-between shrink-0 border-b border-amber-400/30">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-lg bg-white/10 text-amber-200 flex items-center justify-center border border-amber-300/25 shrink-0">
+              <Calendar className="w-3.5 h-3.5 text-amber-300" />
             </div>
-            <div>
-              <h3 className="font-serif text-lg font-bold text-amber-100">
+            <div className="min-w-0 flex items-center flex-wrap gap-x-2.5 gap-y-0.5">
+              <h3 className="font-serif text-sm sm:text-base font-bold text-amber-100 tracking-wide">
                 Appointment Details &amp; Lifecycle
               </h3>
-              <p className="text-xs text-amber-200/80 font-mono">
-                Ref: {activeBooking.id}
-              </p>
+              <div className="flex items-center gap-1.5 bg-black/25 border border-amber-400/20 px-2 py-0.5 rounded text-[11px]">
+                <span className="text-amber-200/90 font-mono">Ref: {shortBookingId}</span>
+                <button
+                  type="button"
+                  onClick={() => handleCopyId(activeBooking.id)}
+                  className={`p-0.5 rounded transition-colors ${
+                    copiedId
+                      ? 'bg-emerald-500/40 text-emerald-200'
+                      : 'hover:bg-white/20 text-amber-300'
+                  }`}
+                  title={copiedId ? 'Copied Full ID!' : `Copy Full ID: ${bookingId}`}
+                >
+                  {copiedId ? <Check className="w-3 h-3 text-emerald-300" /> : <Copy className="w-3 h-3" />}
+                </button>
+              </div>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold border tracking-wide uppercase ${currentBadge.bg} ${currentBadge.text} ${currentBadge.border}`}
+              >
+                ● {currentBadge.label}
+              </span>
             </div>
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer"
+            className="p-1 rounded-lg hover:bg-white/15 text-white/80 hover:text-white transition-colors cursor-pointer shrink-0 ml-2"
+            title="Close modal (Esc)"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-6 space-y-6 overflow-y-auto max-h-[75vh]">
+        {/* Modal Body: Compact density, no excess padding, fits 1366x768 without scrolling */}
+        <div
+          data-lenis-prevent="true"
+          className="p-3 sm:p-4 overflow-y-auto overscroll-contain modal-scroll-container space-y-2.5 flex-1 text-xs"
+        >
           {statusError && (
-            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
               <span>{statusError}</span>
             </div>
           )}
 
-          {/* Service & Schedule Box */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/70">
-              <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block mb-1">
-                Booked Service
-              </span>
-              <p className="font-serif font-bold text-stone-900 text-base">
-                {activeBooking.serviceTitle || activeBooking.serviceType}
-              </p>
-              <p className="text-xs text-stone-600 mt-1">
-                Duration: {activeBooking.durationMinutes || 45} mins • Canonical ID: <span className="font-mono text-[11px] text-amber-900">{activeBooking.serviceType}</span>
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/70">
-              <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block mb-1">
-                Scheduled Date &amp; Time
-              </span>
-              <p className="font-bold text-stone-900 text-base flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-amber-700" />
-                {new Date(activeBooking.scheduledDate).toLocaleDateString('en-US', {
-                  weekday: 'short',
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </p>
-              <p className="text-xs text-stone-700 font-semibold mt-1 flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-amber-700" />
-                {activeBooking.scheduledTime}
-              </p>
-            </div>
-          </div>
-
-          {/* Seeker / Customer Contact Details */}
-          <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200">
-            <span className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block mb-2">
-              Customer Contact Information
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <div>
-                <span className="text-stone-400 block text-[10px]">Customer Name</span>
-                <span className="font-semibold text-stone-900 flex items-center gap-1 mt-0.5">
-                  <UserIcon className="w-3.5 h-3.5 text-stone-500" />
-                  {activeBooking.user?.name || activeBooking.customer?.name || 'Guest'}
+          {/* Row 1: Booked Service & Scheduled Date/Time Side-by-Side */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {/* Booked Service */}
+            <div className="p-2.5 rounded-xl bg-amber-50/50 border border-amber-200/80 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold text-amber-900/80 uppercase tracking-wider block">
+                  Booked Service
                 </span>
-              </div>
-              <div>
-                <span className="text-stone-400 block text-[10px]">Email Address</span>
-                <span className="font-mono text-stone-800 break-all block mt-0.5">
-                  {activeBooking.user?.email || activeBooking.customer?.email || 'N/A'}
-                </span>
-              </div>
-              <div>
-                <span className="text-stone-400 block text-[10px]">Contact Phone</span>
-                <span className="font-mono font-medium text-stone-900 flex items-center gap-1 mt-0.5">
-                  <Phone className="w-3.5 h-3.5 text-stone-500" />
-                  {activeBooking.user?.phone || activeBooking.customer?.phone || 'No phone recorded'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Booking Metadata & User Notes */}
-          <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200 space-y-2 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-stone-500">Booking Created:</span>
-              <span className="font-medium text-stone-700">
-                {new Date(activeBooking.createdAt).toLocaleString()}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-stone-500">Assigned Astrologer:</span>
-              <span className="font-medium text-stone-800">
-                {activeBooking.astrologer?.name || 'Dr. Pandit Vishal Dubey'}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-stone-500">Service Fee:</span>
-              <span className="font-bold text-[#5B0D15]">
-                {activeBooking.totalCost === 0 ? 'Complimentary / Included' : `₹${activeBooking.totalCost}`}
-              </span>
-            </div>
-            {activeBooking.notes && (
-              <div className="pt-2 border-t border-stone-200">
-                <span className="text-stone-500 block text-[11px] mb-1">Customer Remarks / Notes:</span>
-                <p className="p-2.5 rounded-lg bg-white border border-stone-200 text-stone-800 font-mono text-[11px]">
-                  {activeBooking.notes}
+                <p className="font-serif font-bold text-stone-900 text-sm truncate mt-0.5" title={activeBooking.serviceTitle || activeBooking.serviceType}>
+                  {activeBooking.serviceTitle || activeBooking.serviceType}
+                </p>
+                <p className="text-[11px] text-stone-600 mt-0.5">
+                  Duration: <strong className="text-stone-800">{activeBooking.durationMinutes || 45} mins</strong> • Reserved: {new Date(activeBooking.createdAt).toLocaleDateString()}
                 </p>
               </div>
-            )}
+            </div>
+
+            {/* Scheduled Date & Time */}
+            <div className="p-2.5 rounded-xl bg-amber-50/50 border border-amber-200/80 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold text-amber-900/80 uppercase tracking-wider block">
+                  Scheduled Date &amp; Time
+                </span>
+                <p className="font-bold text-stone-900 text-sm flex items-center gap-1.5 mt-0.5">
+                  <Calendar className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                  <span>
+                    {new Date(activeBooking.scheduledDate).toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                </p>
+                <p className="text-[11px] text-stone-700 font-semibold mt-0.5 flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-amber-700 shrink-0" />
+                  <span>{activeBooking.scheduledTime} IST</span>
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* Live Video Consultation Room Box */}
-          <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
-                <Video className="w-4 h-4 text-emerald-700" />
-                Live Google Meet Room
+          {/* Row 2: Customer Information Section (Attendee, Mobile, Account Owner/Email, Spiritual Guide) */}
+          <div className="p-2.5 rounded-xl bg-amber-50/30 border border-amber-200/70">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] font-bold text-amber-900/80 uppercase tracking-wider">
+                Customer &amp; Attendee Information
               </span>
-              <p className="text-xs text-emerald-950 font-mono break-all font-semibold">
-                {activeBooking.meetLink && activeBooking.meetLink.includes('meet.google.com') ? activeBooking.meetLink : formatGoogleMeetLink(activeBooking.id)}
-              </p>
-              <p className="text-[11px] text-emerald-800">
-                Extension Rate: ₹50/minute after scheduled 30 mins.
-              </p>
+              {isForSomeoneElse && (
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1">
+                  <HeartHandshake className="w-3 h-3 text-purple-600" />
+                  <span>Proxy Booking</span>
+                </span>
+              )}
             </div>
-            <a
-              href={activeBooking.meetLink && activeBooking.meetLink.includes('meet.google.com') ? activeBooking.meetLink : formatGoogleMeetLink(activeBooking.id)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2.5 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-md shadow-emerald-900/20 flex items-center justify-center gap-1.5 shrink-0 transition-all hover:scale-105 active:scale-95"
-            >
-              <Video className="w-4 h-4" />
-              <span>Start Google Meet</span>
-            </a>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+              <div className="p-1.5 px-2 rounded-lg bg-white/90 border border-amber-200/50 shadow-2xs">
+                <span className="text-stone-400 block text-[9px] uppercase font-semibold">Attendee</span>
+                <span className="font-semibold text-stone-900 flex items-center gap-1.5 mt-0.5 truncate" title={custName}>
+                  <UserIcon className="w-3 h-3 text-stone-500 shrink-0" />
+                  <span className="truncate">{custName}</span>
+                </span>
+              </div>
+
+              <div className="p-1.5 px-2 rounded-lg bg-white/90 border border-amber-200/50 shadow-2xs">
+                <span className="text-stone-400 block text-[9px] uppercase font-semibold">Contact Mobile</span>
+                <span className="font-mono font-medium text-stone-900 flex items-center gap-1.5 mt-0.5 truncate" title={custPhone}>
+                  <Phone className="w-3 h-3 text-stone-500 shrink-0" />
+                  <span className="truncate">{custPhone}</span>
+                </span>
+              </div>
+
+              <div className="p-1.5 px-2 rounded-lg bg-white/90 border border-amber-200/50 shadow-2xs">
+                <span className="text-stone-400 block text-[9px] uppercase font-semibold">
+                  {isForSomeoneElse ? 'Account Owner' : 'Account Email'}
+                </span>
+                <span className="font-medium text-stone-800 flex items-center gap-1.5 mt-0.5 truncate" title={isForSomeoneElse ? `${accountOwner} (${custEmail})` : custEmail}>
+                  <Mail className="w-3 h-3 text-stone-500 shrink-0" />
+                  <span className="truncate font-mono text-[11px]">
+                    {isForSomeoneElse ? `${accountOwner || custEmail}` : custEmail}
+                  </span>
+                </span>
+              </div>
+
+              <div className="p-1.5 px-2 rounded-lg bg-white/90 border border-amber-200/50 shadow-2xs">
+                <span className="text-stone-400 block text-[9px] uppercase font-semibold">Spiritual Guide</span>
+                <span className="font-semibold text-amber-900 flex items-center gap-1.5 mt-0.5 truncate" title={guideName}>
+                  <ShieldCheck className="w-3 h-3 text-amber-700 shrink-0" />
+                  <span className="truncate">{guideName}</span>
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Current Status & Transitions */}
-          <div className="p-5 rounded-2xl border border-amber-200 bg-amber-50/40 space-y-4">
-            <div className="flex items-center justify-between">
+          {/* Row 3: Dakshina / Payment Status & Google Meet Access Side-by-Side */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {/* Dakshina & Payment Status */}
+            <div className="p-2.5 rounded-xl bg-amber-50/40 border border-amber-200/70 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">
-                  Current Lifecycle Status
+                <span className="text-[10px] font-bold text-amber-900/80 uppercase tracking-wider block">
+                  Dakshina &amp; Payment
                 </span>
-                <span
-                  className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold ${
-                    activeBooking.status === 'CONFIRMED'
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                      : activeBooking.status === 'COMPLETED'
-                      ? 'bg-blue-100 text-blue-800 border border-blue-300'
-                      : activeBooking.status === 'CANCELLED'
-                      ? 'bg-rose-100 text-rose-800 border border-rose-300'
-                      : 'bg-amber-100 text-amber-800 border border-amber-300'
-                  }`}
-                >
-                  ● {activeBooking.status}
-                </span>
+                <div className="mt-1 flex items-baseline gap-2">
+                  <span className="font-bold text-base text-[#5B0D15]">
+                    {activeBooking.totalCost === 0 ? 'Complimentary' : `₹${Number(activeBooking.totalCost).toLocaleString('en-IN')}`}
+                  </span>
+                </div>
               </div>
-
-              {activeBooking.status === 'COMPLETED' || activeBooking.status === 'CANCELLED' ? (
-                <span className="text-xs text-stone-500 italic bg-stone-100 px-3 py-1.5 rounded-lg border border-stone-200">
-                  Terminal state (Concluded)
-                </span>
-              ) : null}
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  activeBooking.status === 'PENDING_PAYMENT' || activeBooking.status === 'PENDING'
+                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                    : activeBooking.status === 'CANCELLED'
+                    ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                    : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                }`}
+              >
+                {activeBooking.status === 'PENDING_PAYMENT' || activeBooking.status === 'PENDING'
+                  ? 'Pending Payment'
+                  : activeBooking.status === 'CANCELLED'
+                  ? 'Cancelled'
+                  : 'Paid / Confirmed'}
+              </span>
             </div>
 
-            {/* Status Update Note Input */}
-            {activeBooking.status !== 'COMPLETED' && activeBooking.status !== 'CANCELLED' && (
-              <div>
-                <label className="block text-xs font-medium text-stone-700 mb-1">
-                  Update Notes (Optional remarks for this status transition):
-                </label>
-                <input
-                  type="text"
-                  value={statusNotes}
-                  onChange={(e) => setStatusNotes(e.target.value)}
-                  placeholder="e.g. Consultation conducted via phone call, or client requested reschedule"
-                  className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-[#5B0D15]"
-                />
+            {/* Google Meet Consultation Access */}
+            <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-300/80 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1">
+                  <Video className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>Google Meet Room</span>
+                </span>
+                <p className="text-[11px] text-emerald-800 mt-0.5">
+                  Extension: ₹50/min after 30 mins
+                </p>
               </div>
+
+              <a
+                href={meetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 shrink-0 transition-transform active:scale-95 cursor-pointer"
+                title={`Open Meeting Room (${meetUrl})`}
+              >
+                <Video className="w-3.5 h-3.5" />
+                <span>Open Meeting</span>
+                <ExternalLink className="w-3 h-3 opacity-80" />
+              </a>
+            </div>
+          </div>
+
+          {/* Genuine Customer Remarks (Hidden if empty or auto-metadata; compact expandable button if present) */}
+          {genuineRemark && (
+            <div className="p-2 rounded-xl bg-amber-50/40 border border-amber-200/60">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-amber-900/80 uppercase tracking-wider flex items-center gap-1">
+                  <MessageSquare className="w-3 h-3 text-amber-700" />
+                  <span>Customer Remarks</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setExpandNotes(!expandNotes)}
+                  className="text-[10px] font-semibold text-amber-800 hover:text-amber-950 flex items-center gap-0.5 cursor-pointer"
+                >
+                  {expandNotes ? (
+                    <>
+                      <span>Hide</span>
+                      <ChevronUp className="w-3 h-3" />
+                    </>
+                  ) : (
+                    <>
+                      <span>View ({genuineRemark.length > 50 ? `${genuineRemark.slice(0, 45)}...` : 'details'})</span>
+                      <ChevronDown className="w-3 h-3" />
+                    </>
+                  )}
+                </button>
+              </div>
+              {expandNotes && (
+                <p className="mt-1 font-mono text-[11px] text-stone-800 bg-white/90 p-2 rounded-lg border border-amber-200/50">
+                  {genuineRemark}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Row 4: Lifecycle Status & Transition Actions */}
+          <div className="p-3 rounded-xl border border-amber-200 bg-amber-50/40 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-stone-600 uppercase tracking-wider">
+                Lifecycle Actions
+              </span>
+              {isTerminalState && (
+                <span className="text-[10px] text-stone-500 italic bg-stone-100 px-2 py-0.5 rounded border border-stone-200">
+                  Terminal State (Concluded)
+                </span>
+              )}
+            </div>
+
+            {/* Status Transition Notes Input (Starts empty with concise placeholder) */}
+            {!isTerminalState && (
+              <input
+                type="text"
+                value={statusNotes}
+                onChange={(e) => setStatusNotes(e.target.value)}
+                placeholder="Optional notes for this update (e.g. Conducted via phone call, reschedule requested)..."
+                className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 bg-white text-xs focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
+              />
             )}
 
             {/* Valid Transition Action Buttons */}
-            {activeBooking.status === 'PENDING' && (
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <button
-                  disabled={updatingStatus}
-                  onClick={() => onTransitionStatus('CONFIRMED')}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  {updatingStatus ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                  Confirm Appointment
-                </button>
-                <button
-                  disabled={updatingStatus}
-                  onClick={() => onTransitionStatus('CANCELLED')}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  Cancel Booking
-                </button>
-              </div>
-            )}
+            <div className="flex flex-wrap items-center gap-2 pt-0.5">
+              {(activeBooking.status === 'PENDING' || activeBooking.status === 'PENDING_PAYMENT') && (
+                <>
+                  <button
+                    type="button"
+                    disabled={updatingStatus}
+                    onClick={() => onTransitionStatus('CONFIRMED')}
+                    className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {updatingStatus ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                    <span>Confirm Appointment</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={updatingStatus}
+                    onClick={() => onTransitionStatus('CANCELLED')}
+                    className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Cancel Booking</span>
+                  </button>
+                </>
+              )}
 
-            {activeBooking.status === 'CONFIRMED' && (
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <button
-                  disabled={updatingStatus}
-                  onClick={() => onTransitionStatus('COMPLETED')}
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  {updatingStatus ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                  Mark as Completed
-                </button>
-                <button
-                  disabled={updatingStatus}
-                  onClick={() => onTransitionStatus('CANCELLED')}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  Cancel Appointment
-                </button>
-              </div>
-            )}
+              {activeBooking.status === 'CONFIRMED' && (
+                <>
+                  <button
+                    type="button"
+                    disabled={updatingStatus}
+                    onClick={() => onTransitionStatus('COMPLETED')}
+                    className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {updatingStatus ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                    <span>Mark as Completed</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={updatingStatus}
+                    onClick={() => onTransitionStatus('CANCELLED')}
+                    className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Cancel Appointment</span>
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Modal Footer */}
-        <div className="px-6 py-4 bg-stone-50 border-t border-stone-200 flex justify-end">
+        {/* Modal Sticky Compact Footer */}
+        <div className="px-4 py-2 bg-stone-50 border-t border-stone-200 flex justify-end shrink-0">
           <button
+            type="button"
             onClick={onClose}
-            className="px-5 py-2 rounded-xl border border-stone-300 bg-white hover:bg-stone-100 text-stone-700 text-xs font-semibold cursor-pointer"
+            className="px-4 py-1 rounded-lg border border-stone-300 bg-white hover:bg-stone-100 text-stone-700 text-xs font-semibold cursor-pointer transition-colors"
           >
             Close
           </button>
@@ -292,3 +452,5 @@ export default function BookingLifecycleModal({
     </div>
   );
 }
+
+

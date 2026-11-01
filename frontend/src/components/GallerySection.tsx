@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Eye, MapPin, Calendar, Sparkles, ArrowRight, X, ChevronLeft, ChevronRight, Flame, Tv, Award, Compass } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useScrollLock } from '../lib/scrollLock';
 
 export interface GalleryPhoto {
   id: string;
@@ -177,6 +178,9 @@ export const GallerySection: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lightboxIndex, filteredPhotos.length]);
+
+  // Lock body scroll and prevent background scroll chaining for lightbox
+  useScrollLock(lightboxIndex !== null);
 
   const activePhoto = lightboxIndex !== null ? filteredPhotos[lightboxIndex] : null;
 
