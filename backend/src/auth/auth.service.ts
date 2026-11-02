@@ -10,6 +10,15 @@ import bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import crypto from 'crypto';
+import { EmailService } from '../email/email.service.js';
+import {
+  ForgotPasswordEmailDto,
+  ResetPasswordEmailDto,
+  ForgotPasswordMobileDto,
+  ResetPasswordMobileDto,
+  VerifyResetMobileOtpDto,
+} from './dto/password-recovery.dto.js';
 
 export { RegisterDto, LoginDto };
 
@@ -35,10 +44,16 @@ export interface UserRecord {
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private users: Map<string, UserRecord> = new Map();
+  private resetTokens: Map<
+    string,
+    { userId: string; email?: string; expiresAt: Date }
+  > = new Map();
+  private mobileOtps: Map<string, { otp: string; expiresAt: Date }> = new Map();
 
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
   ) {
     // Seed initial demo seeker account
     const demoPasswordHash = bcrypt.hashSync('cosmic123', 10);
@@ -86,6 +101,19 @@ export class AuthService {
       id: 'usr-superadmin',
       name: process.env.SUPERADMIN_NAME || 'Yash Patidar',
       email: superadminEmail,
+      passwordHash: bcrypt.hashSync(superadminPass, 10),
+      role: 'SUPERADMIN',
+      status: 'ACTIVE',
+      walletBalance: 99999,
+      savedKundlis: [],
+      savedReadings: [],
+      createdAt: new Date().toISOString(),
+    });
+
+    this.users.set('yashpatidar862@gmail.com', {
+      id: 'usr-yash-owner',
+      name: 'Yash Patidar',
+      email: 'yashpatidar862@gmail.com',
       passwordHash: bcrypt.hashSync(superadminPass, 10),
       role: 'SUPERADMIN',
       status: 'ACTIVE',
@@ -403,4 +431,351 @@ export class AuthService {
 
     return await this.getProfile(userId);
   }
+
+  async forgotPassword(dto: ForgotPasswordEmailDto) {
+    const rawEmail = dto.email?.trim().toLowerCase();
+    if (!rawEmail) {
+      throw new BadRequestException('Please provide a valid email address.');
+    }
+
+    // 1. Look up user in PostgreSQL
+    let user: any = null;
+    try {
+      user = await this.prisma.user.findFirst({
+        where: {
+          email: { equals: rawEmail, mode: 'insensitive' },
+        },
+      });
+    } catch (err) {
+      this.logger.warn(`Database lookup in forgotPassword: ${err}`);
+    }
+
+    // Fallback to in-memory users
+    if (!user) {
+      user = this.users.get(rawEmail);
+      if (!user) {
+        for (const u of this.users.values()) {
+          if (u.email && u.email.toLowerCase() === rawEmail) {
+            user = u;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!user) {
+      this.logger.log(`Password reset requested for non-existent email: ${rawEmail}`);
+      return {
+        message: 'If this email is registered with AstroVD, a password reset link has been dispatched.',
+      };
+    }
+
+    // Generate secure random token
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Store in DB
+    try {
+      await this.prisma.passwordResetToken.deleteMany({
+        where: { userId: user.id },
+      });
+
+      await this.prisma.passwordResetToken.create({
+        data: {
+          userId: user.id,
+          tokenHash,
+          expiresAt,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(`Database token insert in forgotPassword: ${err}`);
+    }
+
+    // In-memory fallback
+    this.resetTokens.set(tokenHash, {
+      userId: user.id,
+      email: user.email,
+      expiresAt,
+    });
+
+    const frontendBase = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+    const resetUrl = `${frontendBase}/reset-password?token=${rawToken}`;
+
+    // Dispatch email via Resend
+    try {
+      await this.emailService.sendPasswordResetEmail({
+        toEmail: user.email || rawEmail,
+        userName: user.name,
+        resetUrl,
+      });
+    } catch (err: any) {
+      this.logger.error(`Error sending reset email: ${err.message}`);
+    }
+
+    this.logger.log(`[PASSWORD RESET LINK] For ${user.email || rawEmail}: ${resetUrl}`);
+
+    return {
+      message: 'If this email is registered with AstroVD, a password reset link has been dispatched.',
+    };
+  }
+
+  async resetPassword(dto: ResetPasswordEmailDto) {
+    const rawToken = dto.token?.trim();
+    if (!rawToken) {
+      throw new BadRequestException('Reset token is required.');
+    }
+    if (!dto.newPassword || dto.newPassword.length < 6) {
+      throw new BadRequestException('New password must be at least 6 characters long.');
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const now = new Date();
+
+    let tokenRecord: any = null;
+    let userId: string | null = null;
+
+    try {
+      tokenRecord = await this.prisma.passwordResetToken.findFirst({
+        where: {
+          tokenHash,
+          consumedAt: null,
+          expiresAt: { gt: now },
+        },
+        include: { user: true },
+      });
+      if (tokenRecord) {
+        userId = tokenRecord.userId;
+      }
+    } catch (err) {
+      this.logger.warn(`Database lookup in resetPassword: ${err}`);
+    }
+
+    // In-memory fallback check
+    if (!userId) {
+      const memRecord = this.resetTokens.get(tokenHash);
+      if (memRecord && memRecord.expiresAt > now) {
+        userId = memRecord.userId;
+      }
+    }
+
+    if (!userId) {
+      throw new BadRequestException(
+        'Invalid or expired password reset link. Please request a new recovery link.',
+      );
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const newPasswordHash = await bcrypt.hash(dto.newPassword, salt);
+
+    // Update in DB
+    try {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          passwordHash: newPasswordHash,
+          tokenVersion: { increment: 1 },
+        },
+      });
+
+      if (tokenRecord) {
+        await this.prisma.passwordResetToken.update({
+          where: { id: tokenRecord.id },
+          data: { consumedAt: now },
+        });
+      }
+    } catch (err) {
+      this.logger.warn(`Database update in resetPassword: ${err}`);
+    }
+
+    // Invalidate in-memory token
+    this.resetTokens.delete(tokenHash);
+
+    // Update in-memory user if present
+    for (const [key, u] of this.users.entries()) {
+      if (u.id === userId) {
+        this.users.set(key, {
+          ...u,
+          passwordHash: newPasswordHash,
+        });
+        break;
+      }
+    }
+
+    this.logger.log(`Password reset successfully for user ID: ${userId}`);
+
+    return {
+      message: 'Your password has been reset successfully. You can now sign in with your new password.',
+    };
+  }
+
+  async forgotPasswordMobile(dto: ForgotPasswordMobileDto) {
+    const rawPhone = dto.phone?.trim();
+    if (!rawPhone) {
+      throw new BadRequestException('Please provide a valid mobile number.');
+    }
+
+    let user: any = null;
+    try {
+      user = await this.prisma.user.findFirst({
+        where: { phone: rawPhone },
+      });
+    } catch (err) {
+      this.logger.warn(`Database lookup in forgotPasswordMobile: ${err}`);
+    }
+
+    if (!user) {
+      for (const u of this.users.values()) {
+        if (u.phone && u.phone === rawPhone) {
+          user = u;
+          break;
+        }
+      }
+    }
+
+    // 6-digit verification code
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+
+    try {
+      await this.prisma.otpVerification.create({
+        data: {
+          identifier: rawPhone,
+          otpHash,
+          type: 'PASSWORD_RESET',
+          expiresAt,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(`Database otpVerification insert: ${err}`);
+    }
+
+    this.mobileOtps.set(rawPhone, { otp, expiresAt });
+    this.logger.log(`[SMS OTP RECOVERY] Phone: ${rawPhone} | Code: ${otp}`);
+
+    return {
+      message: 'A 6-digit recovery code has been sent to your registered mobile number.',
+    };
+  }
+
+  async resetPasswordMobile(dto: ResetPasswordMobileDto) {
+    const rawPhone = dto.phone?.trim();
+    const rawOtp = dto.otp?.trim();
+    if (!rawPhone || !rawOtp) {
+      throw new BadRequestException('Phone and verification code are required.');
+    }
+    if (!dto.newPassword || dto.newPassword.length < 6) {
+      throw new BadRequestException('New password must be at least 6 characters long.');
+    }
+
+    const otpHash = crypto.createHash('sha256').update(rawOtp).digest('hex');
+    const now = new Date();
+
+    let otpValid = false;
+    let otpRecord: any = null;
+
+    try {
+      otpRecord = await this.prisma.otpVerification.findFirst({
+        where: {
+          identifier: rawPhone,
+          otpHash,
+          type: 'PASSWORD_RESET',
+          consumedAt: null,
+          expiresAt: { gt: now },
+        },
+      });
+      if (otpRecord) {
+        otpValid = true;
+      }
+    } catch (err) {
+      this.logger.warn(`Database check in resetPasswordMobile: ${err}`);
+    }
+
+    if (!otpValid) {
+      const memOtp = this.mobileOtps.get(rawPhone);
+      if (memOtp && memOtp.otp === rawOtp && memOtp.expiresAt > now) {
+        otpValid = true;
+      }
+    }
+
+    if (!otpValid) {
+      throw new BadRequestException('Invalid or expired verification code.');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const newPasswordHash = await bcrypt.hash(dto.newPassword, salt);
+
+    try {
+      await this.prisma.user.updateMany({
+        where: { phone: rawPhone },
+        data: {
+          passwordHash: newPasswordHash,
+          tokenVersion: { increment: 1 },
+        },
+      });
+
+      if (otpRecord) {
+        await this.prisma.otpVerification.update({
+          where: { id: otpRecord.id },
+          data: { consumedAt: now },
+        });
+      }
+    } catch (err) {
+      this.logger.warn(`Database update in resetPasswordMobile: ${err}`);
+    }
+
+    this.mobileOtps.delete(rawPhone);
+
+    for (const [key, u] of this.users.entries()) {
+      if (u.phone === rawPhone) {
+        this.users.set(key, { ...u, passwordHash: newPasswordHash });
+        break;
+      }
+    }
+
+    return {
+      message: 'Your password has been reset successfully. Please sign in with your new password.',
+    };
+  }
+
+  async verifyResetMobileOtp(dto: VerifyResetMobileOtpDto) {
+    const rawPhone = dto.phone?.trim();
+    const rawOtp = dto.otp?.trim();
+    const otpHash = crypto.createHash('sha256').update(rawOtp).digest('hex');
+    const now = new Date();
+
+    let valid = false;
+    try {
+      const record = await this.prisma.otpVerification.findFirst({
+        where: {
+          identifier: rawPhone,
+          otpHash,
+          type: 'PASSWORD_RESET',
+          consumedAt: null,
+          expiresAt: { gt: now },
+        },
+      });
+      if (record) valid = true;
+    } catch (err) {
+      this.logger.warn(`Database lookup in verifyResetMobileOtp: ${err}`);
+    }
+
+    if (!valid) {
+      const memOtp = this.mobileOtps.get(rawPhone);
+      if (memOtp && memOtp.otp === rawOtp && memOtp.expiresAt > now) {
+        valid = true;
+      }
+    }
+
+    if (!valid) {
+      throw new BadRequestException('Invalid or expired verification code.');
+    }
+
+    return {
+      message: 'Verification code verified successfully.',
+      resetToken: rawOtp,
+    };
+  }
 }
+

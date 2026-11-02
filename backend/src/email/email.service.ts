@@ -127,4 +127,78 @@ export class EmailService {
       return false;
     }
   }
+
+  async sendPasswordResetEmail(data: {
+    toEmail: string;
+    userName?: string;
+    resetUrl: string;
+  }): Promise<boolean> {
+    const from = process.env.EMAIL_FROM || 'AstroVD <onboarding@resend.dev>';
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Reset Your AstroVD Password</title>
+</head>
+<body style="font-family: 'Georgia', serif; background-color: #FAF7F2; margin: 0; padding: 24px; color: #2A1810;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; border: 1px solid #E6D5BC; box-shadow: 0 10px 25px rgba(91,13,21,0.08);">
+    <tr>
+      <td style="background: linear-gradient(135deg, #5B0D15 0%, #7B121C 100%); padding: 32px 24px; text-align: center;">
+        <h1 style="color: #F8E7C9; margin: 0 0 6px 0; font-size: 24px; letter-spacing: 1px;">AstroVD</h1>
+        <p style="color: #FAF7F2; margin: 0; font-size: 13px; font-family: sans-serif; text-transform: uppercase; letter-spacing: 2px;">Sacred Vedic Sanctuary</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 32px 28px;">
+        <h2 style="font-size: 20px; color: #5B0D15; margin-top: 0;">Namaste, ${data.userName || 'Devotee'} 🙏</h2>
+        <p style="font-size: 14px; line-height: 1.6; color: #524741; font-family: sans-serif;">
+          We received a request to recover access to your sacred AstroVD account associated with <strong>${data.toEmail}</strong>.
+        </p>
+        <p style="font-size: 14px; line-height: 1.6; color: #524741; font-family: sans-serif;">
+          Click the sacred button below to establish a new password for your account. This link is valid for <strong>1 hour</strong>:
+        </p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${data.resetUrl}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #7B121C 0%, #5B0D15 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 50px; font-weight: bold; font-size: 14px; font-family: sans-serif; box-shadow: 0 4px 14px rgba(91,13,21,0.3);">
+            🔑 Reset Account Password
+          </a>
+          <p style="font-size: 11px; color: #8C7E77; margin-top: 12px; font-family: sans-serif;">
+            Or copy and paste this link in your browser: <br>
+            <a href="${data.resetUrl}" style="color: #5B0D15; word-break: break-all;">${data.resetUrl}</a>
+          </p>
+        </div>
+        <p style="font-size: 12px; color: #7D6B62; font-family: sans-serif; line-height: 1.5;">
+          If you did not request a password reset, you can safely ignore this email. Your account remains completely secure.
+        </p>
+        <p style="font-size: 13px; color: #5B0D15; margin-top: 24px; font-weight: bold;">
+          Har Har Mahadev,<br>
+          The AstroVD Team
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+
+    try {
+      if (this.resend) {
+        const result = await this.resend.emails.send({
+          from,
+          to: data.toEmail,
+          subject: 'Reset Your AstroVD Account Password',
+          html: htmlContent,
+        });
+        this.logger.log(`Password reset email sent to ${data.toEmail}. Resend ID: ${result.data?.id}`);
+        return true;
+      } else {
+        this.logger.log(`[SIMULATED EMAIL] To: ${data.toEmail} | Subject: Reset Password | URL: ${data.resetUrl}`);
+        return true;
+      }
+    } catch (error: any) {
+      this.logger.error(`Failed to send password reset email to ${data.toEmail}: ${error.message}`);
+      return false;
+    }
+  }
 }
+

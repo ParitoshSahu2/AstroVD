@@ -11,6 +11,9 @@ export interface ServiceCatalogueItem {
   badge?: string;
   isSpecial?: boolean;
   durationMinutes: number;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const SERVICES_CATALOGUE: ServiceCatalogueItem[] = [

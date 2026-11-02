@@ -102,17 +102,20 @@ model Astrologer {
 }
 
 model Booking {
-  id              String   @id @default(uuid())
-  userId          String
-  astrologerId    String
-  serviceType     String // "AUDIO", "VIDEO", "CHAT"
-  scheduledDate   String
-  scheduledTime   String
-  durationMinutes Int      @default(15)
-  totalCost       Float
-  status          String   @default("CONFIRMED") // "PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"
-  notes           String?
-  createdAt       DateTime @default(now())
+  id                      String   @id @default(uuid())
+  userId                  String
+  astrologerId            String
+  serviceType             String // "AUDIO", "VIDEO", "CHAT"
+  scheduledDate           String
+  scheduledTime           String
+  durationMinutes         Int      @default(15)
+  totalCost               Float
+  status                  String   @default("CONFIRMED") // "PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"
+  notes                   String?
+  customerName            String?
+  customerPhone           String?
+  isBookingForSomeoneElse Boolean  @default(false)
+  createdAt               DateTime @default(now())
 
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   astrologer Astrologer @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
@@ -120,6 +123,7 @@ model Booking {
   @@index([userId])
   @@index([astrologerId])
   @@index([scheduledDate])
+  @@index([customerPhone])
   @@index([astrologerId, scheduledDate, scheduledTime])
 }
 

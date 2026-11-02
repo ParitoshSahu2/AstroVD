@@ -1,13 +1,24 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+  Logger,
+} from '@nestjs/common';
 import {
   ProductItem,
   ProductsFilterDto,
   PaginatedProductsResponse,
 } from './products.types.js';
+import { PrismaService } from '../prisma/prisma.service.js';
+import type { JwtPayload } from '../auth/decorators/current-user.decorator.js';
+import { CreateProductDto } from './dto/create-product.dto.js';
+import { UpdateProductDto } from './dto/update-product.dto.js';
+import { ListProductsQueryDto } from './dto/list-products-query.dto.js';
 
-@Injectable()
-export class ProductsService {
-  private readonly products: ProductItem[] = [
+export const CANONICAL_PRODUCTS: ProductItem[] = [
     {
       id: 'tiger_eye',
       slug: 'tiger-eye',
@@ -827,6 +838,59 @@ export class ProductsService {
     },
   ];
 
+@Injectable()
+export class ProductsService {
+  private readonly logger = new Logger(ProductsService.name);
+  private readonly productsFilePath = path.resolve(process.cwd(), 'data', 'products.json');
+  private products: ProductItem[] = [];
+
+  constructor(private readonly prisma: PrismaService) {
+    this.initProductsCatalog();
+  }
+
+  private initProductsCatalog() {
+    try {
+      const dir = path.dirname(this.productsFilePath);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+      if (fs.existsSync(this.productsFilePath)) {
+        const raw = fs.readFileSync(this.productsFilePath, 'utf-8');
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const existingIds = new Set(parsed.map((p: any) => p.id));
+          const missing = CANONICAL_PRODUCTS.filter((c) => !existingIds.has(c.id));
+          this.products = [
+            ...parsed.map((p: any) => ({
+              ...p,
+              inStock: p.inStock !== undefined ? p.inStock : (p.stock !== undefined ? p.stock > 0 : true),
+            })),
+            ...missing,
+          ];
+          if (missing.length > 0) {
+            this.saveProductsCatalog();
+          }
+          return;
+        }
+      }
+
+      this.products = [...CANONICAL_PRODUCTS];
+      this.saveProductsCatalog();
+    } catch (e) {
+      this.logger.error('Failed to initialize products catalogue, falling back to canonical', e);
+      this.products = [...CANONICAL_PRODUCTS];
+    }
+  }
+
+  private saveProductsCatalog() {
+    try {
+      const dir = path.dirname(this.productsFilePath);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(this.productsFilePath, JSON.stringify(this.products, null, 2), 'utf-8');
+    } catch (e) {
+      this.logger.error('Failed to save products catalogue to disk', e);
+    }
+  }
+
   /**
    * Retrieves products with filters, search, pagination, and language localization (?lang=hi)
    */
@@ -1020,4 +1084,342 @@ export class ProductsService {
     }
     return item;
   }
+
+  /**
+   * Admin: List all products with search, category filtering, and inStock filtering
+   */
+  listAdminProducts(query: ListProductsQueryDto) {
+    let filtered = [...this.products];
+    const { category, search, inStock, page = 1, limit = 10 } = query;
+
+    if (category && category !== 'ALL') {
+      filtered = filtered.filter((p) => p.category.toLowerCase() === category.toLowerCase());
+    }
+
+    if (inStock && inStock !== 'ALL') {
+      const isStock = inStock === 'true';
+      filtered = filtered.filter((p) => p.inStock === isStock);
+    }
+
+    const searchTerm = (search || '').trim().toLowerCase();
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (p) =>
+          p.name.toLowerCase().includes(searchTerm) ||
+          p.nameHi.includes(searchTerm) ||
+          p.desc.toLowerCase().includes(searchTerm) ||
+          p.id.toLowerCase().includes(searchTerm) ||
+          p.slug.toLowerCase().includes(searchTerm),
+      );
+    }
+
+    const totalCount = filtered.length;
+    const totalPages = Math.ceil(totalCount / limit) || 1;
+    const safePage = Math.max(1, Math.min(page, totalPages));
+    const startIndex = (safePage - 1) * limit;
+    const paginatedItems = filtered.slice(startIndex, startIndex + limit);
+
+    return {
+      products: paginatedItems,
+      totalCount,
+      page: safePage,
+      limit,
+      totalPages,
+    };
+  }
+
+  /**
+   * Admin: Create new product with validation, slug generation, and audit logging
+   */
+  async createAdminProduct(actor: JwtPayload, dto: CreateProductDto, ipAddress?: string) {
+    const slug = (dto.name || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || `prod-${Date.now()}`;
+
+    const id = dto.id?.trim() || slug.replace(/-/g, '_');
+
+    // Duplicate check
+    const existing = this.products.find(
+      (p) => p.id.toLowerCase() === id.toLowerCase() || p.slug.toLowerCase() === slug.toLowerCase(),
+    );
+    if (existing) {
+      throw new ConflictException(`A product with ID '${id}' or slug '${slug}' already exists.`);
+    }
+
+    const price = Number(dto.price);
+    const originalPrice = dto.originalPrice ? Number(dto.originalPrice) : Math.round(price * 1.5);
+    const discountPercent = originalPrice > price
+      ? Math.round(((originalPrice - price) / originalPrice) * 100)
+      : 0;
+
+    const newProduct: ProductItem = {
+      id,
+      slug,
+      name: dto.name.trim(),
+      nameHi: dto.nameHi?.trim() || dto.name.trim(),
+      tag: dto.tag?.trim() || 'SACRED ENERGY • ENERGIZED',
+      tagHi: dto.tagHi?.trim() || 'पवित्र ऊर्जा • प्राण-प्रतिष्ठित',
+      desc: dto.desc.trim(),
+      descHi: dto.descHi?.trim() || dto.desc.trim(),
+      image: dto.image.trim(),
+      images: dto.images && dto.images.length > 0 ? dto.images : [dto.image.trim()],
+      category: dto.category.trim().toLowerCase(),
+      categoryLabel: dto.categoryLabel?.trim() || this.formatCategoryLabel(dto.category),
+      categoryLabelHi: dto.categoryLabelHi?.trim() || this.formatCategoryLabel(dto.category),
+      price,
+      priceFormatted: `₹${price.toLocaleString('en-IN')}`,
+      originalPrice,
+      originalPriceFormatted: `₹${originalPrice.toLocaleString('en-IN')}`,
+      discountPercent,
+      planet: dto.planet?.trim() || 'Vedic Astrology Alignment',
+      planetHi: dto.planetHi?.trim() || 'वैदिक ज्योतिष अनुरूप',
+      chakra: dto.chakra?.trim() || 'All Chakras',
+      chakraHi: dto.chakraHi?.trim() || 'सर्व चक्र',
+      mantra: dto.mantra?.trim() || 'ॐ नमः शिवाय',
+      dayToWear: dto.dayToWear?.trim() || 'Any auspicious morning after bath',
+      dayToWearHi: dto.dayToWearHi?.trim() || 'स्नान के पश्चात शुभ मुहूर्त में',
+      beadSize: dto.beadSize?.trim() || '8mm Natural Certified Beads',
+      beadSizeHi: dto.beadSizeHi?.trim() || '8 मिमी प्राकृतिक सिद्ध मनके',
+      rating: 5.0,
+      reviewsCount: 1,
+      inStock: dto.inStock !== undefined ? dto.inStock : dto.stock > 0,
+      stock: Number(dto.stock) || 0,
+      isFeatured: Boolean(dto.isFeatured),
+      benefits: dto.benefits && dto.benefits.length > 0 ? dto.benefits : ['Channels positive vibrational alignment', 'Energized by Varanasi Vedic Acharyas'],
+      benefitsHi: dto.benefitsHi && dto.benefitsHi.length > 0 ? dto.benefitsHi : ['सकारात्मक ऊर्जा का प्रवाह बढ़ाता है', 'काशी के वैदिक आचार्यों द्वारा प्राण-प्रतिष्ठित'],
+    };
+
+    this.products.unshift(newProduct);
+    this.saveProductsCatalog();
+
+    // Sync with Prisma Product table if active
+    try {
+      if (typeof (this.prisma as any).product?.create === 'function') {
+        await (this.prisma as any).product.create({
+          data: {
+            id: newProduct.id,
+            name: newProduct.name,
+            category: newProduct.category,
+            price: newProduct.price,
+            originalPrice: newProduct.originalPrice,
+            rating: newProduct.rating,
+            reviewCount: newProduct.reviewsCount,
+            inStock: newProduct.inStock,
+            stockCount: newProduct.stock,
+            image: newProduct.image,
+            description: newProduct.desc,
+          },
+        }).catch(() => null);
+      }
+    } catch {}
+
+    await this.logAdminAudit(actor, 'PRODUCT_CREATED', newProduct.id, {
+      name: newProduct.name,
+      price: newProduct.price,
+      stock: newProduct.stock,
+    }, ipAddress);
+
+    return newProduct;
+  }
+
+  /**
+   * Admin: Update product details and recalculate pricing / discount
+   */
+  async updateAdminProduct(actor: JwtPayload, id: string, dto: UpdateProductDto, ipAddress?: string) {
+    const idx = this.products.findIndex(
+      (p) => p.id.toLowerCase() === id.toLowerCase() || p.slug.toLowerCase() === id.toLowerCase(),
+    );
+    if (idx === -1) {
+      throw new NotFoundException(`Product with ID '${id}' not found.`);
+    }
+
+    const current = this.products[idx];
+    const price = dto.price !== undefined ? Number(dto.price) : current.price;
+    const originalPrice = dto.originalPrice !== undefined ? Number(dto.originalPrice) : current.originalPrice;
+    const discountPercent = originalPrice > price
+      ? Math.round(((originalPrice - price) / originalPrice) * 100)
+      : current.discountPercent;
+
+    const updated: ProductItem = {
+      ...current,
+      name: dto.name !== undefined ? dto.name.trim() : current.name,
+      nameHi: dto.nameHi !== undefined ? dto.nameHi.trim() : current.nameHi,
+      tag: dto.tag !== undefined ? dto.tag.trim() : current.tag,
+      tagHi: dto.tagHi !== undefined ? dto.tagHi.trim() : current.tagHi,
+      desc: dto.desc !== undefined ? dto.desc.trim() : current.desc,
+      descHi: dto.descHi !== undefined ? dto.descHi.trim() : current.descHi,
+      image: dto.image !== undefined ? dto.image.trim() : current.image,
+      images: dto.images !== undefined ? dto.images : current.images,
+      category: dto.category !== undefined ? dto.category.trim().toLowerCase() : current.category,
+      categoryLabel: dto.categoryLabel !== undefined ? dto.categoryLabel.trim() : current.categoryLabel,
+      categoryLabelHi: dto.categoryLabelHi !== undefined ? dto.categoryLabelHi.trim() : current.categoryLabelHi,
+      price,
+      priceFormatted: `₹${price.toLocaleString('en-IN')}`,
+      originalPrice,
+      originalPriceFormatted: `₹${originalPrice.toLocaleString('en-IN')}`,
+      discountPercent,
+      planet: dto.planet !== undefined ? dto.planet.trim() : current.planet,
+      planetHi: dto.planetHi !== undefined ? dto.planetHi.trim() : current.planetHi,
+      chakra: dto.chakra !== undefined ? dto.chakra.trim() : current.chakra,
+      chakraHi: dto.chakraHi !== undefined ? dto.chakraHi.trim() : current.chakraHi,
+      mantra: dto.mantra !== undefined ? dto.mantra.trim() : current.mantra,
+      dayToWear: dto.dayToWear !== undefined ? dto.dayToWear.trim() : current.dayToWear,
+      dayToWearHi: dto.dayToWearHi !== undefined ? dto.dayToWearHi.trim() : current.dayToWearHi,
+      beadSize: dto.beadSize !== undefined ? dto.beadSize.trim() : current.beadSize,
+      beadSizeHi: dto.beadSizeHi !== undefined ? dto.beadSizeHi.trim() : current.beadSizeHi,
+      stock: dto.stock !== undefined ? Number(dto.stock) : current.stock,
+      inStock: dto.inStock !== undefined ? dto.inStock : (dto.stock !== undefined ? Number(dto.stock) > 0 : current.inStock),
+      isFeatured: dto.isFeatured !== undefined ? Boolean(dto.isFeatured) : current.isFeatured,
+      benefits: dto.benefits !== undefined ? dto.benefits : current.benefits,
+      benefitsHi: dto.benefitsHi !== undefined ? dto.benefitsHi : current.benefitsHi,
+    };
+
+    this.products[idx] = updated;
+    this.saveProductsCatalog();
+
+    try {
+      if (typeof (this.prisma as any).product?.update === 'function') {
+        await (this.prisma as any).product.update({
+          where: { id: updated.id },
+          data: {
+            name: updated.name,
+            price: updated.price,
+            originalPrice: updated.originalPrice,
+            stockCount: updated.stock,
+            inStock: updated.inStock,
+            category: updated.category,
+            description: updated.desc,
+            image: updated.image,
+          },
+        }).catch(() => null);
+      }
+    } catch {}
+
+    await this.logAdminAudit(actor, 'PRODUCT_UPDATED', updated.id, {
+      name: updated.name,
+      price: updated.price,
+      stock: updated.stock,
+      inStock: updated.inStock,
+    }, ipAddress);
+
+    return updated;
+  }
+
+  /**
+   * Admin: Toggle product in-stock status
+   */
+  async toggleAdminProductStock(actor: JwtPayload, id: string, inStock: boolean, ipAddress?: string) {
+    const idx = this.products.findIndex(
+      (p) => p.id.toLowerCase() === id.toLowerCase() || p.slug.toLowerCase() === id.toLowerCase(),
+    );
+    if (idx === -1) {
+      throw new NotFoundException(`Product with ID '${id}' not found.`);
+    }
+
+    this.products[idx].inStock = inStock;
+    this.saveProductsCatalog();
+
+    try {
+      if (typeof (this.prisma as any).product?.update === 'function') {
+        await (this.prisma as any).product.update({
+          where: { id: this.products[idx].id },
+          data: { inStock },
+        }).catch(() => null);
+      }
+    } catch {}
+
+    await this.logAdminAudit(actor, 'PRODUCT_STOCK_TOGGLED', this.products[idx].id, {
+      inStock,
+    }, ipAddress);
+
+    return this.products[idx];
+  }
+
+  /**
+   * Admin: Safely delete product if not referenced by historical orders
+   */
+  async deleteAdminProduct(actor: JwtPayload, id: string, ipAddress?: string) {
+    const idx = this.products.findIndex(
+      (p) => p.id.toLowerCase() === id.toLowerCase() || p.slug.toLowerCase() === id.toLowerCase(),
+    );
+    if (idx === -1) {
+      throw new NotFoundException(`Product with ID '${id}' not found.`);
+    }
+
+    const prodId = this.products[idx].id;
+
+    // Check if referenced in Prisma OrderItem
+    try {
+      if (typeof (this.prisma as any).orderItem?.count === 'function') {
+        const orderCount = await (this.prisma as any).orderItem.count({
+          where: { productId: prodId },
+        });
+        if (orderCount > 0) {
+          throw new BadRequestException(
+            `Cannot delete product '${this.products[idx].name}'. It is referenced by ${orderCount} existing customer order record(s). Mark it out of stock instead to preserve historical records.`,
+          );
+        }
+      }
+    } catch (e: any) {
+      if (e instanceof BadRequestException) throw e;
+    }
+
+    const [deleted] = this.products.splice(idx, 1);
+    this.saveProductsCatalog();
+
+    try {
+      if (typeof (this.prisma as any).product?.delete === 'function') {
+        await (this.prisma as any).product.delete({
+          where: { id: prodId },
+        }).catch(() => null);
+      }
+    } catch {}
+
+    await this.logAdminAudit(actor, 'PRODUCT_DELETED', prodId, {
+      name: deleted.name,
+    }, ipAddress);
+
+    return { success: true, message: `Product '${deleted.name}' deleted successfully.` };
+  }
+
+  private formatCategoryLabel(cat: string): string {
+    switch (cat.toLowerCase()) {
+      case 'wealth':
+        return 'Wealth & Prosperity';
+      case 'protection':
+        return 'Protection & Nazar';
+      case 'love':
+        return 'Love & Peace';
+      case 'healing':
+        return 'Healing & Balance';
+      default:
+        return cat.charAt(0).toUpperCase() + cat.slice(1);
+    }
+  }
+
+  private async logAdminAudit(
+    actor: JwtPayload,
+    action: string,
+    targetId: string,
+    details: Record<string, any>,
+    ipAddress?: string,
+  ) {
+    try {
+      if (typeof (this.prisma as any).auditLog?.create === 'function') {
+        await (this.prisma as any).auditLog.create({
+          data: {
+            action,
+            actorId: actor?.sub || null,
+            actorEmail: actor?.email || 'admin@astrovd.com',
+            targetId,
+            details,
+            ipAddress: ipAddress || '127.0.0.1',
+          },
+        }).catch(() => null);
+      }
+    } catch {}
+  }
 }
+

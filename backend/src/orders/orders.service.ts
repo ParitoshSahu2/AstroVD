@@ -54,6 +54,38 @@ export class OrdersService {
 
     return this.prisma.$transaction(
       async (tx) => {
+        // Step 1b: Idempotency guard - prevent duplicate orders on retry or rapid double-clicks
+        const idempotencyKey = dto.idempotencyKey || dto.shippingAddress?.idempotencyKey;
+        if (idempotencyKey && typeof tx.order.findMany === 'function') {
+          try {
+            const recentOrders = await tx.order.findMany({
+              where: {
+                userId,
+                createdAt: { gte: new Date(Date.now() - 15 * 60 * 1000) },
+              },
+              include: {
+                items: {
+                  include: {
+                    product: true,
+                  },
+                },
+              },
+              orderBy: { createdAt: 'desc' },
+            });
+            const existing = recentOrders.find(
+              (o) => (o.shippingAddress as any)?.idempotencyKey === idempotencyKey,
+            );
+            if (existing) {
+              this.logger.log(
+                `[Idempotency] Returning existing order #${existing.id} for idempotency key "${idempotencyKey}".`,
+              );
+              return existing;
+            }
+          } catch (err: any) {
+            this.logger.warn(`Idempotency check non-fatal error: ${err.message}`);
+          }
+        }
+
         // Step 2: Batch product lookup (1 single database query instead of N sequential round-trips)
         let products: any[] = [];
         if (typeof tx.product.findMany === 'function') {
@@ -94,7 +126,7 @@ export class OrdersService {
         }
 
         // Step 5: Compute canonical line totals and order summary
-        let calculatedTotal = 0;
+        let calculatedSubtotal = 0;
         const lineItemsToCreate: Array<{
           productId: string;
           quantity: number;
@@ -105,7 +137,7 @@ export class OrdersService {
           const product = productMap.get(item.productId)!;
           const linePrice = product.price;
           const lineTotal = linePrice * item.quantity;
-          calculatedTotal += lineTotal;
+          calculatedSubtotal += lineTotal;
 
           lineItemsToCreate.push({
             productId: product.id,
@@ -113,6 +145,33 @@ export class OrdersService {
             price: linePrice,
           });
         }
+
+        // Server-side validation of discounts/coupons
+        let discountAmount = 0;
+        if (dto.couponCode) {
+          const normalizedCode = dto.couponCode.trim().toUpperCase();
+          if (normalizedCode === 'VEDIC10' || normalizedCode === 'EMOX10' || normalizedCode === 'SAVE10') {
+            discountAmount = Math.round(calculatedSubtotal * 0.1);
+          } else {
+            throw new BadRequestException(`Invalid coupon code '${dto.couponCode}'.`);
+          }
+        }
+
+        // Server-side validation of shipping charges
+        let shippingFee = 0;
+        if (dto.shippingFee !== undefined && dto.shippingFee !== null) {
+          const expectedShipping = calculatedSubtotal >= 1500 ? 0 : 99;
+          shippingFee = dto.shippingFee === expectedShipping ? expectedShipping : (dto.shippingFee > 0 ? 99 : 0);
+        }
+
+        // Server-side validation of Vedic Energization add-on
+        let energizationFee = 0;
+        if (dto.energizationFee !== undefined && dto.energizationFee !== null) {
+          energizationFee = dto.energizationFee > 0 ? 251 : 0;
+        }
+
+        const finalTotal = Math.max(0, calculatedSubtotal - discountAmount + shippingFee + energizationFee);
+        const calculatedTotal = Math.round(finalTotal * 100) / 100;
 
         // Step 6: Handle payment verification & determine order status
         const isWalletPayment = dto.paymentMethod === 'WALLET';
@@ -186,7 +245,15 @@ export class OrdersService {
               sankalpName: dto.shippingAddress.sankalpName?.trim() || undefined,
               sankalpGotra: dto.shippingAddress.sankalpGotra?.trim() || undefined,
               notes: dto.shippingAddress.notes?.trim() || undefined,
-              paymentMethod: isWalletPayment ? 'WALLET' : (dto.paymentMethod || 'PENDING_PAYMENT'),
+              idempotencyKey: idempotencyKey || undefined,
+              isDemoOrder: !isWalletPayment,
+              paymentMethod: isWalletPayment ? 'WALLET' : (dto.paymentMethod || 'DEMO_SIMULATED'),
+              paymentStatus: isWalletPayment ? 'PAID' : (dto.paymentMethod === 'cod' ? 'PENDING_DELIVERY' : 'PENDING_PAYMENT'),
+              subtotal: calculatedSubtotal,
+              discountAmount: discountAmount > 0 ? discountAmount : undefined,
+              couponCode: dto.couponCode ? dto.couponCode.trim().toUpperCase() : undefined,
+              shippingFee: shippingFee > 0 ? shippingFee : 0,
+              energizationFee: energizationFee > 0 ? energizationFee : undefined,
             },
             items: {
               create: lineItemsToCreate,
@@ -639,6 +706,56 @@ export class OrdersService {
     return {
       message: `Order status successfully transitioned from ${currentStatus} to ${targetStatus}.`,
       order: updatedOrder,
+    };
+  }
+
+  /**
+   * Permanently delete an order and cascade its items (Admin/Superadmin only).
+   * Records immutable audit log.
+   */
+  async deleteAdminOrder(actor: JwtPayload, orderId: string, ipAddress?: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: { select: { id: true, name: true, email: true, phone: true } },
+        items: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with ID '${orderId}' was not found.`);
+    }
+
+    // Cascade delete order (OrderItem records cascade automatically via Prisma relation onDelete: Cascade)
+    await this.prisma.order.delete({
+      where: { id: order.id },
+    });
+
+    // Record immutable audit log
+    try {
+      await this.prisma.auditLog.create({
+        data: {
+          action: 'ORDER_DELETED',
+          actorId: actor.sub,
+          actorEmail: actor.email,
+          targetId: order.id,
+          targetEmail: order.user?.email || null,
+          details: {
+            totalAmount: order.totalAmount,
+            status: order.status,
+            itemCount: order.items.length,
+          },
+          ipAddress: ipAddress || null,
+        },
+      });
+    } catch (auditErr: any) {
+      this.logger.warn(`Failed to record audit log for order deletion: ${auditErr.message}`);
+    }
+
+    return {
+      success: true,
+      message: `Order #${order.id.slice(0, 8)} has been permanently deleted from database.`,
+      orderId: order.id,
     };
   }
 }

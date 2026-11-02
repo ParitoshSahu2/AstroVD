@@ -7,6 +7,7 @@ import {
   Min,
   ValidateNested,
   ArrayMinSize,
+  IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -56,6 +57,10 @@ export class ShippingAddressDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsString()
+  idempotencyKey?: string;
 }
 
 export class CreateOrderDto {
@@ -72,4 +77,20 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   paymentMethod?: string;
+
+  @IsOptional()
+  @IsString()
+  idempotencyKey?: string;
+
+  @IsOptional()
+  @IsString()
+  couponCode?: string;
+
+  @IsOptional()
+  @IsNumber()
+  shippingFee?: number;
+
+  @IsOptional()
+  @IsNumber()
+  energizationFee?: number;
 }

@@ -16,6 +16,13 @@ import {
 import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import {
+  ForgotPasswordEmailDto,
+  ResetPasswordEmailDto,
+  ForgotPasswordMobileDto,
+  ResetPasswordMobileDto,
+  VerifyResetMobileOtpDto,
+} from './dto/password-recovery.dto.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
 import type { JwtPayload } from './decorators/current-user.decorator.js';
@@ -99,4 +106,65 @@ export class AuthController {
   async logout() {
     return { message: 'Logged out successfully' };
   }
+
+  @Post('forgot-password')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Request password reset link via email',
+    description: 'Generates a secure password reset token and dispatches reset link to registered email.',
+  })
+  async forgotPassword(@Body() dto: ForgotPasswordEmailDto) {
+    return await this.authService.forgotPassword(dto);
+  }
+
+  @Post('reset-password')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Reset password using email token',
+    description: 'Validates reset token and sets new password.',
+  })
+  async resetPassword(@Body() dto: ResetPasswordEmailDto) {
+    return await this.authService.resetPassword(dto);
+  }
+
+  @Post('forgot-password-mobile')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Request SMS OTP for password recovery',
+    description: 'Dispatches 6-digit numeric recovery code via SMS.',
+  })
+  async forgotPasswordMobile(@Body() dto: ForgotPasswordMobileDto) {
+    return await this.authService.forgotPasswordMobile(dto);
+  }
+
+  @Post('reset-password-mobile')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Reset password using mobile SMS OTP',
+    description: 'Validates 6-digit SMS OTP and sets new password.',
+  })
+  async resetPasswordMobile(@Body() dto: ResetPasswordMobileDto) {
+    return await this.authService.resetPasswordMobile(dto);
+  }
+
+  @Post('verify-reset-mobile-otp')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Verify mobile recovery code',
+    description: 'Validates 6-digit recovery code before setting new password.',
+  })
+  async verifyResetMobileOtp(@Body() dto: VerifyResetMobileOtpDto) {
+    return await this.authService.verifyResetMobileOtp(dto);
+  }
 }
+

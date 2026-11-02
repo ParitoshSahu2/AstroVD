@@ -621,4 +621,162 @@ describe('AppointmentsService', () => {
       ).rejects.toThrow(BadRequestException);
     });
   });
+
+  describe('Customer Details & Booking for Someone Else', () => {
+    it('should allow account owner Rahul to book for Amit with isBookingForSomeoneElse: true without overwriting account phone', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'user-uuid-rahul',
+        name: 'Rahul',
+        email: 'rahul@example.com',
+        phone: '+919876543210',
+        status: 'ACTIVE',
+      });
+      prisma.blockedDate.findUnique.mockResolvedValue(null);
+      prisma.appointmentSlot.findUnique.mockResolvedValue({
+        id: 'slot-1',
+        date: '2099-10-25',
+        startTime: '11:00 AM',
+        durationMinutes: 45,
+        isPublished: true,
+      });
+
+      const amitBooking = {
+        id: 'booking-amit-1',
+        userId: 'user-uuid-rahul',
+        astrologerId: 'ast-lead',
+        serviceType: 'astrological_consultation',
+        scheduledDate: '2099-10-25',
+        scheduledTime: '11:00 AM',
+        durationMinutes: 45,
+        totalCost: 2100,
+        status: 'CONFIRMED',
+        customerName: 'Amit',
+        customerPhone: '+919123456780',
+        isBookingForSomeoneElse: true,
+        notes: 'Service: ASTROLOGICAL CONSULTATION | Customer: Amit | Contact: +919123456780 | Booked for someone else by account owner: Rahul',
+        createdAt: new Date(),
+        astrologer: mockLeadAstrologer,
+        user: {
+          id: 'user-uuid-rahul',
+          name: 'Rahul',
+          email: 'rahul@example.com',
+          phone: '+919876543210',
+        },
+      };
+
+      prisma.$transaction.mockImplementation(async (callback) => {
+        const tx = {
+          booking: {
+            findFirst: vi.fn().mockResolvedValue(null),
+            create: vi.fn().mockResolvedValue(amitBooking),
+          },
+          user: {
+            findUnique: vi.fn(),
+            update: vi.fn(),
+          },
+        };
+        return await callback(tx);
+      });
+
+      const res = await service.bookAppointment(
+        { sub: 'user-uuid-rahul', email: 'rahul@example.com', name: 'Rahul', role: 'USER' },
+        {
+          serviceId: 'astrological_consultation',
+          scheduledDate: '2099-10-25',
+          scheduledTime: '11:00 AM',
+          customerName: 'Amit',
+          contactPhone: '9123456780',
+          isBookingForSomeoneElse: true,
+        },
+      );
+
+      expect(res.success).toBe(true);
+      expect(res.booking.customerName).toBe('Amit');
+      expect(res.booking.customerPhone).toBe('+919123456780');
+      expect(res.booking.isBookingForSomeoneElse).toBe(true);
+      expect(res.booking.customer.name).toBe('Amit');
+      expect(res.booking.customer.accountOwnerName).toBe('Rahul');
+    });
+
+    it('should reject booking for someone else when attendee customer name is empty', async () => {
+      await expect(
+        service.bookAppointment(
+          { sub: 'user-uuid-rahul', email: 'rahul@example.com', name: 'Rahul', role: 'USER' },
+          {
+            serviceId: 'astrological_consultation',
+            scheduledDate: '2099-10-25',
+            scheduledTime: '11:00 AM',
+            customerName: '',
+            contactPhone: '9123456780',
+            isBookingForSomeoneElse: true,
+          },
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should return attendee details in getCustomerBookings and getBookingById', async () => {
+      prisma.booking.findMany.mockResolvedValue([
+        {
+          id: 'b-amit',
+          userId: 'user-uuid-rahul',
+          serviceType: 'astrological_consultation',
+          scheduledDate: '2099-10-25',
+          scheduledTime: '11:00 AM',
+          durationMinutes: 45,
+          totalCost: 2100,
+          status: 'CONFIRMED',
+          customerName: 'Amit',
+          customerPhone: '+919123456780',
+          isBookingForSomeoneElse: true,
+          notes: 'Test notes',
+          createdAt: new Date(),
+          astrologer: mockLeadAstrologer,
+          user: {
+            id: 'user-uuid-rahul',
+            name: 'Rahul',
+            email: 'rahul@example.com',
+            phone: '+919876543210',
+          },
+        },
+      ]);
+
+      const myBookings = await service.getCustomerBookings('user-uuid-rahul');
+      expect(myBookings[0].customerName).toBe('Amit');
+      expect(myBookings[0].customerPhone).toBe('+919123456780');
+      expect(myBookings[0].isBookingForSomeoneElse).toBe(true);
+      expect(myBookings[0].accountOwnerName).toBe('Rahul');
+
+      prisma.booking.findUnique.mockResolvedValue({
+        id: 'b-amit',
+        userId: 'user-uuid-rahul',
+        serviceType: 'astrological_consultation',
+        scheduledDate: '2099-10-25',
+        scheduledTime: '11:00 AM',
+        durationMinutes: 45,
+        totalCost: 2100,
+        status: 'CONFIRMED',
+        customerName: 'Amit',
+        customerPhone: '+919123456780',
+        isBookingForSomeoneElse: true,
+        notes: 'Test notes',
+        createdAt: new Date(),
+        astrologer: mockLeadAstrologer,
+        user: {
+          id: 'user-uuid-rahul',
+          name: 'Rahul',
+          email: 'rahul@example.com',
+          phone: '+919876543210',
+        },
+      });
+
+      const detail = await service.getBookingById(
+        { sub: 'user-uuid-rahul', email: 'rahul@example.com', name: 'Rahul', role: 'USER' },
+        'b-amit',
+      );
+      expect(detail.customer.name).toBe('Amit');
+      expect(detail.customer.phone).toBe('+919123456780');
+      expect(detail.customer.accountOwnerName).toBe('Rahul');
+      expect(detail.isBookingForSomeoneElse).toBe(true);
+    });
+  });
 });

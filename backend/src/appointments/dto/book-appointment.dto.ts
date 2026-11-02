@@ -41,21 +41,36 @@ export class BookAppointmentDto {
   @IsIn(['video', 'call', 'in-person'])
   consultationType?: 'video' | 'call' | 'in-person';
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Contact phone number (E.164 or 10-digit format)',
     example: '+919826012345',
   })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  contactPhone!: string;
+  contactPhone?: string;
 
   @ApiPropertyOptional({
-    description: 'Seeker display name',
-    example: 'Rahul Sharma',
+    description: 'Customer contact phone number',
+    example: '+919826012345',
+  })
+  @IsOptional()
+  @IsString()
+  customerPhone?: string;
+
+  @ApiPropertyOptional({
+    description: 'Confirmed customer name who will attend consultation',
+    example: 'Amit Sharma',
   })
   @IsOptional()
   @IsString()
   customerName?: string;
+
+  @ApiPropertyOptional({
+    description: 'Whether booking is on behalf of someone else',
+    example: true,
+  })
+  @IsOptional()
+  isBookingForSomeoneElse?: boolean;
 
   @ApiPropertyOptional({
     description: 'Birth details (DOB, TOB, POB) and specific spiritual questions',

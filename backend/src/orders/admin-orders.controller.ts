@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Patch,
+  Delete,
   Param,
   Query,
   Body,
@@ -81,5 +82,22 @@ export class AdminOrdersController {
       dto,
       ipAddress,
     );
+  }
+
+  @Delete(':id')
+  @ApiOperation({
+    summary: 'Permanently delete a customer shopping order (Admin/Superadmin only)',
+    description: 'Deletes an order and its order items from database with audit logging.',
+  })
+  @ApiParam({ name: 'id', description: 'Order UUID' })
+  @ApiResponse({ status: 200, description: 'Order successfully deleted' })
+  @ApiResponse({ status: 404, description: 'Order not found' })
+  async deleteOrder(
+    @CurrentUser() actor: JwtPayload,
+    @Param('id') id: string,
+    @Req() req: Request,
+  ) {
+    const ipAddress = req.ip || req.socket?.remoteAddress;
+    return await this.ordersService.deleteAdminOrder(actor, id, ipAddress);
   }
 }

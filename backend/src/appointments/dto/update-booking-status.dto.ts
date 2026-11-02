@@ -3,14 +3,14 @@ import { IsString, IsNotEmpty, IsIn, IsOptional } from 'class-validator';
 
 export class UpdateBookingStatusDto {
   @ApiProperty({
-    description: 'Target booking status (PENDING, CONFIRMED, COMPLETED, CANCELLED)',
-    enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'],
+    description: 'Target booking status (PENDING, CONFIRMED, COMPLETED, CANCELLED, REJECTED)',
+    enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'REJECTED'],
     example: 'COMPLETED',
   })
   @IsString()
   @IsNotEmpty()
-  @IsIn(['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'], {
-    message: 'Status must be one of: PENDING, CONFIRMED, COMPLETED, CANCELLED',
+  @IsIn(['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'REJECTED'], {
+    message: 'Status must be one of: PENDING, CONFIRMED, COMPLETED, CANCELLED, REJECTED',
   })
   status!: string;
 
