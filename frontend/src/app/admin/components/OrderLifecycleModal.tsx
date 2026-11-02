@@ -20,6 +20,7 @@ import {
   Wallet,
   Settings,
   Calendar,
+  Trash2,
 } from 'lucide-react';
 import { getFulfillmentStatusInfo, getPaymentStatusInfo } from './AdminOrdersTab';
 
@@ -31,6 +32,7 @@ interface OrderLifecycleModalProps {
   orderStatusUpdating: boolean;
   onTransitionOrderStatus: (status: string) => void;
   onClose: () => void;
+  onDeleteOrder?: (order: any) => void;
 }
 
 export default function OrderLifecycleModal({
@@ -41,6 +43,7 @@ export default function OrderLifecycleModal({
   orderStatusUpdating,
   onTransitionOrderStatus,
   onClose,
+  onDeleteOrder,
 }: OrderLifecycleModalProps) {
   const [copiedText, setCopiedText] = useState<string | null>(null);
 
@@ -447,14 +450,26 @@ export default function OrderLifecycleModal({
                 )}
               </div>
 
-              {/* Close Button on right side */}
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-5 py-1.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 text-xs font-semibold cursor-pointer shadow-2xs transition-colors shrink-0 ml-auto"
-              >
-                Close
-              </button>
+              {/* Action buttons on right side */}
+              <div className="flex items-center gap-2 shrink-0 ml-auto">
+                {onDeleteOrder && (
+                  <button
+                    type="button"
+                    onClick={() => onDeleteOrder(activeOrder)}
+                    className="px-3.5 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold cursor-pointer shadow-2xs transition-colors flex items-center gap-1.5"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                    <span>Delete Order</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-5 py-1.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 text-xs font-semibold cursor-pointer shadow-2xs transition-colors shrink-0"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

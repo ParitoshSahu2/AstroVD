@@ -358,14 +358,22 @@ export default function DashboardPage() {
         </main>
       )}
 
-      {/* Authenticated Dashboard: Cohesive Vedic Seeker Portal */}
+      {/* Authenticated Dashboard: Sacred Seeker Portal */}
       {profile && (
-        <div className="flex-1 flex min-h-screen relative bg-[#F8F5EE] font-['Assistant',system-ui,-apple-system,sans-serif]">
-          {/* ===================== 1. FIXED LEFT SIDEBAR (DESKTOP) ===================== */}
-          <aside className="hidden md:flex w-64 bg-white text-stone-700 flex-col shrink-0 border-r border-stone-200/80 select-none fixed top-0 bottom-0 left-0 z-30 h-screen overflow-hidden shadow-2xs">
-            {/* Logo & Portal Badge */}
-            <div className="p-4 sm:p-5 border-b border-stone-100 flex flex-col gap-1.5">
-              <Link href="/" title="Return to AstroVD Homepage" className="flex items-center group">
+        <div className="flex-1 flex min-h-screen relative bg-[#F8F5EE]">
+          {/* ===================== 1. DESKTOP SIDEBAR (Admin-Styled Aesthetic) ===================== */}
+          <aside
+            data-lenis-prevent="true"
+            onWheel={(e) => e.stopPropagation()}
+            className="hidden md:flex w-64 bg-white text-stone-700 flex-col shrink-0 border-r border-stone-200/80 select-none fixed top-0 bottom-0 left-0 z-30 h-screen overflow-hidden overscroll-contain"
+          >
+            {/* Top Logo & Title */}
+            <div className="p-4 sm:p-5 border-b border-stone-150 flex items-center justify-between shrink-0">
+              <Link
+                href="/"
+                title="Return to AstroVD Homepage"
+                className="flex items-center group transition-all"
+              >
                 <Image
                   src="/astro-vd-logo.png"
                   alt="AstroVD"
@@ -375,54 +383,53 @@ export default function DashboardPage() {
                   className="h-8 sm:h-9 w-auto object-contain hover:opacity-95 transition-opacity"
                 />
               </Link>
-              <div className="pt-0.5">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/60 inline-flex items-center gap-1">
-                  🔱 {t('Sacred Seeker Portal', 'साधक डैशबोर्ड')}
-                </span>
-              </div>
             </div>
 
-            {/* Navigation Groups Container */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-3.5">
-              {/* Main: Dashboard Overview */}
+            {/* Nav Groups Container - fully scrollable with mouse wheel */}
+            <div
+              data-lenis-prevent="true"
+              onWheel={(e) => e.stopPropagation()}
+              className="flex-1 overflow-y-auto p-3.5 space-y-4 overscroll-contain select-none"
+            >
+              {/* Active Top Navigation: Dashboard */}
               <div>
                 <button
                   type="button"
                   onClick={() => setActiveTab('overview')}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition-all cursor-pointer ${
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                     activeTab === 'overview'
-                      ? 'bg-gradient-to-r from-amber-500/12 via-rose-500/6 to-transparent text-[#5B0D15] border-l-[3px] border-[#5B0D15] font-bold shadow-2xs'
-                      : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50/80 font-medium'
+                      ? 'bg-[#FDF2F4] text-[#8B1D2C]'
+                      : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                   }`}
                 >
-                  <Home className={`w-4 h-4 shrink-0 transition-colors ${activeTab === 'overview' ? 'text-[#5B0D15]' : 'text-stone-400'}`} />
+                  <Home className={`w-[18px] h-[18px] shrink-0 transition-colors ${activeTab === 'overview' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
                   <span>{t('Dashboard Overview', 'डैशबोर्ड अवलोकन')}</span>
                 </button>
               </div>
 
-              {/* Group 1: SERVICES & CONSULTATIONS */}
+              {/* Group 1: CONSULTATIONS & APPOINTMENTS */}
               <div>
-                <div className="px-3 mb-1 text-[10px] font-bold tracking-wider text-amber-900/60 uppercase">
+                <div className="px-3 mb-1.5 text-[11px] font-bold tracking-wider text-stone-400 uppercase">
                   {t('Consultations', 'परामर्श सेवा')}
                 </div>
                 <div className="space-y-0.5">
                   <button
                     type="button"
                     onClick={() => setActiveTab('consultations')}
-                    className={`w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] sm:text-sm font-medium transition-all cursor-pointer ${
                       activeTab === 'consultations'
-                        ? 'bg-gradient-to-r from-amber-500/12 via-rose-500/6 to-transparent text-[#5B0D15] border-l-[3px] border-[#5B0D15] font-bold shadow-2xs'
-                        : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50/80 font-medium'
+                        ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                        : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Calendar className={`w-4 h-4 shrink-0 transition-colors ${activeTab === 'consultations' ? 'text-[#5B0D15]' : 'text-stone-400'}`} />
+                      <Calendar className={`w-[18px] h-[18px] shrink-0 transition-colors ${activeTab === 'consultations' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
                       <span>{t('My Consultations', 'मेरे परामर्श')}</span>
                     </div>
                     {bookings.length > 0 && (
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
                         activeTab === 'consultations'
-                          ? 'bg-[#5B0D15] text-white shadow-2xs'
+                          ? 'bg-[#8B1D2C] text-white shadow-xs'
                           : 'bg-stone-100 text-stone-600'
                       }`}>
                         {bookings.length}
@@ -432,9 +439,9 @@ export default function DashboardPage() {
 
                   <Link
                     href="/appointment"
-                    className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50/80 transition-all"
+                    className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] sm:text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
                   >
-                    <Sparkles className="w-4 h-4 text-stone-400 shrink-0" />
+                    <Sparkles className="w-[18px] h-[18px] text-stone-400 shrink-0" />
                     <span>{t('Book Astrologer', 'परामर्श बुक करें')}</span>
                   </Link>
                 </div>
@@ -442,27 +449,27 @@ export default function DashboardPage() {
 
               {/* Group 2: SACRED STORE */}
               <div>
-                <div className="px-3 mb-1 text-[10px] font-bold tracking-wider text-amber-900/60 uppercase">
+                <div className="px-3 mb-1.5 text-[11px] font-bold tracking-wider text-stone-400 uppercase">
                   {t('Sacred Store', 'वैदिक स्टोर')}
                 </div>
                 <div className="space-y-0.5">
                   <button
                     type="button"
                     onClick={() => setActiveTab('orders')}
-                    className={`w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] sm:text-sm font-medium transition-all cursor-pointer ${
                       activeTab === 'orders'
-                        ? 'bg-gradient-to-r from-amber-500/12 via-rose-500/6 to-transparent text-[#5B0D15] border-l-[3px] border-[#5B0D15] font-bold shadow-2xs'
-                        : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50/80 font-medium'
+                        ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                        : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Package className={`w-4 h-4 shrink-0 transition-colors ${activeTab === 'orders' ? 'text-[#5B0D15]' : 'text-stone-400'}`} />
+                      <Package className={`w-[18px] h-[18px] shrink-0 transition-colors ${activeTab === 'orders' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
                       <span>{t('My Orders', 'मेरे ऑर्डर्स')}</span>
                     </div>
                     {orders.length > 0 && (
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
                         activeTab === 'orders'
-                          ? 'bg-[#5B0D15] text-white shadow-2xs'
+                          ? 'bg-[#8B1D2C] text-white shadow-xs'
                           : 'bg-stone-100 text-stone-600'
                       }`}>
                         {orders.length}
@@ -472,9 +479,9 @@ export default function DashboardPage() {
 
                   <Link
                     href="/products"
-                    className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50/80 transition-all"
+                    className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] sm:text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
                   >
-                    <ShoppingBag className="w-4 h-4 text-stone-400 shrink-0" />
+                    <ShoppingBag className="w-[18px] h-[18px] text-stone-400 shrink-0" />
                     <span>{t('Consecrated Store', 'सिद्ध उत्पाद स्टोर')}</span>
                   </Link>
                 </div>
@@ -482,66 +489,73 @@ export default function DashboardPage() {
 
               {/* Group 3: VEDIC ASTROLOGY */}
               <div>
-                <div className="px-3 mb-1 text-[10px] font-bold tracking-wider text-amber-900/60 uppercase">
+                <div className="px-3 mb-1.5 text-[11px] font-bold tracking-wider text-stone-400 uppercase">
                   {t('Kundli & Charts', 'कुंडली एवं पंचांग')}
                 </div>
                 <div className="space-y-0.5">
                   <button
                     type="button"
                     onClick={() => setActiveTab('kundli')}
-                    className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] sm:text-sm font-medium transition-all cursor-pointer ${
                       activeTab === 'kundli'
-                        ? 'bg-gradient-to-r from-amber-500/12 via-rose-500/6 to-transparent text-[#5B0D15] border-l-[3px] border-[#5B0D15] font-bold shadow-2xs'
-                        : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50/80 font-medium'
+                        ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                        : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                     }`}
                   >
-                    <Compass className={`w-4 h-4 shrink-0 transition-colors ${activeTab === 'kundli' ? 'text-[#5B0D15]' : 'text-stone-400'}`} />
+                    <Compass className={`w-[18px] h-[18px] shrink-0 transition-colors ${activeTab === 'kundli' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
                     <span>{t('Janam Kundli', 'जन्म कुंडली')}</span>
                   </button>
                 </div>
               </div>
 
-              {/* Group 4: PREFERENCES */}
+              {/* Group 4: PREFERENCES & SETTINGS */}
               <div>
-                <div className="px-3 mb-1 text-[10px] font-bold tracking-wider text-amber-900/60 uppercase">
+                <div className="px-3 mb-1.5 text-[11px] font-bold tracking-wider text-stone-400 uppercase">
                   {t('Preferences', 'सेटिंग्स')}
                 </div>
                 <div className="space-y-0.5">
                   <button
                     type="button"
                     onClick={() => setActiveTab('settings')}
-                    className={`w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs transition-all cursor-pointer ${
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] sm:text-sm font-medium transition-all cursor-pointer ${
                       activeTab === 'settings'
-                        ? 'bg-gradient-to-r from-amber-500/12 via-rose-500/6 to-transparent text-[#5B0D15] border-l-[3px] border-[#5B0D15] font-bold shadow-2xs'
-                        : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50/80 font-medium'
+                        ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                        : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                     }`}
                   >
-                    <Settings className={`w-4 h-4 shrink-0 transition-colors ${activeTab === 'settings' ? 'text-[#5B0D15]' : 'text-stone-400'}`} />
+                    <Settings className={`w-[18px] h-[18px] shrink-0 transition-colors ${activeTab === 'settings' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
                     <span>{t('Account Settings', 'खाता सेटिंग्स')}</span>
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Sidebar Footer: User Identity & Sign Out */}
-            <div className="p-3.5 border-t border-stone-100 bg-stone-50/70 flex items-center justify-between">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#5B0D15] to-[#7B121C] text-amber-200 font-bold text-xs flex items-center justify-center shrink-0 border border-amber-300/60 shadow-2xs">
-                  {getUserInitials(profile.name)}
+            {/* Sidebar User Identity & Sign Out with Spiritual Quote */}
+            <div className="p-3.5 border-t border-stone-150 bg-stone-50/40 flex flex-col gap-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#5B0D15] to-[#7B121C] text-amber-200 font-bold text-xs flex items-center justify-center shrink-0 border border-amber-300/60 shadow-xs">
+                    {getUserInitials(profile?.name || 'Seeker')}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[13px] font-bold text-stone-800 truncate">{profile?.name || 'Valued Seeker'}</div>
+                    <div className="text-[11px] text-stone-500 truncate">{profile?.email || 'seeker@astrovd.com'}</div>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-bold text-stone-800 truncate">{profile.name}</div>
-                  <div className="text-[10px] text-stone-500 truncate">{profile.email}</div>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="p-1.5 rounded-lg text-stone-400 hover:text-[#8B1D2C] hover:bg-[#FDF2F4] transition-colors cursor-pointer"
+                  title={t('Sign Out', 'लॉगआउट')}
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="p-1.5 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                title={t('Sign Out', 'लॉगआउट')}
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
+              <div className="text-center pt-1 border-t border-stone-200/50">
+                <p className="text-[11px] text-stone-400 font-serif leading-tight">
+                  Spiritual Solutions for a Better Tomorrow
+                </p>
+              </div>
             </div>
           </aside>
 
@@ -556,8 +570,8 @@ export default function DashboardPage() {
                 onClick={() => setMobileSidebarOpen(false)}
                 className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs modal-backdrop-contain"
               />
-              <div className="relative w-64 max-w-[80vw] bg-white text-stone-700 flex flex-col h-full shadow-2xl z-10 font-['Assistant',system-ui,-apple-system,sans-serif] modal-scroll-container">
-                <div className="p-4 flex items-center justify-between border-b border-stone-200">
+              <div className="relative w-64 max-w-[80vw] bg-white text-stone-700 flex flex-col h-full shadow-2xl z-10 modal-scroll-container">
+                <div className="p-4 sm:p-5 border-b border-stone-150 flex items-center justify-between">
                   <Image
                     src="/astro-vd-logo.png"
                     alt="AstroVD"
@@ -567,93 +581,155 @@ export default function DashboardPage() {
                   />
                   <button
                     onClick={() => setMobileSidebarOpen(false)}
-                    className="p-1 rounded-lg text-stone-400 hover:text-stone-700"
+                    className="p-1.5 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                <div data-lenis-prevent="true" className="flex-1 overflow-y-auto p-3 space-y-1.5 modal-scroll-container overscroll-contain">
+                <div data-lenis-prevent="true" className="flex-1 overflow-y-auto p-3.5 space-y-3 modal-scroll-container overscroll-contain">
                   <button
                     onClick={() => {
                       setActiveTab('overview');
                       setMobileSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition-all ${
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                       activeTab === 'overview'
-                        ? 'bg-gradient-to-r from-amber-500/12 via-rose-500/6 to-transparent text-[#5B0D15] border-l-[3px] border-[#5B0D15] font-bold'
-                        : 'text-stone-600 hover:bg-stone-50 font-medium'
+                        ? 'bg-[#FDF2F4] text-[#8B1D2C]'
+                        : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                     }`}
                   >
-                    <Home className="w-4 h-4" />
+                    <Home className={`w-[18px] h-[18px] shrink-0 ${activeTab === 'overview' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
                     <span>{t('Dashboard Overview', 'डैशबोर्ड अवलोकन')}</span>
                   </button>
 
-                  <button
-                    onClick={() => {
-                      setActiveTab('consultations');
-                      setMobileSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition-all ${
-                      activeTab === 'consultations'
-                        ? 'bg-gradient-to-r from-amber-500/12 via-rose-500/6 to-transparent text-[#5B0D15] border-l-[3px] border-[#5B0D15] font-bold'
-                        : 'text-stone-600 hover:bg-stone-50 font-medium'
-                    }`}
-                  >
-                    <Calendar className="w-4 h-4" />
-                    <span>{t('My Consultations', 'मेरे परामर्श')}</span>
-                  </button>
+                  <div className="pt-1">
+                    <div className="px-3 mb-1.5 text-[11px] font-bold tracking-wider text-stone-400 uppercase">
+                      {t('Consultations', 'परामर्श सेवा')}
+                    </div>
+                    <div className="space-y-0.5">
+                      <button
+                        onClick={() => {
+                          setActiveTab('consultations');
+                          setMobileSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] sm:text-sm font-medium transition-all ${
+                          activeTab === 'consultations'
+                            ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                            : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Calendar className={`w-[18px] h-[18px] shrink-0 ${activeTab === 'consultations' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
+                          <span>{t('My Consultations', 'मेरे परामर्श')}</span>
+                        </div>
+                        {bookings.length > 0 && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                            activeTab === 'consultations' ? 'bg-[#8B1D2C] text-white' : 'bg-stone-100 text-stone-600'
+                          }`}>
+                            {bookings.length}
+                          </span>
+                        )}
+                      </button>
+                      <Link
+                        href="/appointment"
+                        onClick={() => setMobileSidebarOpen(false)}
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] sm:text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all"
+                      >
+                        <Sparkles className="w-[18px] h-[18px] text-stone-400 shrink-0" />
+                        <span>{t('Book Astrologer', 'परामर्श बुक करें')}</span>
+                      </Link>
+                    </div>
+                  </div>
 
-                  <button
-                    onClick={() => {
-                      setActiveTab('orders');
-                      setMobileSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition-all ${
-                      activeTab === 'orders'
-                        ? 'bg-gradient-to-r from-amber-500/12 via-rose-500/6 to-transparent text-[#5B0D15] border-l-[3px] border-[#5B0D15] font-bold'
-                        : 'text-stone-600 hover:bg-stone-50 font-medium'
-                    }`}
-                  >
-                    <Package className="w-4 h-4" />
-                    <span>{t('My Orders', 'मेरे ऑर्डर्स')}</span>
-                  </button>
+                  <div className="pt-1">
+                    <div className="px-3 mb-1.5 text-[11px] font-bold tracking-wider text-stone-400 uppercase">
+                      {t('Sacred Store', 'वैदिक स्टोर')}
+                    </div>
+                    <div className="space-y-0.5">
+                      <button
+                        onClick={() => {
+                          setActiveTab('orders');
+                          setMobileSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-[13px] sm:text-sm font-medium transition-all ${
+                          activeTab === 'orders'
+                            ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                            : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Package className={`w-[18px] h-[18px] shrink-0 ${activeTab === 'orders' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
+                          <span>{t('My Orders', 'मेरे ऑर्डर्स')}</span>
+                        </div>
+                        {orders.length > 0 && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                            activeTab === 'orders' ? 'bg-[#8B1D2C] text-white' : 'bg-stone-100 text-stone-600'
+                          }`}>
+                            {orders.length}
+                          </span>
+                        )}
+                      </button>
+                      <Link
+                        href="/products"
+                        onClick={() => setMobileSidebarOpen(false)}
+                        className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] sm:text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all"
+                      >
+                        <ShoppingBag className="w-[18px] h-[18px] text-stone-400 shrink-0" />
+                        <span>{t('Consecrated Store', 'सिद्ध उत्पाद स्टोर')}</span>
+                      </Link>
+                    </div>
+                  </div>
 
-                  <button
-                    onClick={() => {
-                      setActiveTab('kundli');
-                      setMobileSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition-all ${
-                      activeTab === 'kundli'
-                        ? 'bg-gradient-to-r from-amber-500/12 via-rose-500/6 to-transparent text-[#5B0D15] border-l-[3px] border-[#5B0D15] font-bold'
-                        : 'text-stone-600 hover:bg-stone-50 font-medium'
-                    }`}
-                  >
-                    <Compass className="w-4 h-4" />
-                    <span>{t('Janam Kundli', 'जन्म कुंडली')}</span>
-                  </button>
+                  <div className="pt-1">
+                    <div className="px-3 mb-1.5 text-[11px] font-bold tracking-wider text-stone-400 uppercase">
+                      {t('Kundli & Charts', 'कुंडली एवं पंचांग')}
+                    </div>
+                    <div className="space-y-0.5">
+                      <button
+                        onClick={() => {
+                          setActiveTab('kundli');
+                          setMobileSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] sm:text-sm font-medium transition-all ${
+                          activeTab === 'kundli'
+                            ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                            : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                        }`}
+                      >
+                        <Compass className={`w-[18px] h-[18px] shrink-0 ${activeTab === 'kundli' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
+                        <span>{t('Janam Kundli', 'जन्म कुंडली')}</span>
+                      </button>
+                    </div>
+                  </div>
 
-                  <button
-                    onClick={() => {
-                      setActiveTab('settings');
-                      setMobileSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition-all ${
-                      activeTab === 'settings'
-                        ? 'bg-gradient-to-r from-amber-500/12 via-rose-500/6 to-transparent text-[#5B0D15] border-l-[3px] border-[#5B0D15] font-bold'
-                        : 'text-stone-600 hover:bg-stone-50 font-medium'
-                    }`}
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span>{t('Account Settings', 'खाता सेटिंग्स')}</span>
-                  </button>
+                  <div className="pt-1">
+                    <div className="px-3 mb-1.5 text-[11px] font-bold tracking-wider text-stone-400 uppercase">
+                      {t('Preferences', 'सेटिंग्स')}
+                    </div>
+                    <div className="space-y-0.5">
+                      <button
+                        onClick={() => {
+                          setActiveTab('settings');
+                          setMobileSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] sm:text-sm font-medium transition-all ${
+                          activeTab === 'settings'
+                            ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                            : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                        }`}
+                      >
+                        <Settings className={`w-[18px] h-[18px] shrink-0 ${activeTab === 'settings' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
+                        <span>{t('Account Settings', 'खाता सेटिंग्स')}</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="p-3 border-t border-stone-200">
+                <div className="p-3.5 border-t border-stone-150 bg-stone-50/40">
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-rose-50 text-rose-700 font-bold text-xs"
+                    className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-[#FDF2F4] text-[#8B1D2C] hover:bg-rose-100 font-semibold text-xs transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>{t('Sign Out', 'लॉगआउट')}</span>

@@ -91,7 +91,31 @@ export default function ServicesPage() {
     );
   };
 
-  const services = SERVICES_CATALOGUE;
+  const [dynamicServices, setDynamicServices] = useState<ServiceItem[]>(SERVICES_CATALOGUE);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchActiveServices = async () => {
+      try {
+        const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
+        const res = await fetch(`${backendUrl}/api/appointments/services`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && Array.isArray(data) && data.length > 0) {
+            setDynamicServices(data);
+          }
+        }
+      } catch (err) {
+        // Fallback to SERVICES_CATALOGUE preserves offline robustness
+      }
+    };
+    fetchActiveServices();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const services = dynamicServices;
 
   const categories = [
     {

@@ -17,11 +17,10 @@ import {
   MoreVertical,
   CheckCircle2,
   XCircle,
+  Trash2,
 } from 'lucide-react';
 import { SERVICES_CATALOGUE, formatGoogleMeetLink } from '../../../data/servicesData';
 import { getAuthToken } from '../../../lib/auth';
-
-
 
 interface AdminBookingsTabProps {
   bookingSearch: string;
@@ -40,6 +39,7 @@ interface AdminBookingsTabProps {
   bookingTotalPages: number;
   fetchBookingsList: (p: number) => void;
   onSelectBooking: (b: any) => void;
+  onDeleteBooking?: (b: any) => void;
 }
 
 export default function AdminBookingsTab({
@@ -59,6 +59,7 @@ export default function AdminBookingsTab({
   bookingTotalPages,
   fetchBookingsList,
   onSelectBooking,
+  onDeleteBooking,
 }: AdminBookingsTabProps) {
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
   const [activeMenuId, setActiveMenuId] = React.useState<string | null>(null);
@@ -203,6 +204,7 @@ export default function AdminBookingsTab({
               <option value="PENDING">PENDING</option>
               <option value="COMPLETED">COMPLETED</option>
               <option value="CANCELLED">CANCELLED</option>
+              <option value="REJECTED">REJECTED</option>
             </select>
           </div>
 
@@ -307,6 +309,7 @@ export default function AdminBookingsTab({
                     const isConfirmed = b.status === 'CONFIRMED';
                     const isCompleted = b.status === 'COMPLETED';
                     const isCancelled = b.status === 'CANCELLED';
+                    const isRejected = b.status === 'REJECTED';
                     const isPendingPayment = b.status === 'PENDING_PAYMENT' || b.status === 'PENDING';
 
                     const custName = b.customerName || b.customer?.name || 'Customer';
@@ -439,6 +442,8 @@ export default function AdminBookingsTab({
                             className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border whitespace-nowrap ${
                               isCancelled
                                 ? 'bg-rose-50 text-rose-700 border-rose-200/80'
+                                : isRejected
+                                ? 'bg-red-50 text-red-700 border-red-200/80'
                                 : isCompleted
                                 ? 'bg-sky-50 text-sky-700 border-sky-200/80'
                                 : isConfirmed
@@ -453,6 +458,8 @@ export default function AdminBookingsTab({
                               className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                                 isCancelled
                                   ? 'bg-rose-500'
+                                  : isRejected
+                                  ? 'bg-red-500'
                                   : isCompleted
                                   ? 'bg-sky-500'
                                   : isConfirmed
@@ -471,6 +478,8 @@ export default function AdminBookingsTab({
                                 ? 'Completed'
                                 : isCancelled
                                 ? 'Cancelled'
+                                : isRejected
+                                ? 'Rejected'
                                 : b.status || 'Pending'}
                             </span>
                           </span>
@@ -557,6 +566,20 @@ export default function AdminBookingsTab({
                                     >
                                       <XCircle className="w-3.5 h-3.5 text-rose-500" />
                                       <span>Cancel Booking</span>
+                                    </button>
+                                  )}
+
+                                  {onDeleteBooking && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setActiveMenuId(null);
+                                        onDeleteBooking(b);
+                                      }}
+                                      className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-rose-50 text-rose-700 transition-colors cursor-pointer border-t border-stone-100 font-medium"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                                      <span>Delete Booking</span>
                                     </button>
                                   )}
                                 </div>
@@ -738,6 +761,20 @@ export default function AdminBookingsTab({
                                   >
                                     <XCircle className="w-3.5 h-3.5 text-rose-500" />
                                     <span>Cancel</span>
+                                  </button>
+                                )}
+
+                                {onDeleteBooking && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveMenuId(null);
+                                      onDeleteBooking(b);
+                                    }}
+                                    className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-rose-50 text-rose-700 border-t border-stone-100 font-medium"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                                    <span>Delete</span>
                                   </button>
                                 )}
                               </div>

@@ -68,6 +68,15 @@ const AdminBookingsTab = dynamic(() => import('./components/AdminBookingsTab'), 
   ),
 });
 
+const AdminServicesTab = dynamic(() => import('./components/AdminServicesTab'), {
+  loading: () => (
+    <div className="p-12 text-center flex flex-col items-center justify-center space-y-3 bg-white/70 rounded-3xl border border-stone-200/80">
+      <RefreshCw className="w-6 h-6 animate-spin text-[#5B0D15]" />
+      <p className="text-xs text-stone-500 font-medium">Loading divine services catalogue...</p>
+    </div>
+  ),
+});
+
 const AdminOrdersTab = dynamic(() => import('./components/AdminOrdersTab'), {
   loading: () => (
     <div className="p-12 text-center flex flex-col items-center justify-center space-y-3 bg-white/70 rounded-3xl border border-stone-200/80">
@@ -102,6 +111,7 @@ const EditAdminProfileModal = dynamic(() => import('./components/EditAdminProfil
 const GenerateUserModal = dynamic(() => import('./components/GenerateUserModal'), { ssr: false });
 const DeleteUserModal = dynamic(() => import('./components/DeleteUserModal'), { ssr: false });
 const AvailabilityModals = dynamic(() => import('./components/AvailabilityModals'), { ssr: false });
+const DeleteConfirmModal = dynamic(() => import('./components/DeleteConfirmModal'), { ssr: false });
 
 export default function AdminPage() {
   const router = useRouter();
@@ -166,8 +176,22 @@ export default function AdminPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // Admin Top-level Navigation: Overview vs Users Directory vs Customer Appointments vs Shopping Orders vs Panditji Availability vs Content Activity
-  const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'bookings' | 'orders' | 'availability' | 'activity'>('overview');
+  // Delete Booking / Order Confirmation State
+  const [deleteItemModalOpen, setDeleteItemModalOpen] = useState(false);
+  const [deleteItemType, setDeleteItemType] = useState<'booking' | 'order'>('booking');
+  const [itemToDelete, setItemToDelete] = useState<{
+    id: string;
+    title?: string;
+    customerName?: string;
+    date?: string;
+    amount?: number | string;
+    status?: string;
+  } | null>(null);
+  const [deleteItemLoading, setDeleteItemLoading] = useState(false);
+  const [deleteItemError, setDeleteItemError] = useState<string | null>(null);
+
+  // Admin Top-level Navigation: Overview vs Users Directory vs Services vs Customer Appointments vs Shopping Orders vs Panditji Availability vs Content Activity
+  const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'services' | 'bookings' | 'orders' | 'availability' | 'activity'>('overview');
   const [globalSearch, setGlobalSearch] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
@@ -833,6 +857,108 @@ export default function AdminPage() {
     }
   };
 
+  // Handle booking reschedule
+  const handleRescheduleBooking = async (bookingId: string, date: string, time: string, reason?: string) => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    const res = await fetch(`${backendUrl}/api/admin/bookings/${bookingId}/reschedule`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        scheduledDate: date,
+        scheduledTime: time,
+        reason: reason || undefined,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to reschedule appointment.');
+    }
+
+    setNotification({
+      type: 'success',
+      message: data.message || 'Appointment rescheduled successfully!',
+    });
+    if (data.booking) {
+      setActiveBooking(data.booking);
+    }
+    fetchBookingsList(bookingPage);
+  };
+
+  // Handle meeting link update
+  const handleUpdateMeetLink = async (bookingId: string, meetLink: string) => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    const res = await fetch(`${backendUrl}/api/admin/bookings/${bookingId}/meet-link`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        meetLink: meetLink.trim(),
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to update meeting link.');
+    }
+
+    setNotification({
+      type: 'success',
+      message: data.message || 'Consultation room URL updated successfully!',
+    });
+    if (data.booking) {
+      setActiveBooking(data.booking);
+    }
+    fetchBookingsList(bookingPage);
+  };
+
+  // Handle manual / offline payment verification
+  const handleVerifyPayment = async (
+    bookingId: string,
+    transactionReference: string,
+    paymentMethod: string,
+    notes?: string,
+  ) => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    const res = await fetch(`${backendUrl}/api/admin/bookings/${bookingId}/verify-payment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        transactionReference: transactionReference.trim(),
+        paymentMethod,
+        verificationNotes: notes?.trim() || undefined,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to verify payment proof.');
+    }
+
+    setNotification({
+      type: 'success',
+      message: data.message || 'Payment successfully verified and booking confirmed!',
+    });
+    if (data.booking) {
+      setActiveBooking(data.booking);
+    }
+    fetchBookingsList(bookingPage);
+  };
+
   // ==========================================
   // PANDITJI AVAILABILITY MANAGEMENT HANDLERS
   // ==========================================
@@ -1474,6 +1600,105 @@ export default function AdminPage() {
     }
   };
 
+  // Delete Booking & Order Handlers
+  const handleInitiateDeleteBooking = (booking: any) => {
+    if (!booking) return;
+    setDeleteItemType('booking');
+    setItemToDelete({
+      id: booking.id,
+      title: booking.serviceTitle || booking.serviceType || 'Consultation Session',
+      customerName: booking.customerName || booking.customer?.name || booking.user?.name || 'Customer',
+      date: booking.scheduledDate ? new Date(booking.scheduledDate).toLocaleDateString('en-IN') : undefined,
+      amount: booking.totalCost !== undefined ? booking.totalCost : undefined,
+      status: booking.status,
+    });
+    setDeleteItemError(null);
+    setDeleteItemModalOpen(true);
+  };
+
+  const handleInitiateDeleteOrder = (order: any) => {
+    if (!order) return;
+    setDeleteItemType('order');
+    const itemsTitle = Array.isArray(order.items) && order.items.length > 0
+      ? order.items.map((i: any) => i.product?.name || i.name || 'Store Item').filter(Boolean).join(', ')
+      : 'Vedic Order';
+
+    setItemToDelete({
+      id: order.id,
+      title: itemsTitle,
+      customerName: order.shippingAddress?.recipient || order.user?.name || order.customer?.name || 'Customer',
+      date: order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : undefined,
+      amount: order.totalAmount !== undefined ? order.totalAmount : undefined,
+      status: order.status,
+    });
+    setDeleteItemError(null);
+    setDeleteItemModalOpen(true);
+  };
+
+  const handleConfirmDeleteItem = async () => {
+    if (!itemToDelete) return;
+
+    const token = getAuthToken();
+    if (!token) return;
+
+    setDeleteItemLoading(true);
+    setDeleteItemError(null);
+
+    const isBooking = deleteItemType === 'booking';
+    const endpoint = isBooking
+      ? `${backendUrl}/api/admin/bookings/${itemToDelete.id}`
+      : `${backendUrl}/api/admin/orders/${itemToDelete.id}`;
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        data = {};
+      }
+
+      if (res.ok) {
+        setNotification({
+          type: 'success',
+          message: data.message || `${isBooking ? 'Booking' : 'Order'} #${itemToDelete.id.slice(0, 8).toUpperCase()} has been permanently deleted.`,
+        });
+        setDeleteItemModalOpen(false);
+        const deletedId = itemToDelete.id;
+        setItemToDelete(null);
+
+        // Close lifecycle modals if currently active on deleted item
+        if (isBooking) {
+          if (activeBooking && activeBooking.id === deletedId) {
+            setActiveBooking(null);
+          }
+          fetchBookingsList(bookingPage);
+        } else {
+          if (activeOrder && activeOrder.id === deletedId) {
+            setActiveOrder(null);
+          }
+          fetchOrdersList(orderPage);
+        }
+
+        // Refresh admin notification badges
+        fetchAdminNotifications();
+      } else {
+        const errorMsg = data?.message || (Array.isArray(data?.message) ? data.message.join(', ') : null) || `Server returned ${res.status}: Failed to delete ${isBooking ? 'booking' : 'order'}.`;
+        setDeleteItemError(errorMsg);
+      }
+    } catch (err: any) {
+      setDeleteItemError(err.message || `Network error deleting ${isBooking ? 'booking' : 'order'}.`);
+    } finally {
+      setDeleteItemLoading(false);
+    }
+  };
+
   const canDeleteUser = (target: { id: string; role: string }) => {
     if (!currentUser || target.id === currentUser.id) return false;
     if (target.role === 'SUPERADMIN') return false;
@@ -1496,6 +1721,7 @@ export default function AdminPage() {
 
   const getBreadcrumbTitle = () => {
     if (adminTab === 'overview') return 'Overview';
+    if (adminTab === 'services') return 'Services Management';
     if (adminTab === 'users') {
       if (roleFilter === 'USER') return 'Seekers';
       if (roleFilter === 'ADMIN') return 'Pandits';
@@ -1547,8 +1773,10 @@ export default function AdminPage() {
       router.push('/gallery');
     } else if (tabKey === 'products') {
       router.push('/products');
+    } else if (tabKey === 'services') {
+      setAdminTab('services');
     } else if (tabKey === 'categories') {
-      router.push('/services');
+      setAdminTab('services');
     } else if (tabKey === 'wallet' || tabKey === 'ledger') {
       setAdminTab('activity');
     } else if (tabKey === 'payments') {
@@ -1638,9 +1866,13 @@ export default function AdminPage() {
         ) : (
           <div className="flex-1 flex w-full min-h-screen">
             {/* ===================== DESKTOP SIDEBAR ===================== */}
-            <aside className="hidden md:flex w-64 bg-white text-stone-700 flex-col shrink-0 border-r border-stone-200/80 select-none fixed top-0 bottom-0 left-0 z-30 h-screen overflow-hidden">
+            <aside
+              data-lenis-prevent="true"
+              onWheel={(e) => e.stopPropagation()}
+              className="hidden md:flex w-64 bg-white text-stone-700 flex-col shrink-0 border-r border-stone-200/80 select-none fixed top-0 bottom-0 left-0 z-30 h-screen overflow-hidden overscroll-contain"
+            >
               {/* Top Logo & Title */}
-              <div className="p-4 sm:p-5 border-b border-stone-150 flex items-center justify-between">
+              <div className="p-4 sm:p-5 border-b border-stone-150 flex items-center justify-between shrink-0">
                 <Link
                   href="/"
                   title="Return to AstroVD Homepage"
@@ -1657,8 +1889,12 @@ export default function AdminPage() {
                 </Link>
               </div>
 
-              {/* Nav Groups Container */}
-              <div className="flex-1 overflow-y-auto p-3.5 space-y-4">
+              {/* Nav Groups Container - fully scrollable without manual drag */}
+              <div
+                data-lenis-prevent="true"
+                onWheel={(e) => e.stopPropagation()}
+                className="flex-1 overflow-y-auto p-3.5 space-y-4 overscroll-contain select-none"
+              >
                 {/* Active Top Navigation: Dashboard */}
                 <div>
                   <button
@@ -1735,6 +1971,19 @@ export default function AdminPage() {
                     >
                       <Package className="w-4 h-4 text-stone-400 shrink-0" />
                       <span>Orders</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSidebarTabClick('services')}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                        adminTab === 'services'
+                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                      }`}
+                    >
+                      <Sparkles className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Services</span>
                     </button>
 
                     <button
@@ -1938,6 +2187,13 @@ export default function AdminPage() {
                       className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-stone-600 hover:bg-stone-50"
                     >
                       Bookings
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSidebarTabClick('services')}
+                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-stone-600 hover:bg-stone-50"
+                    >
+                      Services
                     </button>
                     <button
                       type="button"
@@ -2245,6 +2501,8 @@ export default function AdminPage() {
               />
             )}
 
+            {adminTab === 'services' && <AdminServicesTab />}
+
             {adminTab === 'bookings' && (
               <AdminBookingsTab
                 bookingSearch={bookingSearch}
@@ -2267,6 +2525,7 @@ export default function AdminPage() {
                   setStatusNotes('');
                   setStatusError(null);
                 }}
+                onDeleteBooking={handleInitiateDeleteBooking}
               />
             )}
 
@@ -2290,6 +2549,7 @@ export default function AdminPage() {
                   setOrderStatusNotes('');
                   setOrderStatusError(null);
                 }}
+                onDeleteOrder={handleInitiateDeleteOrder}
               />
             )}
 
@@ -2355,6 +2615,10 @@ export default function AdminPage() {
           updatingStatus={updatingStatus}
           onTransitionStatus={handleTransitionStatus}
           onClose={() => setActiveBooking(null)}
+          onDeleteBooking={handleInitiateDeleteBooking}
+          onRescheduleBooking={handleRescheduleBooking}
+          onUpdateMeetLink={handleUpdateMeetLink}
+          onVerifyPayment={handleVerifyPayment}
         />
       )}
 
@@ -2368,6 +2632,7 @@ export default function AdminPage() {
           orderStatusUpdating={orderStatusUpdating}
           onTransitionOrderStatus={handleTransitionOrderStatus}
           onClose={() => setActiveOrder(null)}
+          onDeleteOrder={handleInitiateDeleteOrder}
         />
       )}
 
@@ -2430,6 +2695,23 @@ export default function AdminPage() {
           setUserToDelete(null);
         }}
         onConfirmDelete={handleConfirmDelete}
+      />
+
+      {/* DELETE BOOKING / ORDER CONFIRMATION MODAL */}
+      <DeleteConfirmModal
+        isOpen={deleteItemModalOpen}
+        type={deleteItemType}
+        item={itemToDelete}
+        loading={deleteItemLoading}
+        error={deleteItemError}
+        onClose={() => {
+          if (!deleteItemLoading) {
+            setDeleteItemModalOpen(false);
+            setItemToDelete(null);
+            setDeleteItemError(null);
+          }
+        }}
+        onConfirm={handleConfirmDeleteItem}
       />
 
       {/* AVAILABILITY MODALS */}

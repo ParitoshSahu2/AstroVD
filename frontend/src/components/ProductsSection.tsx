@@ -581,41 +581,23 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                     </div>
 
                     <div className="relative flex items-center gap-2">
-                      {/* Added to Cart Popup Tooltip for 2 seconds */}
-                      {addedProductId === item.id && (
-                        <div className="absolute -top-10 right-0 z-30 pointer-events-none flex flex-col items-center animate-fadeIn">
-                          <div className="px-2.5 py-1 bg-[#1C090C] text-emerald-300 text-[11px] font-bold rounded-lg shadow-xl flex items-center gap-1.5 whitespace-nowrap border border-amber-400/60 ring-1 ring-black/40">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                            <span>{t('Added to Cart', 'कार्ट में जोड़ा गया')}</span>
-                          </div>
-                          {/* Triangle indicator pointing down to button */}
-                          <div className="w-2 h-2 bg-[#1C090C] rotate-45 -mt-1 border-r border-b border-amber-400/60" />
-                        </div>
-                      )}
-
                       {quantityInCart === 0 ? (
-
-                        /* Clean Add to Cart button (rounded with clean, subtle hover effect) */
-
+                        /* Original Add to Cart Button */
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleAddToCart(item, 1);
                           }}
-
                           className="px-4 py-1.5 rounded-full bg-[#800000] hover:bg-[#5B0D15] text-white text-xs font-semibold shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 cursor-pointer text-center"
-
                           aria-label={t(`Add ${item.name} to cart`, `${item.name} कार्ट में जोड़ें`)}
                         >
                           {t('Add to Cart', 'कार्ट में जोड़ें')}
                         </button>
                       ) : (
-                        /* Jumps to + 1 and -1 quantity selector */
+                        /* Original - 1 + Stepper */
                         <div
                           onClick={(e) => e.stopPropagation()}
-
                           className="flex items-center bg-[#5B0D15] text-white rounded-full px-1.5 py-1 shadow-xs border border-amber-400/30"
-
                         >
                           <button
                             type="button"
@@ -627,16 +609,14 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                                 updateQuantity(item.id, quantityInCart - 1);
                               }
                             }}
-
                             className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/20 text-white font-bold cursor-pointer transition-colors active:scale-90"
-
                             aria-label={t('Decrease quantity', 'मात्रा घटाएं')}
                           >
                             <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
                           </button>
 
                           <span className="min-w-[28px] px-1 text-center font-extrabold text-xs text-amber-200 select-none">
-                            +{quantityInCart}
+                            {quantityInCart}
                           </span>
 
                           <button
@@ -645,9 +625,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                               e.stopPropagation();
                               updateQuantity(item.id, quantityInCart + 1);
                             }}
-
                             className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/20 text-white font-bold cursor-pointer transition-colors active:scale-90"
-
                             aria-label={t('Increase quantity', 'मात्रा बढ़ाएं')}
                           >
                             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -961,14 +939,14 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                       onClick={() => {
                         handleAddToCart(selectedProduct, 1);
                       }}
-                      className="flex-1 py-3 px-6 rounded-full bg-[#5B0D15] hover:bg-[#78121d] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-98"
+                      className="flex-1 py-3 px-6 rounded-full bg-[#800000] hover:bg-[#5B0D15] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-98"
                     >
                       <ShoppingCart className="w-4 h-4 text-amber-300" />
-                      <span>{t('Add to Sacred Cart', 'पवित्र कार्ट में जोड़ें')}</span>
+                      <span>{t('Add to Cart', 'कार्ट में जोड़ें')}</span>
                     </button>
                   ) : (
-                    /* Persistent Quantity Stepper */
-                    <div className="flex-1 flex items-center justify-between bg-[#5B0D15] text-white rounded-full px-2 py-1.5 shadow-md border border-amber-400/40">
+                    /* Previous Quantity Stepper */
+                    <div className="flex-1 flex items-center justify-between bg-[#5B0D15] text-white rounded-full px-3 py-1.5 shadow-md border border-amber-400/40">
                       <button
                         type="button"
                         onClick={() => {
@@ -984,10 +962,10 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                         <Minus className="w-4 h-4 stroke-[2.5]" />
                       </button>
 
-                      <div className="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-amber-100 select-none px-2">
+                      <div className="flex items-center gap-2 font-bold text-xs sm:text-sm text-amber-100 select-none px-2">
                         <ShoppingCart className="w-4 h-4 text-amber-300" />
-                        <span className="text-white font-extrabold text-sm sm:text-base">+{selectedProductQtyInCart}</span>
-                        <span>{t('in Sacred Cart', 'कार्ट में')}</span>
+                        <span className="text-white font-extrabold text-sm sm:text-base">{selectedProductQtyInCart}</span>
+                        <span>{t('in Cart', 'कार्ट में')}</span>
                       </div>
 
                       <button
@@ -1048,16 +1026,15 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
         >
           {/* Expanded Info on Hover: Cart icon, items count & Total price */}
           <div
-            className={`overflow-hidden transition-all duration-300 ease-out flex items-center select-none whitespace-nowrap ${
+            className={`transition-all duration-300 ease-out flex items-center select-none whitespace-nowrap ${
               isCheckoutBarHovered
-                ? 'max-w-[260px] opacity-100 pl-3 pr-2 gap-2.5'
-                : 'max-w-0 opacity-0 p-0 gap-0 pointer-events-none'
+                ? 'max-w-[280px] opacity-100 pl-3.5 pr-2 gap-2.5 overflow-visible'
+                : 'max-w-0 opacity-0 p-0 gap-0 pointer-events-none overflow-hidden'
             }`}
           >
             <div className="relative w-8 h-8 rounded-full bg-amber-400/15 border border-amber-400/30 flex items-center justify-center shrink-0">
               <ShoppingCart className="w-4 h-4 text-amber-300" />
-              <span className="absolute -top-1 -right-1 bg-[#800000] text-amber-100 text-[10px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center border border-amber-300/80 shadow-xs">
-
+              <span className="absolute -top-1.5 -right-1.5 bg-[#800000] text-amber-100 text-[10px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center border border-amber-300 shadow-md leading-none z-10">
                 {totalCount}
               </span>
             </div>

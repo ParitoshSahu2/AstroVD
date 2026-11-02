@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -79,6 +79,12 @@ function AppointmentContent() {
   }));
   const [date, setDate] = useState<string>(tomorrowStr);
   const [timeSlot, setTimeSlot] = useState<string>('');
+  const selectedTimeSlotRef = useRef<string>('');
+
+  // Keep ref synchronized with state to prevent stale closure during live polling
+  useEffect(() => {
+    selectedTimeSlotRef.current = timeSlot;
+  }, [timeSlot]);
   const [availableSlots, setAvailableSlots] = useState<
     Array<{ time: string; isAvailable: boolean; reason?: string }>
   >([]);
@@ -181,6 +187,7 @@ function AppointmentContent() {
               setIsDateBlocked(true);
               setBlockedReason(data.blockedReason || null);
               setAvailableSlots([]);
+              selectedTimeSlotRef.current = '';
               setTimeSlot('');
             } else if (data.slots && Array.isArray(data.slots) && data.slots.length > 0) {
               setIsDateBlocked(false);
@@ -188,20 +195,29 @@ function AppointmentContent() {
               // Only display published slots returned by backend
               setAvailableSlots(data.slots);
 
-              // If current selected timeSlot is not among available published slots, pick first available
+              // If current selected timeSlot is still available among published slots, keep it!
+              // Only fall back to first available if current slot is empty or became unavailable/reserved.
+              const currentSlot = selectedTimeSlotRef.current;
               const isCurrentAvailable = data.slots.some(
-                (s: any) => s.time === timeSlot && s.isAvailable,
+                (s: any) => s.time === currentSlot && s.isAvailable,
               );
               if (!isCurrentAvailable) {
                 const firstAvailable = data.slots.find((s: any) => s.isAvailable);
-                setTimeSlot(firstAvailable ? firstAvailable.time : '');
+                const nextSlot = firstAvailable ? firstAvailable.time : '';
+                selectedTimeSlotRef.current = nextSlot;
+                setTimeSlot(nextSlot);
               }
             } else {
               setIsDateBlocked(false);
               setBlockedReason(null);
               const dynFallback = generateWorkingHourSlots(durationMinutes).map((time: string) => ({ time, isAvailable: true }));
               setAvailableSlots(dynFallback);
-              if (!timeSlot || !dynFallback.some((s: any) => s.time === timeSlot)) setTimeSlot(dynFallback[0]?.time || '10:00 AM');
+              const currentSlot = selectedTimeSlotRef.current;
+              if (!currentSlot || !dynFallback.some((s: any) => s.time === currentSlot)) {
+                const nextSlot = dynFallback[0]?.time || '10:00 AM';
+                selectedTimeSlotRef.current = nextSlot;
+                setTimeSlot(nextSlot);
+              }
             }
           }
         } else {
@@ -209,7 +225,12 @@ function AppointmentContent() {
             setIsDateBlocked(false);
             const dynFallback = generateWorkingHourSlots(durationMinutes).map((time: string) => ({ time, isAvailable: true }));
             setAvailableSlots(dynFallback);
-            if (!timeSlot || !dynFallback.some((s: any) => s.time === timeSlot)) setTimeSlot(dynFallback[0]?.time || '10:00 AM');
+            const currentSlot = selectedTimeSlotRef.current;
+            if (!currentSlot || !dynFallback.some((s: any) => s.time === currentSlot)) {
+              const nextSlot = dynFallback[0]?.time || '10:00 AM';
+              selectedTimeSlotRef.current = nextSlot;
+              setTimeSlot(nextSlot);
+            }
           }
         }
       } catch (err) {
@@ -218,7 +239,12 @@ function AppointmentContent() {
           setIsDateBlocked(false);
           const dynFallback = generateWorkingHourSlots(durationMinutes).map((time: string) => ({ time, isAvailable: true }));
           setAvailableSlots(dynFallback);
-          if (!timeSlot || !dynFallback.some((s: any) => s.time === timeSlot)) setTimeSlot(dynFallback[0]?.time || '10:00 AM');
+          const currentSlot = selectedTimeSlotRef.current;
+          if (!currentSlot || !dynFallback.some((s: any) => s.time === currentSlot)) {
+            const nextSlot = dynFallback[0]?.time || '10:00 AM';
+            selectedTimeSlotRef.current = nextSlot;
+            setTimeSlot(nextSlot);
+          }
         }
       } finally {
         if (!isCancelled) setLoadingSlots(false);
@@ -253,8 +279,34 @@ function AppointmentContent() {
     };
   }, [selectedServiceId, date, backendUrl]);
 
+  const [servicesList, setServicesList] = useState<ServiceItem[]>(SERVICES_CATALOGUE);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchServices = async () => {
+      try {
+        const res = await fetch(`${backendUrl}/api/appointments/services`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && Array.isArray(data) && data.length > 0) {
+            setServicesList(data);
+          }
+        }
+      } catch (err) {
+        // Fallback to SERVICES_CATALOGUE preserves offline robustness
+      }
+    };
+    fetchServices();
+    return () => {
+      isMounted = false;
+    };
+  }, [backendUrl]);
+
   const activeService: ServiceItem =
-    getServiceById(selectedServiceId) || SERVICES_CATALOGUE[0];
+    servicesList.find((s) => s.id === selectedServiceId) ||
+    getServiceById(selectedServiceId) ||
+    servicesList[0] ||
+    SERVICES_CATALOGUE[0];
 
   const tr = language === 'hi' ? SERVICES_TRANSLATIONS[activeService.id] : null;
   const displayTitle = tr ? tr.titleHi : activeService.title;
@@ -908,7 +960,7 @@ function AppointmentContent() {
                       )}
                     </option>
                     <optgroup label={t('── Authentic Vedic Services ──', '── प्रामाणिक वैदिक सेवाएं ──')}>
-                      {SERVICES_CATALOGUE.filter((s) => s.id !== 'general_consultation').map((s) => {
+                      {servicesList.filter((s) => s.id !== 'general_consultation').map((s) => {
                         const itemTr = language === 'hi' ? SERVICES_TRANSLATIONS[s.id] : null;
                         const itemTitle = language === 'hi' && itemTr?.titleHi ? itemTr.titleHi : s.title;
                         return (
@@ -1159,7 +1211,11 @@ function AppointmentContent() {
                       <select
                         value={timeSlot}
                         disabled={loadingSlots || isDateBlocked || availableSlots.length === 0}
-                        onChange={(e) => setTimeSlot(e.target.value)}
+                        onChange={(e) => {
+                          const chosen = e.target.value;
+                          selectedTimeSlotRef.current = chosen;
+                          setTimeSlot(chosen);
+                        }}
                         className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-xs font-semibold text-stone-800 bg-white focus:outline-none focus:border-amber-500 transition-all cursor-pointer shadow-xs appearance-none pr-10 disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed"
                       >
                         {availableSlots.length > 0 ? (

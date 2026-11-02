@@ -12,6 +12,7 @@ import {
   Check,
   CreditCard,
   Truck,
+  Trash2,
 } from 'lucide-react';
 
 interface AdminOrdersTabProps {
@@ -29,6 +30,7 @@ interface AdminOrdersTabProps {
   orderTotalPages: number;
   fetchOrdersList: (p: number) => void;
   onSelectOrder: (o: any) => void;
+  onDeleteOrder?: (o: any) => void;
 }
 
 export interface StatusDetail {
@@ -206,6 +208,7 @@ export default function AdminOrdersTab({
   orderTotalPages,
   fetchOrdersList,
   onSelectOrder,
+  onDeleteOrder,
 }: AdminOrdersTabProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -600,6 +603,20 @@ export default function AdminOrdersTab({
                                     <CreditCard className="w-3.5 h-3.5 text-emerald-600" />
                                     <span>View Payment Details</span>
                                   </button>
+
+                                  {onDeleteOrder && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setActiveMenuId(null);
+                                        onDeleteOrder(o);
+                                      }}
+                                      className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-rose-50 text-rose-700 transition-colors cursor-pointer border-t border-stone-100 font-medium"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                                      <span>Delete Order</span>
+                                    </button>
+                                  )}
                                 </div>
                               </>
                             )}
@@ -720,6 +737,19 @@ export default function AdminOrdersTab({
                                   <Truck className="w-3.5 h-3.5 text-blue-600" />
                                   <span>Shipping Details</span>
                                 </button>
+                                {onDeleteOrder && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setActiveMenuId(null);
+                                      onDeleteOrder(o);
+                                    }}
+                                    className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-rose-50 text-rose-700 border-t border-stone-100 font-medium"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                                    <span>Delete Order</span>
+                                  </button>
+                                )}
                               </div>
                             </>
                           )}

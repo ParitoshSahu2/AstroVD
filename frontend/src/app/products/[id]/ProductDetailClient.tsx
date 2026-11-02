@@ -198,8 +198,7 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
               {quantityInCart > 0 && (
                 <span className="ml-auto px-3 py-1 rounded-full text-xs font-bold bg-[#5B0D15] text-amber-200 border border-amber-400/80 shadow-xs flex items-center gap-1.5 animate-fadeIn">
                   <ShoppingCart className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                  <span className="font-extrabold text-white">+{quantityInCart}</span>
-                  <span>{t('in Sacred Cart', 'पवित्र कार्ट में')}</span>
+                  <span>{t('In Cart', 'कार्ट में')} ({quantityInCart})</span>
                 </span>
               )}
             </div>
@@ -245,30 +244,18 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
 
             {/* Action Buttons directly visible in viewport */}
             <div className="pt-2">
-              <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                {/* Added to Cart Tooltip when clicked */}
-                {added && (
-                  <div className="absolute -top-11 left-1/4 -translate-x-1/2 z-30 pointer-events-none flex flex-col items-center animate-fadeIn">
-                    <div className="px-3 py-1 bg-[#1C090C] text-emerald-300 text-xs font-bold rounded-lg shadow-xl flex items-center gap-1.5 whitespace-nowrap border border-amber-400/60 ring-1 ring-black/40">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>{t('Added to Cart', 'कार्ट में जोड़ा गया')} (+{quantityInCart})</span>
-                    </div>
-                    {/* Triangle indicator pointing down */}
-                    <div className="w-2 h-2 bg-[#1C090C] rotate-45 -mt-1 border-r border-b border-amber-400/60" />
-                  </div>
-                )}
-
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 {quantityInCart === 0 ? (
                   <button
                     onClick={handleAddToCart}
-                    className="flex-1 py-3 px-6 rounded-full text-xs font-bold shadow-md transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer bg-[#5B0D15] hover:bg-[#78121d] text-white hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-98"
+                    className="flex-1 py-3 px-6 rounded-full text-xs font-bold shadow-md transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer bg-[#800000] hover:bg-[#5B0D15] text-white hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-98"
                   >
-                    <ShoppingCart className="w-4 h-4" />
-                    <span>{t('Add to Sacred Cart', 'पवित्र कार्ट में जोड़ें')}</span>
+                    <ShoppingCart className="w-4 h-4 text-amber-300" />
+                    <span>{t('Add to Cart', 'कार्ट में जोड़ें')}</span>
                   </button>
                 ) : (
-                  /* Persistent Quantity Stepper when item is in cart */
-                  <div className="flex-1 flex items-center justify-between bg-[#5B0D15] text-white rounded-full px-2 py-1.5 shadow-md border border-amber-400/40">
+                  /* Previous Quantity Stepper when item is in cart */
+                  <div className="flex-1 flex items-center justify-between bg-[#5B0D15] text-white rounded-full px-3 py-1.5 shadow-md border border-amber-400/40">
                     <button
                       type="button"
                       onClick={() => {
@@ -284,10 +271,10 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
                       <Minus className="w-4 h-4 stroke-[2.5]" />
                     </button>
 
-                    <div className="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-amber-100 select-none px-2">
+                    <div className="flex items-center gap-2 font-bold text-xs sm:text-sm text-amber-100 select-none px-2">
                       <ShoppingCart className="w-4 h-4 text-amber-300" />
-                      <span className="text-white font-extrabold text-sm sm:text-base">+{quantityInCart}</span>
-                      <span>{t('in Sacred Cart', 'कार्ट में')}</span>
+                      <span className="text-white font-extrabold text-sm sm:text-base">{quantityInCart}</span>
+                      <span>{t('in Cart', 'कार्ट में')}</span>
                     </div>
 
                     <button

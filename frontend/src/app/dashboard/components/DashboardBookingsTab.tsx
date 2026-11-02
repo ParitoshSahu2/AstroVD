@@ -319,7 +319,7 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
               'Comprehensive Vedic Kundli Consultation';
 
             const meetLink =
-              booking.meetLink && booking.meetLink.includes('meet.google.com')
+              booking.meetLink && booking.meetLink.startsWith('http')
                 ? booking.meetLink
                 : formatGoogleMeetLink(bId);
 
