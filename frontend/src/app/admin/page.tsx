@@ -44,7 +44,6 @@ import {
   Sun,
   Download,
   Printer,
-  LayoutGrid,
   Wallet,
   CreditCard,
 } from 'lucide-react';
@@ -73,6 +72,15 @@ const AdminServicesTab = dynamic(() => import('./components/AdminServicesTab'), 
     <div className="p-12 text-center flex flex-col items-center justify-center space-y-3 bg-white/70 rounded-3xl border border-stone-200/80">
       <RefreshCw className="w-6 h-6 animate-spin text-[#5B0D15]" />
       <p className="text-xs text-stone-500 font-medium">Loading divine services catalogue...</p>
+    </div>
+  ),
+});
+
+const AdminProductsTab = dynamic(() => import('./components/AdminProductsTab'), {
+  loading: () => (
+    <div className="p-12 text-center flex flex-col items-center justify-center space-y-3 bg-white/70 rounded-3xl border border-stone-200/80">
+      <RefreshCw className="w-6 h-6 animate-spin text-[#5B0D15]" />
+      <p className="text-xs text-stone-500 font-medium">Loading sacred store products & inventory...</p>
     </div>
   ),
 });
@@ -190,8 +198,8 @@ export default function AdminPage() {
   const [deleteItemLoading, setDeleteItemLoading] = useState(false);
   const [deleteItemError, setDeleteItemError] = useState<string | null>(null);
 
-  // Admin Top-level Navigation: Overview vs Users Directory vs Services vs Customer Appointments vs Shopping Orders vs Panditji Availability vs Content Activity
-  const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'services' | 'bookings' | 'orders' | 'availability' | 'activity'>('overview');
+  // Admin Top-level Navigation: Overview vs Users Directory vs Services vs Products vs Customer Appointments vs Shopping Orders vs Panditji Availability vs Content Activity
+  const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'services' | 'products' | 'bookings' | 'orders' | 'availability' | 'activity'>('overview');
   const [globalSearch, setGlobalSearch] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
@@ -1722,6 +1730,7 @@ export default function AdminPage() {
   const getBreadcrumbTitle = () => {
     if (adminTab === 'overview') return 'Overview';
     if (adminTab === 'services') return 'Services Management';
+    if (adminTab === 'products') return 'Products & Inventory';
     if (adminTab === 'users') {
       if (roleFilter === 'USER') return 'Seekers';
       if (roleFilter === 'ADMIN') return 'Pandits';
@@ -1772,10 +1781,8 @@ export default function AdminPage() {
     } else if (tabKey === 'gallery') {
       router.push('/gallery');
     } else if (tabKey === 'products') {
-      router.push('/products');
+      setAdminTab('products');
     } else if (tabKey === 'services') {
-      setAdminTab('services');
-    } else if (tabKey === 'categories') {
       setAdminTab('services');
     } else if (tabKey === 'wallet' || tabKey === 'ledger') {
       setAdminTab('activity');
@@ -1989,19 +1996,14 @@ export default function AdminPage() {
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('products')}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                        adminTab === 'products'
+                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                      }`}
                     >
                       <ShoppingBag className="w-4 h-4 text-stone-400 shrink-0" />
                       <span>Products</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSidebarTabClick('categories')}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
-                    >
-                      <LayoutGrid className="w-4 h-4 text-stone-400 shrink-0" />
-                      <span>Categories</span>
                     </button>
                   </div>
                 </div>
@@ -2191,9 +2193,20 @@ export default function AdminPage() {
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('services')}
-                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-stone-600 hover:bg-stone-50"
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium ${
+                        adminTab === 'services' ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold' : 'text-stone-600 hover:bg-stone-50'
+                      }`}
                     >
                       Services
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSidebarTabClick('products')}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium ${
+                        adminTab === 'products' ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold' : 'text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      Products
                     </button>
                     <button
                       type="button"
@@ -2502,6 +2515,8 @@ export default function AdminPage() {
             )}
 
             {adminTab === 'services' && <AdminServicesTab />}
+
+            {adminTab === 'products' && <AdminProductsTab />}
 
             {adminTab === 'bookings' && (
               <AdminBookingsTab

@@ -509,17 +509,19 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
 
       </div>
 
-      {/* Floating Bottom-Right Button: Back to Top */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <button
-          onClick={scrollToTop}
-          className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md border border-stone-300 shadow-lg text-stone-700 hover:text-[#5B0D15] hover:scale-110 flex items-center justify-center transition-all cursor-pointer"
-          title="Scroll to Top"
-          aria-label="Scroll to top"
-        >
-          <ArrowUp className="w-4 h-4 stroke-[2.5]" />
-        </button>
-      </div>
+      {/* Floating Bottom-Right Button: Back to Top (Only rendered on full about page, never on home page) */}
+      {!isHomePage && (
+        <div className="fixed bottom-6 right-6 z-40">
+          <button
+            onClick={scrollToTop}
+            className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md border border-stone-300 shadow-lg text-stone-700 hover:text-[#5B0D15] hover:scale-110 flex items-center justify-center transition-all cursor-pointer"
+            title="Scroll to Top"
+            aria-label="Scroll to top"
+          >
+            <ArrowUp className="w-4 h-4 stroke-[2.5]" />
+          </button>
+        </div>
+      )}
 
     </section>
   );

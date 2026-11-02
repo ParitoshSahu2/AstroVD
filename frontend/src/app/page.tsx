@@ -38,7 +38,7 @@ export default function Home() {
 
       {/* 3. Products Section (Showing 8 cards on home page with explore more, no checkout bar) */}
       <div id="shop">
-        <ProductsSection limit={8} showExploreMore={true} showCheckoutBar={false} />
+        <ProductsSection limit={8} showExploreMore={true} showCheckoutBar={true} />
       </div>
 
       {/* Divider after Products */}

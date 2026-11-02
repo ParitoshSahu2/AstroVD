@@ -404,96 +404,105 @@ export default function AdminServicesTab() {
           {services.map((item) => (
             <div
               key={item.id}
-              className={`p-3.5 sm:p-4 rounded-2xl border transition-all ${
+              className={`p-4 sm:p-5 rounded-2xl border transition-all ${
                 item.isActive
-                  ? 'bg-white/90 border-stone-200/80 hover:border-amber-400/50 hover:shadow-sm'
-                  : 'bg-stone-50/80 border-stone-300/70 opacity-75'
+                  ? 'bg-white/95 border-stone-200/90 hover:border-amber-400/60 hover:shadow-xs'
+                  : 'bg-stone-50/90 border-stone-200/80 opacity-80'
               }`}
             >
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="min-w-0 flex-1 space-y-1">
-                  <div className="flex items-center flex-wrap gap-2">
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                        item.isActive
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                          : 'bg-stone-200 text-stone-700 border-stone-300'
-                      }`}
-                    >
-                      ● {item.isActive ? 'Active' : 'Inactive'}
-                    </span>
-
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-100/70 text-amber-900 border border-amber-200">
-                      {item.categoryTag || item.categoryKey}
-                    </span>
-
-                    {item.badge && (
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-100 text-purple-900 border border-purple-200">
-                        ★ {item.badge}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="min-w-0 flex-1 space-y-2 sm:space-y-2.5">
+                  {/* 1. Top row — status and identification */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+                          item.isActive
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                            : 'bg-stone-100 text-stone-600 border-stone-200'
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${item.isActive ? 'bg-emerald-600' : 'bg-stone-400'}`} />
+                        <span>{item.isActive ? 'Active' : 'Inactive'}</span>
                       </span>
-                    )}
 
-                    <span className="font-mono text-[11px] text-stone-400">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-900 border border-amber-200 uppercase tracking-wide">
+                        {item.categoryTag || item.categoryKey}
+                      </span>
+
+                      {item.badge && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-purple-50 text-purple-900 border border-purple-200">
+                          ★ {item.badge}
+                        </span>
+                      )}
+                    </div>
+
+                    <span className="font-mono text-[11px] text-stone-400 select-all shrink-0">
                       ID: {item.id}
                     </span>
                   </div>
 
-                  <h3 className="font-serif text-base font-bold text-stone-900 leading-snug">
+                  {/* 2. Service title */}
+                  <h3 className="text-[17px] sm:text-[18px] font-semibold text-stone-900 leading-snug tracking-tight break-words">
                     {item.title}
                   </h3>
 
-                  <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
+                  {/* 3. Description */}
+                  <p className="text-[13px] sm:text-[14px] text-stone-600 line-clamp-2 leading-relaxed break-words">
                     {item.desc}
                   </p>
 
-                  <div className="flex items-center flex-wrap gap-x-4 gap-y-1 pt-1 text-[11px] text-stone-500">
-                    <span className="flex items-center gap-1">
-                      <User className="w-3 h-3 text-amber-700" />
-                      <strong className="text-stone-700">{item.pandit}</strong>
-                    </span>
+                  {/* 4. Service information */}
+                  <div className="flex items-center flex-wrap gap-x-6 gap-y-1.5 pt-0.5 text-[13px] text-stone-600">
+                    <div className="flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-amber-700/80 shrink-0" />
+                      <span className="text-stone-500 font-normal">Astrologer:</span>
+                      <span className="font-medium text-stone-800">{item.pandit}</span>
+                    </div>
 
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-amber-700" />
-                      <span>{item.durationMinutes} mins</span>
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-amber-700/80 shrink-0" />
+                      <span className="text-stone-500 font-normal">Duration:</span>
+                      <span className="font-medium text-stone-800">{item.durationMinutes} mins</span>
+                    </div>
 
-                    <span className="flex items-center gap-1 font-bold text-[#5B0D15]">
-                      <IndianRupee className="w-3 h-3" />
-                      <span>{item.price || (item.priceNumber === 0 ? '100% Free' : `₹${item.priceNumber}`)}</span>
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <IndianRupee className="w-3.5 h-3.5 text-[#5B0D15] shrink-0" />
+                      <span className="text-stone-500 font-normal">Price:</span>
+                      <span className="font-semibold text-[#5B0D15]">
+                        {item.price || (item.priceNumber === 0 ? '100% Free' : `₹${item.priceNumber.toLocaleString('en-IN')}`)}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Right Action Controls */}
-                <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                  {/* Status Toggle Switch */}
+                {/* 5. Actions */}
+                <div className="flex items-center gap-2 shrink-0 self-start sm:self-center pt-2 sm:pt-0">
                   <button
                     type="button"
                     onClick={() => handleToggleStatus(item)}
-                    className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
                       item.isActive
-                        ? 'bg-stone-100 hover:bg-stone-200 text-stone-700 border-stone-200'
-                        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'
+                        ? 'bg-stone-100 hover:bg-stone-200 text-stone-700 border-stone-300/80'
+                        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300/80'
                     }`}
                     title={item.isActive ? 'Deactivate this service' : 'Activate this service'}
                   >
                     <span>{item.isActive ? 'Deactivate' : 'Activate'}</span>
                   </button>
 
-                  {/* Edit Button */}
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedService(item);
                       setFormModalOpen(true);
                     }}
-                    className="p-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/80 transition-colors cursor-pointer"
+                    className="p-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition-colors cursor-pointer"
                     title="Edit Service Details"
                   >
                     <Edit3 className="w-4 h-4" />
                   </button>
 
-                  {/* Delete Button */}
                   <button
                     type="button"
                     onClick={() => {
@@ -501,7 +510,7 @@ export default function AdminServicesTab() {
                       setDeleteError(null);
                       setDeleteModalOpen(true);
                     }}
-                    className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 transition-colors cursor-pointer"
+                    className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors cursor-pointer"
                     title="Delete Service (Safely guarded)"
                   >
                     <Trash2 className="w-4 h-4" />

@@ -720,60 +720,60 @@ export default function GalleryPage() {
         >
           {/* Lightbox Container */}
           <div
-            className="relative max-w-3xl w-full bg-[#FAF7F2] rounded-3xl overflow-hidden border-2 border-amber-400 shadow-2xl space-y-0"
+            className="relative max-w-4xl w-full max-h-[92vh] flex flex-col bg-[#FAF7F2] rounded-3xl overflow-hidden border-2 border-amber-400 shadow-2xl space-y-0"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
             <button
               onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/40 text-white flex items-center justify-center hover:bg-black/80 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-black/70 backdrop-blur-md border border-white/40 text-white flex items-center justify-center hover:bg-[#5B0D15] transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-xl"
               aria-label="Close dialog"
             >
               <X className="w-5 h-5" />
             </button>
 
-            {/* Navigation Previous Button */}
-            {currentModalIndex > 0 && (
-              <button
-                onClick={handlePrevImage}
-                className="absolute left-4 top-1/3 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/60 backdrop-blur-md border border-white/40 text-white flex items-center justify-center hover:bg-amber-600 transition-colors cursor-pointer shadow-lg"
-                aria-label="Previous image"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-            )}
+            {/* Modal Image Display - object-contain ensures the FULL photo is displayed without cropping or zoom cuts */}
+            <div className="relative w-full bg-[#150D09] flex items-center justify-center overflow-hidden min-h-[260px] sm:min-h-[360px] max-h-[60vh] sm:max-h-[66vh] select-none">
+              {/* Navigation Previous Button */}
+              {currentModalIndex > 0 && (
+                <button
+                  onClick={handlePrevImage}
+                  className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-[#5B0D15] backdrop-blur-md border border-white/40 text-white flex items-center justify-center transition-all hover:scale-110 cursor-pointer shadow-xl"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+              )}
 
-            {/* Navigation Next Button */}
-            {currentModalIndex >= 0 && currentModalIndex < visibleItems.length - 1 && (
-              <button
-                onClick={handleNextImage}
-                className="absolute right-4 top-1/3 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/60 backdrop-blur-md border border-white/40 text-white flex items-center justify-center hover:bg-amber-600 transition-colors cursor-pointer shadow-lg"
-                aria-label="Next image"
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
-            )}
+              {/* Navigation Next Button */}
+              {currentModalIndex >= 0 && currentModalIndex < visibleItems.length - 1 && (
+                <button
+                  onClick={handleNextImage}
+                  className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-[#5B0D15] backdrop-blur-md border border-white/40 text-white flex items-center justify-center transition-all hover:scale-110 cursor-pointer shadow-xl"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              )}
 
-            {/* Modal Image */}
-            <div className="relative w-full h-80 sm:h-96 bg-stone-900 overflow-hidden">
               <img
                 src={resolveImageUrl(selectedImage.image)}
                 alt={language === 'hi' ? selectedImage.titleHi : selectedImage.title}
-                className="w-full h-full object-cover object-center"
+                className="w-auto h-auto max-w-full max-h-[60vh] sm:max-h-[66vh] object-contain object-center select-none"
                 onError={(e: any) => {
                   e.target.src = '/gallery/IMG_2542.jpg';
                 }}
               />
-              <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#5B0D15] text-amber-200 text-xs font-bold tracking-wide">
+              <div className="absolute top-4 left-4 z-10 px-3 py-1 rounded-full bg-[#5B0D15]/90 border border-amber-300/60 text-amber-200 text-xs font-bold tracking-wide shadow-md">
                 {language === 'hi' ? selectedImage.categoryLabelHi : selectedImage.categoryLabel}
               </div>
-              <div className="absolute bottom-3 right-4 px-2.5 py-0.5 rounded-full bg-black/60 text-white/90 text-[10px] font-mono">
+              <div className="absolute bottom-3 right-4 z-10 px-2.5 py-0.5 rounded-full bg-black/70 border border-amber-400/30 text-amber-200/90 text-[11px] font-mono shadow-md">
                 {currentModalIndex + 1} / {visibleItems.length}
               </div>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 sm:p-8 space-y-3">
+            <div className="p-5 sm:p-7 space-y-2.5 overflow-y-auto max-h-[32vh] shrink-0 bg-[#FAF7F2]">
               <h3 className="font-serif font-bold text-xl sm:text-2xl text-[#2A1810]">
                 {language === 'hi' ? selectedImage.titleHi : selectedImage.title}
               </h3>

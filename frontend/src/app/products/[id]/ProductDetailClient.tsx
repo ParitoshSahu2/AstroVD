@@ -130,14 +130,6 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
               sizes="(max-width: 768px) 100vw, 42vw"
               className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
             />
-            {/* Persistent In-Cart Quantity Indicator (+1, +2, etc.) */}
-            {quantityInCart > 0 && (
-              <div className="absolute top-3 left-3 z-20 px-3.5 py-1.5 rounded-full bg-[#5B0D15] text-amber-200 border-2 border-amber-400/90 font-bold text-xs shadow-xl flex items-center gap-1.5 animate-fadeIn backdrop-blur-md">
-                <ShoppingCart className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                <span className="text-white font-extrabold text-sm">+{quantityInCart}</span>
-                <span>{t('in Sacred Cart', 'पवित्र कार्ट में')}</span>
-              </div>
-            )}
             {/* Price badge */}
             <div
               className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md border border-amber-400/80 text-amber-200 font-bold text-xs shadow-md"

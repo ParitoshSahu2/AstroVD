@@ -60,10 +60,8 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
   const router = useRouter();
   const pathname = usePathname();
 
-  // The checkout bar should only ever be visible on dedicated product pages, never on the homepage
-  const isProductPage = Boolean(pathname?.startsWith('/products') || pathname?.startsWith('/shop'));
-  const isHomePage = pathname === '/' || pathname === '' || limit !== undefined;
-  const allowCheckoutBar = showCheckoutBar !== undefined ? showCheckoutBar : (isProductPage && !isHomePage);
+  // Floating checkout bar appears whenever items exist in cart (on products and home page)
+  const allowCheckoutBar = showCheckoutBar !== undefined ? showCheckoutBar : true;
 
   const handleAddToCart = (item: ProductItem, qty: number = 1) => {
     addItem(item, qty);
@@ -123,48 +121,72 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedProduct]);
 
+  const [catalog, setCatalog] = useState<ProductItem[]>(PRODUCTS_CATALOG);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchCatalog = async () => {
+      try {
+        const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
+        const res = await fetch(`${backendUrl}/api/products?limit=100`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && Array.isArray(data.data) && data.data.length > 0) {
+            setCatalog(data.data);
+          }
+        }
+      } catch (e) {
+        // Fallback to PRODUCTS_CATALOG preserves offline and test robustness
+      }
+    };
+    fetchCatalog();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const filterCategories = [
     {
       id: 'all',
       labelEn: 'All Bracelets',
       labelHi: 'सभी ब्रेसलेट',
-      count: PRODUCTS_CATALOG.length,
+      count: catalog.length,
       icon: LayoutGrid,
     },
     {
       id: 'wealth',
       labelEn: 'Wealth & Prosperity',
       labelHi: 'धन एवं समृद्धि',
-      count: PRODUCTS_CATALOG.filter((p) => p.category === 'wealth').length,
+      count: catalog.filter((p) => p.category === 'wealth').length,
       icon: Sparkles,
     },
     {
       id: 'protection',
       labelEn: 'Protection & Nazar',
       labelHi: 'सुरक्षा एवं नज़र दोष',
-      count: PRODUCTS_CATALOG.filter((p) => p.category === 'protection').length,
+      count: catalog.filter((p) => p.category === 'protection').length,
       icon: ShieldCheck,
     },
     {
       id: 'love',
       labelEn: 'Love & Peace',
       labelHi: 'प्रेम एवं शांति',
-      count: PRODUCTS_CATALOG.filter((p) => p.category === 'love').length,
+      count: catalog.filter((p) => p.category === 'love').length,
       icon: Heart,
     },
     {
       id: 'healing',
       labelEn: 'Healing & Balance',
       labelHi: 'आरोग्य एवं संतुलन',
-      count: PRODUCTS_CATALOG.filter((p) => p.category === 'healing').length,
+      count: catalog.filter((p) => p.category === 'healing').length,
       icon: Award,
     },
   ];
 
   // 1. Filter by category
   let list = activeCategory === 'all'
-    ? PRODUCTS_CATALOG
-    : PRODUCTS_CATALOG.filter((p) => p.category === activeCategory);
+    ? catalog
+    : catalog.filter((p) => p.category === activeCategory);
 
   // 2. Filter by search query (name, tag, desc, planet, categoryLabel)
   if (searchQuery.trim()) {
@@ -503,13 +525,6 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
-                  {/* Persistent In-Cart Quantity Indicator (+1, +2, etc.) */}
-                  {quantityInCart > 0 && (
-                    <div className="absolute top-2.5 right-2.5 z-20 px-2.5 py-1 rounded-full bg-[#5B0D15] text-amber-200 text-xs font-bold shadow-md border border-amber-300/80 flex items-center gap-1.5 animate-fadeIn">
-                      <ShoppingCart className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                      <span>+{quantityInCart}</span>
-                    </div>
-                  )}
                 </div>
 
                 {/* 2. White Card Content Area - Snug spacing directly leading into price and button */}
@@ -810,14 +825,6 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                   sizes="(max-width: 768px) 100vw, 42vw"
                   className="object-cover object-center w-full h-full select-none"
                 />
-                {/* Persistent In-Cart Quantity Indicator (+1, +2, etc.) */}
-                {selectedProductQtyInCart > 0 && (
-                  <div className="absolute top-3.5 left-3.5 z-30 px-3.5 py-1.5 rounded-full bg-[#5B0D15] text-amber-200 border-2 border-amber-400 font-bold text-xs shadow-xl flex items-center gap-1.5 animate-fadeIn backdrop-blur-md">
-                    <ShoppingCart className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                    <span className="text-white font-extrabold text-xs sm:text-sm">+{selectedProductQtyInCart}</span>
-                    <span>{t('in Sacred Cart', 'पवित्र कार्ट में')}</span>
-                  </div>
-                )}
               </div>
 
               {/* Details & Actions Side */}
@@ -1015,14 +1022,14 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
         );
       })()}
 
-      {/* Floating Bottom Cart Bar for quick access - only on product page, never on homepage */}
+      {/* Floating Bottom Cart Bar for quick access - appears on home and product pages when cart has items */}
       {allowCheckoutBar && totalCount > 0 && (
 
         <aside
           aria-label="Shopping Cart Bar"
           onMouseEnter={() => setIsCheckoutBarHovered(true)}
           onMouseLeave={() => setIsCheckoutBarHovered(false)}
-          className="fixed bottom-5 right-5 sm:right-8 z-40 group bg-gradient-to-r from-[#240A0F]/95 via-[#350F16]/95 to-[#240A0F]/95 backdrop-blur-xl border border-amber-400/50 shadow-[0_12px_36px_rgba(0,0,0,0.5),0_0_20px_rgba(245,199,126,0.15)] rounded-full p-1 sm:p-1.5 flex items-center transition-all duration-300 hover:border-amber-400/80 hover:shadow-[0_16px_40px_rgba(0,0,0,0.6),0_0_25px_rgba(245,199,126,0.25)] animate-slideUp cursor-pointer"
+          className="fixed bottom-5 right-5 sm:right-8 z-50 group bg-gradient-to-r from-[#240A0F]/95 via-[#350F16]/95 to-[#240A0F]/95 backdrop-blur-xl border border-amber-400/50 shadow-[0_12px_36px_rgba(0,0,0,0.5),0_0_20px_rgba(245,199,126,0.15)] rounded-full p-1 sm:p-1.5 flex items-center transition-all duration-300 hover:border-amber-400/80 hover:shadow-[0_16px_40px_rgba(0,0,0,0.6),0_0_25px_rgba(245,199,126,0.25)] animate-slideUp cursor-pointer"
         >
           {/* Expanded Info on Hover: Cart icon, items count & Total price */}
           <div
