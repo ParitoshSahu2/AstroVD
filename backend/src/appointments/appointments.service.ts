@@ -28,7 +28,7 @@ import { normalizePhoneNumber, isValidE164 } from '../auth/phone.util.js';
 import type { JwtPayload } from '../auth/decorators/current-user.decorator.js';
 import { EmailService } from '../email/email.service.js';
 
-export const DEFAULT_GURUJI_MEET_LINK = 'https://meet.google.com/zrg-vfdz-jky';
+export const DEFAULT_GURUJI_MEET_LINK = 'https://meet.google.com/meet/hui-smdn-gtp';
 
 export function formatGoogleMeetLink(bookingId?: string): string {
   const configured = process.env.GURUJI_MEET_LINK || process.env.NEXT_PUBLIC_GURUJI_MEET_LINK;
