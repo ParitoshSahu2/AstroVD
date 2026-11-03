@@ -200,8 +200,10 @@ export default function AdminBookingsTab({
               className="px-3 py-2 rounded-xl border border-stone-300 bg-white text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
             >
               <option value="ALL">All Statuses</option>
-              <option value="CONFIRMED">CONFIRMED</option>
               <option value="PENDING">PENDING</option>
+              <option value="APPROVED">APPROVED</option>
+              <option value="PENDING_PAYMENT">PENDING PAYMENT</option>
+              <option value="CONFIRMED">CONFIRMED</option>
               <option value="COMPLETED">COMPLETED</option>
               <option value="CANCELLED">CANCELLED</option>
               <option value="REJECTED">REJECTED</option>
@@ -547,6 +549,16 @@ export default function AdminBookingsTab({
                                     </a>
                                   )}
 
+                                  {b.status === 'PENDING' && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleQuickStatus(b, 'APPROVED')}
+                                      className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-emerald-50 hover:text-emerald-900 text-emerald-800 transition-colors cursor-pointer font-bold"
+                                    >
+                                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                      <span>Approve Consultation</span>
+                                    </button>
+                                  )}
                                   {canConfirm && (
                                     <button
                                       type="button"
@@ -740,6 +752,17 @@ export default function AdminBookingsTab({
                                     <Video className="w-3.5 h-3.5 text-emerald-600" />
                                     <span>Join Meeting</span>
                                   </a>
+                                )}
+
+                                {b.status === 'PENDING' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleQuickStatus(b, 'APPROVED')}
+                                    className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-emerald-50 text-emerald-800 font-bold"
+                                  >
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>Approve</span>
+                                  </button>
                                 )}
 
                                 {canConfirm && (

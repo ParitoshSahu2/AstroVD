@@ -1299,62 +1299,120 @@ export class AppointmentsService {
     const limit = Math.min(100, Math.max(1, Number(query.limit) || 20));
     const skip = (page - 1) * limit;
 
-    const where: Prisma.BookingWhereInput = {};
+    let totalCount = 0;
+    let formattedBookings: any[] = [];
+
+    try {
+      const where: Prisma.BookingWhereInput = {};
+
+      if (query.status && query.status !== 'ALL') {
+        where.status = query.status.toUpperCase();
+      }
+
+      if (query.serviceId && query.serviceId !== 'ALL') {
+        where.serviceType = query.serviceId;
+      }
+
+      if (query.date) {
+        where.scheduledDate = query.date;
+      }
+
+      if (query.search && query.search.trim()) {
+        const search = query.search.trim();
+        where.OR = [
+          { id: { contains: search, mode: 'insensitive' } },
+          { customerName: { contains: search, mode: 'insensitive' } },
+          { customerPhone: { contains: search, mode: 'insensitive' } },
+          { user: { name: { contains: search, mode: 'insensitive' } } },
+          { user: { email: { contains: search, mode: 'insensitive' } } },
+          { user: { phone: { contains: search, mode: 'insensitive' } } },
+          { notes: { contains: search, mode: 'insensitive' } },
+        ];
+      }
+
+      const [dbCount, dbBookings] = await Promise.all([
+        this.prisma.booking.count({ where }),
+        this.prisma.booking.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit,
+          include: {
+            astrologer: {
+              select: {
+                id: true,
+                name: true,
+                title: true,
+              },
+            },
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+              },
+            },
+          },
+        }),
+      ]);
+
+      if (dbCount > 0) {
+        totalCount = dbCount;
+        formattedBookings = dbBookings.map((b) =>
+          this.formatBookingPayload(b, b.user, b.astrologer),
+        );
+        return {
+          totalCount,
+          totalPages: Math.ceil(totalCount / limit) || 1,
+          page,
+          limit,
+          bookings: formattedBookings,
+        };
+      }
+    } catch (err: any) {
+      this.logger.warn(`Prisma booking lookup failed (${err.message}). Using fallback bookings.`);
+    }
+
+    // If database returned 0 or was unreachable, serve from this.fallbackBookings (appointments.json)
+    let extraFallback = [...this.fallbackBookings];
 
     if (query.status && query.status !== 'ALL') {
-      where.status = query.status.toUpperCase();
+      const targetStatus = query.status.toUpperCase();
+      extraFallback = extraFallback.filter(
+        (b) => (b.status || 'PENDING').toUpperCase() === targetStatus,
+      );
     }
 
     if (query.serviceId && query.serviceId !== 'ALL') {
-      where.serviceType = query.serviceId;
+      extraFallback = extraFallback.filter((b) => b.serviceType === query.serviceId);
     }
 
     if (query.date) {
-      where.scheduledDate = query.date;
+      extraFallback = extraFallback.filter((b) => b.scheduledDate === query.date);
     }
 
     if (query.search && query.search.trim()) {
-      const search = query.search.trim();
-      where.OR = [
-        { id: { contains: search, mode: 'insensitive' } },
-        { customerName: { contains: search, mode: 'insensitive' } },
-        { customerPhone: { contains: search, mode: 'insensitive' } },
-        { user: { name: { contains: search, mode: 'insensitive' } } },
-        { user: { email: { contains: search, mode: 'insensitive' } } },
-        { user: { phone: { contains: search, mode: 'insensitive' } } },
-        { notes: { contains: search, mode: 'insensitive' } },
-      ];
+      const s = query.search.trim().toLowerCase();
+      extraFallback = extraFallback.filter(
+        (b) =>
+          (b.id && b.id.toLowerCase().includes(s)) ||
+          (b.customerName && b.customerName.toLowerCase().includes(s)) ||
+          (b.customerPhone && b.customerPhone.toLowerCase().includes(s)) ||
+          (b.contactPhone && b.contactPhone.toLowerCase().includes(s)) ||
+          (b.customerEmail && b.customerEmail.toLowerCase().includes(s)) ||
+          (b.notes && b.notes.toLowerCase().includes(s)),
+      );
     }
 
-    const [totalCount, bookings] = await Promise.all([
-      this.prisma.booking.count({ where }),
-      this.prisma.booking.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-        include: {
-          astrologer: {
-            select: {
-              id: true,
-              name: true,
-              title: true,
-            },
-          },
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              phone: true,
-            },
-          },
-        },
-      }),
-    ]);
-
-    const formattedBookings = bookings.map((b) =>
-      this.formatBookingPayload(b, b.user, b.astrologer),
+    totalCount = extraFallback.length;
+    const paged = extraFallback.slice(skip, skip + limit);
+    formattedBookings = paged.map((b) =>
+      this.formatBookingPayload(
+        b,
+        { id: b.userId, name: b.customerName, email: b.customerEmail, phone: b.customerPhone || b.contactPhone },
+        b.astrologer,
+      ),
     );
 
     return {
