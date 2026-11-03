@@ -1,5 +1,25 @@
 [
   {
+    "id": "AVD-125229-I6E8",
+    "userId": "usr-paritosh-1",
+    "astrologerId": "ast-vishal-dubey",
+    "serviceType": "love_relationship_issues",
+    "scheduledDate": "2026-11-03",
+    "scheduledTime": "04:30 PM",
+    "durationMinutes": 30,
+    "totalCost": 2100,
+    "status": "CONFIRMED",
+    "notes": "Service: LOVE AND RELATIONSHIP ISSUES | Mode: VIDEO | Customer: Paritosh Sahu | Contact: +917089390239 | Extension Rate: ₹50/min | Paid via WALLET",
+    "contactPhone": "+917089390239",
+    "customerName": "Paritosh Sahu",
+    "customerPhone": "+917089390239",
+    "isBookingForSomeoneElse": false,
+    "meetLink": "https://meet.google.com/meet/hui-smdn-gtp",
+    "createdAt": "2026-11-03T10:35:25.229Z",
+    "updatedAt": "2026-11-03T10:35:25.229Z",
+    "customerEmail": "paritoshsahu9826@gmail.com"
+  },
+  {
     "id": "AVD-709486-OBPZ",
     "userId": "usr-paritosh-1",
     "astrologerId": "ast-vishal-dubey",

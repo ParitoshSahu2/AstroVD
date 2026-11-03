@@ -48,6 +48,18 @@ export function extractMeetingLink(notes?: string | null, bookingId?: string): s
   return formatGoogleMeetLink(bookingId);
 }
 
+export function getBookingTimestamp(dateStr?: string, timeStr?: string): number {
+  if (!dateStr) return 0;
+  const parts = dateStr.split('-').map(Number);
+  const year = parts[0] || 2026;
+  const month = parts[1] || 1;
+  const day = parts[2] || 1;
+  const minutes = parseTimeToMinutes(timeStr || '10:00 AM');
+  const hours = minutes >= 0 ? Math.floor(minutes / 60) : 0;
+  const mins = minutes >= 0 ? minutes % 60 : 0;
+  return new Date(year, month - 1, day, hours, mins, 0).getTime();
+}
+
 @Injectable()
 export class AppointmentsService {
   private readonly logger = new Logger(AppointmentsService.name);
@@ -2069,6 +2081,34 @@ export class AppointmentsService {
         })),
       ];
 
+      this.initFallbackBookings();
+      const todayStr = new Date().toISOString().split('T')[0];
+      const allActiveUpcoming = this.fallbackBookings
+        .filter((b) => b.scheduledDate >= todayStr && !['CANCELLED', 'REJECTED'].includes(b.status))
+        .map((fb) => ({
+          id: fb.id,
+          serviceTitle: fb.serviceTitle || fb.serviceType,
+          status: fb.status,
+          scheduledTime: fb.scheduledTime,
+          scheduledDate: fb.scheduledDate,
+          customerName: fb.customerName || 'Vedic Seeker',
+          customerPhone: fb.customerPhone || fb.contactPhone || null,
+          customerEmail: fb.customerEmail || null,
+          meetLink: fb.meetLink || DEFAULT_GURUJI_MEET_LINK,
+        }));
+
+      allActiveUpcoming.sort((a, b) => {
+        const tA = getBookingTimestamp(a.scheduledDate, a.scheduledTime);
+        const tB = getBookingTimestamp(b.scheduledDate, b.scheduledTime);
+        return tA - tB;
+      });
+
+      allUpcoming.sort((a, b) => {
+        const tA = parseTimeToMinutes(a.scheduledTime);
+        const tB = parseTimeToMinutes(b.scheduledTime);
+        return tA - tB;
+      });
+
       return {
         date: dateStr,
         isBlocked: Boolean(blockedDate),
@@ -2077,6 +2117,7 @@ export class AppointmentsService {
         totalSlots: enrichedSlots.length,
         bookedCount: enrichedSlots.filter((s) => s.isBooked).length,
         upcomingBookings: allUpcoming,
+        allUpcomingBookings: allActiveUpcoming,
       };
     } catch (err: any) {
       this.logger.warn(`Prisma availability lookup failed (${err.message}). Using fallback schedule.`);
@@ -2112,14 +2153,11 @@ export class AppointmentsService {
         };
       });
 
-      return {
-        date: dateStr,
-        isBlocked: false,
-        blockedReason: null,
-        slots: fallbackSlots,
-        totalSlots: fallbackSlots.length,
-        bookedCount: fallbackSlots.filter((s) => s.isBooked).length,
-        upcomingBookings: fallbackOnDate.map((fb) => ({
+      this.initFallbackBookings();
+      const todayStr = new Date().toISOString().split('T')[0];
+      const allActiveUpcoming = this.fallbackBookings
+        .filter((b) => b.scheduledDate >= todayStr && !['CANCELLED', 'REJECTED'].includes(b.status))
+        .map((fb) => ({
           id: fb.id,
           serviceTitle: fb.serviceTitle || fb.serviceType,
           status: fb.status,
@@ -2129,7 +2167,41 @@ export class AppointmentsService {
           customerPhone: fb.customerPhone || fb.contactPhone || null,
           customerEmail: fb.customerEmail || null,
           meetLink: fb.meetLink || DEFAULT_GURUJI_MEET_LINK,
-        })),
+        }));
+
+      allActiveUpcoming.sort((a, b) => {
+        const tA = getBookingTimestamp(a.scheduledDate, a.scheduledTime);
+        const tB = getBookingTimestamp(b.scheduledDate, b.scheduledTime);
+        return tA - tB;
+      });
+
+      const upcomingForDate = fallbackOnDate.map((fb) => ({
+        id: fb.id,
+        serviceTitle: fb.serviceTitle || fb.serviceType,
+        status: fb.status,
+        scheduledTime: fb.scheduledTime,
+        scheduledDate: fb.scheduledDate,
+        customerName: fb.customerName || 'Vedic Seeker',
+        customerPhone: fb.customerPhone || fb.contactPhone || null,
+        customerEmail: fb.customerEmail || null,
+        meetLink: fb.meetLink || DEFAULT_GURUJI_MEET_LINK,
+      }));
+
+      upcomingForDate.sort((a, b) => {
+        const tA = parseTimeToMinutes(a.scheduledTime);
+        const tB = parseTimeToMinutes(b.scheduledTime);
+        return tA - tB;
+      });
+
+      return {
+        date: dateStr,
+        isBlocked: false,
+        blockedReason: null,
+        slots: fallbackSlots,
+        totalSlots: fallbackSlots.length,
+        bookedCount: fallbackSlots.filter((s) => s.isBooked).length,
+        upcomingBookings: upcomingForDate,
+        allUpcomingBookings: allActiveUpcoming,
       };
     }
   }

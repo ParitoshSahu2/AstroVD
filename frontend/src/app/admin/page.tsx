@@ -1020,9 +1020,8 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!availabilityDate && typeof window !== 'undefined') {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      setAvailabilityDate(tomorrow.toISOString().split('T')[0]);
+      const today = new Date().toISOString().split('T')[0];
+      setAvailabilityDate(today);
     }
   }, [availabilityDate]);
 
