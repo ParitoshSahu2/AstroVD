@@ -90,7 +90,7 @@ export default function DashboardPage() {
     setOrders([]);
   };
 
-  const loadDashboardData = useCallback(async () => {
+  const loadDashboardData = useCallback(async (isSilent = false) => {
     const token = getAuthToken();
     const stored = getStoredUser();
 
@@ -126,87 +126,104 @@ export default function DashboardPage() {
       return;
     }
 
-    setLoading(true);
-    setBookingsLoading(true);
-    setOrdersLoading(true);
-    setTxLoading(true);
+    if (!isSilent) {
+      setLoading(true);
+      setBookingsLoading(true);
+      setOrdersLoading(true);
+      setTxLoading(true);
+    }
 
     try {
-      // 1. Fetch User Profile
-      const userRes = await fetch(`${backendUrl}/api/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (userRes.ok) {
-        const uData = await userRes.json();
-        const u = uData.user || uData;
-        setProfile(u);
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Parallel data fetching for instant response across all widgets
+      const [userSettled, walletSettled, txSettled, bookingsSettled, ordersSettled] = await Promise.allSettled([
+        fetch(`${backendUrl}/api/users/me`, { headers }),
+        fetch(`${backendUrl}/api/users/me/wallet`, { headers }),
+        fetch(`${backendUrl}/api/users/me/wallet/transactions?page=1&limit=20`, { headers }),
+        fetch(`${backendUrl}/api/appointments/my-bookings`, { headers }),
+        fetch(`${backendUrl}/api/orders/my-orders`, { headers }),
+      ]);
+
+      // 1. User Profile
+      if (userSettled.status === 'fulfilled' && userSettled.value.ok) {
+        try {
+          const uData = await userSettled.value.json();
+          const u = uData.user || uData;
+          setProfile(u);
+        } catch (e) {
+          if (stored) setProfile(stored);
+        }
       } else if (stored) {
         setProfile(stored);
       }
 
-      // 2. Fetch Wallet Balance (Canonical: /api/users/me/wallet)
-      try {
-        const wRes = await fetch(`${backendUrl}/api/users/me/wallet`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (wRes.ok) {
-          const wData = await wRes.json();
+      // 2. Wallet Balance
+      if (walletSettled.status === 'fulfilled' && walletSettled.value.ok) {
+        try {
+          const wData = await walletSettled.value.json();
           setWallet(wData);
-        }
-      } catch (e) {}
+        } catch (e) {}
+      }
 
-      // 3. Fetch Transactions (Canonical: /api/users/me/wallet/transactions)
-      try {
-        const txRes = await fetch(`${backendUrl}/api/users/me/wallet/transactions?page=1&limit=20`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (txRes.ok) {
-          const txData = await txRes.json();
+      // 3. Transactions
+      if (txSettled.status === 'fulfilled' && txSettled.value.ok) {
+        try {
+          const txData = await txSettled.value.json();
           setTransactions(txData.transactions || []);
-        }
-      } catch (e) {}
+        } catch (e) {}
+      }
+      setTxLoading(false);
 
-      // 4. Fetch Consultation Bookings (Primary: /api/appointments/my-bookings)
-      try {
-        let bRes = await fetch(`${backendUrl}/api/appointments/my-bookings`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!bRes.ok) {
-          bRes = await fetch(`${backendUrl}/api/bookings/my`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        }
-        if (bRes.ok) {
-          const bData = await bRes.json();
+      // 4. Consultation Bookings
+      if (bookingsSettled.status === 'fulfilled' && bookingsSettled.value.ok) {
+        try {
+          const bData = await bookingsSettled.value.json();
           const list = Array.isArray(bData) ? bData : (bData.bookings || []);
           setBookings(getCombinedBookings(list));
-        } else {
+        } catch (e) {
           setBookings(getCombinedBookings([]));
         }
-      } catch (e) {
-        setBookings(getCombinedBookings([]));
-      }
-
-      // 5. Fetch Orders (Primary: /api/orders/my-orders)
-      try {
-        let oRes = await fetch(`${backendUrl}/api/orders/my-orders`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!oRes.ok) {
-          oRes = await fetch(`${backendUrl}/api/orders/my`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+      } else {
+        try {
+          const altRes = await fetch(`${backendUrl}/api/bookings/my`, { headers });
+          if (altRes.ok) {
+            const bData = await altRes.json();
+            const list = Array.isArray(bData) ? bData : (bData.bookings || []);
+            setBookings(getCombinedBookings(list));
+          } else {
+            setBookings(getCombinedBookings([]));
+          }
+        } catch (e) {
+          setBookings(getCombinedBookings([]));
         }
-        if (oRes.ok) {
-          const oData = await oRes.json();
+      }
+      setBookingsLoading(false);
+
+      // 5. Orders
+      if (ordersSettled.status === 'fulfilled' && ordersSettled.value.ok) {
+        try {
+          const oData = await ordersSettled.value.json();
           const backendOrders = Array.isArray(oData) ? oData : (oData.orders || []);
           setOrders(getCombinedOrders(backendOrders));
-        } else {
+        } catch (e) {
           setOrders(getCombinedOrders([]));
         }
-      } catch (e) {
-        setOrders(getCombinedOrders([]));
+      } else {
+        try {
+          const altRes = await fetch(`${backendUrl}/api/orders/my`, { headers });
+          if (altRes.ok) {
+            const oData = await altRes.json();
+            const backendOrders = Array.isArray(oData) ? oData : (oData.orders || []);
+            setOrders(getCombinedOrders(backendOrders));
+          } else {
+            setOrders(getCombinedOrders([]));
+          }
+        } catch (e) {
+          setOrders(getCombinedOrders([]));
+        }
       }
+      setOrdersLoading(false);
     } catch (err) {
       console.error('Error loading dashboard data:', err);
     } finally {
@@ -246,7 +263,7 @@ export default function DashboardPage() {
     const pollInterval = setInterval(() => {
       const token = getAuthToken();
       if (token) {
-        loadDashboardData();
+        loadDashboardData(true);
       }
     }, 10000);
 
