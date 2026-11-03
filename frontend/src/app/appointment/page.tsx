@@ -391,6 +391,17 @@ function AppointmentContent() {
       return;
     }
 
+    const chosenSlotObj = availableSlots.find((s) => s.time === timeSlot);
+    if (chosenSlotObj && !chosenSlotObj.isAvailable) {
+      setErrorMsg(
+        t(
+          `The time slot at ${timeSlot} on ${date} is already reserved. Please select another available slot.`,
+          `${date} को ${timeSlot} का समय स्लॉट पहले ही आरक्षित है। कृपया कोई अन्य उपलब्ध स्लॉट चुनें।`,
+        ),
+      );
+      return;
+    }
+
     const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
     if (!token) {
       setAuthModalOpen(true);
@@ -448,7 +459,33 @@ function AppointmentContent() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || 'Failed to complete appointment reservation.');
+        setErrorMsg(
+          data.message ||
+            t(
+              'The selected time slot is no longer available. Please select another slot.',
+              'चयनित समय स्लॉट अब उपलब्ध नहीं है। कृपया दूसरा स्लॉट चुनें।',
+            ),
+        );
+        setConfirmationModalOpen(false);
+        try {
+          const slotsRes = await fetch(
+            `${backendUrl}/api/appointments/slots?serviceId=${encodeURIComponent(
+              selectedServiceId,
+            )}&date=${encodeURIComponent(date)}&_t=${Date.now()}`,
+          );
+          if (slotsRes.ok) {
+            const slotsData = await slotsRes.json();
+            if (slotsData.slots) {
+              setAvailableSlots(slotsData.slots);
+              const firstAvail = slotsData.slots.find((s: any) => s.isAvailable);
+              if (firstAvail) {
+                selectedTimeSlotRef.current = firstAvail.time;
+                setTimeSlot(firstAvail.time);
+              }
+            }
+          }
+        } catch (e) {}
+        return;
       }
 
       const bookingPayload = data.booking || {};
@@ -493,7 +530,7 @@ function AppointmentContent() {
         } catch (e) {}
       }
     } catch (err: any) {
-      console.error('Appointment reservation failed:', err);
+      console.warn('Appointment reservation error:', err);
       setErrorMsg(err.message || 'Failed to complete appointment reservation. Please try again.');
       setConfirmationModalOpen(false);
       // Refresh slots in case of collision
@@ -1333,9 +1370,13 @@ function AppointmentContent() {
                           const chosen = e.target.value;
                           selectedTimeSlotRef.current = chosen;
                           setTimeSlot(chosen);
+                          setErrorMsg(null);
                         }}
                         className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-xs font-semibold text-stone-800 bg-white focus:outline-none focus:border-amber-500 transition-all cursor-pointer shadow-xs appearance-none pr-10 disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed"
                       >
+                        <option value="" disabled>
+                          -- {t('Select an Available Slot', 'उपलब्ध स्लॉट चुनें')} --
+                        </option>
                         {availableSlots.length > 0 ? (
                           availableSlots.map((slot) => (
                             <option
@@ -1355,6 +1396,44 @@ function AppointmentContent() {
                       </select>
                       <ChevronDown className="w-4 h-4 text-stone-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
+
+                    {/* Quick-Select Interactive Slot Pills */}
+                    {availableSlots.length > 0 && !isDateBlocked && (
+                      <div className="pt-1.5 flex flex-wrap gap-1.5">
+                        {availableSlots.map((slot) => {
+                          const isSelected = timeSlot === slot.time;
+                          const isAvail = slot.isAvailable;
+                          return (
+                            <button
+                              key={slot.time}
+                              type="button"
+                              disabled={!isAvail}
+                              onClick={() => {
+                                if (isAvail) {
+                                  selectedTimeSlotRef.current = slot.time;
+                                  setTimeSlot(slot.time);
+                                  setErrorMsg(null);
+                                }
+                              }}
+                              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all flex items-center gap-1 cursor-pointer ${
+                                !isAvail
+                                  ? 'bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed line-through opacity-70'
+                                  : isSelected
+                                  ? 'bg-[#5B0D15] text-white border border-[#5B0D15] shadow-xs'
+                                  : 'bg-white text-stone-700 border border-stone-200 hover:border-amber-400 hover:bg-amber-50/50'
+                              }`}
+                            >
+                              <span>{slot.time}</span>
+                              {!isAvail && (
+                                <span className="text-[9px] uppercase tracking-wider text-rose-700/80 no-underline font-bold">
+                                  ({t('Reserved', 'आरक्षित')})
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
 
                     <span className="text-[10px] text-stone-500 block">
                       {timeSlot ? (

@@ -453,6 +453,7 @@ export class AppointmentsService {
    * Calculate published time slots for a service and date, querying PostgreSQL AppointmentSlot & BlockedDate.
    */
   async getAvailableSlots(serviceId: string, dateStr: string, requestedDuration?: number) {
+    this.initFallbackBookings();
     const service = this.getServiceById(serviceId); // Validate service exists
 
     // Validate date format YYYY-MM-DD
@@ -699,6 +700,7 @@ export class AppointmentsService {
    * Book an appointment with database transaction and concurrency double-booking prevention.
    */
   async bookAppointment(actor: JwtPayload, dto: BookAppointmentDto, ipAddress?: string) {
+    this.initFallbackBookings();
     // 1. Validate canonical service definition (price is derived server-side only)
     const service = this.getServiceById(dto.serviceId);
     const bookingDuration = dto.durationMinutes || service.durationMinutes || 30;
@@ -1021,6 +1023,7 @@ export class AppointmentsService {
     service: ServiceCatalogueItem,
     normalizedPhone: string,
   ) {
+    this.initFallbackBookings();
     const collision = this.fallbackBookings.find(
       (b) =>
         b.scheduledDate === dto.scheduledDate &&
