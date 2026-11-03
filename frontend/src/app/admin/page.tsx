@@ -863,7 +863,11 @@ export default function AdminPage() {
       setStatusNotes('');
       fetchBookingsList(bookingPage);
     } catch (err: any) {
-      setStatusError(err.message || 'Error updating status.');
+      if (err.name === 'TypeError' || err.message === 'Failed to fetch' || err.message?.includes('fetch')) {
+        setStatusError('Network connection error: Unable to reach backend server on port 5001. Please make sure the backend server is running.');
+      } else {
+        setStatusError(err.message || 'Error updating status.');
+      }
     } finally {
       setUpdatingStatus(false);
     }

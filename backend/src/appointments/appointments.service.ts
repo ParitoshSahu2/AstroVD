@@ -1277,6 +1277,7 @@ export class AppointmentsService {
         throw err;
       }
 
+      this.initFallbackBookings();
       const b = this.fallbackBookings.find((item) => item.id === bookingId);
       if (!b) {
         throw new NotFoundException(`Booking with ID "${bookingId}" was not found.`);
@@ -1375,6 +1376,7 @@ export class AppointmentsService {
     }
 
     // If database returned 0 or was unreachable, serve from this.fallbackBookings (appointments.json)
+    this.initFallbackBookings();
     let extraFallback = [...this.fallbackBookings];
 
     if (query.status && query.status !== 'ALL') {
@@ -1444,6 +1446,7 @@ export class AppointmentsService {
     }
 
     if (!booking) {
+      this.initFallbackBookings();
       const fbIdx = this.fallbackBookings.findIndex((b) => b.id === bookingId);
       if (fbIdx !== -1) {
         const fb = this.fallbackBookings[fbIdx];
