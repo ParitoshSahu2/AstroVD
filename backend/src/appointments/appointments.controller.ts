@@ -92,6 +92,20 @@ export class AppointmentsController {
     return await this.appointmentsService.getCustomerBookings(actor.sub);
   }
 
+  @Post(':id/pay')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Complete payment for an approved consultation appointment',
+  })
+  async payForBooking(
+    @CurrentUser() actor: JwtPayload,
+    @Param('id') id: string,
+    @Body() body: { paymentMethod?: string },
+  ) {
+    return await this.appointmentsService.payForBooking(actor, id, body?.paymentMethod);
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

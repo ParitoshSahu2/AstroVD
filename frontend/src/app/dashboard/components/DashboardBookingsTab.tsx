@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Calendar,
@@ -18,6 +19,9 @@ import {
   ArrowRight,
   X,
   Printer,
+  CreditCard,
+  AlertCircle,
+  RefreshCw,
   Lock,
 } from 'lucide-react';
 import { formatGoogleMeetLink } from '../utils';
@@ -40,8 +44,59 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
 }) => {
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed' | 'pending'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedRemedyBooking, setSelectedRemedyBooking] = useState<any | null>(null);
+  const [payingBooking, setPayingBooking] = useState<any | null>(null);
+  const [payLoading, setPayLoading] = useState(false);
+  const [paySuccessMsg, setPaySuccessMsg] = useState<string | null>(null);
+
+  const handleExecutePayment = async (bookingId: string) => {
+    setPayLoading(true);
+    setPaySuccessMsg(null);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
+      const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
+      const res = await fetch(`${backendUrl}/api/appointments/${bookingId}/pay`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ paymentMethod: 'WALLET' }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Payment failed.');
+      }
+
+      setPaySuccessMsg(t('Payment successful! Your consultation is now confirmed.', 'दक्षिणा भुगतान संपन्न! आपका परामर्श अब पुष्ट हो गया है।'));
+      
+      // Update local storage and dispatch event to refresh dashboard & navbar
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('astro_consultations');
+          if (raw) {
+            const list = JSON.parse(raw);
+            const updatedList = list.map((b: any) => (b.id === bookingId ? { ...b, status: 'CONFIRMED' } : b));
+            localStorage.setItem('astro_consultations', JSON.stringify(updatedList));
+          }
+          window.dispatchEvent(new CustomEvent('astro-auth-change'));
+        } catch (e) {}
+      }
+
+      setTimeout(() => {
+        setPayingBooking(null);
+        setPaySuccessMsg(null);
+        window.location.reload();
+      }, 1500);
+    } catch (err: any) {
+      alert(err.message || 'Failed to complete payment.');
+    } finally {
+      setPayLoading(false);
+    }
+  };
 
   const handleCopyId = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -358,7 +413,7 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                   </div>
 
                   <div className="flex items-center gap-3">
-                    {/* Status Pill with Dot */}
+                    {/* Status Pill with Dot (Full Lifecycle) */}
                     {isCompleted ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200">
                         <Check className="w-3 h-3 text-blue-600" />
@@ -367,12 +422,22 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                     ) : isConfirmed ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                        <span>{t('Confirmed', 'पुष्टीकृत')}</span>
+                        <span>{t('Confirmed / Paid', 'पुष्टीकृत / प्रदत्त')}</span>
+                      </span>
+                    ) : booking.status === 'APPROVED' || booking.status === 'PENDING_PAYMENT' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-900 border border-emerald-300">
+                        <Sparkles className="w-3 h-3 text-emerald-600" />
+                        <span>{t('Approved - Pay Dakshina', 'स्वीकृत - दक्षिणा शेष')}</span>
+                      </span>
+                    ) : booking.status === 'CANCELLED' || booking.status === 'REJECTED' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-800 border border-rose-200">
+                        <X className="w-3 h-3 text-rose-600" />
+                        <span>{t('Unavailable / Cancelled', 'रद्द / अनुपलब्ध')}</span>
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-300">
                         <Clock className="w-3 h-3 text-amber-600" />
-                        <span>{t('Awaiting Approval', 'स्वीकृति प्रतीक्षारत')}</span>
+                        <span>{t('Awaiting Admin Approval', 'स्वीकृति प्रतीक्षारत')}</span>
                       </span>
                     )}
 
@@ -410,6 +475,45 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                         <span>{slotTime} IST</span>
                       </span>
                     </div>
+
+                    {(booking.status === 'CANCELLED' || booking.status === 'REJECTED') && (
+                      <div className="p-2.5 rounded-xl bg-rose-50/90 border border-rose-200 text-xs text-rose-900 space-y-1 my-1.5">
+                        <div className="flex items-center gap-1.5 font-bold text-rose-800">
+                          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                          <span>{t('Panditji / Guruji Unavailable for this Slot', 'पूज्य गुरुजी / पंडित जी इस समय अनुपलब्ध हैं')}</span>
+                        </div>
+                        <p className="text-[11px] text-rose-700 leading-snug">
+                          {t(
+                            'Dr. Pandit Vishal Dubey is unavailable for this meeting slot due to emergency temple rituals or prior sacred commitments. Please reschedule your consultation for another suitable slot.',
+                            'पूज्य गुरुजी / पंडित जी अपरिहार्य धार्मिक अनुष्ठान के कारण इस समय उपलब्ध नहीं हैं। कृपया अन्य समय हेतु परामर्श पुनर्निर्धारित (Reschedule) करें।'
+                          )}
+                        </p>
+                      </div>
+                    )}
+
+                    {(booking.status === 'APPROVED' || booking.status === 'PENDING_PAYMENT') && (
+                      <div className="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs text-emerald-900 flex items-center gap-2 my-1.5">
+                        <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>
+                          {t(
+                            'Dr. Pandit Vishal Dubey has approved your consultation! Please complete the Dakshina payment to confirm your booking and unlock your video consultation.',
+                            'पूज्य गुरुजी द्वारा परामर्श अनुरोध स्वीकृत हो गया है! कृपया दक्षिणा का भुगतान कर परामर्श पुष्ट करें।'
+                          )}
+                        </span>
+                      </div>
+                    )}
+
+                    {(booking.status === 'PENDING' || (!isConfirmed && !isCompleted && booking.status !== 'CANCELLED' && booking.status !== 'REJECTED' && booking.status !== 'APPROVED' && booking.status !== 'PENDING_PAYMENT')) && (
+                      <div className="p-2 rounded-xl bg-amber-50/70 border border-amber-200/80 text-[11px] text-amber-900 flex items-center gap-2 my-1">
+                        <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>
+                          {t(
+                            'Your consultation request is pending review by Dr. Pandit Vishal Dubey. You will be notified once approved to proceed with payment.',
+                            'आपका परामर्श अनुरोध पूज्य गुरुजी के अवलोकन हेतु प्रतीक्षारत है। व्यवस्थापक द्वारा स्वीकृति के उपरांत भुगतान सक्रिय होगा।'
+                          )}
+                        </span>
+                      </div>
+                    )}
 
                     {(booking.customerName || booking.customerPhone) && (
                       <div className="flex items-center gap-2 text-xs text-stone-600 pt-1 flex-wrap">
@@ -469,10 +573,10 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                           type="button"
                           disabled
                           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-stone-100 text-stone-400 font-semibold text-xs border border-stone-200 cursor-not-allowed whitespace-nowrap"
-                          title={t('Unlocks 15 minutes prior to appointment', 'परामर्श समय से 15 मिनट पहले सक्रिय होगा')}
+                          title={t('Unlocks 5 minutes prior to appointment', 'परामर्श समय से 5 मिनट पहले सक्रिय होगा')}
                         >
                           <Lock className="w-3.5 h-3.5 text-stone-400" />
-                          <span>{t('Join Meeting (Opens 15 Min Before)', 'मीटिंग से जुड़ें (15 मिनट पूर्व)')}</span>
+                          <span>{t('Join Meeting (Opens 5 Min Before)', 'मीटिंग से जुड़ें (5 मिनट पूर्व खुलेगा)')}</span>
                         </button>
                       );
                     })() : (
@@ -622,6 +726,84 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                 </a>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Payment Modal for Approved Consultations */}
+      {payingBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-fadeIn">
+          <div className="relative w-full max-w-md rounded-2xl bg-[#FCFBF8] border border-amber-300 shadow-2xl p-5 text-[#3B1E22]">
+            <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-[#5B0D15]" />
+                <h3 className="font-serif font-bold text-base text-[#5B0D15]">
+                  {t('Complete Consultation Dakshina', 'परामर्श दक्षिणा भुगतान')}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPayingBooking(null)}
+                className="text-stone-400 hover:text-stone-700 cursor-pointer p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {paySuccessMsg ? (
+              <div className="py-6 text-center space-y-2">
+                <Check className="w-10 h-10 text-emerald-600 mx-auto" />
+                <p className="text-sm font-bold text-emerald-800">{paySuccessMsg}</p>
+                <p className="text-xs text-stone-500">{t('Reloading consultation details...', 'विवरण अपडेट हो रहा है...')}</p>
+              </div>
+            ) : (
+              <div className="py-3 space-y-3.5">
+                <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-xs space-y-1.5">
+                  <div className="flex justify-between">
+                    <span className="text-stone-600">{t('Service:', 'सेवा:')}</span>
+                    <span className="font-bold text-[#5B0D15]">{payingBooking.serviceTitle || 'Vedic Consultation'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-stone-600">{t('Scheduled Time:', 'समय:')}</span>
+                    <span className="font-semibold text-stone-800">{payingBooking.scheduledDate} • {payingBooking.scheduledTime || payingBooking.slot}</span>
+                  </div>
+                  <div className="flex justify-between pt-1 border-t border-amber-200/60 font-bold">
+                    <span className="text-stone-800">{t('Dakshina Amount:', 'दक्षिणा राशि:')}</span>
+                    <span className="text-sm text-[#5B0D15]">₹{payingBooking.totalCost || payingBooking.fee || 2100}</span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-white border border-stone-200 text-xs space-y-2">
+                  <div className="flex items-center justify-between font-bold text-stone-800">
+                    <span>🪙 {t('Astro Wallet Balance', 'एस्ट्रो वॉलेट बैलेंस')}</span>
+                    <span className="text-[#5B0D15]">₹{profile?.walletBalance || 0}</span>
+                  </div>
+                  <p className="text-[11px] text-stone-500">
+                    {Number(profile?.walletBalance || 0) >= Number(payingBooking.totalCost || 2100)
+                      ? t('Available balance will be used for instant payment.', 'उपलब्ध बैलेंस से तत्काल भुगतान होगा।')
+                      : t('Instant secure payment with Astro Wallet or UPI/Cards.', 'वॉलेट या यूपीआई से सुरक्षित भुगतान।')}
+                  </p>
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPayingBooking(null)}
+                    className="px-4 py-2 rounded-xl border border-stone-300 text-xs font-semibold hover:bg-stone-50 cursor-pointer"
+                  >
+                    {t('Cancel', 'रद्द करें')}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={payLoading}
+                    onClick={() => handleExecutePayment(payingBooking.id)}
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#5B0D15] via-[#851622] to-[#5B0D15] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {payLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CreditCard className="w-3.5 h-3.5 text-amber-300" />}
+                    <span>{t('Pay ₹' + (payingBooking.totalCost || payingBooking.fee || 2100) + ' & Confirm', '₹' + (payingBooking.totalCost || payingBooking.fee || 2100) + ' भुगतान करें व पुष्ट करें')}</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

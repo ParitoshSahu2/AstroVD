@@ -766,16 +766,27 @@ export default function BookingLifecycleModal({
 
             {/* Valid Transition Action Buttons */}
             <div className="flex flex-wrap items-center gap-2 pt-0.5">
-              {(activeBooking.status === 'PENDING' || activeBooking.status === 'PENDING_PAYMENT') && (
+              {(activeBooking.status === 'PENDING' || activeBooking.status === 'PENDING_PAYMENT' || activeBooking.status === 'APPROVED') && (
                 <>
+                  {activeBooking.status === 'PENDING' && (
+                    <button
+                      type="button"
+                      disabled={updatingStatus}
+                      onClick={() => onTransitionStatus('APPROVED')}
+                      className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:scale-105 active:scale-95"
+                    >
+                      {updatingStatus ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5 text-emerald-200" />}
+                      <span>Approve Consultation (Awaiting User Payment)</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     disabled={updatingStatus}
                     onClick={() => onTransitionStatus('CONFIRMED')}
-                    className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="px-3.5 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
                     {updatingStatus ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                    <span>Confirm Appointment</span>
+                    <span>Confirm &amp; Mark as Paid</span>
                   </button>
                   <button
                     type="button"

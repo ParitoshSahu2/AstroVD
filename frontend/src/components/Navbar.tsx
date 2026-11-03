@@ -506,8 +506,36 @@ export const Navbar: React.FC = () => {
                 title: `${serviceName} - ${t('Consultation Confirmed', 'परामर्श पुष्ट')}`,
                 badge: t('Confirmed', 'पुष्ट'),
                 badgeColor: 'text-emerald-700 bg-emerald-100 border-emerald-200',
-                desc: `${dateStr}${timeSlot ? ` • ${timeSlot}` : ''} ${t('with Dr. Pandit Vishal Dubey. Meeting room unlocks 15m before session.', 'डॉ. पंडित विशाल दुबे के साथ। सत्र से 15 मिनट पूर्व लिंक सक्रिय होगा।')}`,
+                desc: `${dateStr}${timeSlot ? ` • ${timeSlot}` : ''} ${t('with Dr. Pandit Vishal Dubey. Meeting room unlocks 5m before session.', 'डॉ. पंडित विशाल दुबे के साथ। सत्र से 5 मिनट पूर्व लिंक सक्रिय होगा।')}`,
                 time: t('Confirmed', 'पुष्ट'),
+                onClick: () => {
+                  setNotificationOpen(false);
+                  router.push('/dashboard');
+                },
+              });
+            } else if (b.status === 'APPROVED' || b.status === 'PENDING_PAYMENT') {
+              items.push({
+                id: `booking-${b.id || idx}`,
+                icon: '🎉',
+                title: `${serviceName} - ${t('Approved! Pay Dakshina to Confirm', 'स्वीकृत! दक्षिणा भुगतान करें')}`,
+                badge: t('Pay Now', 'भुगतान करें'),
+                badgeColor: 'text-amber-900 bg-amber-100 border-amber-300 animate-pulse',
+                desc: `${dateStr}${timeSlot ? ` • ${timeSlot}` : ''} • ${t('Approved by Dr. Pandit Vishal Dubey. Please proceed to payment to confirm booking and access meeting room.', 'पूज्य गुरुजी द्वारा स्वीकृत। कृपया दक्षिणा का भुगतान कर परामर्श पुष्ट करें।')}`,
+                time: t('Action Needed', 'अनिवार्य'),
+                onClick: () => {
+                  setNotificationOpen(false);
+                  router.push('/dashboard');
+                },
+              });
+            } else if (b.status === 'CANCELLED' || b.status === 'REJECTED') {
+              items.push({
+                id: `booking-${b.id || idx}`,
+                icon: '⚠️',
+                title: `${serviceName} - ${t('Guruji Unavailable (Please Reschedule)', 'गुरुजी अनुपलब्ध (पुनर्निर्धारित करें)')}`,
+                badge: t('Reschedule', 'पुनर्निर्धारित'),
+                badgeColor: 'text-rose-700 bg-rose-100 border-rose-300',
+                desc: `${t('Dr. Pandit Vishal Dubey is unavailable for this slot due to sacred rituals. Please reschedule for another suitable slot.', 'पूज्य गुरुजी धार्मिक अनुष्ठान के कारण अनुपलब्ध हैं। कृपया नया समय चुनें।')}`,
+                time: t('Action Needed', 'अनिवार्य'),
                 onClick: () => {
                   setNotificationOpen(false);
                   router.push('/dashboard');

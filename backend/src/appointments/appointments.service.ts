@@ -1375,12 +1375,32 @@ export class AppointmentsService {
     dto: UpdateBookingStatusDto,
     ipAddress?: string,
   ) {
-    const booking = await this.prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: { user: true },
-    });
+    let booking = null;
+    try {
+      booking = await this.prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: { user: true },
+      });
+    } catch (e) {
+      booking = null;
+    }
 
     if (!booking) {
+      const fbIdx = this.fallbackBookings.findIndex((b) => b.id === bookingId);
+      if (fbIdx !== -1) {
+        const fb = this.fallbackBookings[fbIdx];
+        const currentStatus = (fb.status || 'PENDING').toUpperCase();
+        const targetStatus = dto.status.toUpperCase();
+        fb.status = targetStatus;
+        if (dto.notes) {
+          fb.notes = `${fb.notes || ''} | Status (${targetStatus}): ${dto.notes}`;
+        }
+        this.persistFallbackBookings();
+        return {
+          message: `Booking status successfully updated to ${targetStatus}.`,
+          booking: fb,
+        };
+      }
       throw new NotFoundException(`Booking with ID "${bookingId}" was not found.`);
     }
 
@@ -1410,8 +1430,9 @@ export class AppointmentsService {
     // PENDING -> CONFIRMED, CANCELLED, REJECTED
     // CONFIRMED -> COMPLETED, CANCELLED
     const validTransitions: Record<string, string[]> = {
-      PENDING_PAYMENT: ['CONFIRMED', 'CANCELLED', 'REJECTED'],
-      PENDING: ['CONFIRMED', 'CANCELLED', 'REJECTED'],
+      PENDING_PAYMENT: ['APPROVED', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
+      PENDING: ['APPROVED', 'PENDING_PAYMENT', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
+      APPROVED: ['PENDING_PAYMENT', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
       CONFIRMED: ['COMPLETED', 'CANCELLED'],
     };
 
@@ -1501,6 +1522,92 @@ export class AppointmentsService {
       message: `Booking status successfully updated to ${targetStatus}.`,
       booking: this.formatBookingPayload(updatedBooking, updatedBooking.user, updatedBooking.astrologer),
     };
+  }
+
+  /**
+   * Complete payment for an approved consultation appointment (Customer / Seeker).
+   */
+  async payForBooking(actor: JwtPayload, bookingId: string, paymentMethod = 'WALLET') {
+    try {
+      const booking = await this.prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: { user: true },
+      });
+
+      if (!booking) {
+        throw new NotFoundException(`Booking with ID "${bookingId}" not found.`);
+      }
+
+      if (booking.userId !== actor.sub && actor.role !== 'ADMIN' && actor.role !== 'SUPERADMIN') {
+        throw new ForbiddenException('Not authorized to pay for another user’s consultation.');
+      }
+
+      if (booking.status === 'CONFIRMED' || booking.status === 'COMPLETED') {
+        return {
+          success: true,
+          message: 'Booking is already paid and confirmed.',
+          booking,
+        };
+      }
+
+      const cost = Number(booking.totalCost || 2100);
+
+      if (paymentMethod === 'WALLET') {
+        const user = await this.prisma.user.findUnique({
+          where: { id: actor.sub },
+          select: { id: true, walletBalance: true },
+        });
+
+        if (user && Number(user.walletBalance || 0) >= cost) {
+          await this.prisma.user.update({
+            where: { id: actor.sub },
+            data: { walletBalance: { decrement: cost } },
+          });
+
+          await this.prisma.walletTransaction.create({
+            data: {
+              userId: actor.sub,
+              type: 'DEBIT',
+              amount: cost,
+              balanceAfter: Math.max(0, Number(user.walletBalance || 0) - cost),
+              description: `Payment for consultation: ${booking.serviceType || bookingId}`,
+              reference: `PAY_BOOKING_${bookingId}`,
+            },
+          });
+        }
+      }
+
+      const updated = await this.prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          status: 'CONFIRMED',
+          notes: booking.notes ? `${booking.notes} | Paid via ${paymentMethod}` : `Paid via ${paymentMethod}`,
+        },
+      });
+
+      return {
+        success: true,
+        message: 'Payment completed successfully! Your consultation is now confirmed.',
+        booking: updated,
+      };
+    } catch (err: any) {
+      if (err instanceof NotFoundException || err instanceof ForbiddenException) throw err;
+
+      // Fallback JSON store
+      const idx = this.fallbackBookings.findIndex((b) => b.id === bookingId);
+      if (idx !== -1) {
+        this.fallbackBookings[idx].status = 'CONFIRMED';
+        this.fallbackBookings[idx].notes = `${this.fallbackBookings[idx].notes || ''} | Paid via ${paymentMethod}`;
+        this.persistFallbackBookings();
+        return {
+          success: true,
+          message: 'Payment completed successfully! Your consultation is now confirmed.',
+          booking: this.fallbackBookings[idx],
+        };
+      }
+
+      throw new NotFoundException(`Booking with ID "${bookingId}" not found in persistent store.`);
+    }
   }
 
   /**

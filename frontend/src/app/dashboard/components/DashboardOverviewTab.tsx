@@ -20,6 +20,7 @@ import {
   ExternalLink,
   Truck,
   Lock,
+  CreditCard,
 } from 'lucide-react';
 import { UserProfile, DashboardTab, formatZodiacName, getUserInitials } from '../types';
 import { resolveProductImage } from '../utils';
@@ -378,13 +379,31 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                     type="button"
                     disabled
                     className="px-5 py-2.5 rounded-full bg-stone-100 text-stone-400 font-semibold text-xs border border-stone-200 cursor-not-allowed flex items-center justify-center gap-2"
-                    title={t('Unlocks 15 minutes prior to appointment', 'परामर्श समय से 15 मिनट पहले सक्रिय होगा')}
+                    title={t('Unlocks 5 minutes prior to appointment', 'परामर्श समय से 5 मिनट पहले सक्रिय होगा')}
                   >
                     <Lock className="w-3.5 h-3.5 text-stone-400" />
-                    <span>{t('Join Meeting (Opens 15 Min Before)', 'मीटिंग से जुड़ें (15 मिनट पूर्व)')}</span>
+                    <span>{t('Join Meeting (Opens 5 Min Before)', 'मीटिंग से जुड़ें (5 मिनट पूर्व)')}</span>
                   </button>
                 );
-              })() : (
+              })() : (nextBooking.status === 'APPROVED' || nextBooking.status === 'PENDING_PAYMENT') ? (
+                <button
+                  type="button"
+                  onClick={() => onTabChange('consultations')}
+                  className="px-6 py-3 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#851622] to-[#5B0D15] text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 animate-pulse"
+                >
+                  <CreditCard className="w-4 h-4 text-amber-300" />
+                  <span>{t('Proceed to Pay & Confirm', 'दक्षिणा भुगतान कर पुष्ट करें')}</span>
+                </button>
+              ) : (nextBooking.status === 'CANCELLED' || nextBooking.status === 'REJECTED') ? (
+                <button
+                  type="button"
+                  onClick={() => onTabChange('consultations')}
+                  className="px-5 py-2.5 rounded-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>{t('Reschedule (Guruji Unavailable)', 'पुनर्निर्धारित करें (गुरुजी अनुपलब्ध)')}</span>
+                </button>
+              ) : (
                 <div className="px-5 py-2.5 rounded-full bg-amber-50 text-amber-800 text-xs font-semibold border border-amber-300 flex items-center justify-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-amber-600" />
                   <span>{t('Waiting for Admin Approval', 'व्यवस्थापक स्वीकृति की प्रतीक्षा')}</span>

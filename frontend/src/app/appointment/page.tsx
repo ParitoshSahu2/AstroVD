@@ -617,12 +617,24 @@ function AppointmentContent() {
             </div>
 
             <div className="p-5 sm:p-7 space-y-5 relative z-10">
-              {/* SECTION 1: Success Header & Reference */}
+              {/* SECTION 1: Header & Reference (Pending Admin Approval Flow) */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-stone-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center shrink-0 shadow-xs">
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shadow-md shadow-emerald-700/20">
-                      <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-xs ${
+                    confirmedBooking.status === 'CONFIRMED'
+                      ? 'bg-emerald-50 border border-emerald-200/80'
+                      : 'bg-amber-50 border border-amber-300/80'
+                  }`}>
+                    <div className={`w-7 h-7 rounded-xl text-white flex items-center justify-center shadow-md ${
+                      confirmedBooking.status === 'CONFIRMED'
+                        ? 'bg-gradient-to-br from-emerald-500 to-teal-700 shadow-emerald-700/20'
+                        : 'bg-gradient-to-br from-amber-500 to-amber-700 shadow-amber-700/20'
+                    }`}>
+                      {confirmedBooking.status === 'CONFIRMED' ? (
+                        <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                      ) : (
+                        <Clock className="w-4 h-4 stroke-[2.5]" />
+                      )}
                     </div>
                   </div>
                   <div>
@@ -634,16 +646,30 @@ function AppointmentContent() {
                         {confirmedBooking.id.slice(0, 10).toUpperCase()}
                       </span>
                     </div>
-                    <div className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 mt-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>{t('Reservation Verified', 'सत्यापित आरक्षण')}</span>
+                    <div className={`text-[11px] font-semibold flex items-center gap-1 mt-0.5 ${
+                      confirmedBooking.status === 'CONFIRMED' ? 'text-emerald-700' : 'text-amber-800'
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                        confirmedBooking.status === 'CONFIRMED' ? 'bg-emerald-500' : 'bg-amber-500'
+                      }`} />
+                      <span>
+                        {confirmedBooking.status === 'CONFIRMED'
+                          ? t('Reservation Confirmed', 'पुष्टीकृत आरक्षण')
+                          : t('Request Sent to Admin', 'अनुरोध व्यवस्थापक को प्रेषित')}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 tracking-wider uppercase">
-                    {confirmedBooking.status || 'CONFIRMED'}
+                  <span className={`px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase border ${
+                    confirmedBooking.status === 'CONFIRMED'
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                      : 'bg-amber-100 text-amber-900 border-amber-300'
+                  }`}>
+                    {confirmedBooking.status === 'CONFIRMED'
+                      ? t('CONFIRMED', 'पुष्टीकृत')
+                      : t('WAITING FOR APPROVAL', 'स्वीकृति प्रतीक्षारत')}
                   </span>
                 </div>
               </div>
@@ -651,29 +677,50 @@ function AppointmentContent() {
               {/* Title & Attendee Narrative */}
               <div className="space-y-1.5">
                 <h2 className="font-serif font-bold text-xl sm:text-2xl text-[#2A1810] tracking-tight leading-snug">
-                  {t('Appointment Reserved Successfully!', 'परामर्श सत्र सफलतापूर्वक आरक्षित हुआ!')}
+                  {confirmedBooking.status === 'CONFIRMED'
+                    ? t('Appointment Reserved Successfully!', 'परामर्श सत्र सफलतापूर्वक आरक्षित हुआ!')
+                    : t('Consultation Request Submitted!', 'परामर्श अनुरोध सफलतापूर्वक भेजा गया!')}
                 </h2>
                 <p className="text-xs sm:text-[13px] text-stone-600 leading-relaxed">
-                  {language === 'hi' ? (
-                    <>
-                      {confirmedBooking.isBookingForSomeoneElse && (
-                        <span><strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> जी हेतु • </span>
-                      )}
-                      <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> सत्र दिनांक{' '}
-                      <strong>{confirmedBooking.scheduledDate}</strong> को{' '}
-                      <strong>{confirmedBooking.scheduledTime} IST</strong> पर आरक्षित हो गया है। टीम विवरण{' '}
-                      <strong>{confirmedBooking.customerPhone || confirmedBooking.contactPhone}</strong> पर प्रेषित करेगी।
-                    </>
+                  {confirmedBooking.status === 'CONFIRMED' ? (
+                    language === 'hi' ? (
+                      <>
+                        {confirmedBooking.isBookingForSomeoneElse && (
+                          <span><strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> जी हेतु • </span>
+                        )}
+                        <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> सत्र दिनांक{' '}
+                        <strong>{confirmedBooking.scheduledDate}</strong> को{' '}
+                        <strong>{confirmedBooking.scheduledTime} IST</strong> पर पुष्ट हो गया है।
+                      </>
+                    ) : (
+                      <>
+                        {confirmedBooking.isBookingForSomeoneElse && (
+                          <span>For <strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> • </span>
+                        )}
+                        Your <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> session is confirmed for{' '}
+                        <strong>{confirmedBooking.scheduledDate}</strong> at{' '}
+                        <strong>{confirmedBooking.scheduledTime} IST</strong>.
+                      </>
+                    )
                   ) : (
-                    <>
-                      {confirmedBooking.isBookingForSomeoneElse && (
-                        <span>For <strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> • </span>
-                      )}
-                      Your <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> session is confirmed for{' '}
-                      <strong>{confirmedBooking.scheduledDate}</strong> at{' '}
-                      <strong>{confirmedBooking.scheduledTime} IST</strong>. Details sent to{' '}
-                      <strong>{confirmedBooking.customerPhone || confirmedBooking.contactPhone}</strong>.
-                    </>
+                    language === 'hi' ? (
+                      <>
+                        {confirmedBooking.isBookingForSomeoneElse && (
+                          <span><strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> जी हेतु • </span>
+                        )}
+                        आपका <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> अनुरोध दिनांक{' '}
+                        <strong>{confirmedBooking.scheduledDate}</strong> ({confirmedBooking.scheduledTime} IST) पूज्य डॉ. पंडित विशाल दुबे जी की टीम को प्रेषित कर दिया गया है। व्यवस्थापक द्वारा स्वीकृति मिलने पर आपको भुगतान करने एवं परामर्श में जुड़ने की सूचना प्राप्त होगी।
+                      </>
+                    ) : (
+                      <>
+                        {confirmedBooking.isBookingForSomeoneElse && (
+                          <span>For <strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> • </span>
+                        )}
+                        Your consultation request for <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> on{' '}
+                        <strong>{confirmedBooking.scheduledDate}</strong> at{' '}
+                        <strong>{confirmedBooking.scheduledTime} IST</strong> has been sent to Dr. Pandit Vishal Dubey's admin team. Once approved by Admin, you will receive an approval notification to proceed with payment and access your consultation.
+                      </>
+                    )
                   )}
                 </p>
               </div>
@@ -813,7 +860,7 @@ function AppointmentContent() {
                         ) : (
                           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
                             <Lock className="w-3 h-3 text-amber-700" />
-                            {t('Unlocks 15m Before Session', 'सत्र से 15 मिनट पूर्व सक्रिय')}
+                            {t('Unlocks 5m Before Session', 'सत्र से 5 मिनट पूर्व सक्रिय')}
                           </span>
                         )}
                       </div>
@@ -845,7 +892,7 @@ function AppointmentContent() {
                             <span>
                               {meetStatus.hasEnded
                                 ? t('Session Concluded', 'सत्र समाप्त')
-                                : t('Join Meeting (Opens 15 Min Before)', 'मीटिंग से जुड़ें (15 मिनट पूर्व सक्रिय होगा)')}
+                                : t('Join Meeting (Opens 5 Min Before)', 'मीटिंग से जुड़ें (5 मिनट पूर्व सक्रिय होगा)')}
                             </span>
                           </button>
                         )}

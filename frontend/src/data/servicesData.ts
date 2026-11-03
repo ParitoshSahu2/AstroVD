@@ -533,14 +533,14 @@ export function getMeetingTimeStatus(
   const meetingStartTime = new Date(year, month - 1, day, hours, minutes, 0, 0).getTime();
   const now = Date.now();
 
-  const fifteenMinutesMs = 15 * 60 * 1000;
+  const fiveMinutesMs = 5 * 60 * 1000;
   const sessionDurationMs = (durationMinutes || 30) * 60 * 1000;
   const meetingEndTime = meetingStartTime + sessionDurationMs;
 
-  const enableTime = meetingStartTime - fifteenMinutesMs;
+  const enableTime = meetingStartTime - fiveMinutesMs;
   const diffMinutes = Math.round((meetingStartTime - now) / (60 * 1000));
 
-  // Button unlocks exactly 15 minutes before scheduled session and stays available through the session + 15 min buffer
+  // Button unlocks exactly 5 minutes before scheduled session and stays available through the session + 15 min buffer
   const isJoinable = now >= enableTime && now <= meetingEndTime + 15 * 60 * 1000;
   const hasEnded = now > meetingEndTime + 15 * 60 * 1000;
   const isUpcoming = now < enableTime;
