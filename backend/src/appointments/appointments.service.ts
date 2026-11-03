@@ -831,7 +831,7 @@ export class AppointmentsService {
             ? 'CONFIRMED'
             : dto.paymentMethod === 'PENDING_PAYMENT'
             ? 'PENDING_PAYMENT'
-            : 'CONFIRMED';
+            : 'PENDING';
           const mode = dto.consultationType || 'video';
           const formattedNotes = [
             `Service: ${service.title}`,
@@ -1050,7 +1050,7 @@ export class AppointmentsService {
       scheduledTime: dto.scheduledTime,
       durationMinutes: service.durationMinutes || 45,
       totalCost: service.priceNumber,
-      status: 'CONFIRMED',
+      status: 'PENDING',
       notes: [
         `Service: ${service.title}`,
         `Mode: ${(dto.consultationType || 'video').toUpperCase()}`,

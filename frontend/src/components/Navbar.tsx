@@ -64,6 +64,7 @@ export const Navbar: React.FC = () => {
   const [userBookings, setUserBookings] = useState<any[]>([]);
   const [userOrders, setUserOrders] = useState<any[]>([]);
   const [userWalletBalance, setUserWalletBalance] = useState<number | null>(null);
+  const [adminPendingBookings, setAdminPendingBookings] = useState<any[]>([]);
   const [mounted, setMounted] = useState(false);
 
   // Profile completion reminders and ribbons are strictly reserved for normal seekers (USER) - never ADMIN or SUPERADMIN
@@ -126,9 +127,14 @@ export const Navbar: React.FC = () => {
       const saved = localStorage.getItem('astro_user');
       const token = localStorage.getItem('astro_token');
 
+      let parsedUser: any = null;
       if (saved) {
         try {
-          setUser(JSON.parse(saved));
+          parsedUser = JSON.parse(saved);
+          setUser(parsedUser);
+          if (typeof parsedUser?.walletBalance === 'number') {
+            setUserWalletBalance(parsedUser.walletBalance);
+          }
         } catch (e) {
           setUser(null);
         }
@@ -223,6 +229,20 @@ export const Navbar: React.FC = () => {
           .catch(() => {
             setUserOrders(localOrders);
           });
+
+        // 5. Admin: fetch pending consultation reservations awaiting approval
+        const isAdmin = parsedUser?.role === 'ADMIN' || parsedUser?.role === 'SUPERADMIN';
+        if (isAdmin) {
+          fetch(`${backendBase}/api/admin/bookings?status=PENDING&limit=10`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+            .then((res) => (res.ok ? res.json() : null))
+            .then((admData) => {
+              const list = Array.isArray(admData) ? admData : (admData?.bookings || []);
+              setAdminPendingBookings(list);
+            })
+            .catch(() => {});
+        }
       } else {
         setUserWalletBalance(null);
         setUserBookings(localBookings);
@@ -257,10 +277,12 @@ export const Navbar: React.FC = () => {
       } catch (err) {}
     }
     window.addEventListener('astro-auth-change', handleAuthEvent);
+    window.addEventListener('astro-booking-created', syncUser);
     window.addEventListener('storage', syncUser);
 
     return () => {
       window.removeEventListener('astro-auth-change', handleAuthEvent);
+      window.removeEventListener('astro-booking-created', syncUser);
       window.removeEventListener('storage', syncUser);
     };
   }, []);
@@ -471,24 +493,41 @@ export const Navbar: React.FC = () => {
 
         // 2. Real Consultation Bookings (Active / Upcoming)
         if (userBookings && userBookings.length > 0) {
-          userBookings.slice(0, 2).forEach((b: any, idx: number) => {
+          userBookings.slice(0, 3).forEach((b: any, idx: number) => {
             const serviceName = b.serviceTitle || b.serviceName || t('Vedic Consultation', 'वैदिक परामर्श');
-            const dateStr = b.date || b.appointmentDate || t('Upcoming', 'आगामी');
-            const timeSlot = b.timeSlot || b.slot || '';
-            const status = (b.status || 'SCHEDULED').toUpperCase();
-            items.push({
-              id: `booking-${b.id || idx}`,
-              icon: '🗓️',
-              title: serviceName,
-              badge: status === 'CONFIRMED' ? t('Confirmed', 'पुष्ट') : status,
-              badgeColor: 'text-emerald-700 bg-emerald-100 border-emerald-200',
-              desc: `${dateStr}${timeSlot ? ` • ${timeSlot}` : ''} ${t('with Dr. Pandit Vishal Dubey', 'डॉ. पंडित विशाल दुबे के साथ')}`,
-              time: t('Consultation', 'परामर्श'),
-              onClick: () => {
-                setNotificationOpen(false);
-                router.push('/dashboard');
-              },
-            });
+            const dateStr = b.date || b.scheduledDate || b.appointmentDate || t('Upcoming', 'आगामी');
+            const timeSlot = b.timeSlot || b.scheduledTime || b.slot || '';
+            const isBookingConfirmed = b.status === 'CONFIRMED';
+
+            if (isBookingConfirmed) {
+              items.push({
+                id: `booking-${b.id || idx}`,
+                icon: '🗓️',
+                title: `${serviceName} - ${t('Consultation Confirmed', 'परामर्श पुष्ट')}`,
+                badge: t('Confirmed', 'पुष्ट'),
+                badgeColor: 'text-emerald-700 bg-emerald-100 border-emerald-200',
+                desc: `${dateStr}${timeSlot ? ` • ${timeSlot}` : ''} ${t('with Dr. Pandit Vishal Dubey. Meeting room unlocks 15m before session.', 'डॉ. पंडित विशाल दुबे के साथ। सत्र से 15 मिनट पूर्व लिंक सक्रिय होगा।')}`,
+                time: t('Confirmed', 'पुष्ट'),
+                onClick: () => {
+                  setNotificationOpen(false);
+                  router.push('/dashboard');
+                },
+              });
+            } else {
+              items.push({
+                id: `booking-${b.id || idx}`,
+                icon: '⏳',
+                title: `${serviceName} - ${t('Waiting for Admin Approval', 'स्वीकृति प्रतीक्षारत')}`,
+                badge: t('Waiting', 'प्रतीक्षारत'),
+                badgeColor: 'text-amber-800 bg-amber-100 border-amber-300',
+                desc: `${dateStr}${timeSlot ? ` • ${timeSlot}` : ''} • ${t('Consultation request awaiting Admin confirmation. You will be notified upon approval.', 'परामर्श अनुरोध व्यवस्थापक स्वीकृति हेतु प्रतीक्षारत है।')}`,
+                time: t('Awaiting Approval', 'प्रतीक्षारत'),
+                onClick: () => {
+                  setNotificationOpen(false);
+                  router.push('/dashboard');
+                },
+              });
+            }
           });
         }
 
@@ -575,7 +614,29 @@ export const Navbar: React.FC = () => {
           });
         }
       } else {
-        // ADMIN or SUPERADMIN Role
+        // ADMIN or SUPERADMIN Role: Show pending consultation requests requiring approval
+        if (adminPendingBookings && adminPendingBookings.length > 0) {
+          adminPendingBookings.forEach((b: any, idx: number) => {
+            const customer = b.customerName || b.user?.name || t('Seeker', 'साधक');
+            const serviceName = b.serviceTitle || t('Vedic Consultation', 'वैदिक परामर्श');
+            const dateStr = b.scheduledDate || t('Scheduled Date', 'निर्धारित तिथि');
+            const timeSlot = b.scheduledTime ? ` (${b.scheduledTime})` : '';
+            items.push({
+              id: `admin-pending-${b.id || idx}`,
+              icon: '🗓️',
+              title: `${t('New Consultation Request', 'नया परामर्श अनुरोध')}: ${customer}`,
+              badge: t('Needs Approval', 'स्वीकृति आवश्यक'),
+              badgeColor: 'text-amber-800 bg-amber-100 border-amber-300',
+              desc: `${serviceName} • ${dateStr}${timeSlot}. ${t('Customer is waiting for your approval.', 'ग्राहक आपकी स्वीकृति की प्रतीक्षा कर रहा है।')}`,
+              time: t('Pending Approval', 'प्रतीक्षारत'),
+              onClick: () => {
+                setNotificationOpen(false);
+                router.push('/admin');
+              },
+            });
+          });
+        }
+
         items.push({
           id: 'admin-portal',
           icon: '🛡️',
@@ -647,7 +708,7 @@ export const Navbar: React.FC = () => {
     }
 
     return items;
-  }, [user, isNormalSeeker, isProfileIncomplete, userBookings, userOrders, userWalletBalance, t, router]);
+  }, [user, isNormalSeeker, isProfileIncomplete, userBookings, userOrders, userWalletBalance, adminPendingBookings, t, router]);
 
   return (
     <>

@@ -19,9 +19,11 @@ import {
   RefreshCw,
   ExternalLink,
   Truck,
+  Lock,
 } from 'lucide-react';
 import { UserProfile, DashboardTab, formatZodiacName, getUserInitials } from '../types';
 import { resolveProductImage } from '../utils';
+import { getMeetingTimeStatus } from '../../../data/servicesData';
 
 interface DashboardOverviewTabProps {
   profile: UserProfile;
@@ -304,9 +306,16 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                   <Sparkles className="w-3 h-3 text-[#5B0D15]" />
                   <span>{t('Next Scheduled Session', 'अगला निर्धारित परामर्श')}</span>
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase">
-                  {nextBooking.status || 'CONFIRMED'}
-                </span>
+                {nextBooking.status === 'CONFIRMED' ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase">
+                    {t('Confirmed', 'पुष्टीकृत')}
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold bg-amber-100 text-amber-900 border border-amber-300 uppercase flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-amber-700" />
+                    {t('Awaiting Approval', 'स्वीकृति प्रतीक्षारत')}
+                  </span>
+                )}
                 <span className="text-xs font-bold text-[#5B0D15] bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
                   Dakshina: ₹{Number(nextBooking.totalCost || nextBooking.fee || 2100).toLocaleString('en-IN')}
                 </span>
@@ -334,19 +343,56 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-              <a
-                href={formatGoogleMeetLink(nextBooking.id || nextBooking._id)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 py-3 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
-              >
-                <Video className="w-4 h-4" />
-                <span>{t('Join Google Meet Room', 'गूगल मीट कक्ष में जुड़ें')}</span>
-                <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-              </a>
+              {nextBooking.status === 'CONFIRMED' ? (() => {
+                const meetStatus = getMeetingTimeStatus(
+                  nextBooking.bookingDate || nextBooking.scheduledDate || nextBooking.date,
+                  nextBooking.slot || nextBooking.scheduledTime || nextBooking.time,
+                  30
+                );
+                const meetUrl = formatGoogleMeetLink(nextBooking.id || nextBooking._id);
+
+                if (meetStatus.isJoinable) {
+                  return (
+                    <a
+                      href={meetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-6 py-3 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
+                    >
+                      <Video className="w-4 h-4" />
+                      <span>{t('Join Meeting', 'मीटिंग में जुड़ें')}</span>
+                    </a>
+                  );
+                }
+
+                if (meetStatus.hasEnded) {
+                  return (
+                    <span className="px-5 py-2.5 rounded-full bg-stone-100 text-stone-500 font-medium text-xs border border-stone-200 text-center">
+                      {t('Session Concluded', 'सत्र समाप्त')}
+                    </span>
+                  );
+                }
+
+                return (
+                  <button
+                    type="button"
+                    disabled
+                    className="px-5 py-2.5 rounded-full bg-stone-100 text-stone-400 font-semibold text-xs border border-stone-200 cursor-not-allowed flex items-center justify-center gap-2"
+                    title={t('Unlocks 15 minutes prior to appointment', 'परामर्श समय से 15 मिनट पहले सक्रिय होगा')}
+                  >
+                    <Lock className="w-3.5 h-3.5 text-stone-400" />
+                    <span>{t('Join Meeting (Opens 15 Min Before)', 'मीटिंग से जुड़ें (15 मिनट पूर्व)')}</span>
+                  </button>
+                );
+              })() : (
+                <div className="px-5 py-2.5 rounded-full bg-amber-50 text-amber-800 text-xs font-semibold border border-amber-300 flex items-center justify-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-amber-600" />
+                  <span>{t('Waiting for Admin Approval', 'व्यवस्थापक स्वीकृति की प्रतीक्षा')}</span>
+                </div>
+              )}
               <button
                 onClick={() => onTabChange('consultations')}
-                className="px-5 py-3 rounded-full border border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700 font-semibold text-xs transition-all text-center"
+                className="px-5 py-3 rounded-full border border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700 font-semibold text-xs transition-all text-center cursor-pointer"
               >
                 {t('View All Bookings', 'सभी परामर्श देखें')}
               </button>

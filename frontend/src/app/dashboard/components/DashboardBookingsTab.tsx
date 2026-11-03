@@ -18,8 +18,10 @@ import {
   ArrowRight,
   X,
   Printer,
+  Lock,
 } from 'lucide-react';
 import { formatGoogleMeetLink } from '../utils';
+import { getMeetingTimeStatus } from '../../../data/servicesData';
 
 interface DashboardBookingsTabProps {
   bookings: any[];
@@ -368,9 +370,9 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                         <span>{t('Confirmed', 'पुष्टीकृत')}</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                        <span>{t('Active Session', 'सक्रिय सत्र')}</span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-300">
+                        <Clock className="w-3 h-3 text-amber-600" />
+                        <span>{t('Awaiting Approval', 'स्वीकृति प्रतीक्षारत')}</span>
                       </span>
                     )}
 
@@ -431,19 +433,54 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                     )}
                   </div>
 
-                  {/* 3. Join Google Meet Button */}
+                  {/* 3. Action Buttons - Join Button only after admin approval */}
                   <div className="shrink-0 flex items-center gap-2.5">
-                    {/* Always visible Join Google Meet button for instant access to session */}
-                    <a
-                      href={meetLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer active:scale-95 whitespace-nowrap"
-                    >
-                      <Video className="w-4 h-4 text-white" />
-                      <span>{t('Join Google Meet', 'गूगल मीट में जुड़ें')}</span>
-                      <ExternalLink className="w-3 h-3 text-emerald-200" />
-                    </a>
+                    {isConfirmed ? (() => {
+                      const meetStatus = getMeetingTimeStatus(
+                        booking.scheduledDate || booking.date,
+                        slotTime,
+                        booking.durationMinutes || 30
+                      );
+
+                      if (meetStatus.isJoinable) {
+                        return (
+                          <a
+                            href={meetLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+                          >
+                            <Video className="w-4 h-4 text-white" />
+                            <span>{t('Join Meeting', 'मीटिंग में जुड़ें')}</span>
+                          </a>
+                        );
+                      }
+
+                      if (meetStatus.hasEnded) {
+                        return (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 text-stone-500 font-medium text-xs border border-stone-200">
+                            {t('Session Concluded', 'सत्र समाप्त')}
+                          </span>
+                        );
+                      }
+
+                      return (
+                        <button
+                          type="button"
+                          disabled
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-stone-100 text-stone-400 font-semibold text-xs border border-stone-200 cursor-not-allowed whitespace-nowrap"
+                          title={t('Unlocks 15 minutes prior to appointment', 'परामर्श समय से 15 मिनट पहले सक्रिय होगा')}
+                        >
+                          <Lock className="w-3.5 h-3.5 text-stone-400" />
+                          <span>{t('Join Meeting (Opens 15 Min Before)', 'मीटिंग से जुड़ें (15 मिनट पूर्व)')}</span>
+                        </button>
+                      );
+                    })() : (
+                      <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-amber-800 text-xs font-semibold border border-amber-300">
+                        <Clock className="w-3.5 h-3.5 text-amber-600" />
+                        <span>{t('Waiting for Admin Approval', 'व्यवस्थापक स्वीकृति की प्रतीक्षा')}</span>
+                      </div>
+                    )}
 
                     {isCompleted && (
                       <button
@@ -581,7 +618,7 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                   className="px-4 py-2 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-all"
                 >
                   <Video className="w-3.5 h-3.5" />
-                  <span>Join Room</span>
+                  <span>Join Meeting</span>
                 </a>
               </div>
             </div>
