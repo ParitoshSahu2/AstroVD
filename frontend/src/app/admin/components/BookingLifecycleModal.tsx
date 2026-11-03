@@ -93,7 +93,11 @@ export default function BookingLifecycleModal({
 
   useEffect(() => {
     if (activeBooking) {
-      setCustomMeetLink(activeBooking.meetLink || formatGoogleMeetLink(activeBooking.id));
+      const validLink =
+        activeBooking.meetLink && activeBooking.meetLink.includes('hui-smdn-gtp')
+          ? activeBooking.meetLink
+          : formatGoogleMeetLink(activeBooking.id);
+      setCustomMeetLink(validLink);
       setRescheduleDate(activeBooking.scheduledDate || '');
       setRescheduleTime(activeBooking.scheduledTime || '10:00 AM');
       setShowReschedule(false);
@@ -135,7 +139,8 @@ export default function BookingLifecycleModal({
   const accountOwner = activeBooking.customer?.accountOwnerName || activeBooking.user?.name;
   const guideName = activeBooking.astrologer?.name || 'Dr. Pandit Vishal Dubey';
 
-  const meetUrl = activeBooking.meetLink || customMeetLink || formatGoogleMeetLink(activeBooking.id);
+  const rawMeet = activeBooking.meetLink || customMeetLink || '';
+  const meetUrl = rawMeet && rawMeet.includes('hui-smdn-gtp') ? rawMeet : formatGoogleMeetLink(activeBooking.id);
   const isTerminalState = activeBooking.status === 'COMPLETED' || activeBooking.status === 'CANCELLED' || activeBooking.status === 'REJECTED';
 
   const statusBadgeConfig: Record<string, { bg: string; text: string; border: string; label: string }> = {
@@ -829,6 +834,50 @@ export default function BookingLifecycleModal({
                     <X className="w-3.5 h-3.5" />
                     <span>Cancel Appointment</span>
                   </button>
+                  <button
+                    type="button"
+                    disabled={updatingStatus}
+                    onClick={() => onTransitionStatus('REJECTED')}
+                    className="px-3.5 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    <Ban className="w-3.5 h-3.5" />
+                    <span>Reject Booking</span>
+                  </button>
+                </>
+              )}
+
+              {(activeBooking.status === 'CANCELLED' || activeBooking.status === 'REJECTED') && (
+                <>
+                  <button
+                    type="button"
+                    disabled={updatingStatus}
+                    onClick={() => onTransitionStatus('PENDING')}
+                    className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Re-open as Pending</span>
+                  </button>
+                  {activeBooking.status === 'CANCELLED' ? (
+                    <button
+                      type="button"
+                      disabled={updatingStatus}
+                      onClick={() => onTransitionStatus('REJECTED')}
+                      className="px-3.5 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      <Ban className="w-3.5 h-3.5" />
+                      <span>Switch to Rejected</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={updatingStatus}
+                      onClick={() => onTransitionStatus('CANCELLED')}
+                      className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Switch to Cancelled</span>
+                    </button>
+                  )}
                 </>
               )}
             </div>

@@ -184,7 +184,7 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
             </h1>
             <p className="text-stone-300 text-xs sm:text-sm leading-relaxed">
               {t(
-                'Welcome to your personal astrological portal. Access verified birth Kundli coordinates, consecrated live consultations, and energized Vedic store artifacts.',
+                'Welcome to your personal astrological portal. Access sacred appointments, consecrated live consultations, and energized Vedic store artifacts.',
                 'आपके पावन वैदिक कक्ष में आपका स्वागत है। अपनी जन्म कुंडली, पूज्य गुरुजी के साथ लाइव परामर्श एवं सिद्ध उत्पादों का विवरण यहां देखें।'
               )}
             </p>

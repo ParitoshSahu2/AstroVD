@@ -885,7 +885,7 @@ function AppointmentContent() {
                             title={
                               meetStatus.hasEnded
                                 ? t('Session has ended', 'सत्र समाप्त हो चुका है')
-                                : t('Opens 15 minutes prior to appointment', 'परामर्श समय से 15 मिनट पहले सक्रिय होगा')
+                                : t('Opens 5 minutes prior to appointment', 'परामर्श समय से 5 मिनट पहले सक्रिय होगा')
                             }
                           >
                             <Lock className="w-4 h-4 text-stone-400" />

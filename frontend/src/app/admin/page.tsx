@@ -862,6 +862,9 @@ export default function AdminPage() {
       setActiveBooking(null);
       setStatusNotes('');
       fetchBookingsList(bookingPage);
+      if (typeof fetchAvailability === 'function') {
+        fetchAvailability(availabilityDate);
+      }
     } catch (err: any) {
       if (err.name === 'TypeError' || err.message === 'Failed to fetch' || err.message?.includes('fetch')) {
         setStatusError('Network connection error: Unable to reach backend server on port 5001. Please make sure the backend server is running.');
@@ -1749,7 +1752,7 @@ export default function AdminPage() {
       return bookingServiceFilter === 'INSPECTION' ? 'Inspections' : 'Appointments';
     }
     if (adminTab === 'orders') return 'Orders';
-    if (adminTab === 'availability') return 'Pooja Services';
+    if (adminTab === 'availability') return 'Upcoming Consultations';
     if (adminTab === 'activity') return 'Activity & Audit History';
     return 'Overview';
   };
@@ -2016,10 +2019,10 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Group 3: POOJA SERVICES */}
+                {/* Group 3: UPCOMING CONSULTATIONS */}
                 <div>
                   <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
-                    Pooja Services
+                    Upcoming Consultations
                   </div>
                   <div className="space-y-0.5">
                     <button
@@ -2031,8 +2034,8 @@ export default function AdminPage() {
                           : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
                       }`}
                     >
-                      <Sparkles className="w-4 h-4 text-stone-400 shrink-0" />
-                      <span>Pooja Services</span>
+                      <Calendar className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Upcoming Consultations</span>
                     </button>
                   </div>
                 </div>
@@ -2587,6 +2590,7 @@ export default function AdminPage() {
                 setCreateSlotModalOpen={setCreateSlotModalOpen}
                 setInitScheduleModalOpen={setInitScheduleModalOpen}
                 setInitScheduleDays={setInitScheduleDays}
+                onOpenBooking={(b) => setActiveBooking(b)}
               />
             )}
 

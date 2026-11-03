@@ -538,7 +538,7 @@ export default function AdminBookingsTab({
 
                                   {canMeet && (
                                     <a
-                                      href={b.meetLink && b.meetLink.includes('meet.google.com') ? b.meetLink : formatGoogleMeetLink(b.id)}
+                                      href={b.meetLink && b.meetLink.includes('hui-smdn-gtp') ? b.meetLink : formatGoogleMeetLink(b.id)}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       onClick={() => setActiveMenuId(null)}
@@ -743,7 +743,7 @@ export default function AdminBookingsTab({
 
                                 {canMeet && (
                                   <a
-                                    href={b.meetLink && b.meetLink.includes('meet.google.com') ? b.meetLink : formatGoogleMeetLink(b.id)}
+                                    href={b.meetLink && b.meetLink.includes('hui-smdn-gtp') ? b.meetLink : formatGoogleMeetLink(b.id)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={() => setActiveMenuId(null)}

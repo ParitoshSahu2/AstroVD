@@ -1457,7 +1457,9 @@ export class AppointmentsService {
           PENDING_PAYMENT: ['APPROVED', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
           PENDING: ['APPROVED', 'PENDING_PAYMENT', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
           APPROVED: ['PENDING_PAYMENT', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
-          CONFIRMED: ['COMPLETED', 'CANCELLED'],
+          CONFIRMED: ['COMPLETED', 'CANCELLED', 'REJECTED'],
+          CANCELLED: ['REJECTED', 'PENDING'],
+          REJECTED: ['CANCELLED', 'PENDING'],
         };
         const allowed = validTransitions[currentStatus] || [];
         if (!allowed.includes(targetStatus)) {
@@ -1503,12 +1505,12 @@ export class AppointmentsService {
     // Allowed transition matrix:
     // PENDING_PAYMENT -> CONFIRMED, CANCELLED, REJECTED
     // PENDING -> CONFIRMED, CANCELLED, REJECTED
-    // CONFIRMED -> COMPLETED, CANCELLED
+    // CONFIRMED -> COMPLETED, CANCELLED, REJECTED
     const validTransitions: Record<string, string[]> = {
       PENDING_PAYMENT: ['APPROVED', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
       PENDING: ['APPROVED', 'PENDING_PAYMENT', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
       APPROVED: ['PENDING_PAYMENT', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
-      CONFIRMED: ['COMPLETED', 'CANCELLED'],
+      CONFIRMED: ['COMPLETED', 'CANCELLED', 'REJECTED'],
     };
 
     const allowed = validTransitions[currentStatus] || [];
@@ -1948,92 +1950,185 @@ export class AppointmentsService {
 
     const todayStr = new Date().toISOString().split('T')[0];
     const isPastDate = dateStr < todayStr;
+    this.initFallbackBookings();
 
-    // Check blocked status
-    const blockedDate = await this.prisma.blockedDate.findUnique({
-      where: { date: dateStr },
-    });
-
-    // Query all slots for this date
-    let dbSlots = await this.prisma.appointmentSlot.findMany({
-      where: { date: dateStr },
-      orderBy: { startTime: 'asc' },
-    });
-
-    // If no slots exist yet and date is not in past, auto-seed standard slots for convenience
-    if (dbSlots.length === 0 && !isPastDate) {
-      const defaultSlotsData = PUBLISHED_TIME_SLOTS.map((time) => ({
-        date: dateStr,
-        startTime: time,
-        durationMinutes: 45,
-        isPublished: true,
-      }));
-
-      await this.prisma.appointmentSlot.createMany({
-        data: defaultSlotsData,
-        skipDuplicates: true,
+    try {
+      // Check blocked status
+      const blockedDate = await this.prisma.blockedDate.findUnique({
+        where: { date: dateStr },
       });
 
-      dbSlots = await this.prisma.appointmentSlot.findMany({
+      // Query all slots for this date
+      let dbSlots = await this.prisma.appointmentSlot.findMany({
         where: { date: dateStr },
         orderBy: { startTime: 'asc' },
       });
-    }
 
-    // Query active bookings for this date
-    const existingBookings = await this.prisma.booking.findMany({
-      where: {
-        scheduledDate: dateStr,
-        status: { notIn: ['CANCELLED', 'REJECTED'] },
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
+      // If no slots exist yet and date is not in past, auto-seed standard slots for convenience
+      if (dbSlots.length === 0 && !isPastDate) {
+        const defaultSlotsData = PUBLISHED_TIME_SLOTS.map((time) => ({
+          date: dateStr,
+          startTime: time,
+          durationMinutes: 45,
+          isPublished: true,
+        }));
+
+        await this.prisma.appointmentSlot.createMany({
+          data: defaultSlotsData,
+          skipDuplicates: true,
+        });
+
+        dbSlots = await this.prisma.appointmentSlot.findMany({
+          where: { date: dateStr },
+          orderBy: { startTime: 'asc' },
+        });
+      }
+
+      // Query active bookings for this date
+      const existingBookings = await this.prisma.booking.findMany({
+        where: {
+          scheduledDate: dateStr,
+          status: { notIn: ['CANCELLED', 'REJECTED'] },
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    const bookingByTime = new Map(existingBookings.map((b) => [b.scheduledTime, b]));
+      const fallbackOnDate = this.fallbackBookings.filter(
+        (b) => b.scheduledDate === dateStr && !['CANCELLED', 'REJECTED'].includes(b.status),
+      );
 
-    const enrichedSlots = dbSlots.map((slot) => {
-      const booking = bookingByTime.get(slot.startTime);
-      const isBooked = Boolean(booking);
+      const bookingByTime = new Map(existingBookings.map((b) => [b.scheduledTime, b]));
+      for (const fb of fallbackOnDate) {
+        if (!bookingByTime.has(fb.scheduledTime)) {
+          bookingByTime.set(fb.scheduledTime, fb);
+        }
+      }
+
+      const enrichedSlots = dbSlots.map((slot) => {
+        const booking: any = bookingByTime.get(slot.startTime);
+        const isBooked = Boolean(booking);
+
+        return {
+          id: slot.id,
+          date: slot.date,
+          startTime: slot.startTime,
+          durationMinutes: slot.durationMinutes,
+          isPublished: slot.isPublished,
+          notes: slot.notes,
+          isBooked,
+          booking: booking
+            ? {
+                id: booking.id,
+                serviceType: booking.serviceType || booking.serviceTitle,
+                serviceTitle: booking.serviceTitle || booking.serviceType,
+                status: booking.status,
+                customerName: booking.user?.name || booking.customerName || 'Vedic Seeker',
+                customerEmail: booking.user?.email || booking.customerEmail || null,
+                customerPhone: booking.user?.phone || booking.customerPhone || booking.contactPhone || null,
+                meetLink: booking.meetLink || DEFAULT_GURUJI_MEET_LINK,
+              }
+            : null,
+          canDelete: !isBooked,
+        };
+      });
+
+      const allUpcoming = [
+        ...existingBookings.map((b) => ({
+          id: b.id,
+          serviceTitle: b.serviceType,
+          status: b.status,
+          scheduledTime: b.scheduledTime,
+          scheduledDate: b.scheduledDate,
+          customerName: b.user?.name || 'Vedic Seeker',
+          customerPhone: b.user?.phone || null,
+          customerEmail: b.user?.email || null,
+          meetLink: DEFAULT_GURUJI_MEET_LINK,
+        })),
+        ...fallbackOnDate.map((fb) => ({
+          id: fb.id,
+          serviceTitle: fb.serviceTitle || fb.serviceType,
+          status: fb.status,
+          scheduledTime: fb.scheduledTime,
+          scheduledDate: fb.scheduledDate,
+          customerName: fb.customerName || 'Vedic Seeker',
+          customerPhone: fb.customerPhone || fb.contactPhone || null,
+          customerEmail: fb.customerEmail || null,
+          meetLink: fb.meetLink || DEFAULT_GURUJI_MEET_LINK,
+        })),
+      ];
 
       return {
-        id: slot.id,
-        date: slot.date,
-        startTime: slot.startTime,
-        durationMinutes: slot.durationMinutes,
-        isPublished: slot.isPublished,
-        notes: slot.notes,
-        isBooked,
-        booking: booking
-          ? {
-              id: booking.id,
-              serviceType: booking.serviceType,
-              status: booking.status,
-              customerName: booking.user?.name || 'Vedic Seeker',
-              customerEmail: booking.user?.email || null,
-              customerPhone: booking.user?.phone || null,
-            }
-          : null,
-        canDelete: !isBooked,
+        date: dateStr,
+        isBlocked: Boolean(blockedDate),
+        blockedReason: blockedDate?.reason || null,
+        slots: enrichedSlots,
+        totalSlots: enrichedSlots.length,
+        bookedCount: enrichedSlots.filter((s) => s.isBooked).length,
+        upcomingBookings: allUpcoming,
       };
-    });
+    } catch (err: any) {
+      this.logger.warn(`Prisma availability lookup failed (${err.message}). Using fallback schedule.`);
+      const fallbackOnDate = this.fallbackBookings.filter(
+        (b) => b.scheduledDate === dateStr && !['CANCELLED', 'REJECTED'].includes(b.status),
+      );
+      const bookingByTime = new Map(fallbackOnDate.map((b) => [b.scheduledTime, b]));
 
-    return {
-      date: dateStr,
-      isBlocked: Boolean(blockedDate),
-      blockedReason: blockedDate?.reason || null,
-      slots: enrichedSlots,
-      totalSlots: enrichedSlots.length,
-      bookedCount: enrichedSlots.filter((s) => s.isBooked).length,
-    };
+      const fallbackSlots = PUBLISHED_TIME_SLOTS.map((time, idx) => {
+        const fb = bookingByTime.get(time);
+        const isBooked = Boolean(fb);
+        return {
+          id: `slot-${dateStr}-${idx}`,
+          date: dateStr,
+          startTime: time,
+          durationMinutes: 45,
+          isPublished: true,
+          notes: null,
+          isBooked,
+          booking: fb
+            ? {
+                id: fb.id,
+                serviceType: fb.serviceType || fb.serviceTitle,
+                serviceTitle: fb.serviceTitle || fb.serviceType,
+                status: fb.status,
+                customerName: fb.customerName || 'Vedic Seeker',
+                customerEmail: fb.customerEmail || null,
+                customerPhone: fb.customerPhone || fb.contactPhone || null,
+                meetLink: fb.meetLink || DEFAULT_GURUJI_MEET_LINK,
+              }
+            : null,
+          canDelete: !isBooked,
+        };
+      });
+
+      return {
+        date: dateStr,
+        isBlocked: false,
+        blockedReason: null,
+        slots: fallbackSlots,
+        totalSlots: fallbackSlots.length,
+        bookedCount: fallbackSlots.filter((s) => s.isBooked).length,
+        upcomingBookings: fallbackOnDate.map((fb) => ({
+          id: fb.id,
+          serviceTitle: fb.serviceTitle || fb.serviceType,
+          status: fb.status,
+          scheduledTime: fb.scheduledTime,
+          scheduledDate: fb.scheduledDate,
+          customerName: fb.customerName || 'Vedic Seeker',
+          customerPhone: fb.customerPhone || fb.contactPhone || null,
+          customerEmail: fb.customerEmail || null,
+          meetLink: fb.meetLink || DEFAULT_GURUJI_MEET_LINK,
+        })),
+      };
+    }
   }
 
   /**

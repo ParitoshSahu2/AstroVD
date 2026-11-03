@@ -298,7 +298,7 @@ export default function DashboardPage() {
             </h2>
             <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-md mx-auto">
               {t(
-                'Please sign in to view your verified Janam Kundli, access video consultation passes, and track orders.',
+                'Please sign in to manage your consultation bookings, access video consultation passes, and track orders.',
                 'अपनी जन्म कुंडली देखने एवं परामर्श सत्रों में सम्मिलित होने हेतु लॉगिन करें।'
               )}
             </p>

@@ -238,7 +238,7 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                 : 'text-stone-600 hover:text-stone-900'
             }`}
           >
-            {t('Completed & Prescribed', 'संपन्न एवं उपाय')} (
+            {t('Completed Consultations', 'परामर्श संपन्न')} (
             {bookings.filter((b) => (b.status || '').toUpperCase() === 'COMPLETED').length})
           </button>
           <button
@@ -249,7 +249,7 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                 : 'text-stone-600 hover:text-stone-900'
             }`}
           >
-            {t('Reviewing Kundli', 'समीक्षाधीन')} (
+            {t('Pending Approval & Payment', 'स्वीकृति व दक्षिणा प्रतीक्षारत')} (
             {
               bookings.filter(
                 (b) =>

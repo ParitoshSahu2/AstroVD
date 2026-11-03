@@ -13,6 +13,8 @@ import {
   Trash2,
   RefreshCw,
   Clock,
+  Video,
+  ExternalLink,
 } from 'lucide-react';
 
 interface AdminAvailabilityTabProps {
@@ -29,6 +31,7 @@ interface AdminAvailabilityTabProps {
   setCreateSlotModalOpen: (b: boolean) => void;
   setInitScheduleModalOpen: (b: boolean) => void;
   setInitScheduleDays: (days: number) => void;
+  onOpenBooking?: (booking: any) => void;
 }
 
 export default function AdminAvailabilityTab({
@@ -45,7 +48,19 @@ export default function AdminAvailabilityTab({
   setCreateSlotModalOpen,
   setInitScheduleModalOpen,
   setInitScheduleDays,
+  onOpenBooking,
 }: AdminAvailabilityTabProps) {
+  const upcomingBookings: any[] =
+    (availabilityData?.upcomingBookings && availabilityData.upcomingBookings.length > 0)
+      ? availabilityData.upcomingBookings
+      : (availabilityData?.slots || [])
+          .filter((s: any) => s.isBooked && s.booking)
+          .map((s: any) => ({
+            ...s.booking,
+            scheduledTime: s.startTime,
+            scheduledDate: s.date,
+          }));
+
   return (
     <div className="space-y-6">
       {/* Control Bar: Date Selector, Quick Jumps & Sanctuary Status */}
@@ -190,20 +205,126 @@ export default function AdminAvailabilityTab({
         </div>
       </div>
 
-      {/* Slots Section */}
+      {/* ================= 1. UPCOMING CONSULTATIONS FOR SELECTED DATE ================= */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-[#5B0D15]">
+              <Video className="w-4 h-4 text-[#5B0D15]" />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg font-bold text-[#3B1E22] flex items-center gap-2">
+                <span>Upcoming Consultations</span>
+                <span className="text-xs font-mono font-medium text-amber-900 bg-amber-100/70 px-2.5 py-0.5 rounded-full border border-amber-300">
+                  {upcomingBookings.length} Booked
+                </span>
+              </h3>
+              <p className="text-xs text-stone-500">
+                Active devotee sessions scheduled with Dr. Pandit Vishal Dubey for {availabilityDate}.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {upcomingBookings.length === 0 ? (
+          <div className="py-8 text-center text-xs text-stone-500 bg-stone-50/60 rounded-2xl border border-stone-200/70 p-4">
+            <Calendar className="w-8 h-8 text-stone-300 mx-auto mb-1.5" />
+            <p className="font-semibold text-stone-700">No Seeker Consultations Booked Yet for {availabilityDate}</p>
+            <p className="text-[11px] text-stone-400 mt-0.5">
+              When devotees reserve slots for this date, their full appointment details, Google Meet link, and lifecycle controls will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {upcomingBookings.map((b: any, bIdx: number) => {
+              const st = (b.status || 'PENDING').toUpperCase();
+              const meetLink = b.meetLink || 'https://meet.google.com/meet/hui-smdn-gtp';
+              const statusColors: Record<string, string> = {
+                CONFIRMED: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                PENDING: 'bg-amber-50 text-amber-800 border-amber-200',
+                APPROVED: 'bg-teal-50 text-teal-800 border-teal-200',
+                PENDING_PAYMENT: 'bg-amber-50 text-amber-800 border-amber-200',
+                COMPLETED: 'bg-blue-50 text-blue-800 border-blue-200',
+                CANCELLED: 'bg-rose-50 text-rose-800 border-rose-200',
+                REJECTED: 'bg-red-50 text-red-800 border-red-200',
+              };
+
+              return (
+                <div
+                  key={b.id || bIdx}
+                  className="p-4 rounded-2xl bg-gradient-to-br from-stone-50/80 to-amber-50/30 border border-stone-200/90 shadow-2xs hover:shadow-md transition-all space-y-3"
+                >
+                  <div className="flex items-center justify-between gap-2 border-b border-stone-200/60 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5 text-amber-700" />
+                      <span className="font-bold text-xs text-stone-900 font-mono">
+                        {b.scheduledTime || 'Confirmed Slot'}
+                      </span>
+                    </div>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusColors[st] || 'bg-stone-100 text-stone-700 border-stone-200'}`}>
+                      {st}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h4 className="font-serif font-bold text-sm text-[#3B1E22]">
+                      {b.serviceTitle || b.serviceType || 'Vedic Consultation'}
+                    </h4>
+                    <div className="text-xs text-stone-600 mt-1 flex items-center justify-between">
+                      <span className="font-semibold text-stone-800">
+                        👤 {b.customerName || 'Vedic Seeker'}
+                      </span>
+                      {b.customerPhone && (
+                        <span className="font-mono text-stone-500">
+                          📞 {b.customerPhone}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-stone-200/60 flex-wrap">
+                    <a
+                      href={meetLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition-all active:scale-95"
+                    >
+                      <Video className="w-3.5 h-3.5" />
+                      <span>Join Room</span>
+                      <ExternalLink className="w-3 h-3 text-emerald-200" />
+                    </a>
+
+                    {onOpenBooking && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenBooking(b)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-stone-300 hover:bg-stone-50 text-stone-700 font-semibold text-xs transition-all cursor-pointer shadow-2xs active:scale-95"
+                      >
+                        <span>Manage Lifecycle →</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ================= 2. CONSULTATION SLOT INVENTORY ================= */}
       <div className="p-5 sm:p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-5">
         {/* Section Header with Stats Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-stone-100">
           <div>
             <h3 className="font-serif text-lg font-bold text-[#3B1E22] flex items-center gap-2">
               <Calendar className="w-4.5 h-4.5 text-amber-700" />
-              <span>Sanctuary Consultation Slots</span>
+              <span>Consultation Slot Inventory &amp; Availability</span>
               <span className="text-xs font-mono font-medium text-stone-600 bg-stone-100 px-2.5 py-0.5 rounded-md border border-stone-200/60">
                 {availabilityDate}
               </span>
             </h3>
             <p className="text-xs text-stone-500 mt-1">
-              Live appointment inventory and booking schedule for Dr. Pandit Vishal Dubey.
+              Live slot inventory and timing schedule for Dr. Pandit Vishal Dubey.
             </p>
           </div>
 
@@ -253,7 +374,7 @@ export default function AdminAvailabilityTab({
               const isBooked = slot.isBooked;
               const isPublished = slot.isPublished;
 
-              // Parse time into large digits and smaller AM/PM so "10" is prominent and "AM" doesn't overpower it
+              // Parse time into large digits and smaller AM/PM
               const timeParts = (slot.startTime || '').trim().split(' ');
               const timeDigits = timeParts[0] || slot.startTime;
               const timePeriod = timeParts[1] || '';
@@ -269,7 +390,7 @@ export default function AdminAvailabilityTab({
                       : 'bg-stone-50/70 border-stone-200/80 opacity-80 hover:opacity-100'
                   }`}
                 >
-                  {/* Card Header: Slot Time with prominent digits + small AM/PM & Clean Status */}
+                  {/* Card Header: Slot Time */}
                   <div className="p-4 pb-3 bg-stone-50/50 border-b border-stone-100 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5">
                       <Clock className="w-4 h-4 text-amber-700 shrink-0" />
@@ -303,7 +424,7 @@ export default function AdminAvailabilityTab({
                     </div>
                   </div>
 
-                  {/* Card Body: Meaningful Slot Context */}
+                  {/* Card Body: Slot Context */}
                   <div className="p-4 space-y-2 flex-1">
                     {isBooked && slot.booking ? (
                       <div className="p-3 rounded-xl bg-white border border-rose-200/80 space-y-1.5 shadow-2xs">
@@ -333,7 +454,7 @@ export default function AdminAvailabilityTab({
                     )}
                   </div>
 
-                  {/* Card Footer: Structured & Harmonized Action Controls */}
+                  {/* Card Footer: Action Controls */}
                   <div className="px-4 py-3 bg-stone-50/70 border-t border-stone-100 flex items-center justify-between gap-2">
                     {/* Toggle Visibility Button */}
                     <button
