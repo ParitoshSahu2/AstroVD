@@ -333,6 +333,39 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password.');
     }
 
+    // Ensure seeded or in-memory user exists in database to satisfy relational foreign keys
+    if (user && this.prisma?.user) {
+      try {
+        const dbUserSync = await this.prisma.user.findFirst({
+          where: {
+            OR: [
+              ...(user.email ? [{ email: { equals: user.email, mode: 'insensitive' as const } }] : []),
+              { id: user.id },
+            ],
+          },
+        });
+        if (!dbUserSync) {
+          const created = await this.prisma.user.create({
+            data: {
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              phone: user.phone || null,
+              passwordHash: user.passwordHash,
+              role: user.role,
+              status: user.status,
+              walletBalance: user.walletBalance || 0,
+            },
+          });
+          user.id = created.id;
+        } else {
+          user.id = dbUserSync.id;
+        }
+      } catch (err: any) {
+        this.logger.warn(`User sync non-fatal warning: ${err.message}`);
+      }
+    }
+
     const accessToken = this.jwtService.sign({
       sub: user.id,
       email: user.email,

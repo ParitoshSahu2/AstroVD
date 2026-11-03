@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -395,6 +395,41 @@ export default function CartPage() {
     paymentMethod: 'upi',
   });
 
+  // Tracks which payment method details accordion is open/expanded
+  const [expandedPayment, setExpandedPayment] = useState<string>('upi');
+
+  // Reference to payment methods container for click-outside detection
+  const paymentMethodsRef = useRef<HTMLDivElement>(null);
+
+  // Close open payment method section accordion if user clicks on empty space outside the payment options
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (!expandedPayment) return;
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      // Do not close if clicking inside payment method options or buttons
+      if (paymentMethodsRef.current && paymentMethodsRef.current.contains(target)) {
+        return;
+      }
+
+      // Do not close if clicking submit button or terms checkbox
+      if (
+        target.closest('button[type="submit"]') ||
+        target.closest('#termsCheck') ||
+        target.closest('label[for="termsCheck"]')
+      ) {
+        return;
+      }
+
+      // Close the open payment method accordion back to unexpanded stage
+      setExpandedPayment('');
+    };
+
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [expandedPayment]);
+
   // Listen to logout & auth changes to immediately wipe all checkout details, modals, and shopping state
   useEffect(() => {
     const handleAuthChange = (e: any) => {
@@ -481,8 +516,16 @@ export default function CartPage() {
   // Helper to get realistic MRP for item (displayed in price breakdown)
   const getItemMrp = (item: CartItem): number => {
     if (item.originalPriceFormatted) {
-      const num = parseInt(item.originalPriceFormatted.replace(/[^\d]/g, ''), 10);
-      if (!isNaN(num) && num > item.price) return num;
+      if (typeof item.originalPriceFormatted === 'number') {
+        const num = item.originalPriceFormatted;
+        if (!isNaN(num) && num > item.price) return num;
+      } else {
+        const num = parseInt(String(item.originalPriceFormatted).replace(/[^\d]/g, ''), 10);
+        if (!isNaN(num) && num > item.price) return num;
+      }
+    }
+    if ((item as any).originalPrice && typeof (item as any).originalPrice === 'number' && (item as any).originalPrice > item.price) {
+      return (item as any).originalPrice;
     }
     if (item.price === 999) return 1499;
     if (item.price === 1499) return 2199;
@@ -578,6 +621,9 @@ export default function CartPage() {
   const handleCompleteOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setCheckoutError(null);
+
+    const activePaymentMethod = shippingForm.paymentMethod || expandedPayment || 'upi';
+
     setIsSubmitting(true);
 
     const token = getAuthToken();
@@ -611,7 +657,7 @@ export default function CartPage() {
             notes: activeAddress?.label || 'Home',
             idempotencyKey: currentIdempotencyKey,
           },
-          paymentMethod: shippingForm.paymentMethod,
+          paymentMethod: activePaymentMethod,
           couponCode: appliedCoupon?.code,
           idempotencyKey: currentIdempotencyKey,
         }),
@@ -1655,17 +1701,9 @@ export default function CartPage() {
                 <div className="lg:col-span-7 bg-white rounded-2xl sm:rounded-3xl border border-[#E5DAC8] p-5 sm:p-7 lg:p-8 shadow-xs space-y-5">
                     {/* Header */}
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h2 className="font-sans font-semibold text-lg sm:text-xl text-[#2A1810] tracking-tight">
-                          Demo Checkout & Simulated Payment
-                        </h2>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
-                          Showcase Demo
-                        </span>
-                      </div>
-                      <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed">
-                        ℹ️ <strong>Demonstration Project:</strong> No real money will be charged, and no real card numbers, CVVs, or UPI PINs are collected. Select any simulated payment method below to test the complete order workflow safely.
-                      </div>
+                      <h2 className="font-sans font-semibold text-lg sm:text-xl text-[#2A1810] tracking-tight">
+                        Checkout &amp; Simulated Payment
+                      </h2>
                     </div>
 
                     {/* Submission Error Banner */}
@@ -1723,15 +1761,19 @@ export default function CartPage() {
 
                     {/* Payment Form with 4 Options */}
                     <form onSubmit={handleCompleteOrder} className="space-y-3">
-                      {/* 1. UPI (replaces PayPal from image) */}
-                      <div
-                        onClick={() => setShippingForm((prev) => ({ ...prev, paymentMethod: 'upi' }))}
-                        className={`rounded-2xl border transition-all cursor-pointer p-4 sm:p-4.5 ${
-                          shippingForm.paymentMethod === 'upi'
-                            ? 'border-[#800000] ring-1 ring-[#800000] bg-[#FAF5EE]/30 shadow-xs'
-                            : 'border-gray-200 bg-white hover:border-gray-300'
-                        }`}
-                      >
+                      <div ref={paymentMethodsRef} className="space-y-3">
+                        {/* 1. UPI (replaces PayPal from image) */}
+                        <div
+                          onClick={() => {
+                            setExpandedPayment((prev) => (prev === 'upi' ? '' : 'upi'));
+                            setShippingForm((prev) => ({ ...prev, paymentMethod: 'upi' }));
+                          }}
+                          className={`rounded-2xl border transition-all cursor-pointer p-4 sm:p-4.5 ${
+                            shippingForm.paymentMethod === 'upi'
+                              ? 'border-[#800000] ring-1 ring-[#800000] bg-[#FAF5EE]/30 shadow-xs'
+                              : 'border-gray-200 bg-white hover:border-gray-300'
+                          }`}
+                        >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
@@ -1774,7 +1816,7 @@ export default function CartPage() {
                           </div>
                         </div>
 
-                        {shippingForm.paymentMethod === 'upi' && (
+                        {expandedPayment === 'upi' && (
                           <div className="mt-3.5 pt-3.5 border-t border-gray-100 space-y-3.5" onClick={(e) => e.stopPropagation()}>
                             <div>
                               <span className="block text-xs font-semibold text-gray-700 mb-2">
@@ -2012,7 +2054,10 @@ export default function CartPage() {
 
                       {/* 2. Simulated Card Payment (Clean informational demo view) */}
                       <div
-                        onClick={() => setShippingForm((prev) => ({ ...prev, paymentMethod: 'card' }))}
+                        onClick={() => {
+                          setExpandedPayment((prev) => (prev === 'card' ? '' : 'card'));
+                          setShippingForm((prev) => ({ ...prev, paymentMethod: 'card' }));
+                        }}
                         className={`rounded-2xl border transition-all cursor-pointer p-4 sm:p-4.5 ${
                           shippingForm.paymentMethod === 'card'
                             ? 'border-[#800000] ring-1 ring-[#800000] bg-[#FAF5EE]/30 shadow-xs'
@@ -2056,7 +2101,7 @@ export default function CartPage() {
                           Pay securely using Visa, Mastercard, RuPay, or Maestro.
                         </p>
 
-                        {shippingForm.paymentMethod === 'card' && (
+                        {expandedPayment === 'card' && (
                           <div className="mt-4 pt-3.5 border-t border-gray-100 space-y-2" onClick={(e) => e.stopPropagation()}>
                             <div className="p-3.5 bg-[#FAF5EE] border border-[#EBE3D7] rounded-xl text-xs text-[#5C5248] space-y-1">
                               <div className="flex items-center gap-1.5 font-semibold text-[#2A1810]">
@@ -2064,7 +2109,7 @@ export default function CartPage() {
                                 <span>Secure Online Payment</span>
                               </div>
                               <p className="text-[11px] text-[#736B63] leading-relaxed">
-                                Your order will be placed with Pending Payment status. You will receive an order confirmation and reference immediately.
+                                Your order will be placed with Unpaid status. You will receive an order confirmation and reference immediately.
                               </p>
                             </div>
                           </div>
@@ -2073,7 +2118,10 @@ export default function CartPage() {
 
                       {/* 3. Net Banking */}
                       <div
-                        onClick={() => setShippingForm((prev) => ({ ...prev, paymentMethod: 'netbanking' }))}
+                        onClick={() => {
+                          setExpandedPayment((prev) => (prev === 'netbanking' ? '' : 'netbanking'));
+                          setShippingForm((prev) => ({ ...prev, paymentMethod: 'netbanking' }));
+                        }}
                         className={`rounded-2xl border transition-all cursor-pointer p-4 sm:p-4.5 ${
                           shippingForm.paymentMethod === 'netbanking'
                             ? 'border-[#800000] ring-1 ring-[#800000] bg-[#FAF5EE]/30 shadow-xs'
@@ -2103,7 +2151,7 @@ export default function CartPage() {
                           </div>
                         </div>
 
-                        {shippingForm.paymentMethod === 'netbanking' && (
+                        {expandedPayment === 'netbanking' && (
                           <div className="mt-3.5 pt-3.5 border-t border-gray-100 space-y-3" onClick={(e) => e.stopPropagation()}>
                             <p className="text-xs text-gray-500">
                               Choose from popular Indian banks or select from dropdown:
@@ -2144,7 +2192,10 @@ export default function CartPage() {
 
                       {/* 4. Cash on delivery */}
                       <div
-                        onClick={() => setShippingForm((prev) => ({ ...prev, paymentMethod: 'cod' }))}
+                        onClick={() => {
+                          setExpandedPayment((prev) => (prev === 'cod' ? '' : 'cod'));
+                          setShippingForm((prev) => ({ ...prev, paymentMethod: 'cod' }));
+                        }}
                         className={`rounded-2xl border transition-all cursor-pointer p-4 sm:p-4.5 ${
                           shippingForm.paymentMethod === 'cod'
                             ? 'border-[#800000] ring-1 ring-[#800000] bg-[#FAF5EE]/30 shadow-xs'
@@ -2172,14 +2223,15 @@ export default function CartPage() {
                           </div>
                         </div>
 
-                        {shippingForm.paymentMethod === 'cod' && (
-                          <div className="mt-3 pt-3 border-t border-gray-100 pl-8">
+                        {expandedPayment === 'cod' && (
+                          <div className="mt-3 pt-3 border-t border-gray-100 pl-8" onClick={(e) => e.stopPropagation()}>
                             <p className="text-xs text-gray-500 leading-relaxed">
                               Pay with Cash or scan UPI QR code upon doorstep delivery of your authentic consecrated items.
                             </p>
                           </div>
                         )}
                       </div>
+                    </div>
 
                       {/* Primary Place Order Button */}
                       <button

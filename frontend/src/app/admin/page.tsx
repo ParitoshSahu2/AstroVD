@@ -45,7 +45,6 @@ import {
   Download,
   Printer,
   Wallet,
-  CreditCard,
 } from 'lucide-react';
 import {
   UserSummary,
@@ -784,7 +783,10 @@ export default function AdminPage() {
   };
 
   // Handle order status lifecycle transition
-  const handleTransitionOrderStatus = async (targetStatus: string) => {
+  const handleTransitionOrderStatus = async (
+    targetStatus: string,
+    extraData?: { courierName?: string; trackingNumber?: string },
+  ) => {
     if (!activeOrder) return;
     const token = getAuthToken();
     if (!token) return;
@@ -802,6 +804,8 @@ export default function AdminPage() {
         body: JSON.stringify({
           status: targetStatus,
           notes: orderStatusNotes.trim() || undefined,
+          courierName: extraData?.courierName?.trim() || undefined,
+          trackingNumber: extraData?.trackingNumber?.trim() || undefined,
         }),
       });
 
@@ -1741,7 +1745,7 @@ export default function AdminPage() {
       return bookingServiceFilter === 'INSPECTION' ? 'Inspections' : 'Appointments';
     }
     if (adminTab === 'orders') return 'Orders';
-    if (adminTab === 'availability') return 'Panditji Availability';
+    if (adminTab === 'availability') return 'Pooja Services';
     if (adminTab === 'activity') return 'Activity & Audit History';
     return 'Overview';
   };
@@ -2008,25 +2012,12 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Group 3: FINANCE */}
+                {/* Group 3: POOJA SERVICES */}
                 <div>
                   <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
-                    Finance
+                    Pooja Services
                   </div>
                   <div className="space-y-0.5">
-                    <button
-                      type="button"
-                      onClick={() => handleSidebarTabClick('payments')}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                        adminTab === 'orders'
-                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
-                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
-                      }`}
-                    >
-                      <CreditCard className="w-4 h-4 text-stone-400 shrink-0" />
-                      <span>Payments</span>
-                    </button>
-
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('pooja')}
@@ -2214,6 +2205,15 @@ export default function AdminPage() {
                       className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-stone-600 hover:bg-stone-50"
                     >
                       Orders
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSidebarTabClick('pooja')}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium ${
+                        adminTab === 'availability' ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold' : 'text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      Pooja Services
                     </button>
                     <button
                       type="button"

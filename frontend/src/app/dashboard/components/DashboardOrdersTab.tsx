@@ -65,10 +65,31 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
 
     const status = (ord.status || 'PENDING_PAYMENT').toUpperCase();
     const isDelivered = status === 'DELIVERED';
+    const isOutForDelivery = status === 'OUT_FOR_DELIVERY';
     const isShipped = status === 'SHIPPED' || status === 'IN_TRANSIT';
+    const isPacked = status === 'PACKED';
     const isProcessing = status === 'PROCESSING';
-    const isPendingPayment = status === 'PENDING_PAYMENT' || status === 'PENDING';
+    const isConfirmed = status === 'CONFIRMED';
+    const isPendingPayment = status === 'PENDING_PAYMENT' || status === 'PENDING' || status === 'ORDER_PLACED';
     const isCancelled = status === 'CANCELLED';
+
+    const courierPartner =
+      ord.courierName ||
+      ord.shippingAddress?.courierName ||
+      ord.shippingAddress?.courier ||
+      null;
+    const trackingNumber =
+      ord.trackingNumber ||
+      ord.shippingAddress?.trackingNumber ||
+      ord.shippingAddress?.awbNumber ||
+      null;
+
+    const isWalletPayment = ord.shippingAddress?.paymentMethod === 'WALLET';
+    const isDemoOrder = Boolean(
+      ord.isDemoOrder ??
+        ord.shippingAddress?.isDemoOrder ??
+        (ord.shippingAddress?.paymentMethod ? ord.shippingAddress.paymentMethod !== 'WALLET' : true),
+    );
 
     const dateStr =
       ord.deliveryDate ||
@@ -92,30 +113,38 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
       ord.deliveryStatusText ||
       (isDelivered
         ? `Delivered on ${dateStr}`
+        : isOutForDelivery
+        ? `Out for Delivery Today`
         : isShipped
-        ? `Expected Delivery by ${dateStr}`
+        ? `Shipped via ${courierPartner || 'Express Courier'}`
+        : isPacked
+        ? `Packed & Ready for Dispatch`
+        : isProcessing
+        ? `Product Preparation & Consecration`
+        : isConfirmed
+        ? `Order Confirmed & Accepted`
         : isCancelled
         ? `Order Cancelled`
-        : isProcessing
-        ? `Consecration in Progress`
         : `Order Placed (${placedDate})`);
 
-    const rawSubtext =
-      ord.deliverySubtext ||
-      (isDelivered
-        ? 'Your item has been delivered'
-        : isShipped
-        ? 'Your item is in transit'
-        : isCancelled
-        ? 'This order was cancelled'
-        : isProcessing
-        ? 'Pran-Pratishtha underway'
-        : 'Order placed — awaiting payment confirmation');
-
     const deliverySubtext =
-      rawSubtext.toLowerCase().includes('pran-pratishtha') && rawSubtext.length > 25
-        ? 'Pran-Pratishtha underway'
-        : rawSubtext;
+      isDelivered
+        ? 'Your sacred package has been delivered safely.'
+        : isOutForDelivery
+        ? 'Delivery courier is out with your package for doorstep handover.'
+        : isShipped
+        ? trackingNumber
+          ? `In transit • Tracking AWB: ${trackingNumber}`
+          : 'Handed over to courier partner for fast transit.'
+        : isPacked
+        ? 'Sanctum packing complete, pickup scheduled shortly.'
+        : isProcessing
+        ? 'Pran-Pratishtha sanctification and energized mantras underway.'
+        : isConfirmed
+        ? 'AstroVD has accepted your order and queued it for preparation.'
+        : isCancelled
+        ? 'This order was cancelled.'
+        : 'Order received — admin review underway.';
 
     const shippingCity =
       ord.shippingAddress?.city
@@ -144,10 +173,17 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
       placedDate,
       status,
       isDelivered,
+      isOutForDelivery,
       isShipped,
+      isPacked,
       isProcessing,
+      isConfirmed,
       isPendingPayment,
       isCancelled,
+      isDemoOrder,
+      isWalletPayment,
+      courierPartner,
+      trackingNumber,
       deliveryHeading,
       deliverySubtext,
       shippingCity,
@@ -167,9 +203,18 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
   // Filter individual product items by status and search
   const filteredProductItems = allProductItems.filter((entry) => {
     const st = entry.status;
-    if (filter === 'processing' && st !== 'PROCESSING' && st !== 'PENDING' && st !== 'PLACED') return false;
-    if (filter === 'shipped' && st !== 'SHIPPED' && st !== 'IN_TRANSIT') return false;
-    if (filter === 'delivered' && st !== 'DELIVERED') return false;
+    if (
+      filter === 'processing' &&
+      !['PROCESSING', 'PENDING', 'ORDER_PLACED', 'PENDING_PAYMENT', 'CONFIRMED', 'PACKED'].includes(st)
+    ) {
+      return false;
+    }
+    if (filter === 'shipped' && !['SHIPPED', 'OUT_FOR_DELIVERY', 'IN_TRANSIT'].includes(st)) {
+      return false;
+    }
+    if (filter === 'delivered' && st !== 'DELIVERED') {
+      return false;
+    }
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -374,28 +419,57 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
                         <span>Delivered</span>
                       </span>
                     )}
-                    {entry.isShipped && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
-                        <span>In Transit</span>
+                    {entry.isOutForDelivery && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-300">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
+                        <span>Out for Delivery</span>
+                      </span>
+                    )}
+                    {entry.isShipped && !entry.isOutForDelivery && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-900 border border-purple-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-600 animate-pulse" />
+                        <span>Shipped</span>
+                      </span>
+                    )}
+                    {entry.isPacked && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-900 border border-indigo-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
+                        <span>Packed</span>
                       </span>
                     )}
                     {entry.isProcessing && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
-                        <span>Consecration</span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-900 border border-sky-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-sky-600 animate-pulse" />
+                        <span>Processing</span>
+                      </span>
+                    )}
+                    {entry.isConfirmed && (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-900 border border-blue-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                        <span>Confirmed</span>
                       </span>
                     )}
                     {entry.isPendingPayment && (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-900 border border-amber-200">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                        <span>Pending</span>
+                        <span>Order Placed</span>
                       </span>
                     )}
                     {entry.isCancelled && (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-stone-100 text-stone-600 border border-stone-200">
                         <span className="w-1.5 h-1.5 rounded-full bg-stone-400" />
                         <span>Cancelled</span>
+                      </span>
+                    )}
+
+                    {/* Payment Status Label: Separate from fulfillment status */}
+                    {entry.isWalletPayment ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300">
+                        Paid via Wallet
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-300">
+                        Unpaid
                       </span>
                     )}
 
@@ -643,85 +717,176 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
             <div className="flex items-center justify-between pb-2.5 border-b border-stone-100">
               <div>
                 <span className="text-[10px] uppercase font-bold text-stone-400 block">
-                  Consignment Tracking
+                  Consignment &amp; Order Lifecycle Tracking
                 </span>
                 <h3 className="font-serif font-bold text-base text-[#3B1E22]">
-                  {selectedTrackOrder.orderNumber || selectedTrackOrder.id}
+                  {selectedTrackOrder.orderReference || (selectedTrackOrder.id ? `#ORD-${selectedTrackOrder.id.slice(0, 8).toUpperCase()}` : selectedTrackOrder.orderNumber)}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedTrackOrder(null)}
-                className="p-1 rounded-lg text-stone-400 hover:text-stone-700"
+                className="p-1 rounded-lg text-stone-400 hover:text-stone-700 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* 4-Step Visual Tracker */}
-            <div className="relative pl-6 space-y-5 border-l-2 border-amber-300 ml-3 py-1">
-              {/* Step 1 */}
-              <div className="relative">
-                <span className="absolute -left-[31px] top-0.5 w-4 h-4 rounded-full bg-emerald-600 ring-4 ring-emerald-100" />
-                <h5 className="font-bold text-xs text-stone-900">1. Order Confirmed</h5>
-                <p className="text-[11px] text-stone-500">
-                  Dakshina verified. Artifact queued for Vedic energization.
-                </p>
+            {/* Courier Dispatch Card if shipped */}
+            {(selectedTrackOrder.courierName ||
+              selectedTrackOrder.shippingAddress?.courierName ||
+              selectedTrackOrder.trackingNumber ||
+              selectedTrackOrder.shippingAddress?.trackingNumber) && (
+              <div className="p-3 rounded-2xl bg-purple-50/80 border border-purple-200 flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                    <Truck className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] uppercase font-bold text-purple-700 block leading-tight">
+                      Express Courier Partner
+                    </span>
+                    <span className="font-semibold text-stone-900 block truncate mt-0.5">
+                      {selectedTrackOrder.courierName || selectedTrackOrder.shippingAddress?.courierName || 'Sacred Express'}
+                      {' • '}
+                      <span className="font-mono text-purple-900">
+                        {selectedTrackOrder.trackingNumber || selectedTrackOrder.shippingAddress?.trackingNumber}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) =>
+                    handleCopyId(
+                      selectedTrackOrder.trackingNumber ||
+                        selectedTrackOrder.shippingAddress?.trackingNumber ||
+                        '',
+                      e,
+                    )
+                  }
+                  className="px-2.5 py-1 rounded-lg bg-white border border-purple-200 text-purple-800 text-[11px] font-semibold hover:bg-purple-100 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs shrink-0"
+                >
+                  <Copy className="w-3 h-3" />
+                  <span>Copy AWB</span>
+                </button>
               </div>
+            )}
 
-              {/* Step 2 */}
-              <div className="relative">
-                <span className="absolute -left-[31px] top-0.5 w-4 h-4 rounded-full bg-emerald-600 ring-4 ring-emerald-100" />
-                <h5 className="font-bold text-xs text-stone-900">
-                  2. Pran-Pratishtha Consecration Completed
-                </h5>
-                <p className="text-[11px] text-stone-500">
-                  Energized with Beej Mantras at Varanasi Sanctum by Dr. Vishal Dubey.
+            {/* 7-Stage Visual Lifecycle Tracker */}
+            {selectedTrackOrder.status === 'CANCELLED' ? (
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
+                <p className="font-bold">Order Cancelled</p>
+                <p className="text-[11px] text-rose-600 mt-0.5">
+                  This order was cancelled and inventory was safely restored.
                 </p>
               </div>
+            ) : (
+              <div className="relative pl-6 space-y-4 border-l-2 border-amber-300 ml-3 py-1">
+                {(() => {
+                  const s = (selectedTrackOrder.status || 'PENDING').toUpperCase();
+                  const stageIdx =
+                    s === 'DELIVERED'
+                      ? 6
+                      : s === 'OUT_FOR_DELIVERY'
+                      ? 5
+                      : s === 'SHIPPED' || s === 'IN_TRANSIT'
+                      ? 4
+                      : s === 'PACKED'
+                      ? 3
+                      : s === 'PROCESSING'
+                      ? 2
+                      : s === 'CONFIRMED'
+                      ? 1
+                      : 0;
 
-              {/* Step 3 */}
-              <div className="relative">
-                <span
-                  className={`absolute -left-[31px] top-0.5 w-4 h-4 rounded-full ${
-                    selectedTrackOrder.status === 'PROCESSING'
-                      ? 'bg-amber-400 ring-4 ring-amber-100'
-                      : 'bg-emerald-600 ring-4 ring-emerald-100'
-                  }`}
-                />
-                <h5 className="font-bold text-xs text-stone-900">
-                  3. Dispatched via Express Sacred Courier
-                </h5>
-                <p className="text-[11px] text-stone-500">
-                  Sealed with Ganga Jal & packed in protective sanctum pouch.
-                </p>
-              </div>
+                  const stages = [
+                    {
+                      num: '1',
+                      title: 'Order Placed',
+                      desc: 'Order received and logged in AstroVD system for admin review.',
+                    },
+                    {
+                      num: '2',
+                      title: 'Confirmed by Admin',
+                      desc: 'Order accepted and scheduled for spiritual preparation.',
+                    },
+                    {
+                      num: '3',
+                      title: 'Product Preparation & Consecration',
+                      desc: 'Pran-Pratishtha sanctification and energized mantras underway.',
+                    },
+                    {
+                      num: '4',
+                      title: 'Packed & Sanctified',
+                      desc: 'Sealed in protective sanctum pouch with Ganga Jal blessing.',
+                    },
+                    {
+                      num: '5',
+                      title: 'Shipped & Dispatched',
+                      desc:
+                        selectedTrackOrder.courierName || selectedTrackOrder.shippingAddress?.courierName
+                          ? `Handed over to ${selectedTrackOrder.courierName || selectedTrackOrder.shippingAddress?.courierName} (AWB: ${selectedTrackOrder.trackingNumber || selectedTrackOrder.shippingAddress?.trackingNumber || 'Available'})`
+                          : 'Handed over to express courier partner.',
+                    },
+                    {
+                      num: '6',
+                      title: 'Out for Delivery',
+                      desc: 'Package reached your destination hub and is out for doorstep delivery.',
+                    },
+                    {
+                      num: '7',
+                      title: 'Delivered',
+                      desc: 'Successfully delivered to customer resident.',
+                    },
+                  ];
 
-              {/* Step 4 */}
-              <div className="relative">
-                <span
-                  className={`absolute -left-[31px] top-0.5 w-4 h-4 rounded-full ${
-                    selectedTrackOrder.status === 'DELIVERED'
-                      ? 'bg-emerald-600 ring-4 ring-emerald-100'
-                      : 'bg-stone-300 ring-4 ring-stone-100'
-                  }`}
-                />
-                <h5 className="font-bold text-xs text-stone-900">
-                  4. Delivered to Destination
-                </h5>
-                <p className="text-[11px] text-stone-500">
-                  {selectedTrackOrder.status === 'DELIVERED'
-                    ? 'Delivered safely to resident with blessed guidance card.'
-                    : 'Scheduled for doorstep delivery shortly.'}
-                </p>
+                  return stages.map((st, idx) => {
+                    const isCompleted = idx < stageIdx;
+                    const isCurrent = idx === stageIdx;
+                    return (
+                      <div key={st.num} className="relative">
+                        <span
+                          className={`absolute -left-[31px] top-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white transition-all ${
+                            isCompleted
+                              ? 'bg-emerald-600 ring-4 ring-emerald-100'
+                              : isCurrent
+                              ? 'bg-amber-500 ring-4 ring-amber-100 animate-pulse'
+                              : 'bg-stone-300 ring-4 ring-stone-100 text-stone-600'
+                          }`}
+                        >
+                          {isCompleted ? '✓' : st.num}
+                        </span>
+                        <h5
+                          className={`font-bold text-xs ${
+                            isCurrent
+                              ? 'text-amber-900 font-extrabold'
+                              : isCompleted
+                              ? 'text-stone-900'
+                              : 'text-stone-400'
+                          }`}
+                        >
+                          {st.title} {isCurrent && <span className="text-[10px] text-amber-600 font-normal ml-1">● In Progress</span>}
+                        </h5>
+                        <p
+                          className={`text-[11px] ${
+                            isCompleted || isCurrent ? 'text-stone-600' : 'text-stone-400'
+                          }`}
+                        >
+                          {st.desc}
+                        </p>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
-            </div>
+            )}
 
             <div className="pt-1 flex justify-end">
               <button
                 type="button"
                 onClick={() => setSelectedTrackOrder(null)}
-                className="px-5 py-2 rounded-xl bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs font-bold transition-all shadow-xs"
+                className="px-5 py-2 rounded-xl bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
               >
                 Close Tracking
               </button>

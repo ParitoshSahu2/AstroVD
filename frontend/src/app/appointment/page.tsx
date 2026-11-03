@@ -466,6 +466,9 @@ function AppointmentContent() {
 
       setConfirmedBooking(resolvedBooking);
       setConfirmationModalOpen(false);
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
 
       if (typeof window !== 'undefined') {
         try {
@@ -507,7 +510,11 @@ function AppointmentContent() {
       <Navbar />
 
       {/* HERO BANNER SECTION (Panoramic full-bleed backdrop matching reference design) */}
-      <section className="relative w-full bg-[#36170A] overflow-hidden pt-24 sm:pt-28 md:pt-30 pb-9 sm:pb-11 px-4 sm:px-6 lg:px-12 min-h-[220px] sm:min-h-[250px] flex items-center">
+      <section className={`relative w-full bg-[#36170A] overflow-hidden px-4 sm:px-6 lg:px-12 flex items-center transition-all duration-300 ${
+        confirmedBooking
+          ? 'pt-20 sm:pt-24 pb-5 min-h-[135px] sm:min-h-[150px]'
+          : 'pt-24 sm:pt-28 md:pt-30 pb-9 sm:pb-11 min-h-[220px] sm:min-h-[250px]'
+      }`}>
         {/* Background ambient gradient matching reference tone */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#36170A] via-[#36170A] to-[#2B0E06]" />
 
@@ -527,20 +534,38 @@ function AppointmentContent() {
 
         {/* Content container - Left Text Information (Clear, readable, with zero obstruction) */}
         <div className="relative max-w-7xl mx-auto w-full z-10">
-          <div className="max-w-xl text-left space-y-2">
-            <div className="tracking-[0.2em] text-[10px] sm:text-[11px] font-bold text-[#D8B28A] uppercase drop-shadow-sm">
-              {t('DIVINE JYOTISH • 1-ON-1 VEDIC GUIDANCE • SACRED SANKALP', 'दैवीय ज्योतिष • 1-ऑन-1 वैदिक परामर्श • पावन संकल्प')}
+          {confirmedBooking ? (
+            <div className="max-w-2xl text-left space-y-1">
+              <div className="tracking-[0.2em] text-[10px] sm:text-[11px] font-bold text-amber-300 uppercase drop-shadow-sm flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>{t('VEDIC CONSULTATION SANCTUM • RESERVATION CONFIRMED', 'वैदिक परामर्श • आरक्षण सफल')}</span>
+              </div>
+              <h1 className="font-serif text-xl sm:text-2xl md:text-3xl font-bold text-[#FFFDFB] tracking-wide leading-tight drop-shadow-md">
+                {t('Your Sacred Appointment Is Confirmed', 'आपका पावन परामर्श सत्र आरक्षित हो गया है')}
+              </h1>
+              <p className="text-[#D7C4BD] text-xs sm:text-[13px] leading-relaxed max-w-xl font-normal drop-shadow-sm">
+                {t(
+                  'Your 1-on-1 consultation pass and Google Meet sanctum access are confirmed below.',
+                  'आपका 1-ऑन-1 परामर्श पास एवं गूगल मीट लिंक नीचे संलग्न है।'
+                )}
+              </p>
             </div>
-            <h1 className="font-serif text-2xl sm:text-3xl md:text-[34px] lg:text-[38px] font-bold text-[#FFFDFB] tracking-wide leading-tight drop-shadow-md">
-              {t('Book Your Vedic Consultation', 'अपना वैदिक परामर्श सत्र बुक करें')}
-            </h1>
-            <p className="text-[#D7C4BD] text-xs sm:text-[13px] leading-relaxed max-w-lg font-normal drop-shadow-sm">
-              {t(
-                'Direct 1-on-1 private video and voice consultations with verified Jyotish Acharyas. Get comprehensive horoscope analysis, dosha remedies, and celestial guidance.',
-                'पूज्य वैदिक ज्योतिषाचार्यों के साथ निजी 1-ऑन-1 वीडियो व वॉइस परामर्श। संपूर्ण जन्म कुंडली परीक्षण, ग्रह दोष निवारण एवं जीवन के लिए पावन मार्गदर्शन प्राप्त करें।'
-              )}
-            </p>
-          </div>
+          ) : (
+            <div className="max-w-xl text-left space-y-2">
+              <div className="tracking-[0.2em] text-[10px] sm:text-[11px] font-bold text-[#D8B28A] uppercase drop-shadow-sm">
+                {t('DIVINE JYOTISH • 1-ON-1 VEDIC GUIDANCE • SACRED SANKALP', 'दैवीय ज्योतिष • 1-ऑन-1 वैदिक परामर्श • पावन संकल्प')}
+              </div>
+              <h1 className="font-serif text-2xl sm:text-3xl md:text-[34px] lg:text-[38px] font-bold text-[#FFFDFB] tracking-wide leading-tight drop-shadow-md">
+                {t('Book Your Vedic Consultation', 'अपना वैदिक परामर्श सत्र बुक करें')}
+              </h1>
+              <p className="text-[#D7C4BD] text-xs sm:text-[13px] leading-relaxed max-w-lg font-normal drop-shadow-sm">
+                {t(
+                  'Direct 1-on-1 private video and voice consultations with verified Jyotish Acharyas. Get comprehensive horoscope analysis, dosha remedies, and celestial guidance.',
+                  'पूज्य वैदिक ज्योतिषाचार्यों के साथ निजी 1-ऑन-1 वीडियो व वॉइस परामर्श। संपूर्ण जन्म कुंडली परीक्षण, ग्रह दोष निवारण एवं जीवन के लिए पावन मार्गदर्शन प्राप्त करें।'
+                )}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Subtle curved bottom wave divider matching reference design */}
@@ -565,15 +590,17 @@ function AppointmentContent() {
         </div>
       </section>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-12 py-8 sm:py-12 space-y-10">
-        {/* CONFIRMATION STATE - Simple & Elegant Vedic Receipt */}
+      <main className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-12 transition-all ${
+        confirmedBooking ? 'py-5 sm:py-7 space-y-6' : 'py-8 sm:py-12 space-y-10'
+      }`}>
+        {/* CONFIRMATION STATE - Vertical Layout with Minimal Scrolling */}
         {confirmedBooking ? (
-          <div className="relative max-w-xl mx-auto rounded-3xl bg-white border border-stone-200/90 shadow-xl shadow-stone-900/5 overflow-hidden animate-fadeIn">
+          <div className="relative max-w-2xl mx-auto rounded-3xl bg-white border border-stone-200/90 shadow-xl shadow-stone-900/5 overflow-hidden animate-fadeIn">
             {/* Elegant Top Accent Bar */}
             <div className="h-1.5 w-full bg-gradient-to-r from-amber-400 via-[#7B121C] to-amber-400" />
 
             {/* Subtle Celestial Watermark Background */}
-            <div className="absolute -top-12 -right-12 w-48 h-48 opacity-[0.04] pointer-events-none">
+            <div className="absolute -top-12 -right-12 w-48 h-48 opacity-[0.03] pointer-events-none">
               <img
                 src="/ornaments/clean_mandala.png"
                 alt=""
@@ -581,63 +608,72 @@ function AppointmentContent() {
               />
             </div>
 
-            <div className="p-8 sm:p-10 text-center space-y-6 relative z-10">
-              {/* Refined Success Icon with Soft Halo */}
-              <div className="relative mx-auto w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200/60 flex items-center justify-center shadow-xs">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shadow-md shadow-emerald-700/20">
-                  <CheckCircle2 className="w-5 h-5" />
+            <div className="p-5 sm:p-7 space-y-5 relative z-10">
+              {/* SECTION 1: Success Header & Reference */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-stone-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center shrink-0 shadow-xs">
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shadow-md shadow-emerald-700/20">
+                      <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-stone-100 border border-stone-200 text-stone-700 text-[11px] font-mono">
+                      <span className="text-stone-400 font-sans text-[10px] uppercase tracking-wider font-semibold">
+                        Ref:
+                      </span>
+                      <span className="font-bold text-stone-800">
+                        {confirmedBooking.id.slice(0, 10).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 mt-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>{t('Reservation Verified', 'सत्यापित आरक्षण')}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 tracking-wider uppercase">
+                    {confirmedBooking.status || 'CONFIRMED'}
+                  </span>
                 </div>
               </div>
 
-              {/* Header & Reference */}
-              <div className="space-y-2.5">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-50 border border-stone-200 text-stone-600 text-[11px] font-mono">
-                  <span className="text-stone-400 font-sans text-[10px] uppercase tracking-wider font-semibold">
-                    Booking Ref:
-                  </span>
-                  <span className="font-bold text-stone-700">
-                    {confirmedBooking.id.slice(0, 13).toUpperCase()}...
-                  </span>
-                </div>
-
-                <h2 className="font-serif font-bold text-2xl sm:text-3xl text-[#2A1810] tracking-tight">
+              {/* Title & Attendee Narrative */}
+              <div className="space-y-1.5">
+                <h2 className="font-serif font-bold text-xl sm:text-2xl text-[#2A1810] tracking-tight leading-snug">
                   {t('Appointment Reserved Successfully!', 'परामर्श सत्र सफलतापूर्वक आरक्षित हुआ!')}
                 </h2>
-
-                <p className="text-xs sm:text-sm text-stone-600 max-w-md mx-auto leading-relaxed">
+                <p className="text-xs sm:text-[13px] text-stone-600 leading-relaxed">
                   {language === 'hi' ? (
                     <>
-                      {confirmedBooking.isBookingForSomeoneElse ? (
-                        <>
-                          <strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> जी के लिए{' '}
-                        </>
-                      ) : null}
+                      {confirmedBooking.isBookingForSomeoneElse && (
+                        <span><strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> जी हेतु • </span>
+                      )}
                       <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> सत्र दिनांक{' '}
                       <strong>{confirmedBooking.scheduledDate}</strong> को{' '}
-                      <strong>{confirmedBooking.scheduledTime}</strong> पर आरक्षित हो गया है। हमारी
-                      टीम संपर्क सूत्र <strong>{confirmedBooking.customerPhone || confirmedBooking.contactPhone}</strong> पर
-                      सत्र विवरण प्रेषित करेगी।
+                      <strong>{confirmedBooking.scheduledTime} IST</strong> पर आरक्षित हो गया है। टीम विवरण{' '}
+                      <strong>{confirmedBooking.customerPhone || confirmedBooking.contactPhone}</strong> पर प्रेषित करेगी।
                     </>
                   ) : (
                     <>
-                      {confirmedBooking.isBookingForSomeoneElse ? (
-                        <>
-                          Consultation for <strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong>:{' '}
-                        </>
-                      ) : null}
+                      {confirmedBooking.isBookingForSomeoneElse && (
+                        <span>For <strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> • </span>
+                      )}
                       Your <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> session is confirmed for{' '}
                       <strong>{confirmedBooking.scheduledDate}</strong> at{' '}
-                      <strong>{confirmedBooking.scheduledTime}</strong>. AstroVD Team will
-                      reach out to <strong>{confirmedBooking.customerPhone || confirmedBooking.contactPhone}</strong> with session details.
+                      <strong>{confirmedBooking.scheduledTime} IST</strong>. Details sent to{' '}
+                      <strong>{confirmedBooking.customerPhone || confirmedBooking.contactPhone}</strong>.
                     </>
                   )}
                 </p>
               </div>
 
-              {/* Elegant Reservation Summary Pass / Ticket */}
-              <div className="rounded-2xl bg-[#FAF8F5] border border-stone-200/80 p-5 text-left text-xs space-y-3.5 shadow-2xs">
+              {/* SECTION 2: Sacred Reservation Summary Pass / Ticket */}
+              <div className="rounded-2xl bg-[#FAF8F5] border border-stone-200/80 p-4 text-left text-xs space-y-2.5 shadow-2xs">
                 {/* Attendee Details */}
-                <div className="flex justify-between items-center pb-2.5 border-b border-stone-200/60">
+                <div className="flex justify-between items-center pb-2 border-b border-stone-200/60">
                   <span className="text-stone-500 flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5 text-stone-400" />
                     <span>{t('Customer / Attendee:', 'परामर्शार्थी / ग्राहक:')}</span>
@@ -654,13 +690,13 @@ function AppointmentContent() {
 
                 {/* If booked for someone else, indicate Account Owner */}
                 {confirmedBooking.isBookingForSomeoneElse && (
-                  <div className="flex justify-between items-center pb-2.5 border-b border-stone-200/60 bg-amber-50/60 -mx-2 px-2 py-1.5 rounded-xl border border-amber-200/80">
+                  <div className="flex justify-between items-center pb-2 border-b border-stone-200/60 bg-amber-50/60 -mx-1 px-2 py-1 rounded-lg border border-amber-200/80">
                     <span className="text-amber-900 font-semibold flex items-center gap-1.5 text-[11px]">
                       <HeartHandshake className="w-3.5 h-3.5 text-amber-700" />
-                      <span>{t('Booked For Family / Friend', 'परिवार / मित्र हेतु बुक किया गया')}</span>
+                      <span>{t('Booked For Family / Friend', 'परिवार / मित्र हेतु बुक')}</span>
                     </span>
                     <span className="text-[11px] text-stone-600 font-medium">
-                      {t('By Account: ', 'खाता: ')}
+                      {t('Account: ', 'खाता: ')}
                       <strong className="text-stone-800">
                         {confirmedBooking.accountOwnerName || accountUser?.name || 'Your Account'}
                       </strong>
@@ -668,16 +704,16 @@ function AppointmentContent() {
                   </div>
                 )}
 
-                <div className="flex justify-between items-center pb-2.5 border-b border-stone-200/60">
+                <div className="flex justify-between items-center pb-2 border-b border-stone-200/60">
                   <span className="text-stone-500 flex items-center gap-1.5">
                     <span>{t('Spiritual Service:', 'वैदिक सेवा:')}</span>
                   </span>
-                  <span className="font-bold text-[#5B0D15] text-right truncate max-w-[240px]">
+                  <span className="font-bold text-[#5B0D15] text-right truncate max-w-[280px]">
                     {confirmedBooking.serviceTitle}
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center pb-2.5 border-b border-stone-200/60">
+                <div className="flex justify-between items-center pb-2 border-b border-stone-200/60">
                   <span className="text-stone-500 flex items-center gap-1.5">
                     <UserCheck className="w-3.5 h-3.5 text-stone-400" />
                     <span>{t('Spiritual Guide:', 'आचार्य:')}</span>
@@ -687,7 +723,7 @@ function AppointmentContent() {
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center pb-2.5 border-b border-stone-200/60">
+                <div className="flex justify-between items-center pb-2 border-b border-stone-200/60">
                   <span className="text-stone-500 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-stone-400" />
                     <span>{t('Date & Time Slot:', 'दिनांक व समय:')}</span>
@@ -713,7 +749,7 @@ function AppointmentContent() {
                 </div>
               </div>
 
-              {/* Google Meet Shared Room Pass */}
+              {/* SECTION 3: Google Meet Shared Room Pass */}
               {confirmedBooking.meetLink && (() => {
                 const meetStatus = getMeetingTimeStatus(
                   confirmedBooking.scheduledDate,
@@ -723,7 +759,7 @@ function AppointmentContent() {
                 const meetUrl = formatGoogleMeetLink(confirmedBooking.meetLink);
 
                 return (
-                  <div className="p-4 rounded-2xl bg-emerald-50/90 border border-emerald-300 text-left space-y-2.5 shadow-2xs">
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-50/90 border border-emerald-300 text-left space-y-2 shadow-2xs">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
                         <Video className="w-4 h-4 text-emerald-700" />
@@ -741,28 +777,17 @@ function AppointmentContent() {
                       ) : (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
                           <Lock className="w-3 h-3 text-amber-700" />
-                          {t('Unlocks 5m Before Session', 'सत्र से 5 मिनट पूर्व खुलेगा')}
+                          {t('Unlocks 5m Before Session', 'सत्र से 5 मिनट पूर्व सक्रिय')}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-stone-600">
-                      {meetStatus.isJoinable
-                        ? t(
-                            'Your session is ready! Click below to enter Guruji’s consultation room.',
-                            'आपका सत्र तैयार है! गुरुजी के परामर्श कक्ष में प्रवेश के लिए नीचे क्लिक करें।'
-                          )
-                        : t(
-                            'The Join button will be enabled 5 minutes before your scheduled appointment time. Both Dr. Pandit Vishal Dubey and you connect via this sanctum link.',
-                            'मीटिंग कक्ष का बटन आपके निर्धारित समय से ठीक 5 मिनट पहले खुलेगा। पूज्य गुरुजी एवं आप दोनों इसी लिंक पर जुड़ेंगे।'
-                          )}
-                    </p>
-                    <div className="pt-1 flex flex-col sm:flex-row sm:items-center gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                       {meetStatus.isJoinable ? (
                         <a
                           href={meetUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-md transition-all hover:scale-102 active:scale-98 animate-pulse"
+                          className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-md transition-all hover:scale-102 active:scale-98 animate-pulse shrink-0"
                         >
                           <Video className="w-3.5 h-3.5" />
                           <span>{t('Join Google Meet Now', 'गूगल मीट से अभी जुड़ें')}</span>
@@ -771,7 +796,7 @@ function AppointmentContent() {
                         <button
                           type="button"
                           disabled
-                          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-stone-200 text-stone-500 font-bold text-xs cursor-not-allowed border border-stone-300"
+                          className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl bg-stone-200 text-stone-500 font-bold text-xs cursor-not-allowed border border-stone-300 shrink-0"
                           title={
                             meetStatus.hasEnded
                               ? t('Session has ended', 'सत्र समाप्त हो चुका है')
@@ -782,11 +807,11 @@ function AppointmentContent() {
                           <span>
                             {meetStatus.hasEnded
                               ? t('Session Concluded', 'सत्र समाप्त')
-                              : t('Join Room (Opens 5 Min Before Session)', 'मीट कक्ष (सत्र से 5 मिनट पूर्व खुलेगा)')}
+                              : t('Join Room (Opens 5 Min Before Session)', 'मीट कक्ष (5 मिनट पूर्व खुलेगा)')}
                           </span>
                         </button>
                       )}
-                      <span className="text-[11px] font-mono text-emerald-900 truncate select-all bg-white/90 px-3 py-1.5 rounded-xl border border-emerald-200 block text-center sm:text-left">
+                      <span className="text-[11px] font-mono text-emerald-900 truncate select-all bg-white/90 px-2.5 py-1 rounded-lg border border-emerald-200 block text-center sm:text-left min-w-0 flex-1">
                         {meetUrl}
                       </span>
                     </div>
@@ -794,8 +819,8 @@ function AppointmentContent() {
                 );
               })()}
 
-              {/* Action Buttons */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              {/* SECTION 4: Action Buttons (Side by Side on sm+, Stacked on mobile) */}
+              <div className="pt-2 flex flex-col sm:flex-row gap-3 w-full">
                 <Link
                   href={`/dashboard?highlightBooking=${encodeURIComponent(confirmedBooking.id || confirmedBooking._id || '')}&tab=consultations`}
                   onClick={() => {
@@ -805,16 +830,17 @@ function AppointmentContent() {
                       }
                     } catch (e) {}
                   }}
-                  className="w-full sm:w-auto px-6 py-3 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs font-bold shadow-md shadow-rose-950/20 transition-all flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-[0.98]"
+                  className="flex-1 px-5 py-2.5 rounded-xl bg-[#5B0D15] hover:bg-[#480a11] text-white text-xs sm:text-sm font-bold shadow-md shadow-rose-950/20 transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
                 >
                   <span>{t('View in My Consultations →', 'मेरी परामर्श सूची देखें →')}</span>
                 </Link>
                 <button
+                  type="button"
                   onClick={() => {
                     setConfirmedBooking(null);
                     setSelectedServiceId('astrological_consultation');
                   }}
-                  className="w-full sm:w-auto px-6 py-3 rounded-full border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 text-xs font-semibold transition-all hover:border-stone-400"
+                  className="sm:w-auto px-5 py-2.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 text-xs sm:text-sm font-semibold transition-all hover:border-stone-400 cursor-pointer"
                 >
                   {t('Book Another Service', 'अन्य सेवा बुक करें')}
                 </button>

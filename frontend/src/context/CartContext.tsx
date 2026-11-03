@@ -222,7 +222,12 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           tagHi: 'tagHi' in product ? product.tagHi : undefined,
           price: numericPrice,
           priceFormatted: formattedPrice,
-          originalPriceFormatted: 'originalPrice' in product ? product.originalPrice : undefined,
+          originalPriceFormatted:
+            'originalPriceFormatted' in product && typeof (product as any).originalPriceFormatted === 'string'
+              ? (product as any).originalPriceFormatted
+              : 'originalPrice' in product && typeof (product as any).originalPrice === 'number'
+              ? `₹${Number((product as any).originalPrice).toLocaleString('en-IN')}`
+              : undefined,
           image: product.image,
           category: product.category,
           quantity,

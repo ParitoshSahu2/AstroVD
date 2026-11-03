@@ -230,30 +230,127 @@ describe('Admin Shopping Order Management', () => {
       );
     });
 
-    it('successfully transitions from PROCESSING to SHIPPED', async () => {
+    it('successfully transitions from PENDING to CONFIRMED (Admin accepts order)', async () => {
+      mockPrisma.order.findUnique.mockResolvedValue({ ...sampleOrder, status: 'PENDING' });
+      mockPrisma.order.update.mockResolvedValue({ ...sampleOrder, status: 'CONFIRMED' });
+
+      const res = await ordersService.updateOrderStatus(
+        mockAdminUser,
+        'ord-uuid-1',
+        { status: 'CONFIRMED', notes: 'Order accepted by Admin' },
+      );
+
+      expect(res.message).toContain('successfully transitioned from PENDING to CONFIRMED');
+    });
+
+    it('successfully transitions from CONFIRMED to PROCESSING', async () => {
+      mockPrisma.order.findUnique.mockResolvedValue({ ...sampleOrder, status: 'CONFIRMED' });
+      mockPrisma.order.update.mockResolvedValue({ ...sampleOrder, status: 'PROCESSING' });
+
+      const res = await ordersService.updateOrderStatus(
+        mockAdminUser,
+        'ord-uuid-1',
+        { status: 'PROCESSING', notes: 'Vedic sanctum energization started' },
+      );
+
+      expect(res.message).toContain('successfully transitioned from CONFIRMED to PROCESSING');
+    });
+
+    it('successfully transitions from PROCESSING to PACKED', async () => {
       mockPrisma.order.findUnique.mockResolvedValue({ ...sampleOrder, status: 'PROCESSING' });
+      mockPrisma.order.update.mockResolvedValue({ ...sampleOrder, status: 'PACKED' });
+
+      const res = await ordersService.updateOrderStatus(
+        mockAdminUser,
+        'ord-uuid-1',
+        { status: 'PACKED', notes: 'Sanctum consecration and packing complete' },
+      );
+
+      expect(res.message).toContain('successfully transitioned from PROCESSING to PACKED');
+    });
+
+    it('successfully transitions from PACKED to SHIPPED when courier and tracking number are provided', async () => {
+      mockPrisma.order.findUnique.mockResolvedValue({ ...sampleOrder, status: 'PACKED' });
       mockPrisma.order.update.mockResolvedValue({ ...sampleOrder, status: 'SHIPPED' });
 
       const res = await ordersService.updateOrderStatus(
         mockAdminUser,
         'ord-uuid-1',
-        { status: 'SHIPPED', notes: 'BlueDart Tracking #BD-12345' },
+        {
+          status: 'SHIPPED',
+          courierName: 'Delhivery Express',
+          trackingNumber: 'DEL-9948201',
+          notes: 'Dispatched from Varanasi Hub',
+        },
       );
 
-      expect(res.message).toContain('successfully transitioned');
+      expect(res.message).toContain('successfully transitioned from PACKED to SHIPPED');
+      expect(mockPrisma.order.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: 'SHIPPED',
+            shippingAddress: expect.objectContaining({
+              courierName: 'Delhivery Express',
+              trackingNumber: 'DEL-9948201',
+            }),
+          }),
+        }),
+      );
     });
 
-    it('successfully transitions from SHIPPED to DELIVERED', async () => {
+    it('rejects transition to SHIPPED when courier or tracking number is missing', async () => {
+      mockPrisma.order.findUnique.mockResolvedValue({ ...sampleOrder, status: 'PACKED' });
+
+      await expect(
+        ordersService.updateOrderStatus(mockAdminUser, 'ord-uuid-1', {
+          status: 'SHIPPED',
+          notes: 'Dispatched without courier details',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('successfully transitions from SHIPPED to OUT_FOR_DELIVERY', async () => {
       mockPrisma.order.findUnique.mockResolvedValue({ ...sampleOrder, status: 'SHIPPED' });
+      mockPrisma.order.update.mockResolvedValue({ ...sampleOrder, status: 'OUT_FOR_DELIVERY' });
+
+      const res = await ordersService.updateOrderStatus(
+        mockAdminUser,
+        'ord-uuid-1',
+        { status: 'OUT_FOR_DELIVERY', notes: 'Package out for local delivery' },
+      );
+
+      expect(res.message).toContain('successfully transitioned from SHIPPED to OUT_FOR_DELIVERY');
+    });
+
+    it('successfully transitions from OUT_FOR_DELIVERY to DELIVERED', async () => {
+      mockPrisma.order.findUnique.mockResolvedValue({ ...sampleOrder, status: 'OUT_FOR_DELIVERY' });
       mockPrisma.order.update.mockResolvedValue({ ...sampleOrder, status: 'DELIVERED' });
 
       const res = await ordersService.updateOrderStatus(
         mockAdminUser,
         'ord-uuid-1',
-        { status: 'DELIVERED', notes: 'Received by customer' },
+        { status: 'DELIVERED', notes: 'Handed over to customer' },
       );
 
-      expect(res.message).toContain('successfully transitioned');
+      expect(res.message).toContain('successfully transitioned from OUT_FOR_DELIVERY to DELIVERED');
+    });
+
+    it('correctly labels simulated demo online payment orders as DEMO_NOT_PROCESSED', async () => {
+      const demoOrder = {
+        ...sampleOrder,
+        id: 'ord-demo-1',
+        shippingAddress: {
+          ...sampleShippingAddress,
+          isDemoOrder: true,
+          paymentMethod: 'DEMO_SIMULATED',
+        },
+      };
+
+      mockPrisma.order.findUnique.mockResolvedValue(demoOrder);
+      const detail = await ordersService.getAdminOrderById('ord-demo-1');
+
+      expect(detail.paymentStatus).toBe('UNPAID');
+      expect(detail.isDemoOrder).toBe(true);
     });
 
     it('successfully cancels order from PENDING and restores product stock', async () => {

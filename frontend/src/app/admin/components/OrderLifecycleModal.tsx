@@ -30,7 +30,7 @@ interface OrderLifecycleModalProps {
   setOrderStatusNotes: (s: string) => void;
   orderStatusError: string | null;
   orderStatusUpdating: boolean;
-  onTransitionOrderStatus: (status: string) => void;
+  onTransitionOrderStatus: (status: string, extraData?: { courierName?: string; trackingNumber?: string }) => void;
   onClose: () => void;
   onDeleteOrder?: (order: any) => void;
 }
@@ -46,6 +46,28 @@ export default function OrderLifecycleModal({
   onDeleteOrder,
 }: OrderLifecycleModalProps) {
   const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [courierNameInput, setCourierNameInput] = useState<string>('');
+  const [trackingNumberInput, setTrackingNumberInput] = useState<string>('');
+  const [shippingInputError, setShippingInputError] = useState<string | null>(null);
+
+  // Synchronize courier fields whenever activeOrder changes
+  useEffect(() => {
+    if (activeOrder) {
+      setCourierNameInput(
+        activeOrder.courierName ||
+          activeOrder.shippingAddress?.courierName ||
+          activeOrder.shippingAddress?.courier ||
+          '',
+      );
+      setTrackingNumberInput(
+        activeOrder.trackingNumber ||
+          activeOrder.shippingAddress?.trackingNumber ||
+          activeOrder.shippingAddress?.awbNumber ||
+          '',
+      );
+      setShippingInputError(null);
+    }
+  }, [activeOrder]);
 
   // Lock body scroll and prevent background scroll chaining
   useScrollLock(Boolean(activeOrder));
@@ -62,7 +84,7 @@ export default function OrderLifecycleModal({
   if (!activeOrder) return null;
 
   const fulfillment = getFulfillmentStatusInfo(activeOrder.status);
-  const payment = getPaymentStatusInfo(activeOrder.paymentStatus, activeOrder.status);
+  const payment = getPaymentStatusInfo(activeOrder.paymentStatus, activeOrder.status, activeOrder.isDemoOrder);
 
   const handleCopy = (text: string) => {
     if (!text) return;
@@ -101,7 +123,9 @@ export default function OrderLifecycleModal({
   const paymentMethodText =
     activeOrder.paymentMethod === 'COD' || activeOrder.paymentMethod === 'cash_on_delivery'
       ? 'Cash on Delivery'
-      : 'Prepaid Online';
+      : activeOrder.paymentMethod === 'WALLET'
+      ? 'Spiritual Wallet'
+      : 'Demo Online Payment';
 
   const itemsToRender =
     activeOrder.items && activeOrder.items.length > 0
@@ -365,17 +389,113 @@ export default function OrderLifecycleModal({
           </div>
 
 
+          {/* Row 5b: Consignment & Courier Tracking Pill if already dispatched */}
+          {(activeOrder.courierName ||
+            activeOrder.trackingNumber ||
+            activeOrder.shippingAddress?.courierName ||
+            activeOrder.shippingAddress?.trackingNumber) && (
+            <div className="p-2 sm:p-2.5 rounded-2xl bg-purple-50/80 border border-purple-200/90 flex items-center justify-between gap-3 text-xs shadow-2xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center shrink-0">
+                  <Truck className="w-4 h-4 text-purple-700" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider block leading-tight">
+                    Courier Consignment / AWB
+                  </span>
+                  <span className="text-xs font-bold text-purple-950 block truncate mt-0.5">
+                    {activeOrder.courierName || activeOrder.shippingAddress?.courierName || 'Sacred Express'}
+                    {' • '}
+                    <span className="font-mono text-purple-900">
+                      {activeOrder.trackingNumber || activeOrder.shippingAddress?.trackingNumber}
+                    </span>
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  handleCopy(
+                    activeOrder.trackingNumber || activeOrder.shippingAddress?.trackingNumber || '',
+                  )
+                }
+                className="px-2.5 py-1 rounded-lg bg-white border border-purple-200 text-purple-800 text-[11px] font-semibold hover:bg-purple-100/60 flex items-center gap-1 cursor-pointer transition-colors shrink-0 shadow-2xs"
+              >
+                {copiedText ===
+                (activeOrder.trackingNumber || activeOrder.shippingAddress?.trackingNumber) ? (
+                  <Check className="w-3 h-3 text-emerald-600" />
+                ) : (
+                  <Copy className="w-3 h-3" />
+                )}
+                <span>Copy AWB</span>
+              </button>
+            </div>
+          )}
+
           {/* Row 6: Fulfillment Section & Actions */}
-          <div className="p-2.5 sm:p-3 rounded-2xl bg-[#FFF9EE] border border-amber-300/80 shadow-xs space-y-2">
-            <div className="flex items-center gap-2">
-              <Settings className="w-3.5 h-3.5 text-[#A85A28]" />
-              <span className="text-xs font-bold text-stone-800">
-                Fulfillment Status
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FDECC8] text-[#9A520E] border border-[#FCD98B]">
-                ● {fulfillment.label}
+          <div className="p-2.5 sm:p-3 rounded-2xl bg-[#FFF9EE] border border-amber-300/80 shadow-xs space-y-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Settings className="w-3.5 h-3.5 text-[#A85A28]" />
+                <span className="text-xs font-bold text-stone-800">
+                  Fulfillment Lifecycle Stage
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FDECC8] text-[#9A520E] border border-[#FCD98B]">
+                  ● {fulfillment.label}
+                </span>
+              </div>
+              <span className="text-[10px] font-medium text-stone-500">
+                Stage {activeOrder.status === 'PENDING' || activeOrder.status === 'PENDING_PAYMENT' || activeOrder.status === 'ORDER_PLACED' ? '1/7' : activeOrder.status === 'CONFIRMED' ? '2/7' : activeOrder.status === 'PROCESSING' ? '3/7' : activeOrder.status === 'PACKED' ? '4/7' : activeOrder.status === 'SHIPPED' ? '5/7' : activeOrder.status === 'OUT_FOR_DELIVERY' ? '6/7' : activeOrder.status === 'DELIVERED' ? '7/7' : 'Cancelled'}
               </span>
             </div>
+
+            {/* Courier & Tracking Input (Required when status is PACKED to move to SHIPPED) */}
+            {activeOrder.status === 'PACKED' && (
+              <div className="p-2.5 rounded-xl bg-purple-50/90 border border-purple-200/90 space-y-2">
+                <div className="flex items-center gap-1.5 text-purple-950 font-bold text-xs">
+                  <Truck className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                  <span>Courier &amp; Tracking / AWB Information (Required for Dispatch)</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] font-bold text-stone-600 block mb-0.5">
+                      Courier Service Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={courierNameInput}
+                      onChange={(e) => {
+                        setCourierNameInput(e.target.value);
+                        setShippingInputError(null);
+                      }}
+                      placeholder="e.g. BlueDart Express, Delhivery, DTDC"
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white text-xs text-stone-800 focus:outline-none focus:ring-1.5 focus:ring-purple-500 shadow-2xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-stone-600 block mb-0.5">
+                      Tracking / AWB Number *
+                    </label>
+                    <input
+                      type="text"
+                      value={trackingNumberInput}
+                      onChange={(e) => {
+                        setTrackingNumberInput(e.target.value);
+                        setShippingInputError(null);
+                      }}
+                      placeholder="e.g. BD-99482019"
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white text-xs font-mono text-stone-800 focus:outline-none focus:ring-1.5 focus:ring-purple-500 shadow-2xs"
+                    />
+                  </div>
+                </div>
+                {shippingInputError && (
+                  <p className="text-[11px] font-semibold text-rose-600 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 text-rose-600 shrink-0" />
+                    <span>{shippingInputError}</span>
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Optional Remarks Input with placeholder matching reference */}
             {!isTerminalState && (
@@ -383,7 +503,7 @@ export default function OrderLifecycleModal({
                 type="text"
                 value={orderStatusNotes}
                 onChange={(e) => setOrderStatusNotes(e.target.value)}
-                placeholder="Add optional remarks..."
+                placeholder="Add optional fulfillment remarks..."
                 className="w-full px-3 py-1.5 rounded-xl border border-stone-200 bg-white text-xs placeholder:text-stone-400 focus:outline-none focus:ring-1.5 focus:ring-amber-500 shadow-2xs"
               />
             )}
@@ -391,16 +511,43 @@ export default function OrderLifecycleModal({
             {/* Action Buttons styled matching visual reference */}
             <div className="flex items-center justify-between gap-3 pt-0.5">
               <div className="flex items-center gap-2.5 flex-wrap">
-                {(activeOrder.status === 'PENDING' || activeOrder.status === 'PENDING_PAYMENT') && (
+                {/* 1. Order Placed -> Confirm Order */}
+                {(activeOrder.status === 'PENDING' ||
+                  activeOrder.status === 'PENDING_PAYMENT' ||
+                  activeOrder.status === 'ORDER_PLACED') && (
+                  <>
+                    <button
+                      type="button"
+                      disabled={orderStatusUpdating}
+                      onClick={() => onTransitionOrderStatus('CONFIRMED')}
+                      className="px-4 py-1.5 rounded-xl bg-[#0066FF] hover:bg-[#0055D4] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                    >
+                      {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                      <span>Accept &amp; Confirm Order</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={orderStatusUpdating}
+                      onClick={() => onTransitionOrderStatus('CANCELLED')}
+                      className="px-4 py-1.5 rounded-xl bg-[#E60039] hover:bg-[#CC0033] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Cancel Order</span>
+                    </button>
+                  </>
+                )}
+
+                {/* 2. Confirmed -> Start Processing */}
+                {activeOrder.status === 'CONFIRMED' && (
                   <>
                     <button
                       type="button"
                       disabled={orderStatusUpdating}
                       onClick={() => onTransitionOrderStatus('PROCESSING')}
-                      className="px-4 py-1.5 rounded-xl bg-[#0066FF] hover:bg-[#0055D4] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                      className="px-4 py-1.5 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
                     >
                       {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Settings className="w-3.5 h-3.5" />}
-                      <span>Start Processing &amp; Packing</span>
+                      <span>Start Product Preparation &amp; Packing</span>
                     </button>
                     <button
                       type="button"
@@ -414,16 +561,17 @@ export default function OrderLifecycleModal({
                   </>
                 )}
 
+                {/* 3. Processing -> Mark Packing Complete */}
                 {activeOrder.status === 'PROCESSING' && (
                   <>
                     <button
                       type="button"
                       disabled={orderStatusUpdating}
-                      onClick={() => onTransitionOrderStatus('SHIPPED')}
-                      className="px-4 py-1.5 rounded-xl bg-[#6B21A8] hover:bg-[#581C87] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                      onClick={() => onTransitionOrderStatus('PACKED')}
+                      className="px-4 py-1.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
                     >
-                      {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
-                      <span>Mark as Shipped &amp; Dispatched</span>
+                      {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Package className="w-3.5 h-3.5" />}
+                      <span>Mark Packing Complete</span>
                     </button>
                     <button
                       type="button"
@@ -437,7 +585,55 @@ export default function OrderLifecycleModal({
                   </>
                 )}
 
+                {/* 4. Packed -> Ship Order (Courier & Tracking required) */}
+                {activeOrder.status === 'PACKED' && (
+                  <>
+                    <button
+                      type="button"
+                      disabled={orderStatusUpdating}
+                      onClick={() => {
+                        if (!courierNameInput.trim() || !trackingNumberInput.trim()) {
+                          setShippingInputError('Courier service partner and tracking/AWB number are required before dispatching.');
+                          return;
+                        }
+                        setShippingInputError(null);
+                        onTransitionOrderStatus('SHIPPED', {
+                          courierName: courierNameInput.trim(),
+                          trackingNumber: trackingNumberInput.trim(),
+                        });
+                      }}
+                      className="px-4 py-1.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                    >
+                      {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
+                      <span>Dispatch &amp; Ship Order</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={orderStatusUpdating}
+                      onClick={() => onTransitionOrderStatus('CANCELLED')}
+                      className="px-4 py-1.5 rounded-xl bg-[#E60039] hover:bg-[#CC0033] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>Cancel Order</span>
+                    </button>
+                  </>
+                )}
+
+                {/* 5. Shipped -> Out for Delivery */}
                 {activeOrder.status === 'SHIPPED' && (
+                  <button
+                    type="button"
+                    disabled={orderStatusUpdating}
+                    onClick={() => onTransitionOrderStatus('OUT_FOR_DELIVERY')}
+                    className="px-4 py-1.5 rounded-xl bg-[#D97706] hover:bg-[#B45309] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                  >
+                    {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
+                    <span>Mark Out for Delivery</span>
+                  </button>
+                )}
+
+                {/* 6. Out for Delivery -> Mark Delivered */}
+                {activeOrder.status === 'OUT_FOR_DELIVERY' && (
                   <button
                     type="button"
                     disabled={orderStatusUpdating}
@@ -447,6 +643,22 @@ export default function OrderLifecycleModal({
                     {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                     <span>Mark as Delivered to Customer</span>
                   </button>
+                )}
+
+                {/* 7. Delivered (Terminal State) */}
+                {activeOrder.status === 'DELIVERED' && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100/80 text-emerald-800 text-xs font-bold border border-emerald-300">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Order Completed &amp; Delivered</span>
+                  </span>
+                )}
+
+                {/* Cancelled State */}
+                {activeOrder.status === 'CANCELLED' && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold border border-stone-200">
+                    <X className="w-3.5 h-3.5 text-stone-500" />
+                    <span>Order Cancelled &amp; Stock Restored</span>
+                  </span>
                 )}
               </div>
 

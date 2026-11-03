@@ -196,7 +196,7 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
               <span>{t('My Bookings', 'मेरे परामर्श')}</span>
             </button>
             <Link
-              href="/services"
+              href="/appointment"
               className="px-5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-all flex items-center gap-2"
             >
               <span>{t('Book Consultation', 'परामर्श बुक करें')}</span>

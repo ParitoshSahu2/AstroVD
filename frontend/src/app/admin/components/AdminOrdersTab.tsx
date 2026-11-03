@@ -42,10 +42,26 @@ export interface StatusDetail {
 
 export const getPaymentStatusDetail = (
   rawPaymentStatus: string | undefined,
-  orderStatus: string | undefined
+  orderStatus: string | undefined,
+  isDemoOrder?: boolean,
 ): StatusDetail => {
   const p = (rawPaymentStatus || '').toUpperCase().trim();
   const o = (orderStatus || '').toUpperCase().trim();
+
+  if (
+    p === 'UNPAID' ||
+    p === 'DEMO_NOT_PROCESSED' ||
+    p === 'PENDING_PAYMENT' ||
+    p.includes('DEMO') ||
+    isDemoOrder === true
+  ) {
+    return {
+      label: 'Unpaid',
+      dotClass: 'bg-amber-500',
+      textClass: 'text-amber-800',
+      badgeClass: 'bg-amber-50 text-amber-900 border-amber-300',
+    };
+  }
 
   if (p === 'PAID') {
     return {
@@ -53,6 +69,15 @@ export const getPaymentStatusDetail = (
       dotClass: 'bg-emerald-600',
       textClass: 'text-emerald-700',
       badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+    };
+  }
+
+  if (p === 'COD_PENDING' || p === 'COD') {
+    return {
+      label: 'Cash on Delivery',
+      dotClass: 'bg-sky-500',
+      textClass: 'text-sky-800',
+      badgeClass: 'bg-sky-50 text-sky-800 border-sky-200/80',
     };
   }
 
@@ -74,21 +99,6 @@ export const getPaymentStatusDetail = (
     };
   }
 
-  if (
-    p === 'PENDING' ||
-    p === 'PENDING_PAYMENT' ||
-    p.includes('PENDING') ||
-    o === 'PENDING_PAYMENT' ||
-    (!p && o === 'PENDING')
-  ) {
-    return {
-      label: 'Unpaid',
-      dotClass: 'bg-amber-500',
-      textClass: 'text-amber-800',
-      badgeClass: 'bg-amber-50 text-amber-900 border-amber-200/80',
-    };
-  }
-
   if (o === 'CANCELLED' && (p === 'CANCELLED' || !p)) {
     return {
       label: 'Cancelled',
@@ -98,12 +108,18 @@ export const getPaymentStatusDetail = (
     };
   }
 
-  if (o === 'PROCESSING' || o === 'SHIPPED' || o === 'DELIVERED') {
+  if (
+    p === 'PENDING' ||
+    p === 'PENDING_PAYMENT' ||
+    p.includes('PENDING') ||
+    o === 'PENDING_PAYMENT' ||
+    (!p && (o === 'PENDING' || o === 'ORDER_PLACED'))
+  ) {
     return {
-      label: 'Paid',
-      dotClass: 'bg-emerald-600',
-      textClass: 'text-emerald-700',
-      badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
+      label: 'Demo / Not Processed',
+      dotClass: 'bg-amber-500',
+      textClass: 'text-amber-800',
+      badgeClass: 'bg-amber-50 text-amber-900 border-amber-300',
     };
   }
 
@@ -119,16 +135,16 @@ export const getPaymentStatusDetail = (
   }
 
   return {
-    label: 'Unpaid',
+    label: 'Demo / Not Processed',
     dotClass: 'bg-amber-500',
     textClass: 'text-amber-800',
-    badgeClass: 'bg-amber-50 text-amber-900 border-amber-200/80',
+    badgeClass: 'bg-amber-50 text-amber-900 border-amber-300',
   };
 };
 
 export const getFulfillmentStatusDetail = (
   rawStatus: string | undefined,
-  deliveryStatus?: string | undefined
+  deliveryStatus?: string | undefined,
 ): StatusDetail => {
   const s = (deliveryStatus || rawStatus || '').toUpperCase().trim();
 
@@ -140,12 +156,26 @@ export const getFulfillmentStatusDetail = (
         textClass: 'text-teal-800',
         badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200/80',
       };
+    case 'OUT_FOR_DELIVERY':
+      return {
+        label: 'Out for Delivery',
+        dotClass: 'bg-amber-600',
+        textClass: 'text-amber-800',
+        badgeClass: 'bg-amber-50 text-amber-800 border-amber-200/80',
+      };
     case 'SHIPPED':
       return {
         label: 'Shipped',
         dotClass: 'bg-purple-600',
         textClass: 'text-purple-800',
         badgeClass: 'bg-purple-50 text-purple-800 border-purple-200/80',
+      };
+    case 'PACKED':
+      return {
+        label: 'Packed',
+        dotClass: 'bg-indigo-600',
+        textClass: 'text-indigo-800',
+        badgeClass: 'bg-indigo-50 text-indigo-800 border-indigo-200/80',
       };
     case 'PROCESSING':
       return {
@@ -154,6 +184,13 @@ export const getFulfillmentStatusDetail = (
         textClass: 'text-sky-800',
         badgeClass: 'bg-sky-50 text-sky-800 border-sky-200/80',
       };
+    case 'CONFIRMED':
+      return {
+        label: 'Confirmed',
+        dotClass: 'bg-blue-600',
+        textClass: 'text-blue-800',
+        badgeClass: 'bg-blue-50 text-blue-800 border-blue-200/80',
+      };
     case 'CANCELLED':
       return {
         label: 'Cancelled',
@@ -161,10 +198,11 @@ export const getFulfillmentStatusDetail = (
         textClass: 'text-rose-700',
         badgeClass: 'bg-rose-50 text-rose-800 border-rose-200/80',
       };
+    case 'ORDER_PLACED':
     case 'PENDING':
     case 'PENDING_PAYMENT':
       return {
-        label: 'Pending',
+        label: 'Order Placed',
         dotClass: 'bg-amber-500',
         textClass: 'text-amber-800',
         badgeClass: 'bg-amber-50 text-amber-900 border-amber-200/80',
@@ -181,7 +219,7 @@ export const getFulfillmentStatusDetail = (
         };
       }
       return {
-        label: 'Pending',
+        label: 'Order Placed',
         dotClass: 'bg-amber-500',
         textClass: 'text-amber-800',
         badgeClass: 'bg-amber-50 text-amber-900 border-amber-200/80',
@@ -289,11 +327,14 @@ export default function AdminOrdersTab({
               className="px-3 py-2 rounded-xl border border-stone-300 bg-white text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
             >
               <option value="ALL">All Statuses</option>
-              <option value="PENDING">PENDING</option>
-              <option value="PROCESSING">PROCESSING</option>
-              <option value="SHIPPED">SHIPPED</option>
-              <option value="DELIVERED">DELIVERED</option>
-              <option value="CANCELLED">CANCELLED</option>
+              <option value="PENDING">Order Placed</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="PROCESSING">Processing</option>
+              <option value="PACKED">Packed</option>
+              <option value="SHIPPED">Shipped</option>
+              <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+              <option value="DELIVERED">Delivered</option>
+              <option value="CANCELLED">Cancelled</option>
             </select>
           </div>
 
@@ -378,7 +419,7 @@ export default function AdminOrdersTab({
                 <tbody className="divide-y divide-stone-100">
                   {ordersList.map((o, index) => {
                     const fulfillment = getFulfillmentStatusDetail(o.status, o.deliveryStatus);
-                    const payment = getPaymentStatusDetail(o.paymentStatus, o.status);
+                    const payment = getPaymentStatusDetail(o.paymentStatus, o.status, o.isDemoOrder);
 
                     const orderRef = o.orderReference || (o.id ? `#ORD-${o.id.slice(0, 8).toUpperCase()}` : '#ORD-N/A');
                     const shortId = o.orderReference ? o.orderReference : `#${o.id ? o.id.slice(0, 8).toUpperCase() : 'N/A'}`;
@@ -490,8 +531,21 @@ export default function AdminOrdersTab({
                             >
                               ₹{Number(o.totalAmount).toLocaleString('en-IN')}
                             </span>
-                            <span className="text-[11px] text-stone-400 block truncate mt-0.5" title={o.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Prepaid Online'}>
-                              {o.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Prepaid Online'}
+                            <span
+                              className="text-[11px] text-stone-400 block truncate mt-0.5"
+                              title={
+                                o.paymentMethod === 'cod' || o.paymentMethod === 'COD'
+                                  ? 'Cash on Delivery'
+                                  : o.paymentMethod === 'WALLET'
+                                  ? 'Spiritual Wallet'
+                                  : 'Demo Online Payment'
+                              }
+                            >
+                              {o.paymentMethod === 'cod' || o.paymentMethod === 'COD'
+                                ? 'Cash on Delivery'
+                                : o.paymentMethod === 'WALLET'
+                                ? 'Spiritual Wallet'
+                                : 'Demo Online Payment'}
                             </span>
                           </div>
                         </td>
@@ -633,7 +687,7 @@ export default function AdminOrdersTab({
             <div className="md:hidden space-y-3">
               {ordersList.map((o, index) => {
                 const fulfillment = getFulfillmentStatusInfo(o.status);
-                const payment = getPaymentStatusInfo(o.paymentStatus, o.status);
+                const payment = getPaymentStatusInfo(o.paymentStatus, o.status, o.isDemoOrder);
 
                 const orderRef = o.orderReference || (o.id ? `#ORD-${o.id.slice(0, 8).toUpperCase()}` : '#ORD-N/A');
                 const shortId = o.orderReference ? o.orderReference : `#${o.id ? o.id.slice(0, 8).toUpperCase() : 'N/A'}`;
