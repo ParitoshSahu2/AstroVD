@@ -148,6 +148,14 @@ function AppointmentContent() {
     };
   }, []);
 
+  // Auto-fill account info whenever "I'm booking for someone else" is unchecked
+  useEffect(() => {
+    if (!isBookingForSomeoneElse && accountUser) {
+      if (accountUser.name) setName(accountUser.name);
+      if (accountUser.phone) setPhone(accountUser.phone);
+    }
+  }, [accountUser, isBookingForSomeoneElse]);
+
   const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(
     /\/api\/?$/,
     '',
@@ -160,8 +168,8 @@ function AppointmentContent() {
     }
   }, [queryServiceId]);
 
-  // NOTE: Requirement 1: Do NOT automatically fill booking form with logged-in user's name & phone.
-  // The user explicitly enters or confirms the attendee customer details.
+  // Auto-fill active for self bookings: When "I'm booking for someone else" is unchecked,
+  // the logged-in user's account details automatically populate. Checking the box enables manual entry.
 
   // Fetch real available slots whenever selectedServiceId or date changes, with live polling & cache-busting
   useEffect(() => {
@@ -1023,21 +1031,26 @@ function AppointmentContent() {
                     </p>
                   </div>
 
-                  {/* Optional voluntary helper for self bookings (Never auto-filled by default) */}
-                  {!isBookingForSomeoneElse && accountUser?.name && (
+                  {/* Account Auto-fill Indicator & Re-fill Helper */}
+                  {!isBookingForSomeoneElse && accountUser?.name ? (
                     <button
                       type="button"
                       onClick={() => {
                         if (accountUser.name) setName(accountUser.name);
                         if (accountUser.phone) setPhone(accountUser.phone);
                       }}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-amber-300 text-[11px] font-semibold text-amber-900 hover:bg-amber-100/70 transition-colors cursor-pointer w-fit"
-                      title={t('Click to fill with your logged-in account details', 'अपने खाते के विवरण भरने के लिए क्लिक करें')}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-[11px] font-semibold text-emerald-900 hover:bg-emerald-100 transition-colors cursor-pointer w-fit shadow-2xs"
+                      title={t('Auto-filled from account. Click to re-fill if edited.', 'खाते से स्वतः भरा गया। पुनः भरने के लिए क्लिक करें।')}
                     >
-                      <Sparkles className="w-3 h-3 text-amber-600" />
-                      <span>{t('Fill my account details', 'मेरे खाते के विवरण भरें')}</span>
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{t('Auto-filled from your account', 'आपके खाते से स्वतः भरा गया')}</span>
                     </button>
-                  )}
+                  ) : isBookingForSomeoneElse ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100/70 border border-amber-300 text-[11px] font-medium text-amber-900 w-fit">
+                      <HeartHandshake className="w-3.5 h-3.5 text-amber-700" />
+                      <span>{t('Manual attendee entry', 'मैन्युअल विवरण भरें')}</span>
+                    </span>
+                  ) : null}
                 </div>
 
                 {/* Checkbox: "I'm booking for someone else" */}
@@ -1048,10 +1061,14 @@ function AppointmentContent() {
                     onChange={(e) => {
                       const checked = e.target.checked;
                       setIsBookingForSomeoneElse(checked);
-                      // If toggling to booking for someone else, clear fields so user can input fresh details
                       if (checked) {
+                        // When checked: clear info so user can enter manually for someone else
                         setName('');
                         setPhone('');
+                      } else {
+                        // When unchecked: auto-fill the account owner's details
+                        if (accountUser?.name) setName(accountUser.name);
+                        if (accountUser?.phone) setPhone(accountUser.phone);
                       }
                     }}
                     className="mt-0.5 h-4 w-4 rounded border-amber-300 text-[#5B0D15] focus:ring-[#5B0D15] cursor-pointer"

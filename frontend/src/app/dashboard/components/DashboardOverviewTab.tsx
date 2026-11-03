@@ -28,7 +28,7 @@ interface DashboardOverviewTabProps {
   bookings: any[];
   orders: any[];
   onTabChange: (tab: DashboardTab) => void;
-  onEditKundli: () => void;
+  onEditKundli?: () => void;
   formatGoogleMeetLink: (bookingId: string) => string;
   t: (en: string, hi: string) => string;
 }
@@ -208,9 +208,9 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
 
       {/* 2. Top 3 Metric KPI Cards (Admin Style) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Metric 1: Zodiac Sign / Kundli */}
+        {/* Metric 1: Zodiac Sign / Rashi */}
         <div
-          onClick={() => onTabChange('kundli')}
+          onClick={() => onTabChange('settings')}
           className="p-5 rounded-2xl bg-white border border-stone-200/80 shadow-xs hover:border-amber-300 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
         >
           <div className="flex items-center justify-between mb-3">
@@ -355,10 +355,8 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
         </div>
       )}
 
-      {/* 4. Split Grid: Recent Orders & Kundli Snapshot */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Recent Orders Tracker */}
-        <div className="lg:col-span-7 bg-white rounded-3xl border border-stone-200/80 p-5 sm:p-6 shadow-xs space-y-4">
+      {/* 4. Recent Sacred Orders Tracker */}
+      <div className="w-full bg-white rounded-3xl border border-stone-200/80 p-5 sm:p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-stone-100">
             <div className="flex items-center gap-2">
               <Package className="w-5 h-5 text-amber-700" />
@@ -498,57 +496,7 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
           )}
         </div>
 
-        {/* Right Column: Janam Kundli Quick Snapshot */}
-        <div className="lg:col-span-5 bg-white rounded-3xl border border-stone-200/80 p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-stone-100">
-            <div className="flex items-center gap-2">
-              <Compass className="w-5 h-5 text-amber-700" />
-              <h3 className="font-serif text-lg font-bold text-[#3B1E22]">
-                {t('Janam Kundli Coordinates', 'जन्म कुंडली विवरण')}
-              </h3>
-            </div>
-            <button
-              onClick={onEditKundli}
-              className="text-xs font-semibold text-[#5B0D15] hover:underline"
-            >
-              {t('Edit', 'संशोधन')}
-            </button>
-          </div>
 
-          <div className="space-y-3 text-xs">
-            <div className="flex items-center justify-between py-1 border-b border-stone-100">
-              <span className="text-stone-500">{t('Full Name', 'नाम')}</span>
-              <span className="font-semibold text-stone-900">{profile.name}</span>
-            </div>
-            <div className="flex items-center justify-between py-1 border-b border-stone-100">
-              <span className="text-stone-500">{t('Date of Birth', 'जन्म तिथि')}</span>
-              <span className="font-semibold text-stone-900">{profile.dateOfBirth || t('Not added', 'अप्राप्त')}</span>
-            </div>
-            <div className="flex items-center justify-between py-1 border-b border-stone-100">
-              <span className="text-stone-500">{t('Time of Birth', 'जन्म समय')}</span>
-              <span className="font-semibold text-stone-900">{profile.timeOfBirth || t('Not added', 'अप्राप्त')}</span>
-            </div>
-            <div className="flex items-center justify-between py-1 border-b border-stone-100">
-              <span className="text-stone-500">{t('Place of Birth', 'जन्म स्थान')}</span>
-              <span className="font-semibold text-stone-900">{profile.placeOfBirth || t('Not added', 'अप्राप्त')}</span>
-            </div>
-            <div className="flex items-center justify-between py-1">
-              <span className="text-stone-500">{t('Zodiac / Rashi', 'राशि')}</span>
-              <span className="font-semibold text-amber-900">{formatZodiacName(profile.zodiacSign)}</span>
-            </div>
-          </div>
-
-          <div className="pt-2">
-            <button
-              onClick={() => onTabChange('kundli')}
-              className="w-full py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-200/80 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <Compass className="w-4 h-4 text-amber-800" />
-              <span>{t('View Detailed Horoscope Parameters', 'संपूर्ण कुंडली चक्र देखें')}</span>
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

@@ -38,7 +38,6 @@ import { formatGoogleMeetLink, getCombinedOrders, getCombinedBookings } from './
 import DashboardOverviewTab from './components/DashboardOverviewTab';
 import DashboardBookingsTab from './components/DashboardBookingsTab';
 import DashboardOrdersTab from './components/DashboardOrdersTab';
-import DashboardKundliTab from './components/DashboardKundliTab';
 import DashboardSettingsTab from './components/DashboardSettingsTab';
 
 export default function DashboardPage() {
@@ -68,31 +67,21 @@ export default function DashboardPage() {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
-  const [editKundliModalOpen, setEditKundliModalOpen] = useState(false);
 
   // Lock body scroll and prevent background scroll chaining for dashboard overlays
-  useScrollLock(mobileSidebarOpen || editKundliModalOpen);
+  useScrollLock(mobileSidebarOpen);
 
   useEffect(() => {
-    if (!mobileSidebarOpen && !editKundliModalOpen) return;
+    if (!mobileSidebarOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (mobileSidebarOpen) setMobileSidebarOpen(false);
-        if (editKundliModalOpen) setEditKundliModalOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mobileSidebarOpen, editKundliModalOpen]);
+  }, [mobileSidebarOpen]);
 
-  // Edit Kundli Form Fields
-  const [editName, setEditName] = useState('');
-  const [editDob, setEditDob] = useState('');
-  const [editTob, setEditTob] = useState('');
-  const [editPob, setEditPob] = useState('');
-  const [editZodiac, setEditZodiac] = useState('');
-  const [savingKundli, setSavingKundli] = useState(false);
-  const [kundliMsg, setKundliMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -155,11 +144,6 @@ export default function DashboardPage() {
         const uData = await userRes.json();
         const u = uData.user || uData;
         setProfile(u);
-        setEditName(u.name || '');
-        setEditDob(u.dateOfBirth || '');
-        setEditTob(u.timeOfBirth || '');
-        setEditPob(u.placeOfBirth || '');
-        setEditZodiac(u.zodiacSign || '');
       } else if (stored) {
         setProfile(stored);
       }
@@ -244,7 +228,7 @@ export default function DashboardPage() {
     if (typeof window !== 'undefined') {
       const search = new URLSearchParams(window.location.search);
       const tabParam = search.get('tab') as DashboardTab | null;
-      if (tabParam && ['overview', 'consultations', 'orders', 'kundli', 'settings'].includes(tabParam)) {
+      if (tabParam && ['overview', 'consultations', 'orders', 'settings'].includes(tabParam)) {
         setActiveTab(tabParam);
       }
     }
@@ -299,30 +283,6 @@ export default function DashboardPage() {
     return false;
   };
 
-  const handleSaveKundli = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSavingKundli(true);
-    setKundliMsg(null);
-
-    const success = await handleUpdateProfile({
-      name: editName,
-      dateOfBirth: editDob,
-      timeOfBirth: editTob,
-      placeOfBirth: editPob,
-      zodiacSign: editZodiac,
-    });
-
-    setSavingKundli(false);
-    if (success) {
-      setKundliMsg({ type: 'success', text: t('Birth coordinates updated successfully!', 'जन्म विवरण सफलतापूर्वक सहेजा गया!') });
-      setTimeout(() => {
-        setEditKundliModalOpen(false);
-        setKundliMsg(null);
-      }, 1200);
-    } else {
-      setKundliMsg({ type: 'error', text: t('Failed to update coordinates.', 'विवरण सहेजने में त्रुटि हुई।') });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] flex flex-col text-[#3B1E22] selection:bg-amber-400">
@@ -490,26 +450,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Group 3: VEDIC ASTROLOGY */}
-              <div>
-                <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
-                  {t('Vedic Astrology', 'वैदिक ज्योतिष')}
-                </div>
-                <div className="space-y-0.5">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('kundli')}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                      activeTab === 'kundli'
-                        ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
-                        : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
-                    }`}
-                  >
-                    <Compass className={`w-4 h-4 shrink-0 transition-colors ${activeTab === 'kundli' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
-                    <span>{t('Janam Kundli', 'जन्म कुंडली')}</span>
-                  </button>
-                </div>
-              </div>
+
 
               {/* Group 4: CONTENT & WISDOM */}
               <div>
@@ -710,28 +651,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
-                      {t('Vedic Astrology', 'वैदिक ज्योतिष')}
-                    </div>
-                    <div className="space-y-0.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab('kundli');
-                          setMobileSidebarOpen(false);
-                        }}
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                          activeTab === 'kundli'
-                            ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
-                            : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
-                        }`}
-                      >
-                        <Compass className={`w-4 h-4 shrink-0 transition-colors ${activeTab === 'kundli' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
-                        <span>{t('Janam Kundli', 'जन्म कुंडली')}</span>
-                      </button>
-                    </div>
-                  </div>
+
 
                   <div>
                     <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
@@ -818,7 +738,6 @@ export default function DashboardPage() {
                     {activeTab === 'overview' && t('Dashboard Overview', 'डैशबोर्ड अवलोकन')}
                     {activeTab === 'consultations' && t('My Consultations', 'परामर्श सत्र')}
                     {activeTab === 'orders' && t('Sacred Orders', 'पावन ऑर्डर्स')}
-                    {activeTab === 'kundli' && t('Janam Kundli', 'जन्म कुंडली')}
                     {activeTab === 'settings' && t('Account Settings', 'खाता सेटिंग्स')}
                   </span>
                 </div>
@@ -922,17 +841,7 @@ export default function DashboardPage() {
                         <div className="text-[10px] text-stone-400 truncate">{profile.email || 'seeker@astrovd.com'}</div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab('kundli');
-                          setProfileDropdownOpen(false);
-                        }}
-                        className="w-full px-4 py-2 hover:bg-stone-50 flex items-center gap-2 text-left cursor-pointer"
-                      >
-                        <Compass className="w-3.5 h-3.5 text-amber-700" />
-                        <span>{t('Janam Kundli', 'जन्म कुंडली')}</span>
-                      </button>
+
 
                       <button
                         type="button"
@@ -973,7 +882,6 @@ export default function DashboardPage() {
                   bookings={bookings}
                   orders={orders}
                   onTabChange={(tab) => setActiveTab(tab)}
-                  onEditKundli={() => setEditKundliModalOpen(true)}
                   formatGoogleMeetLink={formatGoogleMeetLink}
                   t={t}
                 />
@@ -984,7 +892,7 @@ export default function DashboardPage() {
                   bookings={bookings}
                   bookingsLoading={bookingsLoading}
                   profile={profile}
-                  onOpenEditProfile={() => setEditKundliModalOpen(true)}
+                  onOpenEditProfile={() => setActiveTab('settings')}
                   t={t}
                 />
               )}
@@ -997,13 +905,7 @@ export default function DashboardPage() {
                 />
               )}
 
-              {activeTab === 'kundli' && (
-                <DashboardKundliTab
-                  profile={profile}
-                  onEditKundli={() => setEditKundliModalOpen(true)}
-                  t={t}
-                />
-              )}
+
 
               {activeTab === 'settings' && (
                 <DashboardSettingsTab
@@ -1013,149 +915,6 @@ export default function DashboardPage() {
                 />
               )}
             </main>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Kundli Coordinates Modal */}
-      {editKundliModalOpen && (
-        <div
-          data-lenis-prevent="true"
-          onWheel={(e) => e.stopPropagation()}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/60 backdrop-blur-xs animate-fadeIn modal-backdrop-contain overscroll-contain"
-        >
-          <div
-            data-lenis-prevent="true"
-            className="relative w-full max-w-lg bg-white rounded-3xl border border-stone-200 shadow-2xl p-6 sm:p-7 space-y-5 max-h-[90vh] overflow-y-auto modal-scroll-container overscroll-contain"
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-stone-100">
-              <div className="flex items-center gap-2">
-                <Compass className="w-5 h-5 text-amber-700" />
-                <h3 className="font-serif text-lg font-bold text-[#3B1E22]">
-                  {t('Edit Janam Kundli Coordinates', 'जन्म कुंडली विवरण संशोधित करें')}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditKundliModalOpen(false)}
-                className="p-1 rounded-lg text-stone-400 hover:text-stone-700"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {kundliMsg && (
-              <div
-                className={`p-3 rounded-xl text-xs font-semibold ${
-                  kundliMsg.type === 'success'
-                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                    : 'bg-rose-50 text-rose-800 border border-rose-200'
-                }`}
-              >
-                {kundliMsg.text}
-              </div>
-            )}
-
-            <form onSubmit={handleSaveKundli} className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-stone-600 block mb-1">
-                  {t('Full Name (as per Janam Kundli)', 'पूरा नाम')}
-                </label>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  required
-                  className="w-full px-3.5 py-2 text-xs rounded-xl bg-stone-50 border border-stone-200 focus:border-amber-400 focus:bg-white outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="text-xs font-bold text-stone-600 block mb-1">
-                    {t('Date of Birth', 'जन्म तिथि')}
-                  </label>
-                  <input
-                    type="date"
-                    value={editDob}
-                    onChange={(e) => setEditDob(e.target.value)}
-                    required
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-stone-50 border border-stone-200 focus:border-amber-400 focus:bg-white outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-stone-600 block mb-1">
-                    {t('Time of Birth (IST)', 'जन्म समय')}
-                  </label>
-                  <input
-                    type="time"
-                    value={editTob}
-                    onChange={(e) => setEditTob(e.target.value)}
-                    required
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-stone-50 border border-stone-200 focus:border-amber-400 focus:bg-white outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="text-xs font-bold text-stone-600 block mb-1">
-                    {t('Place of Birth (City / Town)', 'जन्म स्थान (शहर)')}
-                  </label>
-                  <input
-                    type="text"
-                    value={editPob}
-                    onChange={(e) => setEditPob(e.target.value)}
-                    placeholder="e.g. Varanasi, UP"
-                    required
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-stone-50 border border-stone-200 focus:border-amber-400 focus:bg-white outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-stone-600 block mb-1">
-                    {t('Zodiac Sign / Rashi', 'राशि')}
-                  </label>
-                  <select
-                    value={editZodiac}
-                    onChange={(e) => setEditZodiac(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-stone-50 border border-stone-200 focus:border-amber-400 focus:bg-white outline-none cursor-pointer"
-                  >
-                    <option value="">{t('Select Rashi...', 'राशि चुनें...')}</option>
-                    <option value="Aries">Aries (मेष)</option>
-                    <option value="Taurus">Taurus (वृषभ)</option>
-                    <option value="Gemini">Gemini (मिथुन)</option>
-                    <option value="Cancer">Cancer (कर्क)</option>
-                    <option value="Leo">Leo (सिंह)</option>
-                    <option value="Virgo">Virgo (कन्या)</option>
-                    <option value="Libra">Libra (तुला)</option>
-                    <option value="Scorpio">Scorpio (वृश्चिक)</option>
-                    <option value="Sagittarius">Sagittarius (धनु)</option>
-                    <option value="Capricorn">Capricorn (मकर)</option>
-                    <option value="Aquarius">Aquarius (कुंभ)</option>
-                    <option value="Pisces">Pisces (मीन)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setEditKundliModalOpen(false)}
-                  className="px-4 py-2 rounded-full bg-stone-100 text-stone-600 text-xs font-semibold"
-                >
-                  {t('Cancel', 'रद्द करें')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingKundli}
-                  className="px-6 py-2 rounded-full bg-[#5B0D15] hover:bg-[#72111c] text-white text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-60"
-                >
-                  {savingKundli ? t('Updating...', 'अपडेट हो रहा है...') : t('Save Coordinates', 'सहेजें')}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
