@@ -135,19 +135,35 @@ export const FeedbackSection: React.FC = () => {
 
   const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
 
-  // Load verified user reviews from localStorage
+  // Load verified user reviews from localStorage and keep updated dynamically
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('astro_verified_reviews');
-      if (stored) {
-        const parsed: FeedbackItem[] = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setFeedbacksList([...parsed, ...DEFAULT_FEEDBACKS]);
+    const loadReviews = () => {
+      try {
+        const stored = localStorage.getItem('astro_verified_reviews');
+        if (stored) {
+          const parsed: FeedbackItem[] = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setFeedbacksList([...parsed, ...DEFAULT_FEEDBACKS]);
+          }
         }
+      } catch (e) {
+        console.error('Failed to load local reviews:', e);
       }
-    } catch (e) {
-      console.error('Failed to load local reviews:', e);
-    }
+    };
+
+    loadReviews();
+
+    const handleReviewAdded = () => {
+      loadReviews();
+    };
+
+    window.addEventListener('storage', handleReviewAdded);
+    window.addEventListener('astro_review_added', handleReviewAdded);
+
+    return () => {
+      window.removeEventListener('storage', handleReviewAdded);
+      window.removeEventListener('astro_review_added', handleReviewAdded);
+    };
   }, []);
 
   // Verify whether current user has taken services, consultancy, or purchased products

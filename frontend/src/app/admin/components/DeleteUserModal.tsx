@@ -100,10 +100,6 @@ export default function DeleteUserModal({
                 {userToDelete.role}
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-stone-500">Wallet Balance:</span>
-              <span className="font-semibold text-[#5B0D15]">₹{userToDelete.walletBalance.toFixed(2)}</span>
-            </div>
           </div>
 
           <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1">
@@ -112,7 +108,7 @@ export default function DeleteUserModal({
               <span>What happens next:</span>
             </p>
             <p className="text-[11px] text-amber-800 leading-relaxed">
-              The account credentials, orders, consultations, and wallet records will be permanently deleted.
+              The account credentials, orders, and consultations will be permanently deleted.
               An immutable, append-only record is preserved in the administrative audit logs.
             </p>
           </div>

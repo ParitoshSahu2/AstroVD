@@ -44,7 +44,6 @@ import {
   Sun,
   Download,
   Printer,
-  Wallet,
 } from 'lucide-react';
 import {
   UserSummary,
@@ -336,6 +335,10 @@ export default function AdminPage() {
 
       notificationsListRef.current = dynamicNotifs;
       setNotificationsList(dynamicNotifs);
+      try {
+        localStorage.setItem('astrovd_cached_admin_notifs', JSON.stringify(dynamicNotifs));
+        window.dispatchEvent(new CustomEvent('astrovd_notifs_updated'));
+      } catch (e) {}
     } catch (err) {
       console.error('Failed to fetch admin notifications:', err);
     }
@@ -818,7 +821,32 @@ export default function AdminPage() {
         type: 'success',
         message: data.message || `Order status updated to ${targetStatus}!`,
       });
-      setActiveOrder(null);
+
+      // Keep the modal open so admin can progress through stages sequentially on the same page
+      if (targetStatus === 'CANCELLED') {
+        setActiveOrder(null);
+      } else {
+        const updated = (data && data.id) ? data : (data?.order || null);
+        if (updated) {
+          setActiveOrder(updated);
+        } else {
+          setActiveOrder((prev: any) =>
+            prev
+              ? {
+                  ...prev,
+                  status: targetStatus,
+                  courierName: extraData?.courierName?.trim() || prev.courierName,
+                  trackingNumber: extraData?.trackingNumber?.trim() || prev.trackingNumber,
+                  shippingAddress: {
+                    ...(prev.shippingAddress as any),
+                    ...(extraData?.courierName ? { courierName: extraData.courierName, courier: extraData.courierName } : {}),
+                    ...(extraData?.trackingNumber ? { trackingNumber: extraData.trackingNumber, awbNumber: extraData.trackingNumber } : {}),
+                  },
+                }
+              : null,
+          );
+        }
+      }
       setOrderStatusNotes('');
       fetchOrdersList(orderPage);
     } catch (err: any) {
@@ -1818,7 +1846,7 @@ export default function AdminPage() {
         <PageHeader
           breadcrumb="Administrative Portal"
           title="Admin Control & Seeker 360° Inspection"
-          subtitle="Full oversight into customer orders, booked astrology services, celestial wallet movements, and platform activities."
+          subtitle="Full oversight into customer orders, booked astrology services, store inventory, and platform activities."
         />
       )}
 
@@ -2266,94 +2294,57 @@ export default function AdminPage() {
 
                 {/* Right Header Items: Notifications & Admin Profile */}
                 <div className="flex items-center gap-4">
-                  {/* Notification Bell with Dynamic Unread Badge */}
+                  {/* Notification Bell */}
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => setNotificationsOpen(!notificationsOpen)}
                       className="w-10 h-10 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-600 relative cursor-pointer transition-colors"
-                      title="Platform notifications"
-                      aria-label="Platform notifications"
+                      title="Notifications"
+                      aria-label="Notifications"
                     >
                       <Bell className="w-5 h-5" />
                       {unreadNotificationsCount > 0 && (
-                        <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 bg-[#E11D48] text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-xs animate-fadeIn">
+                        <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 bg-[#E11D48] text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-xs">
                           {unreadNotificationsCount}
                         </span>
                       )}
                     </button>
 
                     {notificationsOpen && (
-                      <div className="absolute right-0 top-12 w-84 sm:w-96 bg-white/98 backdrop-blur-md rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] border border-stone-200/90 p-4 z-30 space-y-3 animate-fadeIn ring-1 ring-black/5">
-                        <div className="flex items-center justify-between pb-2.5 border-b border-stone-100">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-stone-900 tracking-tight">Activity Notifications</span>
-                            {unreadNotificationsCount > 0 && (
-                              <span className="text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200/80 px-2 py-0.5 rounded-full">
-                                {unreadNotificationsCount} new
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {unreadNotificationsCount === 0 && (
-                              <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
-                                All caught up
-                              </span>
-                            )}
-                            {unreadNotificationsCount > 0 && (
-                              <button
-                                type="button"
-                                onClick={handleMarkAllNotificationsRead}
-                                className="text-[10px] font-semibold text-stone-500 hover:text-stone-900 transition-colors cursor-pointer"
-                              >
-                                Mark all read
-                              </button>
-                            )}
-                          </div>
+                      <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-30 space-y-3 animate-fadeIn">
+                        <div className="flex items-center justify-between pb-2 border-b border-stone-100">
+                          <span className="text-xs font-bold text-stone-900">Notifications</span>
+                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                            Live Updates
+                          </span>
                         </div>
-
-                        <div className="space-y-1.5 text-xs max-h-84 overflow-y-auto pr-0.5">
-                          {notificationsList.length === 0 ? (
-                            <div className="py-8 text-center text-xs text-stone-400 space-y-2">
-                              <div className="w-10 h-10 rounded-full bg-stone-100 text-stone-400 flex items-center justify-center mx-auto">
-                                <Bell className="w-5 h-5" />
-                              </div>
-                              <p className="font-semibold text-stone-700 text-xs">No Notifications</p>
-                              <p className="text-[11px] text-stone-400 max-w-[220px] mx-auto leading-relaxed">
-                                Devotee consultation bookings and sacred store orders will appear here.
-                              </p>
-                            </div>
-                          ) : (
-                            notificationsList.map((item) => (
-                              <div
-                                key={item.id}
-                                onClick={() => handleNotificationClick(item)}
-                                className={`p-3 rounded-xl cursor-pointer border transition-all flex items-start gap-2.5 ${
-                                  item.read
-                                    ? 'bg-transparent hover:bg-stone-50/80 border-transparent text-stone-500'
-                                    : 'bg-stone-50/80 hover:bg-stone-100/80 border-stone-200/70 text-stone-900'
+                        <div className="space-y-1.5 text-xs max-h-72 overflow-y-auto">
+                          {notificationsList.map((item) => (
+                            <div
+                              key={item.id}
+                              onClick={() => handleNotificationClick(item)}
+                              className="p-2.5 rounded-xl cursor-pointer border border-transparent hover:bg-stone-50 transition-all flex items-start gap-2.5"
+                            >
+                              <span
+                                className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                                  item.read ? 'bg-stone-300' : 'bg-[#E11D48]'
                                 }`}
-                              >
-                                <span
-                                  className={`w-2 h-2 rounded-full mt-1.5 shrink-0 transition-colors ${
-                                    item.read ? 'bg-transparent' : 'bg-[#5B0D15]'
-                                  }`}
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center justify-between gap-1">
-                                    <div className={`truncate text-xs ${item.read ? 'font-medium text-stone-700' : 'font-bold text-stone-900'}`}>
-                                      {item.title}
-                                    </div>
-                                    {item.time && (
-                                      <span className="text-[10px] font-normal text-stone-400 shrink-0">{item.time}</span>
-                                    )}
-                                  </div>
-                                  <div className="text-[11px] text-stone-500 leading-relaxed line-clamp-2 mt-0.5">
-                                    {item.description}
-                                  </div>
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="font-bold text-stone-900 truncate">
+                                  {item.title}
+                                </div>
+                                <div className="text-[11px] text-stone-500 truncate">
+                                  {item.description} {item.time ? `• ${item.time}` : ''}
                                 </div>
                               </div>
-                            ))
+                            </div>
+                          ))}
+                          {notificationsList.length === 0 && (
+                            <p className="text-stone-400 text-center py-4 text-xs">
+                              No new notifications
+                            </p>
                           )}
                         </div>
                       </div>

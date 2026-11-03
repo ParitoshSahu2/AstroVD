@@ -198,6 +198,34 @@ export default function CartPage() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState<string>('');
 
+  // Automatically reset step to 1 whenever new items are present in cart, preventing stuck confirmation view
+  useEffect(() => {
+    if (items.length > 0 && currentStep === 3) {
+      setCurrentStep(1);
+      setCompletedOrderNumber('');
+    }
+  }, [items.length, currentStep]);
+
+  // Clean up completion state on unmount so next visit always starts fresh at step 1
+  useEffect(() => {
+    return () => {
+      setCurrentStep(1);
+      setCompletedOrderNumber('');
+    };
+  }, []);
+
+  // Handle pageshow / BFCache restore
+  useEffect(() => {
+    const handlePageShow = () => {
+      if (items.length > 0) {
+        setCurrentStep(1);
+        setCompletedOrderNumber('');
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, [items.length]);
+
   // Floating order confirmation notification state
   const [orderNotification, setOrderNotification] = useState<{
     show: boolean;
@@ -752,6 +780,10 @@ export default function CartPage() {
             <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 href="/dashboard?tab=orders"
+                onClick={() => {
+                  setCurrentStep(1);
+                  setCompletedOrderNumber('');
+                }}
                 className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#3E1F18] via-[#4D241B] to-[#3E1F18] hover:from-[#2B140F] hover:to-[#2B140F] text-white font-serif font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Package className="w-4 h-4 text-amber-300" />
@@ -760,6 +792,10 @@ export default function CartPage() {
               </Link>
               <Link
                 href="/products"
+                onClick={() => {
+                  setCurrentStep(1);
+                  setCompletedOrderNumber('');
+                }}
                 className="px-5 py-3 rounded-xl border border-[#ECE5DC] text-[#736B63] hover:text-[#2A1810] font-medium text-xs sm:text-sm hover:bg-[#FAF7F2] transition-colors"
               >
                 Continue Browsing Store

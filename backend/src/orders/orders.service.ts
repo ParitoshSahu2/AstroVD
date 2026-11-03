@@ -289,6 +289,17 @@ export class OrdersService {
               couponCode: dto.couponCode ? dto.couponCode.trim().toUpperCase() : undefined,
               shippingFee: shippingFee > 0 ? shippingFee : 0,
               energizationFee: energizationFee > 0 ? energizationFee : undefined,
+              statusTimestamps: {
+                ORDER_PLACED: new Date().toISOString(),
+              },
+              timeline: [
+                {
+                  status: 'ORDER_PLACED',
+                  timestamp: new Date().toISOString(),
+                  title: 'Order Placed',
+                  desc: 'Order received and logged in AstroVD system for admin review.',
+                },
+              ],
             },
             items: {
               create: lineItemsToCreate,
@@ -744,9 +755,34 @@ export class OrdersService {
       );
     }
 
-    // Update shippingAddress with fulfillment notes, courier & tracking number
+    const existingTimestamps = (existingAddress.statusTimestamps as Record<string, string>) || {};
+    const existingTimeline = Array.isArray(existingAddress.timeline) ? [...existingAddress.timeline] : [];
+    const nowIso = new Date().toISOString();
+
+    const initialTimestamp =
+      existingTimestamps.ORDER_PLACED ||
+      (order.createdAt ? new Date(order.createdAt).toISOString() : nowIso);
+
+    const updatedTimestamps: Record<string, string> = {
+      ...existingTimestamps,
+      ORDER_PLACED: initialTimestamp,
+      [targetStatus]: nowIso,
+    };
+
+    if (!existingTimeline.some((t: any) => t.status === targetStatus)) {
+      existingTimeline.push({
+        status: targetStatus,
+        stage: targetStatus,
+        timestamp: nowIso,
+        notes: dto.notes?.trim() || undefined,
+      });
+    }
+
+    // Update shippingAddress with dynamic timeline timestamps, fulfillment notes, courier & tracking number
     const updatedAddress = {
       ...existingAddress,
+      statusTimestamps: updatedTimestamps,
+      timeline: existingTimeline,
       ...(dto.notes?.trim() ? { adminFulfillmentNotes: dto.notes.trim() } : {}),
       ...(courierName ? { courierName, courier: courierName } : {}),
       ...(trackingNumber ? { trackingNumber, awbNumber: trackingNumber } : {}),

@@ -8,7 +8,6 @@ import {
   Clock,
   MapPin,
   Sparkles,
-  Wallet,
   RefreshCw,
 } from 'lucide-react';
 
@@ -32,8 +31,8 @@ interface GenerateUserModalProps {
   setGenPlaceOfBirth: (s: string) => void;
   genZodiacSign: string;
   setGenZodiacSign: (s: string) => void;
-  genWalletBalance: number;
-  setGenWalletBalance: (n: number) => void;
+  genWalletBalance?: number;
+  setGenWalletBalance?: (n: number) => void;
   genError: string | null;
   genLoading: boolean;
   onGenerateProfile: (e: React.FormEvent) => void;
@@ -236,21 +235,7 @@ export default function GenerateUserModal({
             </div>
           </div>
 
-          {/* Initial Spiritual Wallet */}
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-[#3B1E22] flex items-center gap-1.5">
-              <Wallet className="w-3.5 h-3.5 text-amber-700" />
-              <span>Initial Spiritual Wallet Balance (₹)</span>
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="10"
-              value={genWalletBalance}
-              onChange={(e) => setGenWalletBalance(Number(e.target.value))}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 bg-white text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
-            />
-          </div>
+
 
           <div className="pt-3 border-t border-stone-100 flex items-center justify-end gap-3">
             <button

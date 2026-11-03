@@ -158,6 +158,20 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
               <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-[#3B1E22]">
                 {name}
               </h1>
+
+              {/* Product Rating: ONLY small light stars, NO text, NO numbers */}
+              <div className="flex items-center gap-1 pt-1" title="Sacred Blessing Rating">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star
+                    key={s}
+                    className={`w-3 h-3 ${
+                      s <= Math.round(product.rating || 5)
+                        ? 'fill-amber-300 text-amber-400 stroke-amber-400/80'
+                        : 'fill-stone-200 text-stone-300 stroke-stone-300'
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
 
             {/* Price Box */}
@@ -234,7 +248,7 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
               </div>
             </div>
 
-            {/* Action Buttons directly visible in viewport */}
+            {/* Action Buttons at the bottom */}
             <div className="pt-2">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 {quantityInCart === 0 ? (
@@ -246,7 +260,7 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
                     <span>{t('Add to Cart', 'कार्ट में जोड़ें')}</span>
                   </button>
                 ) : (
-                  /* Previous Quantity Stepper when item is in cart */
+                  /* Clean (- 1 +) Stepper matching product card */
                   <div className="flex-1 flex items-center justify-between bg-[#5B0D15] text-white rounded-full px-3 py-1.5 shadow-md border border-amber-400/40">
                     <button
                       type="button"
@@ -263,11 +277,9 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
                       <Minus className="w-4 h-4 stroke-[2.5]" />
                     </button>
 
-                    <div className="flex items-center gap-2 font-bold text-xs sm:text-sm text-amber-100 select-none px-2">
-                      <ShoppingCart className="w-4 h-4 text-amber-300" />
-                      <span className="text-white font-extrabold text-sm sm:text-base">{quantityInCart}</span>
-                      <span>{t('in Cart', 'कार्ट में')}</span>
-                    </div>
+                    <span className="min-w-[36px] px-2 text-center font-extrabold text-sm sm:text-base text-amber-200 select-none">
+                      {quantityInCart}
+                    </span>
 
                     <button
                       type="button"
@@ -284,7 +296,7 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
 
                 <button
                   onClick={handleBuyNow}
-                  className="flex-1 py-3 px-6 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#3B1E22] font-serif font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.02]"
+                  className="flex-1 py-3 px-6 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#3B1E22] font-serif font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.02]"
                 >
                   <span>{quantityInCart > 0 ? t('Proceed to Checkout', 'चेकआउट पर जाएं') : t('Instant Checkout', 'तुरंत ऑर्डर करें')}</span>
                   <ArrowRight className="w-4 h-4" />

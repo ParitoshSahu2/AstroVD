@@ -13,8 +13,8 @@
     "isSpecial": true,
     "durationMinutes": 20,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.506Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.854Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "general_consultation",
@@ -29,8 +29,8 @@
     "badge": "Open Query",
     "durationMinutes": 30,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "astrological_consultation",
@@ -45,8 +45,8 @@
     "badge": "Most Popular",
     "durationMinutes": 30,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "marriage_match_making",
@@ -60,8 +60,8 @@
     "image": "/services/marriage.jpg",
     "durationMinutes": 30,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "love_relationship_issues",
@@ -75,8 +75,8 @@
     "image": "/services/career.jpg",
     "durationMinutes": 30,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "grah_pravesh_vaastu",
@@ -90,8 +90,8 @@
     "image": "/services/puja.jpg",
     "durationMinutes": 60,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "birth_chart_kundli",
@@ -105,8 +105,8 @@
     "image": "/services/kundli.jpg",
     "durationMinutes": 30,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "mangal_dosh_shanti",
@@ -120,8 +120,8 @@
     "image": "/services/marriage.jpg",
     "durationMinutes": 45,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "navgrah_shanti_poojan",
@@ -136,8 +136,8 @@
     "badge": "Highly Recommended",
     "durationMinutes": 60,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "booking_for_pooja",
@@ -151,8 +151,8 @@
     "image": "/services/puja.jpg",
     "durationMinutes": 45,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "vastu_consultation",
@@ -166,8 +166,8 @@
     "image": "/services/consultation.jpg",
     "durationMinutes": 45,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "tarot_card_reading",
@@ -181,8 +181,8 @@
     "image": "/services/consultation.jpg",
     "durationMinutes": 30,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "pendulum_dowsing",
@@ -196,8 +196,8 @@
     "image": "/services/consultation.jpg",
     "durationMinutes": 20,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "annual_chart_varshaphal",
@@ -211,8 +211,8 @@
     "image": "/services/career.jpg",
     "durationMinutes": 30,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "lucky_gem_stone",
@@ -226,8 +226,8 @@
     "image": "/services/gemstones.jpg",
     "durationMinutes": 20,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "hypnotism",
@@ -241,8 +241,8 @@
     "image": "/services/consultation.jpg",
     "durationMinutes": 45,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "grahan_shanti_surya_chandra",
@@ -256,8 +256,8 @@
     "image": "/services/puja.jpg",
     "durationMinutes": 45,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.507Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "kaal_sarp_dhosh_shanti",
@@ -272,8 +272,8 @@
     "badge": "Life-Transforming",
     "durationMinutes": 60,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.507Z",
-    "updatedAt": "2026-11-03T05:46:31.508Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "chandal_dosh_shanti",
@@ -287,8 +287,8 @@
     "image": "/services/puja.jpg",
     "durationMinutes": 45,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.508Z",
-    "updatedAt": "2026-11-03T05:46:31.508Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "lucky_number",
@@ -302,8 +302,8 @@
     "image": "/services/consultation.jpg",
     "durationMinutes": 20,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.508Z",
-    "updatedAt": "2026-11-03T05:46:31.508Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "know_your_lucky_color",
@@ -317,8 +317,8 @@
     "image": "/services/gemstones.jpg",
     "durationMinutes": 20,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.508Z",
-    "updatedAt": "2026-11-03T05:46:31.508Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "shat_chandi_path",
@@ -333,8 +333,8 @@
     "badge": "Supreme Maha Yagya",
     "durationMinutes": 90,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.508Z",
-    "updatedAt": "2026-11-03T05:46:31.508Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "angrarak_dosh_shanti",
@@ -348,8 +348,8 @@
     "image": "/services/puja.jpg",
     "durationMinutes": 45,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.508Z",
-    "updatedAt": "2026-11-03T05:46:31.508Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "ark_vivah_kumbh_vivah",
@@ -363,8 +363,8 @@
     "image": "/services/marriage.jpg",
     "durationMinutes": 60,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.508Z",
-    "updatedAt": "2026-11-03T05:46:31.508Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "shreee_yantra_sthapana",
@@ -378,8 +378,8 @@
     "image": "/services/puja.jpg",
     "durationMinutes": 45,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.508Z",
-    "updatedAt": "2026-11-03T05:46:31.508Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "personal_appointment",
@@ -394,8 +394,8 @@
     "badge": "VIP In-Person",
     "durationMinutes": 45,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.508Z",
-    "updatedAt": "2026-11-03T05:46:31.508Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "nav_chandi_path",
@@ -409,8 +409,8 @@
     "image": "/services/puja.jpg",
     "durationMinutes": 60,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.508Z",
-    "updatedAt": "2026-11-03T05:46:31.508Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   },
   {
     "id": "aura_scanning",
@@ -424,7 +424,7 @@
     "image": "/services/consultation.jpg",
     "durationMinutes": 30,
     "isActive": true,
-    "createdAt": "2026-11-03T05:46:31.508Z",
-    "updatedAt": "2026-11-03T05:46:31.508Z"
+    "createdAt": "2026-11-03T07:38:32.855Z",
+    "updatedAt": "2026-11-03T07:38:32.855Z"
   }
 ]

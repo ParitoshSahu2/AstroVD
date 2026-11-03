@@ -123,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span>Call Astrologer</span>
             </button>
 
-            {/* Auth / Wallet */}
+            {/* Auth / User */}
             {user ? (
               <div className="flex items-center gap-2.5 bg-white border border-amber-300 px-3 py-1.5 rounded-xl shadow-sm">
                 <div className="text-right">
