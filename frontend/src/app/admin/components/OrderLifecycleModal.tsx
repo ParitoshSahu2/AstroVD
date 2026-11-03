@@ -445,7 +445,7 @@ export default function OrderLifecycleModal({
                 </span>
               </div>
               <span className="text-[10px] font-medium text-stone-500">
-                Stage {activeOrder.status === 'PENDING' || activeOrder.status === 'PENDING_PAYMENT' || activeOrder.status === 'ORDER_PLACED' ? '1/7' : activeOrder.status === 'CONFIRMED' ? '2/7' : activeOrder.status === 'PROCESSING' ? '3/7' : activeOrder.status === 'PACKED' ? '4/7' : activeOrder.status === 'SHIPPED' ? '5/7' : activeOrder.status === 'OUT_FOR_DELIVERY' ? '6/7' : activeOrder.status === 'DELIVERED' ? '7/7' : 'Cancelled'}
+                Stage {activeOrder.status === 'PENDING' || activeOrder.status === 'PENDING_PAYMENT' || activeOrder.status === 'ORDER_PLACED' ? '1/5: Order Placed' : activeOrder.status === 'CONFIRMED' ? '2/5: Order Confirmed' : activeOrder.status === 'PROCESSING' || activeOrder.status === 'PACKED' ? '3/5: Preparation & Sanctification' : activeOrder.status === 'SHIPPED' || activeOrder.status === 'OUT_FOR_DELIVERY' ? '4/5: Shipped & On the Way' : activeOrder.status === 'DELIVERED' ? '5/5: Delivered' : 'Cancelled'}
               </span>
             </div>
 
@@ -547,7 +547,7 @@ export default function OrderLifecycleModal({
                       className="px-4 py-1.5 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
                     >
                       {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Settings className="w-3.5 h-3.5" />}
-                      <span>Start Product Preparation &amp; Packing</span>
+                      <span>Start Product Preparing &amp; Packaging</span>
                     </button>
                     <button
                       type="button"

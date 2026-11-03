@@ -22,14 +22,10 @@ import {
   ChevronRight,
   ChevronDown,
   ExternalLink,
-  Sparkles,
   Lock,
   RefreshCw,
-  ShoppingBag,
   ShieldCheck,
   User as UserIcon,
-  FileText,
-  Image as ImageIcon,
 } from 'lucide-react';
 
 import { UserProfile, WalletData, Transaction, DashboardTab, getUserInitials } from './types';
@@ -246,9 +242,18 @@ export default function DashboardPage() {
     window.addEventListener('astro-auth-change', handleAuthChange);
     window.addEventListener('storage', handleAuthChange);
 
+    // Live polling: auto-refresh dashboard data every 10 seconds so customer sees admin stage changes live
+    const pollInterval = setInterval(() => {
+      const token = getAuthToken();
+      if (token) {
+        loadDashboardData();
+      }
+    }, 10000);
+
     return () => {
       window.removeEventListener('astro-auth-change', handleAuthChange);
       window.removeEventListener('storage', handleAuthChange);
+      clearInterval(pollInterval);
     };
   }, [loadDashboardData, router]);
 
@@ -370,10 +375,10 @@ export default function DashboardPage() {
                 </button>
               </div>
 
-              {/* Group 1: OPERATIONS / CONSULTATIONS */}
+              {/* Group 1: BOOKINGS & ORDERS */}
               <div>
                 <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
-                  {t('Consultations', 'परामर्श सेवा')}
+                  {t('Bookings', 'बुकिंग्स')}
                 </div>
                 <div className="space-y-0.5">
                   <button
@@ -400,22 +405,6 @@ export default function DashboardPage() {
                     )}
                   </button>
 
-                  <Link
-                    href="/appointment"
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
-                  >
-                    <Sparkles className="w-4 h-4 text-stone-400 shrink-0" />
-                    <span>{t('Book Consultation', 'परामर्श बुक करें')}</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Group 2: SACRED STORE */}
-              <div>
-                <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
-                  {t('Sacred Store', 'वैदिक स्टोर')}
-                </div>
-                <div className="space-y-0.5">
                   <button
                     type="button"
                     onClick={() => setActiveTab('orders')}
@@ -439,42 +428,11 @@ export default function DashboardPage() {
                       </span>
                     )}
                   </button>
-
-                  <Link
-                    href="/products"
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
-                  >
-                    <ShoppingBag className="w-4 h-4 text-stone-400 shrink-0" />
-                    <span>{t('Consecrated Store', 'सिद्ध उत्पाद स्टोर')}</span>
-                  </Link>
                 </div>
               </div>
 
 
 
-              {/* Group 4: CONTENT & WISDOM */}
-              <div>
-                <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
-                  {t('Content', 'ज्ञान एवं दीर्घा')}
-                </div>
-                <div className="space-y-0.5">
-                  <Link
-                    href="/blog"
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
-                  >
-                    <FileText className="w-4 h-4 text-stone-400 shrink-0" />
-                    <span>{t('Blogs', 'ब्लॉग्स')}</span>
-                  </Link>
-
-                  <Link
-                    href="/gallery"
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
-                  >
-                    <ImageIcon className="w-4 h-4 text-stone-400 shrink-0" />
-                    <span>{t('Gallery', 'गैलरी')}</span>
-                  </Link>
-                </div>
-              </div>
 
               {/* Group 5: SETTINGS */}
               <div>
@@ -567,7 +525,7 @@ export default function DashboardPage() {
 
                   <div>
                     <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
-                      {t('Consultations', 'परामर्श सेवा')}
+                      {t('Bookings', 'बुकिंग्स')}
                     </div>
                     <div className="space-y-0.5">
                       <button
@@ -597,22 +555,6 @@ export default function DashboardPage() {
                         )}
                       </button>
 
-                      <Link
-                        href="/appointment"
-                        onClick={() => setMobileSidebarOpen(false)}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
-                      >
-                        <Sparkles className="w-4 h-4 text-stone-400 shrink-0" />
-                        <span>{t('Book Consultation', 'परामर्श बुक करें')}</span>
-                      </Link>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
-                      {t('Sacred Store', 'वैदिक स्टोर')}
-                    </div>
-                    <div className="space-y-0.5">
                       <button
                         type="button"
                         onClick={() => {
@@ -639,44 +581,11 @@ export default function DashboardPage() {
                           </span>
                         )}
                       </button>
-
-                      <Link
-                        href="/products"
-                        onClick={() => setMobileSidebarOpen(false)}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
-                      >
-                        <ShoppingBag className="w-4 h-4 text-stone-400 shrink-0" />
-                        <span>{t('Consecrated Store', 'सिद्ध उत्पाद स्टोर')}</span>
-                      </Link>
                     </div>
                   </div>
 
 
 
-                  <div>
-                    <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
-                      {t('Content', 'ज्ञान एवं दीर्घा')}
-                    </div>
-                    <div className="space-y-0.5">
-                      <Link
-                        href="/blog"
-                        onClick={() => setMobileSidebarOpen(false)}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
-                      >
-                        <FileText className="w-4 h-4 text-stone-400 shrink-0" />
-                        <span>{t('Blogs', 'ब्लॉग्स')}</span>
-                      </Link>
-
-                      <Link
-                        href="/gallery"
-                        onClick={() => setMobileSidebarOpen(false)}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
-                      >
-                        <ImageIcon className="w-4 h-4 text-stone-400 shrink-0" />
-                        <span>{t('Gallery', 'गैलरी')}</span>
-                      </Link>
-                    </div>
-                  </div>
 
                   <div>
                     <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">

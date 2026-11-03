@@ -15,7 +15,6 @@ import {
   ChevronRight,
   ArrowRight,
   CreditCard,
-  Wallet,
   Heart,
   Briefcase,
   Shield,
@@ -182,7 +181,7 @@ export default function AdminOverviewTab({
       time: '6 hours ago',
     },
     {
-      icon: <Wallet className="w-4 h-4 text-blue-600 shrink-0" />,
+      icon: <CreditCard className="w-4 h-4 text-blue-600 shrink-0" />,
       iconBg: 'bg-blue-50 border-blue-100',
       title: 'Payment received',
       detail: '₹1,299 via UPI',
@@ -707,28 +706,28 @@ export default function AdminOverviewTab({
                 </div>
               </div>
 
-              {/* Tile 2: Wallet Balance */}
+              {/* Tile 2: Sacred Orders */}
               <div className="bg-[#FAF9F7] rounded-2xl p-3 sm:p-3.5 border border-stone-200/60 shadow-2xs flex flex-col justify-between min-w-0">
                 <div className="flex items-center justify-between gap-1.5 min-w-0">
                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#FFF1F2] text-[#E11D48] flex items-center justify-center shrink-0">
-                    <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
                   <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md shrink-0">
-                    +5%
+                    +15%
                   </span>
                 </div>
                 <div className="mt-2 min-w-0">
                   <span
                     className="text-[10.5px] sm:text-[11px] font-medium text-stone-500 block leading-tight truncate"
-                    title="Wallet Balance"
+                    title="Sacred Orders"
                   >
-                    Wallet Balance
+                    Sacred Orders
                   </span>
                   <span
                     className="text-sm sm:text-base font-bold text-stone-900 font-sans tracking-tight mt-0.5 block truncate"
-                    title="₹12,660"
+                    title="142"
                   >
-                    ₹12,660
+                    142
                   </span>
                 </div>
               </div>

@@ -495,7 +495,7 @@ export default function BookingLifecycleModal({
                       {activeBooking.totalCost === 0 ? 'Complimentary' : `₹${Number(activeBooking.totalCost).toLocaleString('en-IN')}`}
                     </span>
                     <span className="text-[10px] text-stone-500">
-                      Method: {isWalletPayment ? 'Celestial Wallet' : isVerifiedManual ? 'Verified Offline' : 'Gateway / Direct'}
+                      Method: {isVerifiedManual ? 'Verified Offline' : 'Online Gateway'}
                     </span>
                   </div>
                 </div>
@@ -515,7 +515,7 @@ export default function BookingLifecycleModal({
                     ? 'Pending Payment'
                     : activeBooking.status === 'CANCELLED' || activeBooking.status === 'REJECTED'
                     ? hasRefund
-                      ? 'Refunded to Wallet'
+                      ? 'Refunded to Source'
                       : 'Unpaid / Concluded'
                     : 'Paid / Confirmed'}
                 </span>

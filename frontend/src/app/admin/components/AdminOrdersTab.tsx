@@ -536,16 +536,12 @@ export default function AdminOrdersTab({
                               title={
                                 o.paymentMethod === 'cod' || o.paymentMethod === 'COD'
                                   ? 'Cash on Delivery'
-                                  : o.paymentMethod === 'WALLET'
-                                  ? 'Spiritual Wallet'
-                                  : 'Demo Online Payment'
+                                  : 'Online Payment'
                               }
                             >
                               {o.paymentMethod === 'cod' || o.paymentMethod === 'COD'
                                 ? 'Cash on Delivery'
-                                : o.paymentMethod === 'WALLET'
-                                ? 'Spiritual Wallet'
-                                : 'Demo Online Payment'}
+                                : 'Online Payment'}
                             </span>
                           </div>
                         </td>

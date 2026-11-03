@@ -196,15 +196,15 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
               className="px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#2A0E13] text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
             >
               <Calendar className="w-4 h-4" />
-              <span>{t('My Bookings', 'मेरे परामर्श')}</span>
+              <span>{t('My Consultations', 'मेरे परामर्श')}</span>
             </button>
-            <Link
-              href="/appointment"
-              className="px-5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-all flex items-center gap-2"
+            <button
+              onClick={() => onTabChange('orders')}
+              className="px-5 py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-all flex items-center gap-2 cursor-pointer"
             >
-              <span>{t('Book Consultation', 'परामर्श बुक करें')}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+              <Package className="w-4 h-4" />
+              <span>{t('My Orders', 'मेरे ऑर्डर्स')}</span>
+            </button>
           </div>
         </div>
       </div>

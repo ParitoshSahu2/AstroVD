@@ -176,7 +176,7 @@ export default function AdminUsersTab({
                     <th className="py-3 px-3 w-[28%] font-medium truncate">User / Astrologer</th>
                     <th className="py-3 px-3 w-[11%] font-medium truncate">Role</th>
                     <th className="py-3 px-3 w-[11%] font-medium truncate">Status</th>
-                    <th className="py-3 px-3 w-[13%] font-medium truncate">Wallet</th>
+                    <th className="py-3 px-3 w-[13%] font-medium truncate">Joined</th>
                     <th className="py-3 px-3 text-center w-[11%] font-medium truncate">Orders</th>
                     <th className="py-3 px-3 text-center w-[11%] font-medium truncate">Bookings</th>
                     <th className="py-3 px-3 text-right w-[15%] font-medium truncate">Actions</th>
@@ -248,9 +248,9 @@ export default function AdminUsersTab({
                           </span>
                         </td>
 
-                        {/* 4. Wallet Balance */}
-                        <td className="py-3 px-3 align-middle overflow-hidden font-semibold text-[#5B0D15] truncate" title={`Wallet: ₹${u.walletBalance.toFixed(2)}`}>
-                          ₹{u.walletBalance.toFixed(2)}
+                        {/* 4. Joined Date */}
+                        <td className="py-3 px-3 align-middle overflow-hidden font-medium text-stone-600 truncate" title={u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'Active Member'}>
+                          {u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Active'}
                         </td>
 
                         {/* 5. Orders Count */}
@@ -565,10 +565,6 @@ export default function AdminUsersTab({
                         >
                           <span className={`w-1.5 h-1.5 rounded-full ${u.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                           <span>{u.status}</span>
-                        </span>
-
-                        <span className="font-semibold text-[#5B0D15] text-xs">
-                          ₹{u.walletBalance.toFixed(2)}
                         </span>
                       </div>
 

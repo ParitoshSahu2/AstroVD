@@ -16,7 +16,6 @@ import {
   Video,
   Phone,
   MessageSquare,
-  Wallet,
   UserCheck,
   UserX,
   UserMinus,
@@ -166,14 +165,6 @@ export default function UserInspectionModal({
                       {inspectUser.bookings?.filter((b) => (b.status || '').toUpperCase() === 'CONFIRMED').length} confirmed
                     </span>
                   )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-stone-200/90 shadow-2xs">
-                  <Wallet className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                  <span className="text-stone-600 font-medium">Wallet:</span>
-                  <strong className="text-[#5B0D15] font-bold">₹{inspectUser.walletBalance.toFixed(2)}</strong>
                 </div>
               </div>
             </div>
@@ -890,14 +881,14 @@ export default function UserInspectionModal({
                         >
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-900 flex items-center justify-center shrink-0">
-                              <Wallet className="w-4 h-4" />
+                              <CheckCircle2 className="w-4 h-4" />
                             </div>
                             <div>
                               <div className="font-bold text-[#3B1E22]">
-                                Wallet: {tx.description}
+                                {tx.description.replace(/wallet:?\s*/i, '')}
                               </div>
                               <div className="text-[11px] text-stone-500">
-                                Balance After: ₹{tx.balanceAfter.toFixed(2)}
+                                Transferred: ₹{tx.amount.toFixed(2)}
                               </div>
                             </div>
                           </div>
