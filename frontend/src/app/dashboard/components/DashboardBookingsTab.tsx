@@ -339,10 +339,12 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
             const shortId = bId.length > 16 ? `${bId.slice(0, 16)}…` : bId;
             const isCopied = copiedId === bId;
 
-            const st = (booking.status || 'CONFIRMED').toUpperCase();
+            const st = (booking.status || 'PENDING').toUpperCase();
             const isConfirmed = st === 'CONFIRMED' || st === 'SCHEDULED' || st === 'BOOKED';
             const isCompleted = st === 'COMPLETED';
-            const isPending = st === 'PENDING' || st === 'PENDING_PAYMENT' || st === 'REVIEWING';
+            const isApproved = st === 'APPROVED' || st === 'PENDING_PAYMENT';
+            const isCancelled = st === 'CANCELLED' || st === 'REJECTED';
+            const isPending = st === 'PENDING' || st === 'REVIEWING';
 
             const rawDate = booking.scheduledDate || booking.date || booking.bookingDate || booking.createdAt;
             let formattedDate = 'Scheduled Soon';
@@ -537,7 +539,7 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                     )}
                   </div>
 
-                  {/* 3. Action Buttons - Join Button only after admin approval */}
+                  {/* 3. Action Buttons - Join Button strictly after admin approval AND payment */}
                   <div className="shrink-0 flex items-center gap-2.5">
                     {isConfirmed ? (() => {
                       const meetStatus = getMeetingTimeStatus(
@@ -579,7 +581,24 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                           <span>{t('Join Meeting (Opens 5 Min Before)', 'मीटिंग से जुड़ें (5 मिनट पूर्व खुलेगा)')}</span>
                         </button>
                       );
-                    })() : (
+                    })() : isApproved ? (
+                      <button
+                        type="button"
+                        onClick={() => setPayingBooking(booking)}
+                        className="inline-flex items-center gap-2 px-4.5 py-2 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#851622] to-[#5B0D15] hover:opacity-95 text-white font-bold text-xs shadow-md transition-all cursor-pointer active:scale-95 whitespace-nowrap animate-pulse"
+                      >
+                        <CreditCard className="w-3.5 h-3.5 text-amber-300" />
+                        <span>{t('Pay Dakshina & Confirm', 'दक्षिणा भुगतान कर पुष्ट करें')}</span>
+                      </button>
+                    ) : isCancelled ? (
+                      <Link
+                        href="/appointment"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shadow-xs transition-all cursor-pointer whitespace-nowrap"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>{t('Reschedule Consultation', 'परामर्श पुनर्निर्धारित करें')}</span>
+                      </Link>
+                    ) : (
                       <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 text-amber-800 text-xs font-semibold border border-amber-300">
                         <Clock className="w-3.5 h-3.5 text-amber-600" />
                         <span>{t('Waiting for Admin Approval', 'व्यवस्थापक स्वीकृति की प्रतीक्षा')}</span>

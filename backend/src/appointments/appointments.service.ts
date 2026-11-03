@@ -1137,24 +1137,24 @@ export class AppointmentsService {
     const meetLink = extractMeetingLink(b.notes, b.id);
     const customerName = b.customerName || userObj?.name || 'Customer';
     const customerPhone = b.customerPhone || userObj?.phone || b.contactPhone;
-    const isWalletPayment = Boolean(b.notes?.includes('Payment: WALLET_PAID'));
+    const isWalletPayment = Boolean(b.notes?.includes('Paid via WALLET') || b.notes?.includes('Payment: WALLET_PAID'));
     const isVerifiedManual = Boolean(b.notes?.includes('Payment Verified:'));
     const hasRefund = Boolean(b.notes?.includes('REFUND_BOOKING_'));
     const paymentStatus =
-      b.status === 'PENDING_PAYMENT'
-        ? 'PENDING'
+      b.status === 'CONFIRMED' || b.status === 'COMPLETED'
+        ? 'PAID'
         : b.status === 'CANCELLED' || b.status === 'REJECTED'
         ? hasRefund || isWalletPayment
           ? 'REFUNDED'
           : 'CANCELLED_UNPAID'
-        : 'PAID';
+        : 'UNPAID';
     const paymentMethod = isWalletPayment
       ? 'WALLET'
       : isVerifiedManual
       ? 'VERIFIED_OFFLINE'
       : b.totalCost === 0
       ? 'COMPLIMENTARY'
-      : 'PENDING_OR_GATEWAY';
+      : 'PENDING_PAYMENT';
 
     return {
       id: b.id,
@@ -1391,14 +1391,28 @@ export class AppointmentsService {
         const fb = this.fallbackBookings[fbIdx];
         const currentStatus = (fb.status || 'PENDING').toUpperCase();
         const targetStatus = dto.status.toUpperCase();
+
+        const validTransitions: Record<string, string[]> = {
+          PENDING_PAYMENT: ['APPROVED', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
+          PENDING: ['APPROVED', 'PENDING_PAYMENT', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
+          APPROVED: ['PENDING_PAYMENT', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
+          CONFIRMED: ['COMPLETED', 'CANCELLED'],
+        };
+        const allowed = validTransitions[currentStatus] || [];
+        if (!allowed.includes(targetStatus)) {
+          throw new BadRequestException(
+            `Invalid status transition from "${currentStatus}" to "${targetStatus}". Allowed: ${allowed.join(', ')}`,
+          );
+        }
+
         fb.status = targetStatus;
         if (dto.notes) {
           fb.notes = `${fb.notes || ''} | Status (${targetStatus}): ${dto.notes}`;
         }
-        this.persistFallbackBookings();
+        this.saveFallbackBookings();
         return {
           message: `Booking status successfully updated to ${targetStatus}.`,
-          booking: fb,
+          booking: this.formatBookingPayload(fb),
         };
       }
       throw new NotFoundException(`Booking with ID "${bookingId}" was not found.`);
@@ -1550,6 +1564,16 @@ export class AppointmentsService {
         };
       }
 
+      if (booking.status === 'PENDING') {
+        throw new BadRequestException(
+          'Consultation request is awaiting admin approval. You can proceed with payment once approved.',
+        );
+      }
+
+      if (booking.status === 'CANCELLED' || booking.status === 'REJECTED') {
+        throw new BadRequestException('This consultation request was cancelled or unavailable.');
+      }
+
       const cost = Number(booking.totalCost || 2100);
 
       if (paymentMethod === 'WALLET') {
@@ -1558,23 +1582,27 @@ export class AppointmentsService {
           select: { id: true, walletBalance: true },
         });
 
-        if (user && Number(user.walletBalance || 0) >= cost) {
-          await this.prisma.user.update({
-            where: { id: actor.sub },
-            data: { walletBalance: { decrement: cost } },
-          });
-
-          await this.prisma.walletTransaction.create({
-            data: {
-              userId: actor.sub,
-              type: 'DEBIT',
-              amount: cost,
-              balanceAfter: Math.max(0, Number(user.walletBalance || 0) - cost),
-              description: `Payment for consultation: ${booking.serviceType || bookingId}`,
-              reference: `PAY_BOOKING_${bookingId}`,
-            },
-          });
+        if (!user || Number(user.walletBalance || 0) < cost) {
+          throw new BadRequestException(
+            `Insufficient wallet balance (₹${user?.walletBalance || 0}). Required: ₹${cost}`,
+          );
         }
+
+        await this.prisma.user.update({
+          where: { id: actor.sub },
+          data: { walletBalance: { decrement: cost } },
+        });
+
+        await this.prisma.walletTransaction.create({
+          data: {
+            userId: actor.sub,
+            type: 'DEBIT',
+            amount: cost,
+            balanceAfter: Math.max(0, Number(user.walletBalance || 0) - cost),
+            description: `Payment for consultation: ${booking.serviceType || bookingId}`,
+            reference: `PAY_BOOKING_${bookingId}`,
+          },
+        });
       }
 
       const updated = await this.prisma.booking.update({
@@ -1588,21 +1616,31 @@ export class AppointmentsService {
       return {
         success: true,
         message: 'Payment completed successfully! Your consultation is now confirmed.',
-        booking: updated,
+        booking: this.formatBookingPayload(updated),
       };
     } catch (err: any) {
-      if (err instanceof NotFoundException || err instanceof ForbiddenException) throw err;
+      if (err instanceof NotFoundException || err instanceof ForbiddenException || err instanceof BadRequestException) throw err;
 
       // Fallback JSON store
       const idx = this.fallbackBookings.findIndex((b) => b.id === bookingId);
       if (idx !== -1) {
-        this.fallbackBookings[idx].status = 'CONFIRMED';
-        this.fallbackBookings[idx].notes = `${this.fallbackBookings[idx].notes || ''} | Paid via ${paymentMethod}`;
-        this.persistFallbackBookings();
+        const fb = this.fallbackBookings[idx];
+        if (fb.status === 'PENDING') {
+          throw new BadRequestException(
+            'Consultation request is awaiting admin approval. You can proceed with payment once approved.',
+          );
+        }
+        if (fb.status === 'CANCELLED' || fb.status === 'REJECTED') {
+          throw new BadRequestException('This consultation request was cancelled or unavailable.');
+        }
+
+        fb.status = 'CONFIRMED';
+        fb.notes = `${fb.notes || ''} | Paid via ${paymentMethod}`;
+        this.saveFallbackBookings();
         return {
           success: true,
           message: 'Payment completed successfully! Your consultation is now confirmed.',
-          booking: this.fallbackBookings[idx],
+          booking: this.formatBookingPayload(fb),
         };
       }
 
@@ -2283,7 +2321,7 @@ export class AppointmentsService {
             serviceType: booking.serviceType,
             scheduledDate: booking.scheduledDate,
             scheduledTime: booking.scheduledTime,
-            customerName: booking.customerName || booking.user?.name,
+            customerName: (booking as any).customerName || booking.user?.name,
             totalCost: booking.totalCost,
             status: booking.status,
           },
