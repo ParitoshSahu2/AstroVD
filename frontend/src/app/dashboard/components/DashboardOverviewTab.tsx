@@ -344,7 +344,16 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-              {nextBooking.status === 'CONFIRMED' ? (() => {
+              {nextBooking.status === 'COMPLETED' ? (
+                <button
+                  type="button"
+                  onClick={() => onTabChange('consultations')}
+                  className="px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                >
+                  <Star className="w-3.5 h-3.5 fill-white" />
+                  <span>{t('Rate & Review Consultation', 'रेटिंग व समीक्षा')}</span>
+                </button>
+              ) : nextBooking.status === 'CONFIRMED' ? (() => {
                 const meetStatus = getMeetingTimeStatus(
                   nextBooking.bookingDate || nextBooking.scheduledDate || nextBooking.date,
                   nextBooking.slot || nextBooking.scheduledTime || nextBooking.time,
@@ -403,12 +412,12 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>{t('Reschedule (Guruji Unavailable)', 'पुनर्निर्धारित करें (गुरुजी अनुपलब्ध)')}</span>
                 </button>
-              ) : (
+              ) : (nextBooking.status === 'PENDING' || nextBooking.status === 'REVIEWING') ? (
                 <div className="px-5 py-2.5 rounded-full bg-amber-50 text-amber-800 text-xs font-semibold border border-amber-300 flex items-center justify-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-amber-600" />
                   <span>{t('Waiting for Admin Approval', 'व्यवस्थापक स्वीकृति की प्रतीक्षा')}</span>
                 </div>
-              )}
+              ) : null}
               <button
                 onClick={() => onTabChange('consultations')}
                 className="px-5 py-3 rounded-full border border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700 font-semibold text-xs transition-all text-center cursor-pointer"
