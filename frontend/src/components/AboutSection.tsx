@@ -236,13 +236,6 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                   {t('Dr. Pandit Vishal Dubey', 'डॉ. पंडित विशाल दुबे')}
                 </h3>
 
-                <div className="inline-flex flex-wrap items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-[#B98E4B] via-[#C59B56] to-[#A87B38] text-white text-xs font-semibold shadow-sm">
-                  <span>AstroVD</span>
-                  <span>•</span>
-                  <span>{t('PhD in Vedic Astrology', 'पीएचडी वैदिक ज्योतिष')}</span>
-                  <span>•</span>
-                  <span>{t('Jyotishacharya (2018)', 'ज्योतिषाचार्य (2018)')}</span>
-                </div>
               </div>
 
               {/* Bio Summary: Concise & Impactful */}

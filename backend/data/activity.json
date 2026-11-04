@@ -1,5 +1,5387 @@
 [
   {
+    "id": "act-1793816423203-4omzq",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "1700000000000-sacred_temple.jpg",
+    "itemTitle": "Sacred Temple.jpg",
+    "action": "UPLOAD_IMAGE",
+    "timestamp": "2026-11-04T18:20:23.203Z",
+    "summary": "Uploaded image \"Sacred Temple.jpg\" (200.0 KB)",
+    "details": {
+      "filename": "1700000000000-sacred_temple.jpg",
+      "size": 204800,
+      "mimetype": "image/jpeg",
+      "url": "/api/content/uploads/1700000000000-sacred_temple.jpg"
+    }
+  },
+  {
+    "id": "act-1793816423114-fx422",
+    "adminId": "super-1",
+    "adminName": "Yash Deep (Superadmin)",
+    "adminEmail": "yash@astrovd.com",
+    "adminRole": "SUPERADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw2fzeeu",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T18:20:23.114Z",
+    "summary": "Unpublished blog post \"Audit Log Test Blog\""
+  },
+  {
+    "id": "act-1793816423097-ptug5",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw2fzeeu",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T18:20:23.097Z",
+    "summary": "Created blog post \"Audit Log Test Blog\" (Published)",
+    "details": {
+      "post": {
+        "id": "audit-log-test-blog-mw2fzeeu",
+        "title": "Audit Log Test Blog",
+        "titleHi": "Audit Log Test Blog",
+        "category": "Test Category",
+        "categoryHi": "Test Category",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Audit Log Test Blog",
+        "excerptHi": "Audit Log Test Blog",
+        "content": [
+          "Testing audit"
+        ],
+        "contentHi": [
+          "Audit Log Test Blog"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": false,
+        "createdAt": "2026-11-04T18:20:23.094Z",
+        "updatedAt": "2026-11-04T18:20:23.111Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        },
+        "updatedBy": {
+          "id": "super-1",
+          "name": "Yash Deep (Superadmin)",
+          "email": "yash@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793816423062-f5dml",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw2fzedi-l2ry",
+    "itemTitle": "Photo to delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T18:20:23.062Z",
+    "summary": "Deleted gallery entry \"Photo to delete\"",
+    "details": {
+      "deletedItem": {
+        "id": "gal-mw2fzedi-l2ry",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T18:20:23.046Z",
+        "updatedAt": "2026-11-04T18:20:23.046Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793816423048-24jbo",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw2fzedi-l2ry",
+    "itemTitle": "Photo to delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T18:20:23.048Z",
+    "summary": "Added new gallery entry \"Photo to delete\"",
+    "details": {
+      "item": {
+        "id": "gal-mw2fzedi-l2ry",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T18:20:23.046Z",
+        "updatedAt": "2026-11-04T18:20:23.046Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793816423013-pwxum",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw2fzebd-m400",
+    "itemTitle": "Updated Sacred Ritual Title",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T18:20:23.013Z",
+    "summary": "Updated gallery entry \"Updated Sacred Ritual Title\"",
+    "details": {
+      "changes": {
+        "title": "Updated Sacred Ritual Title",
+        "location": "Kedarnath Valley, Uttarakhand"
+      }
+    }
+  },
+  {
+    "id": "act-1793816422971-k7nef",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw2fzebd-m400",
+    "itemTitle": "Varanasi Ganga Aarti Special Shanti Yagya",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T18:20:22.971Z",
+    "summary": "Added new gallery entry \"Varanasi Ganga Aarti Special Shanti Yagya\"",
+    "details": {
+      "item": {
+        "id": "gal-mw2fzebd-m400",
+        "title": "Varanasi Ganga Aarti Special Shanti Yagya",
+        "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+        "category": "Vedic Rituals",
+        "categoryLabel": "Sacred Gallery",
+        "categoryLabelHi": "पावन दर्शन",
+        "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+        "location": "Dashashwamedh Ghat, Varanasi",
+        "locationHi": "दशाश्वमेध घाट, वाराणसी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "isPublished": true,
+        "createdAt": "2026-11-04T18:20:22.970Z",
+        "updatedAt": "2026-11-04T18:20:22.970Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793816422905-1k956",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw2fze92",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T18:20:22.905Z",
+    "summary": "Deleted blog post \"Temporary Post to Delete\"",
+    "details": {
+      "deletedPost": {
+        "id": "temporary-post-to-delete-mw2fze92",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T18:20:22.886Z",
+        "updatedAt": "2026-11-04T18:20:22.886Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793816422889-1fayx",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw2fze92",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T18:20:22.889Z",
+    "summary": "Created blog post \"Temporary Post to Delete\" (Published)",
+    "details": {
+      "post": {
+        "id": "temporary-post-to-delete-mw2fze92",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T18:20:22.886Z",
+        "updatedAt": "2026-11-04T18:20:22.886Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793816422848-thwfw",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw2fze4r",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "PUBLISH",
+    "timestamp": "2026-11-04T18:20:22.848Z",
+    "summary": "Published blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793816422830-hyiwc",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw2fze4r",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T18:20:22.830Z",
+    "summary": "Unpublished blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793816422789-yzwmb",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw2fze4r",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T18:20:22.789Z",
+    "summary": "Updated blog post \"Updated Planetary Transits 2026 Guide\"",
+    "details": {
+      "changes": {
+        "title": "Updated Planetary Transits 2026 Guide",
+        "readTime": "12 min read"
+      }
+    }
+  },
+  {
+    "id": "act-1793816422739-ol630",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw2fze4r",
+    "itemTitle": "Solar Eclipse 2026 Remedial Rituals",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T18:20:22.739Z",
+    "summary": "Created blog post \"Solar Eclipse 2026 Remedial Rituals\" (Published)",
+    "details": {
+      "post": {
+        "id": "solar-eclipse-2026-remedial-rituals-mw2fze4r",
+        "title": "Solar Eclipse 2026 Remedial Rituals",
+        "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+        "category": "Rituals & Upay",
+        "categoryHi": "अनुष्ठान एवं उपाय",
+        "author": "Pandit Vishal Dubey",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Chief Acharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+        "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+        "content": [
+          "Observe silent japa during the peak eclipse hours."
+        ],
+        "contentHi": [
+          "ग्रहण के दौरान जप और दान की विधियां।"
+        ],
+        "keyTakeaways": [
+          "Avoid eating during eclipse",
+          "Perform Shiva japa"
+        ],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T18:20:22.735Z",
+        "updatedAt": "2026-11-04T18:20:22.735Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793815467868-9ibxm",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "1700000000000-sacred_temple.jpg",
+    "itemTitle": "Sacred Temple.jpg",
+    "action": "UPLOAD_IMAGE",
+    "timestamp": "2026-11-04T18:04:27.868Z",
+    "summary": "Uploaded image \"Sacred Temple.jpg\" (200.0 KB)",
+    "details": {
+      "filename": "1700000000000-sacred_temple.jpg",
+      "size": 204800,
+      "mimetype": "image/jpeg",
+      "url": "/api/content/uploads/1700000000000-sacred_temple.jpg"
+    }
+  },
+  {
+    "id": "act-1793815467787-xv8y7",
+    "adminId": "super-1",
+    "adminName": "Yash Deep (Superadmin)",
+    "adminEmail": "yash@astrovd.com",
+    "adminRole": "SUPERADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw2fex9v",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T18:04:27.787Z",
+    "summary": "Unpublished blog post \"Audit Log Test Blog\""
+  },
+  {
+    "id": "act-1793815467768-63yxd",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw2fex9v",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T18:04:27.768Z",
+    "summary": "Created blog post \"Audit Log Test Blog\" (Published)",
+    "details": {
+      "post": {
+        "id": "audit-log-test-blog-mw2fex9v",
+        "title": "Audit Log Test Blog",
+        "titleHi": "Audit Log Test Blog",
+        "category": "Test Category",
+        "categoryHi": "Test Category",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Audit Log Test Blog",
+        "excerptHi": "Audit Log Test Blog",
+        "content": [
+          "Testing audit"
+        ],
+        "contentHi": [
+          "Audit Log Test Blog"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": false,
+        "createdAt": "2026-11-04T18:04:27.764Z",
+        "updatedAt": "2026-11-04T18:04:27.783Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        },
+        "updatedBy": {
+          "id": "super-1",
+          "name": "Yash Deep (Superadmin)",
+          "email": "yash@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793815467678-2jxhc",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw2fex6z-15gr",
+    "itemTitle": "Photo to delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T18:04:27.678Z",
+    "summary": "Deleted gallery entry \"Photo to delete\"",
+    "details": {
+      "deletedItem": {
+        "id": "gal-mw2fex6z-15gr",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T18:04:27.659Z",
+        "updatedAt": "2026-11-04T18:04:27.659Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793815467661-t6vm9",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw2fex6z-15gr",
+    "itemTitle": "Photo to delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T18:04:27.661Z",
+    "summary": "Added new gallery entry \"Photo to delete\"",
+    "details": {
+      "item": {
+        "id": "gal-mw2fex6z-15gr",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T18:04:27.659Z",
+        "updatedAt": "2026-11-04T18:04:27.659Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793815467616-hv894",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw2fex44-we0a",
+    "itemTitle": "Updated Sacred Ritual Title",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T18:04:27.616Z",
+    "summary": "Updated gallery entry \"Updated Sacred Ritual Title\"",
+    "details": {
+      "changes": {
+        "title": "Updated Sacred Ritual Title",
+        "location": "Kedarnath Valley, Uttarakhand"
+      }
+    }
+  },
+  {
+    "id": "act-1793815467558-dzbhk",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw2fex44-we0a",
+    "itemTitle": "Varanasi Ganga Aarti Special Shanti Yagya",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T18:04:27.558Z",
+    "summary": "Added new gallery entry \"Varanasi Ganga Aarti Special Shanti Yagya\"",
+    "details": {
+      "item": {
+        "id": "gal-mw2fex44-we0a",
+        "title": "Varanasi Ganga Aarti Special Shanti Yagya",
+        "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+        "category": "Vedic Rituals",
+        "categoryLabel": "Sacred Gallery",
+        "categoryLabelHi": "पावन दर्शन",
+        "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+        "location": "Dashashwamedh Ghat, Varanasi",
+        "locationHi": "दशाश्वमेध घाट, वाराणसी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "isPublished": true,
+        "createdAt": "2026-11-04T18:04:27.556Z",
+        "updatedAt": "2026-11-04T18:04:27.556Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793815467476-7reco",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw2fex12",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T18:04:27.476Z",
+    "summary": "Deleted blog post \"Temporary Post to Delete\"",
+    "details": {
+      "deletedPost": {
+        "id": "temporary-post-to-delete-mw2fex12",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T18:04:27.446Z",
+        "updatedAt": "2026-11-04T18:04:27.446Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793815467457-zix8e",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw2fex12",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T18:04:27.457Z",
+    "summary": "Created blog post \"Temporary Post to Delete\" (Published)",
+    "details": {
+      "post": {
+        "id": "temporary-post-to-delete-mw2fex12",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T18:04:27.446Z",
+        "updatedAt": "2026-11-04T18:04:27.446Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793815467386-l1ndw",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw2fewuw",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "PUBLISH",
+    "timestamp": "2026-11-04T18:04:27.386Z",
+    "summary": "Published blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793815467359-qk67u",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw2fewuw",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T18:04:27.359Z",
+    "summary": "Unpublished blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793815467299-9zfx2",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw2fewuw",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T18:04:27.299Z",
+    "summary": "Updated blog post \"Updated Planetary Transits 2026 Guide\"",
+    "details": {
+      "changes": {
+        "title": "Updated Planetary Transits 2026 Guide",
+        "readTime": "12 min read"
+      }
+    }
+  },
+  {
+    "id": "act-1793815467235-x93ci",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw2fewuw",
+    "itemTitle": "Solar Eclipse 2026 Remedial Rituals",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T18:04:27.235Z",
+    "summary": "Created blog post \"Solar Eclipse 2026 Remedial Rituals\" (Published)",
+    "details": {
+      "post": {
+        "id": "solar-eclipse-2026-remedial-rituals-mw2fewuw",
+        "title": "Solar Eclipse 2026 Remedial Rituals",
+        "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+        "category": "Rituals & Upay",
+        "categoryHi": "अनुष्ठान एवं उपाय",
+        "author": "Pandit Vishal Dubey",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Chief Acharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+        "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+        "content": [
+          "Observe silent japa during the peak eclipse hours."
+        ],
+        "contentHi": [
+          "ग्रहण के दौरान जप और दान की विधियां।"
+        ],
+        "keyTakeaways": [
+          "Avoid eating during eclipse",
+          "Perform Shiva japa"
+        ],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T18:04:27.229Z",
+        "updatedAt": "2026-11-04T18:04:27.229Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793813552782-j6f4e",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "1700000000000-sacred_temple.jpg",
+    "itemTitle": "Sacred Temple.jpg",
+    "action": "UPLOAD_IMAGE",
+    "timestamp": "2026-11-04T17:32:32.782Z",
+    "summary": "Uploaded image \"Sacred Temple.jpg\" (200.0 KB)",
+    "details": {
+      "filename": "1700000000000-sacred_temple.jpg",
+      "size": 204800,
+      "mimetype": "image/jpeg",
+      "url": "/api/content/uploads/1700000000000-sacred_temple.jpg"
+    }
+  },
+  {
+    "id": "act-1793813552667-ilkda",
+    "adminId": "super-1",
+    "adminName": "Yash Deep (Superadmin)",
+    "adminEmail": "yash@astrovd.com",
+    "adminRole": "SUPERADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw2e9vk1",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T17:32:32.667Z",
+    "summary": "Unpublished blog post \"Audit Log Test Blog\""
+  },
+  {
+    "id": "act-1793813552646-0yyzp",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw2e9vk1",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T17:32:32.646Z",
+    "summary": "Created blog post \"Audit Log Test Blog\" (Published)",
+    "details": {
+      "post": {
+        "id": "audit-log-test-blog-mw2e9vk1",
+        "title": "Audit Log Test Blog",
+        "titleHi": "Audit Log Test Blog",
+        "category": "Test Category",
+        "categoryHi": "Test Category",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Audit Log Test Blog",
+        "excerptHi": "Audit Log Test Blog",
+        "content": [
+          "Testing audit"
+        ],
+        "contentHi": [
+          "Audit Log Test Blog"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": false,
+        "createdAt": "2026-11-04T17:32:32.641Z",
+        "updatedAt": "2026-11-04T17:32:32.663Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        },
+        "updatedBy": {
+          "id": "super-1",
+          "name": "Yash Deep (Superadmin)",
+          "email": "yash@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793813552592-bvhsc",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw2e9vi2-qsyi",
+    "itemTitle": "Photo to delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T17:32:32.592Z",
+    "summary": "Deleted gallery entry \"Photo to delete\"",
+    "details": {
+      "deletedItem": {
+        "id": "gal-mw2e9vi2-qsyi",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T17:32:32.570Z",
+        "updatedAt": "2026-11-04T17:32:32.570Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793813552573-oba72",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw2e9vi2-qsyi",
+    "itemTitle": "Photo to delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T17:32:32.573Z",
+    "summary": "Added new gallery entry \"Photo to delete\"",
+    "details": {
+      "item": {
+        "id": "gal-mw2e9vi2-qsyi",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T17:32:32.570Z",
+        "updatedAt": "2026-11-04T17:32:32.570Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793813552525-3up6u",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw2e9vfd-8yf5",
+    "itemTitle": "Updated Sacred Ritual Title",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T17:32:32.525Z",
+    "summary": "Updated gallery entry \"Updated Sacred Ritual Title\"",
+    "details": {
+      "changes": {
+        "title": "Updated Sacred Ritual Title",
+        "location": "Kedarnath Valley, Uttarakhand"
+      }
+    }
+  },
+  {
+    "id": "act-1793813552476-oqzp3",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw2e9vfd-8yf5",
+    "itemTitle": "Varanasi Ganga Aarti Special Shanti Yagya",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T17:32:32.476Z",
+    "summary": "Added new gallery entry \"Varanasi Ganga Aarti Special Shanti Yagya\"",
+    "details": {
+      "item": {
+        "id": "gal-mw2e9vfd-8yf5",
+        "title": "Varanasi Ganga Aarti Special Shanti Yagya",
+        "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+        "category": "Vedic Rituals",
+        "categoryLabel": "Sacred Gallery",
+        "categoryLabelHi": "पावन दर्शन",
+        "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+        "location": "Dashashwamedh Ghat, Varanasi",
+        "locationHi": "दशाश्वमेध घाट, वाराणसी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "isPublished": true,
+        "createdAt": "2026-11-04T17:32:32.473Z",
+        "updatedAt": "2026-11-04T17:32:32.473Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793813552376-a6vyt",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw2e9vbt",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T17:32:32.376Z",
+    "summary": "Deleted blog post \"Temporary Post to Delete\"",
+    "details": {
+      "deletedPost": {
+        "id": "temporary-post-to-delete-mw2e9vbt",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T17:32:32.345Z",
+        "updatedAt": "2026-11-04T17:32:32.345Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793813552351-5gw3e",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw2e9vbt",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T17:32:32.351Z",
+    "summary": "Created blog post \"Temporary Post to Delete\" (Published)",
+    "details": {
+      "post": {
+        "id": "temporary-post-to-delete-mw2e9vbt",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T17:32:32.345Z",
+        "updatedAt": "2026-11-04T17:32:32.345Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793813552283-8koir",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw2e9v56",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "PUBLISH",
+    "timestamp": "2026-11-04T17:32:32.283Z",
+    "summary": "Published blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793813552249-sqfih",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw2e9v56",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T17:32:32.249Z",
+    "summary": "Unpublished blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793813552178-6qr9y",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw2e9v56",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T17:32:32.178Z",
+    "summary": "Updated blog post \"Updated Planetary Transits 2026 Guide\"",
+    "details": {
+      "changes": {
+        "title": "Updated Planetary Transits 2026 Guide",
+        "readTime": "12 min read"
+      }
+    }
+  },
+  {
+    "id": "act-1793813552118-xty3m",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw2e9v56",
+    "itemTitle": "Solar Eclipse 2026 Remedial Rituals",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T17:32:32.118Z",
+    "summary": "Created blog post \"Solar Eclipse 2026 Remedial Rituals\" (Published)",
+    "details": {
+      "post": {
+        "id": "solar-eclipse-2026-remedial-rituals-mw2e9v56",
+        "title": "Solar Eclipse 2026 Remedial Rituals",
+        "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+        "category": "Rituals & Upay",
+        "categoryHi": "अनुष्ठान एवं उपाय",
+        "author": "Pandit Vishal Dubey",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Chief Acharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+        "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+        "content": [
+          "Observe silent japa during the peak eclipse hours."
+        ],
+        "contentHi": [
+          "ग्रहण के दौरान जप और दान की विधियां।"
+        ],
+        "keyTakeaways": [
+          "Avoid eating during eclipse",
+          "Perform Shiva japa"
+        ],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T17:32:32.110Z",
+        "updatedAt": "2026-11-04T17:32:32.110Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793796232367-nq2aw",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "1700000000000-sacred_temple.jpg",
+    "itemTitle": "Sacred Temple.jpg",
+    "action": "UPLOAD_IMAGE",
+    "timestamp": "2026-11-04T12:43:52.367Z",
+    "summary": "Uploaded image \"Sacred Temple.jpg\" (200.0 KB)",
+    "details": {
+      "filename": "1700000000000-sacred_temple.jpg",
+      "size": 204800,
+      "mimetype": "image/jpeg",
+      "url": "/api/content/uploads/1700000000000-sacred_temple.jpg"
+    }
+  },
+  {
+    "id": "act-1793796232318-9s00o",
+    "adminId": "super-1",
+    "adminName": "Yash Deep (Superadmin)",
+    "adminEmail": "yash@astrovd.com",
+    "adminRole": "SUPERADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw23yn3l",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T12:43:52.318Z",
+    "summary": "Unpublished blog post \"Audit Log Test Blog\""
+  },
+  {
+    "id": "act-1793796232309-r7486",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw23yn3l",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:43:52.309Z",
+    "summary": "Created blog post \"Audit Log Test Blog\" (Published)",
+    "details": {
+      "post": {
+        "id": "audit-log-test-blog-mw23yn3l",
+        "title": "Audit Log Test Blog",
+        "titleHi": "Audit Log Test Blog",
+        "category": "Test Category",
+        "categoryHi": "Test Category",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Audit Log Test Blog",
+        "excerptHi": "Audit Log Test Blog",
+        "content": [
+          "Testing audit"
+        ],
+        "contentHi": [
+          "Audit Log Test Blog"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": false,
+        "createdAt": "2026-11-04T12:43:52.306Z",
+        "updatedAt": "2026-11-04T12:43:52.316Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        },
+        "updatedBy": {
+          "id": "super-1",
+          "name": "Yash Deep (Superadmin)",
+          "email": "yash@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793796232279-802b5",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw23yn2g-eht6",
+    "itemTitle": "Photo to delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T12:43:52.279Z",
+    "summary": "Deleted gallery entry \"Photo to delete\"",
+    "details": {
+      "deletedItem": {
+        "id": "gal-mw23yn2g-eht6",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:43:52.264Z",
+        "updatedAt": "2026-11-04T12:43:52.264Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793796232265-5y7zk",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw23yn2g-eht6",
+    "itemTitle": "Photo to delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:43:52.265Z",
+    "summary": "Added new gallery entry \"Photo to delete\"",
+    "details": {
+      "item": {
+        "id": "gal-mw23yn2g-eht6",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:43:52.264Z",
+        "updatedAt": "2026-11-04T12:43:52.264Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793796232241-e5ie3",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw23yn0v-p7dj",
+    "itemTitle": "Updated Sacred Ritual Title",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T12:43:52.241Z",
+    "summary": "Updated gallery entry \"Updated Sacred Ritual Title\"",
+    "details": {
+      "changes": {
+        "title": "Updated Sacred Ritual Title",
+        "location": "Kedarnath Valley, Uttarakhand"
+      }
+    }
+  },
+  {
+    "id": "act-1793796232211-2fjg0",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw23yn0v-p7dj",
+    "itemTitle": "Varanasi Ganga Aarti Special Shanti Yagya",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:43:52.211Z",
+    "summary": "Added new gallery entry \"Varanasi Ganga Aarti Special Shanti Yagya\"",
+    "details": {
+      "item": {
+        "id": "gal-mw23yn0v-p7dj",
+        "title": "Varanasi Ganga Aarti Special Shanti Yagya",
+        "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+        "category": "Vedic Rituals",
+        "categoryLabel": "Sacred Gallery",
+        "categoryLabelHi": "पावन दर्शन",
+        "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+        "location": "Dashashwamedh Ghat, Varanasi",
+        "locationHi": "दशाश्वमेध घाट, वाराणसी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:43:52.208Z",
+        "updatedAt": "2026-11-04T12:43:52.208Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793796232159-y21us",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw23ymz0",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T12:43:52.159Z",
+    "summary": "Deleted blog post \"Temporary Post to Delete\"",
+    "details": {
+      "deletedPost": {
+        "id": "temporary-post-to-delete-mw23ymz0",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:43:52.140Z",
+        "updatedAt": "2026-11-04T12:43:52.140Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793796232143-j0twn",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw23ymz0",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:43:52.143Z",
+    "summary": "Created blog post \"Temporary Post to Delete\" (Published)",
+    "details": {
+      "post": {
+        "id": "temporary-post-to-delete-mw23ymz0",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:43:52.140Z",
+        "updatedAt": "2026-11-04T12:43:52.140Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793796232106-fldkw",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw23ymva",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "PUBLISH",
+    "timestamp": "2026-11-04T12:43:52.106Z",
+    "summary": "Published blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793796232086-xz7t7",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw23ymva",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T12:43:52.086Z",
+    "summary": "Unpublished blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793796232050-2yyc9",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw23ymva",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T12:43:52.050Z",
+    "summary": "Updated blog post \"Updated Planetary Transits 2026 Guide\"",
+    "details": {
+      "changes": {
+        "title": "Updated Planetary Transits 2026 Guide",
+        "readTime": "12 min read"
+      }
+    }
+  },
+  {
+    "id": "act-1793796232011-2id9e",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw23ymva",
+    "itemTitle": "Solar Eclipse 2026 Remedial Rituals",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:43:52.011Z",
+    "summary": "Created blog post \"Solar Eclipse 2026 Remedial Rituals\" (Published)",
+    "details": {
+      "post": {
+        "id": "solar-eclipse-2026-remedial-rituals-mw23ymva",
+        "title": "Solar Eclipse 2026 Remedial Rituals",
+        "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+        "category": "Rituals & Upay",
+        "categoryHi": "अनुष्ठान एवं उपाय",
+        "author": "Pandit Vishal Dubey",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Chief Acharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+        "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+        "content": [
+          "Observe silent japa during the peak eclipse hours."
+        ],
+        "contentHi": [
+          "ग्रहण के दौरान जप और दान की विधियां।"
+        ],
+        "keyTakeaways": [
+          "Avoid eating during eclipse",
+          "Perform Shiva japa"
+        ],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:43:52.007Z",
+        "updatedAt": "2026-11-04T12:43:52.007Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793796187470-f9alm",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "1700000000000-sacred_temple.jpg",
+    "itemTitle": "Sacred Temple.jpg",
+    "action": "UPLOAD_IMAGE",
+    "timestamp": "2026-11-04T12:43:07.470Z",
+    "summary": "Uploaded image \"Sacred Temple.jpg\" (200.0 KB)",
+    "details": {
+      "filename": "1700000000000-sacred_temple.jpg",
+      "size": 204800,
+      "mimetype": "image/jpeg",
+      "url": "/api/content/uploads/1700000000000-sacred_temple.jpg"
+    }
+  },
+  {
+    "id": "act-1793796187425-9lxdt",
+    "adminId": "super-1",
+    "adminName": "Yash Deep (Superadmin)",
+    "adminEmail": "yash@astrovd.com",
+    "adminRole": "SUPERADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw23xogm",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T12:43:07.425Z",
+    "summary": "Unpublished blog post \"Audit Log Test Blog\""
+  },
+  {
+    "id": "act-1793796187416-nzwb3",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw23xogm",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:43:07.416Z",
+    "summary": "Created blog post \"Audit Log Test Blog\" (Published)",
+    "details": {
+      "post": {
+        "id": "audit-log-test-blog-mw23xogm",
+        "title": "Audit Log Test Blog",
+        "titleHi": "Audit Log Test Blog",
+        "category": "Test Category",
+        "categoryHi": "Test Category",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Audit Log Test Blog",
+        "excerptHi": "Audit Log Test Blog",
+        "content": [
+          "Testing audit"
+        ],
+        "contentHi": [
+          "Audit Log Test Blog"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": false,
+        "createdAt": "2026-11-04T12:43:07.415Z",
+        "updatedAt": "2026-11-04T12:43:07.423Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        },
+        "updatedBy": {
+          "id": "super-1",
+          "name": "Yash Deep (Superadmin)",
+          "email": "yash@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793796187397-5hgcu",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw23xofw-j348",
+    "itemTitle": "Photo to delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T12:43:07.397Z",
+    "summary": "Deleted gallery entry \"Photo to delete\"",
+    "details": {
+      "deletedItem": {
+        "id": "gal-mw23xofw-j348",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:43:07.388Z",
+        "updatedAt": "2026-11-04T12:43:07.388Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793796187389-qkb37",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw23xofw-j348",
+    "itemTitle": "Photo to delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:43:07.389Z",
+    "summary": "Added new gallery entry \"Photo to delete\"",
+    "details": {
+      "item": {
+        "id": "gal-mw23xofw-j348",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:43:07.388Z",
+        "updatedAt": "2026-11-04T12:43:07.388Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793796187368-zj04p",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw23xoer-i0aj",
+    "itemTitle": "Updated Sacred Ritual Title",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T12:43:07.368Z",
+    "summary": "Updated gallery entry \"Updated Sacred Ritual Title\"",
+    "details": {
+      "changes": {
+        "title": "Updated Sacred Ritual Title",
+        "location": "Kedarnath Valley, Uttarakhand"
+      }
+    }
+  },
+  {
+    "id": "act-1793796187348-phvyx",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw23xoer-i0aj",
+    "itemTitle": "Varanasi Ganga Aarti Special Shanti Yagya",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:43:07.348Z",
+    "summary": "Added new gallery entry \"Varanasi Ganga Aarti Special Shanti Yagya\"",
+    "details": {
+      "item": {
+        "id": "gal-mw23xoer-i0aj",
+        "title": "Varanasi Ganga Aarti Special Shanti Yagya",
+        "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+        "category": "Vedic Rituals",
+        "categoryLabel": "Sacred Gallery",
+        "categoryLabelHi": "पावन दर्शन",
+        "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+        "location": "Dashashwamedh Ghat, Varanasi",
+        "locationHi": "दशाश्वमेध घाट, वाराणसी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:43:07.347Z",
+        "updatedAt": "2026-11-04T12:43:07.347Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793796187297-k2e2n",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw23xocw",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T12:43:07.298Z",
+    "summary": "Deleted blog post \"Temporary Post to Delete\"",
+    "details": {
+      "deletedPost": {
+        "id": "temporary-post-to-delete-mw23xocw",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:43:07.281Z",
+        "updatedAt": "2026-11-04T12:43:07.281Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793796187288-zqvdv",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw23xocw",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:43:07.288Z",
+    "summary": "Created blog post \"Temporary Post to Delete\" (Published)",
+    "details": {
+      "post": {
+        "id": "temporary-post-to-delete-mw23xocw",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:43:07.281Z",
+        "updatedAt": "2026-11-04T12:43:07.281Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793796187251-z6al8",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw23xo83",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "PUBLISH",
+    "timestamp": "2026-11-04T12:43:07.251Z",
+    "summary": "Published blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793796187232-24zfq",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw23xo83",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T12:43:07.232Z",
+    "summary": "Unpublished blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793796187172-17919",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw23xo83",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T12:43:07.172Z",
+    "summary": "Updated blog post \"Updated Planetary Transits 2026 Guide\"",
+    "details": {
+      "changes": {
+        "title": "Updated Planetary Transits 2026 Guide",
+        "readTime": "12 min read"
+      }
+    }
+  },
+  {
+    "id": "act-1793796187113-v1a2g",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw23xo83",
+    "itemTitle": "Solar Eclipse 2026 Remedial Rituals",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:43:07.113Z",
+    "summary": "Created blog post \"Solar Eclipse 2026 Remedial Rituals\" (Published)",
+    "details": {
+      "post": {
+        "id": "solar-eclipse-2026-remedial-rituals-mw23xo83",
+        "title": "Solar Eclipse 2026 Remedial Rituals",
+        "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+        "category": "Rituals & Upay",
+        "categoryHi": "अनुष्ठान एवं उपाय",
+        "author": "Pandit Vishal Dubey",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Chief Acharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+        "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+        "content": [
+          "Observe silent japa during the peak eclipse hours."
+        ],
+        "contentHi": [
+          "ग्रहण के दौरान जप और दान की विधियां।"
+        ],
+        "keyTakeaways": [
+          "Avoid eating during eclipse",
+          "Perform Shiva japa"
+        ],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:43:07.111Z",
+        "updatedAt": "2026-11-04T12:43:07.111Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793795851103-ubg1j",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "1700000000000-sacred_temple.jpg",
+    "itemTitle": "Sacred Temple.jpg",
+    "action": "UPLOAD_IMAGE",
+    "timestamp": "2026-11-04T12:37:31.103Z",
+    "summary": "Uploaded image \"Sacred Temple.jpg\" (200.0 KB)",
+    "details": {
+      "filename": "1700000000000-sacred_temple.jpg",
+      "size": 204800,
+      "mimetype": "image/jpeg",
+      "url": "/api/content/uploads/1700000000000-sacred_temple.jpg"
+    }
+  },
+  {
+    "id": "act-1793795851064-24yl7",
+    "adminId": "super-1",
+    "adminName": "Yash Deep (Superadmin)",
+    "adminEmail": "yash@astrovd.com",
+    "adminRole": "SUPERADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw23qgxa",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T12:37:31.064Z",
+    "summary": "Unpublished blog post \"Audit Log Test Blog\""
+  },
+  {
+    "id": "act-1793795851057-fs17j",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw23qgxa",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:37:31.057Z",
+    "summary": "Created blog post \"Audit Log Test Blog\" (Published)",
+    "details": {
+      "post": {
+        "id": "audit-log-test-blog-mw23qgxa",
+        "title": "Audit Log Test Blog",
+        "titleHi": "Audit Log Test Blog",
+        "category": "Test Category",
+        "categoryHi": "Test Category",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Audit Log Test Blog",
+        "excerptHi": "Audit Log Test Blog",
+        "content": [
+          "Testing audit"
+        ],
+        "contentHi": [
+          "Audit Log Test Blog"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": false,
+        "createdAt": "2026-11-04T12:37:31.055Z",
+        "updatedAt": "2026-11-04T12:37:31.063Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        },
+        "updatedBy": {
+          "id": "super-1",
+          "name": "Yash Deep (Superadmin)",
+          "email": "yash@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793795851031-yg4b7",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw23qgwd-5afh",
+    "itemTitle": "Photo to delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T12:37:31.031Z",
+    "summary": "Deleted gallery entry \"Photo to delete\"",
+    "details": {
+      "deletedItem": {
+        "id": "gal-mw23qgwd-5afh",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:37:31.022Z",
+        "updatedAt": "2026-11-04T12:37:31.022Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793795851023-mr7yy",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw23qgwd-5afh",
+    "itemTitle": "Photo to delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:37:31.023Z",
+    "summary": "Added new gallery entry \"Photo to delete\"",
+    "details": {
+      "item": {
+        "id": "gal-mw23qgwd-5afh",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:37:31.022Z",
+        "updatedAt": "2026-11-04T12:37:31.022Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793795850998-5a70f",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw23qguz-3a3e",
+    "itemTitle": "Updated Sacred Ritual Title",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T12:37:30.998Z",
+    "summary": "Updated gallery entry \"Updated Sacred Ritual Title\"",
+    "details": {
+      "changes": {
+        "title": "Updated Sacred Ritual Title",
+        "location": "Kedarnath Valley, Uttarakhand"
+      }
+    }
+  },
+  {
+    "id": "act-1793795850972-qywby",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw23qguz-3a3e",
+    "itemTitle": "Varanasi Ganga Aarti Special Shanti Yagya",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:37:30.972Z",
+    "summary": "Added new gallery entry \"Varanasi Ganga Aarti Special Shanti Yagya\"",
+    "details": {
+      "item": {
+        "id": "gal-mw23qguz-3a3e",
+        "title": "Varanasi Ganga Aarti Special Shanti Yagya",
+        "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+        "category": "Vedic Rituals",
+        "categoryLabel": "Sacred Gallery",
+        "categoryLabelHi": "पावन दर्शन",
+        "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+        "location": "Dashashwamedh Ghat, Varanasi",
+        "locationHi": "दशाश्वमेध घाट, वाराणसी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:37:30.971Z",
+        "updatedAt": "2026-11-04T12:37:30.971Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793795850925-fqvhb",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw23qgt5",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T12:37:30.925Z",
+    "summary": "Deleted blog post \"Temporary Post to Delete\"",
+    "details": {
+      "deletedPost": {
+        "id": "temporary-post-to-delete-mw23qgt5",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:37:30.905Z",
+        "updatedAt": "2026-11-04T12:37:30.905Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793795850907-u60ee",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw23qgt5",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:37:30.907Z",
+    "summary": "Created blog post \"Temporary Post to Delete\" (Published)",
+    "details": {
+      "post": {
+        "id": "temporary-post-to-delete-mw23qgt5",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:37:30.905Z",
+        "updatedAt": "2026-11-04T12:37:30.905Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793795850867-f088x",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw23qgq1",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "PUBLISH",
+    "timestamp": "2026-11-04T12:37:30.867Z",
+    "summary": "Published blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793795850854-jzlqg",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw23qgq1",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T12:37:30.854Z",
+    "summary": "Unpublished blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793795850826-in16k",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw23qgq1",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T12:37:30.827Z",
+    "summary": "Updated blog post \"Updated Planetary Transits 2026 Guide\"",
+    "details": {
+      "changes": {
+        "title": "Updated Planetary Transits 2026 Guide",
+        "readTime": "12 min read"
+      }
+    }
+  },
+  {
+    "id": "act-1793795850797-2794h",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw23qgq1",
+    "itemTitle": "Solar Eclipse 2026 Remedial Rituals",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:37:30.797Z",
+    "summary": "Created blog post \"Solar Eclipse 2026 Remedial Rituals\" (Published)",
+    "details": {
+      "post": {
+        "id": "solar-eclipse-2026-remedial-rituals-mw23qgq1",
+        "title": "Solar Eclipse 2026 Remedial Rituals",
+        "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+        "category": "Rituals & Upay",
+        "categoryHi": "अनुष्ठान एवं उपाय",
+        "author": "Pandit Vishal Dubey",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Chief Acharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+        "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+        "content": [
+          "Observe silent japa during the peak eclipse hours."
+        ],
+        "contentHi": [
+          "ग्रहण के दौरान जप और दान की विधियां।"
+        ],
+        "keyTakeaways": [
+          "Avoid eating during eclipse",
+          "Perform Shiva japa"
+        ],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:37:30.795Z",
+        "updatedAt": "2026-11-04T12:37:30.795Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793794357116-3u03c",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "1700000000000-sacred_temple.jpg",
+    "itemTitle": "Sacred Temple.jpg",
+    "action": "UPLOAD_IMAGE",
+    "timestamp": "2026-11-04T12:12:37.116Z",
+    "summary": "Uploaded image \"Sacred Temple.jpg\" (200.0 KB)",
+    "details": {
+      "filename": "1700000000000-sacred_temple.jpg",
+      "size": 204800,
+      "mimetype": "image/jpeg",
+      "url": "/api/content/uploads/1700000000000-sacred_temple.jpg"
+    }
+  },
+  {
+    "id": "act-1793794357058-c3frf",
+    "adminId": "super-1",
+    "adminName": "Yash Deep (Superadmin)",
+    "adminEmail": "yash@astrovd.com",
+    "adminRole": "SUPERADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw22ug4y",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T12:12:37.058Z",
+    "summary": "Unpublished blog post \"Audit Log Test Blog\""
+  },
+  {
+    "id": "act-1793794357046-l8n6i",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw22ug4y",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:12:37.046Z",
+    "summary": "Created blog post \"Audit Log Test Blog\" (Published)",
+    "details": {
+      "post": {
+        "id": "audit-log-test-blog-mw22ug4y",
+        "title": "Audit Log Test Blog",
+        "titleHi": "Audit Log Test Blog",
+        "category": "Test Category",
+        "categoryHi": "Test Category",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Audit Log Test Blog",
+        "excerptHi": "Audit Log Test Blog",
+        "content": [
+          "Testing audit"
+        ],
+        "contentHi": [
+          "Audit Log Test Blog"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": false,
+        "createdAt": "2026-11-04T12:12:37.043Z",
+        "updatedAt": "2026-11-04T12:12:37.055Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        },
+        "updatedBy": {
+          "id": "super-1",
+          "name": "Yash Deep (Superadmin)",
+          "email": "yash@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793794357001-gk8gy",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw22ug3e-mw8i",
+    "itemTitle": "Photo to delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T12:12:37.001Z",
+    "summary": "Deleted gallery entry \"Photo to delete\"",
+    "details": {
+      "deletedItem": {
+        "id": "gal-mw22ug3e-mw8i",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:12:36.986Z",
+        "updatedAt": "2026-11-04T12:12:36.986Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793794356988-y7veo",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw22ug3e-mw8i",
+    "itemTitle": "Photo to delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:12:36.988Z",
+    "summary": "Added new gallery entry \"Photo to delete\"",
+    "details": {
+      "item": {
+        "id": "gal-mw22ug3e-mw8i",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:12:36.986Z",
+        "updatedAt": "2026-11-04T12:12:36.986Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793794356957-9ibhh",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw22ug1g-p4e9",
+    "itemTitle": "Updated Sacred Ritual Title",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T12:12:36.957Z",
+    "summary": "Updated gallery entry \"Updated Sacred Ritual Title\"",
+    "details": {
+      "changes": {
+        "title": "Updated Sacred Ritual Title",
+        "location": "Kedarnath Valley, Uttarakhand"
+      }
+    }
+  },
+  {
+    "id": "act-1793794356917-plrj5",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw22ug1g-p4e9",
+    "itemTitle": "Varanasi Ganga Aarti Special Shanti Yagya",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:12:36.917Z",
+    "summary": "Added new gallery entry \"Varanasi Ganga Aarti Special Shanti Yagya\"",
+    "details": {
+      "item": {
+        "id": "gal-mw22ug1g-p4e9",
+        "title": "Varanasi Ganga Aarti Special Shanti Yagya",
+        "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+        "category": "Vedic Rituals",
+        "categoryLabel": "Sacred Gallery",
+        "categoryLabelHi": "पावन दर्शन",
+        "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+        "location": "Dashashwamedh Ghat, Varanasi",
+        "locationHi": "दशाश्वमेध घाट, वाराणसी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:12:36.916Z",
+        "updatedAt": "2026-11-04T12:12:36.916Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793794356858-ynpgs",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw22ufz9",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T12:12:36.858Z",
+    "summary": "Deleted blog post \"Temporary Post to Delete\"",
+    "details": {
+      "deletedPost": {
+        "id": "temporary-post-to-delete-mw22ufz9",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:12:36.837Z",
+        "updatedAt": "2026-11-04T12:12:36.837Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793794356840-gpsjh",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw22ufz9",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:12:36.840Z",
+    "summary": "Created blog post \"Temporary Post to Delete\" (Published)",
+    "details": {
+      "post": {
+        "id": "temporary-post-to-delete-mw22ufz9",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:12:36.837Z",
+        "updatedAt": "2026-11-04T12:12:36.837Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793794356798-um7r7",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw22ufut",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "PUBLISH",
+    "timestamp": "2026-11-04T12:12:36.798Z",
+    "summary": "Published blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793794356780-bufzo",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw22ufut",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T12:12:36.780Z",
+    "summary": "Unpublished blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793794356738-tj08b",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw22ufut",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T12:12:36.738Z",
+    "summary": "Updated blog post \"Updated Planetary Transits 2026 Guide\"",
+    "details": {
+      "changes": {
+        "title": "Updated Planetary Transits 2026 Guide",
+        "readTime": "12 min read"
+      }
+    }
+  },
+  {
+    "id": "act-1793794356684-rxvfs",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw22ufut",
+    "itemTitle": "Solar Eclipse 2026 Remedial Rituals",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:12:36.684Z",
+    "summary": "Created blog post \"Solar Eclipse 2026 Remedial Rituals\" (Published)",
+    "details": {
+      "post": {
+        "id": "solar-eclipse-2026-remedial-rituals-mw22ufut",
+        "title": "Solar Eclipse 2026 Remedial Rituals",
+        "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+        "category": "Rituals & Upay",
+        "categoryHi": "अनुष्ठान एवं उपाय",
+        "author": "Pandit Vishal Dubey",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Chief Acharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+        "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+        "content": [
+          "Observe silent japa during the peak eclipse hours."
+        ],
+        "contentHi": [
+          "ग्रहण के दौरान जप और दान की विधियां।"
+        ],
+        "keyTakeaways": [
+          "Avoid eating during eclipse",
+          "Perform Shiva japa"
+        ],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:12:36.681Z",
+        "updatedAt": "2026-11-04T12:12:36.682Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793793887468-zahy6",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "1700000000000-sacred_temple.jpg",
+    "itemTitle": "Sacred Temple.jpg",
+    "action": "UPLOAD_IMAGE",
+    "timestamp": "2026-11-04T12:04:47.468Z",
+    "summary": "Uploaded image \"Sacred Temple.jpg\" (200.0 KB)",
+    "details": {
+      "filename": "1700000000000-sacred_temple.jpg",
+      "size": 204800,
+      "mimetype": "image/jpeg",
+      "url": "/api/content/uploads/1700000000000-sacred_temple.jpg"
+    }
+  },
+  {
+    "id": "act-1793793887433-r7s0g",
+    "adminId": "super-1",
+    "adminName": "Yash Deep (Superadmin)",
+    "adminEmail": "yash@astrovd.com",
+    "adminRole": "SUPERADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw22kdry",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T12:04:47.433Z",
+    "summary": "Unpublished blog post \"Audit Log Test Blog\""
+  },
+  {
+    "id": "act-1793793887424-g23sr",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw22kdry",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:04:47.424Z",
+    "summary": "Created blog post \"Audit Log Test Blog\" (Published)",
+    "details": {
+      "post": {
+        "id": "audit-log-test-blog-mw22kdry",
+        "title": "Audit Log Test Blog",
+        "titleHi": "Audit Log Test Blog",
+        "category": "Test Category",
+        "categoryHi": "Test Category",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Audit Log Test Blog",
+        "excerptHi": "Audit Log Test Blog",
+        "content": [
+          "Testing audit"
+        ],
+        "contentHi": [
+          "Audit Log Test Blog"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": false,
+        "createdAt": "2026-11-04T12:04:47.423Z",
+        "updatedAt": "2026-11-04T12:04:47.432Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        },
+        "updatedBy": {
+          "id": "super-1",
+          "name": "Yash Deep (Superadmin)",
+          "email": "yash@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793793887400-mpivk",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw22kdr0-aww9",
+    "itemTitle": "Photo to delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T12:04:47.400Z",
+    "summary": "Deleted gallery entry \"Photo to delete\"",
+    "details": {
+      "deletedItem": {
+        "id": "gal-mw22kdr0-aww9",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:04:47.388Z",
+        "updatedAt": "2026-11-04T12:04:47.388Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793793887389-828rh",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw22kdr0-aww9",
+    "itemTitle": "Photo to delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:04:47.390Z",
+    "summary": "Added new gallery entry \"Photo to delete\"",
+    "details": {
+      "item": {
+        "id": "gal-mw22kdr0-aww9",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:04:47.388Z",
+        "updatedAt": "2026-11-04T12:04:47.388Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793793887366-codzt",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw22kdpf-s2ee",
+    "itemTitle": "Updated Sacred Ritual Title",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T12:04:47.366Z",
+    "summary": "Updated gallery entry \"Updated Sacred Ritual Title\"",
+    "details": {
+      "changes": {
+        "title": "Updated Sacred Ritual Title",
+        "location": "Kedarnath Valley, Uttarakhand"
+      }
+    }
+  },
+  {
+    "id": "act-1793793887332-2gext",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw22kdpf-s2ee",
+    "itemTitle": "Varanasi Ganga Aarti Special Shanti Yagya",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:04:47.333Z",
+    "summary": "Added new gallery entry \"Varanasi Ganga Aarti Special Shanti Yagya\"",
+    "details": {
+      "item": {
+        "id": "gal-mw22kdpf-s2ee",
+        "title": "Varanasi Ganga Aarti Special Shanti Yagya",
+        "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+        "category": "Vedic Rituals",
+        "categoryLabel": "Sacred Gallery",
+        "categoryLabelHi": "पावन दर्शन",
+        "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+        "location": "Dashashwamedh Ghat, Varanasi",
+        "locationHi": "दशाश्वमेध घाट, वाराणसी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:04:47.331Z",
+        "updatedAt": "2026-11-04T12:04:47.331Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793793887274-1olze",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw22kdnd",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T12:04:47.274Z",
+    "summary": "Deleted blog post \"Temporary Post to Delete\"",
+    "details": {
+      "deletedPost": {
+        "id": "temporary-post-to-delete-mw22kdnd",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:04:47.258Z",
+        "updatedAt": "2026-11-04T12:04:47.258Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793793887261-mujkl",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw22kdnd",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:04:47.261Z",
+    "summary": "Created blog post \"Temporary Post to Delete\" (Published)",
+    "details": {
+      "post": {
+        "id": "temporary-post-to-delete-mw22kdnd",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:04:47.258Z",
+        "updatedAt": "2026-11-04T12:04:47.258Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793793887218-o4s0o",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw22kdj9",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "PUBLISH",
+    "timestamp": "2026-11-04T12:04:47.219Z",
+    "summary": "Published blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793793887197-7pxnc",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw22kdj9",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T12:04:47.197Z",
+    "summary": "Unpublished blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793793887154-4bma6",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw22kdj9",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T12:04:47.154Z",
+    "summary": "Updated blog post \"Updated Planetary Transits 2026 Guide\"",
+    "details": {
+      "changes": {
+        "title": "Updated Planetary Transits 2026 Guide",
+        "readTime": "12 min read"
+      }
+    }
+  },
+  {
+    "id": "act-1793793887115-1bsfn",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw22kdj9",
+    "itemTitle": "Solar Eclipse 2026 Remedial Rituals",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T12:04:47.115Z",
+    "summary": "Created blog post \"Solar Eclipse 2026 Remedial Rituals\" (Published)",
+    "details": {
+      "post": {
+        "id": "solar-eclipse-2026-remedial-rituals-mw22kdj9",
+        "title": "Solar Eclipse 2026 Remedial Rituals",
+        "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+        "category": "Rituals & Upay",
+        "categoryHi": "अनुष्ठान एवं उपाय",
+        "author": "Pandit Vishal Dubey",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Chief Acharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+        "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+        "content": [
+          "Observe silent japa during the peak eclipse hours."
+        ],
+        "contentHi": [
+          "ग्रहण के दौरान जप और दान की विधियां।"
+        ],
+        "keyTakeaways": [
+          "Avoid eating during eclipse",
+          "Perform Shiva japa"
+        ],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T12:04:47.112Z",
+        "updatedAt": "2026-11-04T12:04:47.112Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793793005799-9c2ok",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "1700000000000-sacred_temple.jpg",
+    "itemTitle": "Sacred Temple.jpg",
+    "action": "UPLOAD_IMAGE",
+    "timestamp": "2026-11-04T11:50:05.799Z",
+    "summary": "Uploaded image \"Sacred Temple.jpg\" (200.0 KB)",
+    "details": {
+      "filename": "1700000000000-sacred_temple.jpg",
+      "size": 204800,
+      "mimetype": "image/jpeg",
+      "url": "/api/content/uploads/1700000000000-sacred_temple.jpg"
+    }
+  },
+  {
+    "id": "act-1793793005769-4isu6",
+    "adminId": "super-1",
+    "adminName": "Yash Deep (Superadmin)",
+    "adminEmail": "yash@astrovd.com",
+    "adminRole": "SUPERADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw221hhf",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T11:50:05.769Z",
+    "summary": "Unpublished blog post \"Audit Log Test Blog\""
+  },
+  {
+    "id": "act-1793793005764-r53qn",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw221hhf",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T11:50:05.764Z",
+    "summary": "Created blog post \"Audit Log Test Blog\" (Published)",
+    "details": {
+      "post": {
+        "id": "audit-log-test-blog-mw221hhf",
+        "title": "Audit Log Test Blog",
+        "titleHi": "Audit Log Test Blog",
+        "category": "Test Category",
+        "categoryHi": "Test Category",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Audit Log Test Blog",
+        "excerptHi": "Audit Log Test Blog",
+        "content": [
+          "Testing audit"
+        ],
+        "contentHi": [
+          "Audit Log Test Blog"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": false,
+        "createdAt": "2026-11-04T11:50:05.763Z",
+        "updatedAt": "2026-11-04T11:50:05.769Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        },
+        "updatedBy": {
+          "id": "super-1",
+          "name": "Yash Deep (Superadmin)",
+          "email": "yash@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793793005750-d67kc",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw221hgw-u9kl",
+    "itemTitle": "Photo to delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T11:50:05.750Z",
+    "summary": "Deleted gallery entry \"Photo to delete\"",
+    "details": {
+      "deletedItem": {
+        "id": "gal-mw221hgw-u9kl",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T11:50:05.744Z",
+        "updatedAt": "2026-11-04T11:50:05.744Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793793005745-h3srp",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw221hgw-u9kl",
+    "itemTitle": "Photo to delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T11:50:05.745Z",
+    "summary": "Added new gallery entry \"Photo to delete\"",
+    "details": {
+      "item": {
+        "id": "gal-mw221hgw-u9kl",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T11:50:05.744Z",
+        "updatedAt": "2026-11-04T11:50:05.744Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793793005729-d6oiv",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw221hg1-l7jv",
+    "itemTitle": "Updated Sacred Ritual Title",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T11:50:05.729Z",
+    "summary": "Updated gallery entry \"Updated Sacred Ritual Title\"",
+    "details": {
+      "changes": {
+        "title": "Updated Sacred Ritual Title",
+        "location": "Kedarnath Valley, Uttarakhand"
+      }
+    }
+  },
+  {
+    "id": "act-1793793005714-vandx",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw221hg1-l7jv",
+    "itemTitle": "Varanasi Ganga Aarti Special Shanti Yagya",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T11:50:05.714Z",
+    "summary": "Added new gallery entry \"Varanasi Ganga Aarti Special Shanti Yagya\"",
+    "details": {
+      "item": {
+        "id": "gal-mw221hg1-l7jv",
+        "title": "Varanasi Ganga Aarti Special Shanti Yagya",
+        "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+        "category": "Vedic Rituals",
+        "categoryLabel": "Sacred Gallery",
+        "categoryLabelHi": "पावन दर्शन",
+        "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+        "location": "Dashashwamedh Ghat, Varanasi",
+        "locationHi": "दशाश्वमेध घाट, वाराणसी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "isPublished": true,
+        "createdAt": "2026-11-04T11:50:05.713Z",
+        "updatedAt": "2026-11-04T11:50:05.713Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793793005690-65u82",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw221hf6",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T11:50:05.690Z",
+    "summary": "Deleted blog post \"Temporary Post to Delete\"",
+    "details": {
+      "deletedPost": {
+        "id": "temporary-post-to-delete-mw221hf6",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T11:50:05.682Z",
+        "updatedAt": "2026-11-04T11:50:05.682Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793793005683-agk5t",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw221hf6",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T11:50:05.683Z",
+    "summary": "Created blog post \"Temporary Post to Delete\" (Published)",
+    "details": {
+      "post": {
+        "id": "temporary-post-to-delete-mw221hf6",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T11:50:05.682Z",
+        "updatedAt": "2026-11-04T11:50:05.682Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793793005667-duziw",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw221hdj",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "PUBLISH",
+    "timestamp": "2026-11-04T11:50:05.667Z",
+    "summary": "Published blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793793005660-65ayn",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw221hdj",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T11:50:05.660Z",
+    "summary": "Unpublished blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793793005641-n672g",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw221hdj",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T11:50:05.641Z",
+    "summary": "Updated blog post \"Updated Planetary Transits 2026 Guide\"",
+    "details": {
+      "changes": {
+        "title": "Updated Planetary Transits 2026 Guide",
+        "readTime": "12 min read"
+      }
+    }
+  },
+  {
+    "id": "act-1793793005625-4duy7",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw221hdj",
+    "itemTitle": "Solar Eclipse 2026 Remedial Rituals",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T11:50:05.625Z",
+    "summary": "Created blog post \"Solar Eclipse 2026 Remedial Rituals\" (Published)",
+    "details": {
+      "post": {
+        "id": "solar-eclipse-2026-remedial-rituals-mw221hdj",
+        "title": "Solar Eclipse 2026 Remedial Rituals",
+        "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+        "category": "Rituals & Upay",
+        "categoryHi": "अनुष्ठान एवं उपाय",
+        "author": "Pandit Vishal Dubey",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Chief Acharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+        "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+        "content": [
+          "Observe silent japa during the peak eclipse hours."
+        ],
+        "contentHi": [
+          "ग्रहण के दौरान जप और दान की विधियां।"
+        ],
+        "keyTakeaways": [
+          "Avoid eating during eclipse",
+          "Perform Shiva japa"
+        ],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T11:50:05.624Z",
+        "updatedAt": "2026-11-04T11:50:05.624Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793791232168-qhw1m",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "1700000000000-sacred_temple.jpg",
+    "itemTitle": "Sacred Temple.jpg",
+    "action": "UPLOAD_IMAGE",
+    "timestamp": "2026-11-04T11:20:32.168Z",
+    "summary": "Uploaded image \"Sacred Temple.jpg\" (200.0 KB)",
+    "details": {
+      "filename": "1700000000000-sacred_temple.jpg",
+      "size": 204800,
+      "mimetype": "image/jpeg",
+      "url": "/api/content/uploads/1700000000000-sacred_temple.jpg"
+    }
+  },
+  {
+    "id": "act-1793791232097-oi5s9",
+    "adminId": "super-1",
+    "adminName": "Yash Deep (Superadmin)",
+    "adminEmail": "yash@astrovd.com",
+    "adminRole": "SUPERADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw20zgw6",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T11:20:32.097Z",
+    "summary": "Unpublished blog post \"Audit Log Test Blog\""
+  },
+  {
+    "id": "act-1793791232074-kwo8k",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw20zgw6",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T11:20:32.074Z",
+    "summary": "Created blog post \"Audit Log Test Blog\" (Published)",
+    "details": {
+      "post": {
+        "id": "audit-log-test-blog-mw20zgw6",
+        "title": "Audit Log Test Blog",
+        "titleHi": "Audit Log Test Blog",
+        "category": "Test Category",
+        "categoryHi": "Test Category",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Audit Log Test Blog",
+        "excerptHi": "Audit Log Test Blog",
+        "content": [
+          "Testing audit"
+        ],
+        "contentHi": [
+          "Audit Log Test Blog"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": false,
+        "createdAt": "2026-11-04T11:20:32.070Z",
+        "updatedAt": "2026-11-04T11:20:32.094Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        },
+        "updatedBy": {
+          "id": "super-1",
+          "name": "Yash Deep (Superadmin)",
+          "email": "yash@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793791232035-5oaiw",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw20zgul-2cxz",
+    "itemTitle": "Photo to delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T11:20:32.035Z",
+    "summary": "Deleted gallery entry \"Photo to delete\"",
+    "details": {
+      "deletedItem": {
+        "id": "gal-mw20zgul-2cxz",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T11:20:32.013Z",
+        "updatedAt": "2026-11-04T11:20:32.013Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793791232015-dffon",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw20zgul-2cxz",
+    "itemTitle": "Photo to delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T11:20:32.015Z",
+    "summary": "Added new gallery entry \"Photo to delete\"",
+    "details": {
+      "item": {
+        "id": "gal-mw20zgul-2cxz",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T11:20:32.013Z",
+        "updatedAt": "2026-11-04T11:20:32.013Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793791231907-qp7g1",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw20zgq7-4awa",
+    "itemTitle": "Updated Sacred Ritual Title",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T11:20:31.907Z",
+    "summary": "Updated gallery entry \"Updated Sacred Ritual Title\"",
+    "details": {
+      "changes": {
+        "title": "Updated Sacred Ritual Title",
+        "location": "Kedarnath Valley, Uttarakhand"
+      }
+    }
+  },
+  {
+    "id": "act-1793791231858-q2tw1",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw20zgq7-4awa",
+    "itemTitle": "Varanasi Ganga Aarti Special Shanti Yagya",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T11:20:31.858Z",
+    "summary": "Added new gallery entry \"Varanasi Ganga Aarti Special Shanti Yagya\"",
+    "details": {
+      "item": {
+        "id": "gal-mw20zgq7-4awa",
+        "title": "Varanasi Ganga Aarti Special Shanti Yagya",
+        "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+        "category": "Vedic Rituals",
+        "categoryLabel": "Sacred Gallery",
+        "categoryLabelHi": "पावन दर्शन",
+        "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+        "location": "Dashashwamedh Ghat, Varanasi",
+        "locationHi": "दशाश्वमेध घाट, वाराणसी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "isPublished": true,
+        "createdAt": "2026-11-04T11:20:31.855Z",
+        "updatedAt": "2026-11-04T11:20:31.855Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793791231764-k10vb",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw20zgmz",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T11:20:31.764Z",
+    "summary": "Deleted blog post \"Temporary Post to Delete\"",
+    "details": {
+      "deletedPost": {
+        "id": "temporary-post-to-delete-mw20zgmz",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T11:20:31.739Z",
+        "updatedAt": "2026-11-04T11:20:31.739Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793791231744-v98bg",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw20zgmz",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T11:20:31.744Z",
+    "summary": "Created blog post \"Temporary Post to Delete\" (Published)",
+    "details": {
+      "post": {
+        "id": "temporary-post-to-delete-mw20zgmz",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T11:20:31.739Z",
+        "updatedAt": "2026-11-04T11:20:31.739Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793791231670-65ey4",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw20zggl",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "PUBLISH",
+    "timestamp": "2026-11-04T11:20:31.670Z",
+    "summary": "Published blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793791231639-wl2nj",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw20zggl",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T11:20:31.639Z",
+    "summary": "Unpublished blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793791231580-ntxmm",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw20zggl",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T11:20:31.580Z",
+    "summary": "Updated blog post \"Updated Planetary Transits 2026 Guide\"",
+    "details": {
+      "changes": {
+        "title": "Updated Planetary Transits 2026 Guide",
+        "readTime": "12 min read"
+      }
+    }
+  },
+  {
+    "id": "act-1793791231517-gu06w",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw20zggl",
+    "itemTitle": "Solar Eclipse 2026 Remedial Rituals",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T11:20:31.517Z",
+    "summary": "Created blog post \"Solar Eclipse 2026 Remedial Rituals\" (Published)",
+    "details": {
+      "post": {
+        "id": "solar-eclipse-2026-remedial-rituals-mw20zggl",
+        "title": "Solar Eclipse 2026 Remedial Rituals",
+        "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+        "category": "Rituals & Upay",
+        "categoryHi": "अनुष्ठान एवं उपाय",
+        "author": "Pandit Vishal Dubey",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Chief Acharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+        "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+        "content": [
+          "Observe silent japa during the peak eclipse hours."
+        ],
+        "contentHi": [
+          "ग्रहण के दौरान जप और दान की विधियां।"
+        ],
+        "keyTakeaways": [
+          "Avoid eating during eclipse",
+          "Perform Shiva japa"
+        ],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T11:20:31.512Z",
+        "updatedAt": "2026-11-04T11:20:31.513Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793781793692-h9azn",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "1700000000000-sacred_temple.jpg",
+    "itemTitle": "Sacred Temple.jpg",
+    "action": "UPLOAD_IMAGE",
+    "timestamp": "2026-11-04T08:43:13.692Z",
+    "summary": "Uploaded image \"Sacred Temple.jpg\" (200.0 KB)",
+    "details": {
+      "filename": "1700000000000-sacred_temple.jpg",
+      "size": 204800,
+      "mimetype": "image/jpeg",
+      "url": "/api/content/uploads/1700000000000-sacred_temple.jpg"
+    }
+  },
+  {
+    "id": "act-1793781793596-s3s0h",
+    "adminId": "super-1",
+    "adminName": "Yash Deep (Superadmin)",
+    "adminEmail": "yash@astrovd.com",
+    "adminRole": "SUPERADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw1vd63s",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T08:43:13.596Z",
+    "summary": "Unpublished blog post \"Audit Log Test Blog\""
+  },
+  {
+    "id": "act-1793781793580-hio9z",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw1vd63s",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T08:43:13.580Z",
+    "summary": "Created blog post \"Audit Log Test Blog\" (Published)",
+    "details": {
+      "post": {
+        "id": "audit-log-test-blog-mw1vd63s",
+        "title": "Audit Log Test Blog",
+        "titleHi": "Audit Log Test Blog",
+        "category": "Test Category",
+        "categoryHi": "Test Category",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Audit Log Test Blog",
+        "excerptHi": "Audit Log Test Blog",
+        "content": [
+          "Testing audit"
+        ],
+        "contentHi": [
+          "Audit Log Test Blog"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": false,
+        "createdAt": "2026-11-04T08:43:13.577Z",
+        "updatedAt": "2026-11-04T08:43:13.594Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        },
+        "updatedBy": {
+          "id": "super-1",
+          "name": "Yash Deep (Superadmin)",
+          "email": "yash@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793781793537-0ujlx",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw1vd62a-nnee",
+    "itemTitle": "Photo to delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T08:43:13.537Z",
+    "summary": "Deleted gallery entry \"Photo to delete\"",
+    "details": {
+      "deletedItem": {
+        "id": "gal-mw1vd62a-nnee",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T08:43:13.522Z",
+        "updatedAt": "2026-11-04T08:43:13.522Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793781793524-uqbov",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw1vd62a-nnee",
+    "itemTitle": "Photo to delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T08:43:13.524Z",
+    "summary": "Added new gallery entry \"Photo to delete\"",
+    "details": {
+      "item": {
+        "id": "gal-mw1vd62a-nnee",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T08:43:13.522Z",
+        "updatedAt": "2026-11-04T08:43:13.522Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793781793486-szfcv",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw1vd5zz-324w",
+    "itemTitle": "Updated Sacred Ritual Title",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T08:43:13.486Z",
+    "summary": "Updated gallery entry \"Updated Sacred Ritual Title\"",
+    "details": {
+      "changes": {
+        "title": "Updated Sacred Ritual Title",
+        "location": "Kedarnath Valley, Uttarakhand"
+      }
+    }
+  },
+  {
+    "id": "act-1793781793441-kbbyd",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw1vd5zz-324w",
+    "itemTitle": "Varanasi Ganga Aarti Special Shanti Yagya",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T08:43:13.441Z",
+    "summary": "Added new gallery entry \"Varanasi Ganga Aarti Special Shanti Yagya\"",
+    "details": {
+      "item": {
+        "id": "gal-mw1vd5zz-324w",
+        "title": "Varanasi Ganga Aarti Special Shanti Yagya",
+        "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+        "category": "Vedic Rituals",
+        "categoryLabel": "Sacred Gallery",
+        "categoryLabelHi": "पावन दर्शन",
+        "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+        "location": "Dashashwamedh Ghat, Varanasi",
+        "locationHi": "दशाश्वमेध घाट, वाराणसी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "isPublished": true,
+        "createdAt": "2026-11-04T08:43:13.439Z",
+        "updatedAt": "2026-11-04T08:43:13.439Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793781793359-k7y3n",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw1vd5x7",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T08:43:13.359Z",
+    "summary": "Deleted blog post \"Temporary Post to Delete\"",
+    "details": {
+      "deletedPost": {
+        "id": "temporary-post-to-delete-mw1vd5x7",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T08:43:13.340Z",
+        "updatedAt": "2026-11-04T08:43:13.340Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793781793343-osrzd",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw1vd5x7",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T08:43:13.343Z",
+    "summary": "Created blog post \"Temporary Post to Delete\" (Published)",
+    "details": {
+      "post": {
+        "id": "temporary-post-to-delete-mw1vd5x7",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T08:43:13.340Z",
+        "updatedAt": "2026-11-04T08:43:13.340Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793781793295-sbaf8",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw1vd5sb",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "PUBLISH",
+    "timestamp": "2026-11-04T08:43:13.295Z",
+    "summary": "Published blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793781793274-lxhie",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw1vd5sb",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T08:43:13.274Z",
+    "summary": "Unpublished blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793781793223-brq1u",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw1vd5sb",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T08:43:13.223Z",
+    "summary": "Updated blog post \"Updated Planetary Transits 2026 Guide\"",
+    "details": {
+      "changes": {
+        "title": "Updated Planetary Transits 2026 Guide",
+        "readTime": "12 min read"
+      }
+    }
+  },
+  {
+    "id": "act-1793781793170-vvlcx",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw1vd5sb",
+    "itemTitle": "Solar Eclipse 2026 Remedial Rituals",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T08:43:13.170Z",
+    "summary": "Created blog post \"Solar Eclipse 2026 Remedial Rituals\" (Published)",
+    "details": {
+      "post": {
+        "id": "solar-eclipse-2026-remedial-rituals-mw1vd5sb",
+        "title": "Solar Eclipse 2026 Remedial Rituals",
+        "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+        "category": "Rituals & Upay",
+        "categoryHi": "अनुष्ठान एवं उपाय",
+        "author": "Pandit Vishal Dubey",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Chief Acharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+        "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+        "content": [
+          "Observe silent japa during the peak eclipse hours."
+        ],
+        "contentHi": [
+          "ग्रहण के दौरान जप और दान की विधियां।"
+        ],
+        "keyTakeaways": [
+          "Avoid eating during eclipse",
+          "Perform Shiva japa"
+        ],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T08:43:13.166Z",
+        "updatedAt": "2026-11-04T08:43:13.167Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793781282872-c55ns",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "1700000000000-sacred_temple.jpg",
+    "itemTitle": "Sacred Temple.jpg",
+    "action": "UPLOAD_IMAGE",
+    "timestamp": "2026-11-04T08:34:42.872Z",
+    "summary": "Uploaded image \"Sacred Temple.jpg\" (200.0 KB)",
+    "details": {
+      "filename": "1700000000000-sacred_temple.jpg",
+      "size": 204800,
+      "mimetype": "image/jpeg",
+      "url": "/api/content/uploads/1700000000000-sacred_temple.jpg"
+    }
+  },
+  {
+    "id": "act-1793781282837-uqgwf",
+    "adminId": "super-1",
+    "adminName": "Yash Deep (Superadmin)",
+    "adminEmail": "yash@astrovd.com",
+    "adminRole": "SUPERADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw1v280c",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T08:34:42.837Z",
+    "summary": "Unpublished blog post \"Audit Log Test Blog\""
+  },
+  {
+    "id": "act-1793781282830-gny3w",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw1v280c",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T08:34:42.830Z",
+    "summary": "Created blog post \"Audit Log Test Blog\" (Published)",
+    "details": {
+      "post": {
+        "id": "audit-log-test-blog-mw1v280c",
+        "title": "Audit Log Test Blog",
+        "titleHi": "Audit Log Test Blog",
+        "category": "Test Category",
+        "categoryHi": "Test Category",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Audit Log Test Blog",
+        "excerptHi": "Audit Log Test Blog",
+        "content": [
+          "Testing audit"
+        ],
+        "contentHi": [
+          "Audit Log Test Blog"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": false,
+        "createdAt": "2026-11-04T08:34:42.828Z",
+        "updatedAt": "2026-11-04T08:34:42.835Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        },
+        "updatedBy": {
+          "id": "super-1",
+          "name": "Yash Deep (Superadmin)",
+          "email": "yash@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793781282811-ymp5y",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw1v27zn-u385",
+    "itemTitle": "Photo to delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T08:34:42.811Z",
+    "summary": "Deleted gallery entry \"Photo to delete\"",
+    "details": {
+      "deletedItem": {
+        "id": "gal-mw1v27zn-u385",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T08:34:42.803Z",
+        "updatedAt": "2026-11-04T08:34:42.803Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793781282804-7e4r1",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw1v27zn-u385",
+    "itemTitle": "Photo to delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T08:34:42.804Z",
+    "summary": "Added new gallery entry \"Photo to delete\"",
+    "details": {
+      "item": {
+        "id": "gal-mw1v27zn-u385",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T08:34:42.803Z",
+        "updatedAt": "2026-11-04T08:34:42.803Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793781282784-dbxpo",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw1v27yh-g24s",
+    "itemTitle": "Updated Sacred Ritual Title",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T08:34:42.784Z",
+    "summary": "Updated gallery entry \"Updated Sacred Ritual Title\"",
+    "details": {
+      "changes": {
+        "title": "Updated Sacred Ritual Title",
+        "location": "Kedarnath Valley, Uttarakhand"
+      }
+    }
+  },
+  {
+    "id": "act-1793781282762-70iwb",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw1v27yh-g24s",
+    "itemTitle": "Varanasi Ganga Aarti Special Shanti Yagya",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T08:34:42.762Z",
+    "summary": "Added new gallery entry \"Varanasi Ganga Aarti Special Shanti Yagya\"",
+    "details": {
+      "item": {
+        "id": "gal-mw1v27yh-g24s",
+        "title": "Varanasi Ganga Aarti Special Shanti Yagya",
+        "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+        "category": "Vedic Rituals",
+        "categoryLabel": "Sacred Gallery",
+        "categoryLabelHi": "पावन दर्शन",
+        "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+        "location": "Dashashwamedh Ghat, Varanasi",
+        "locationHi": "दशाश्वमेध घाट, वाराणसी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "isPublished": true,
+        "createdAt": "2026-11-04T08:34:42.761Z",
+        "updatedAt": "2026-11-04T08:34:42.761Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793781282717-qv41s",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw1v27wu",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T08:34:42.717Z",
+    "summary": "Deleted blog post \"Temporary Post to Delete\"",
+    "details": {
+      "deletedPost": {
+        "id": "temporary-post-to-delete-mw1v27wu",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T08:34:42.703Z",
+        "updatedAt": "2026-11-04T08:34:42.703Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793781282706-26q18",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw1v27wu",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T08:34:42.706Z",
+    "summary": "Created blog post \"Temporary Post to Delete\" (Published)",
+    "details": {
+      "post": {
+        "id": "temporary-post-to-delete-mw1v27wu",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T08:34:42.703Z",
+        "updatedAt": "2026-11-04T08:34:42.703Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793781282671-3i10c",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw1v27tu",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "PUBLISH",
+    "timestamp": "2026-11-04T08:34:42.671Z",
+    "summary": "Published blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793781282656-e9259",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw1v27tu",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T08:34:42.656Z",
+    "summary": "Unpublished blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793781282629-s88jz",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw1v27tu",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T08:34:42.629Z",
+    "summary": "Updated blog post \"Updated Planetary Transits 2026 Guide\"",
+    "details": {
+      "changes": {
+        "title": "Updated Planetary Transits 2026 Guide",
+        "readTime": "12 min read"
+      }
+    }
+  },
+  {
+    "id": "act-1793781282601-titre",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw1v27tu",
+    "itemTitle": "Solar Eclipse 2026 Remedial Rituals",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T08:34:42.601Z",
+    "summary": "Created blog post \"Solar Eclipse 2026 Remedial Rituals\" (Published)",
+    "details": {
+      "post": {
+        "id": "solar-eclipse-2026-remedial-rituals-mw1v27tu",
+        "title": "Solar Eclipse 2026 Remedial Rituals",
+        "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+        "category": "Rituals & Upay",
+        "categoryHi": "अनुष्ठान एवं उपाय",
+        "author": "Pandit Vishal Dubey",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Chief Acharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+        "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+        "content": [
+          "Observe silent japa during the peak eclipse hours."
+        ],
+        "contentHi": [
+          "ग्रहण के दौरान जप और दान की विधियां।"
+        ],
+        "keyTakeaways": [
+          "Avoid eating during eclipse",
+          "Perform Shiva japa"
+        ],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T08:34:42.597Z",
+        "updatedAt": "2026-11-04T08:34:42.598Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793773168539-d9rm4",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "1700000000000-sacred_temple.jpg",
+    "itemTitle": "Sacred Temple.jpg",
+    "action": "UPLOAD_IMAGE",
+    "timestamp": "2026-11-04T06:19:28.539Z",
+    "summary": "Uploaded image \"Sacred Temple.jpg\" (200.0 KB)",
+    "details": {
+      "filename": "1700000000000-sacred_temple.jpg",
+      "size": 204800,
+      "mimetype": "image/jpeg",
+      "url": "/api/content/uploads/1700000000000-sacred_temple.jpg"
+    }
+  },
+  {
+    "id": "act-1793773168471-yt4rr",
+    "adminId": "super-1",
+    "adminName": "Yash Deep (Superadmin)",
+    "adminEmail": "yash@astrovd.com",
+    "adminRole": "SUPERADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw1q8ax3",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T06:19:28.471Z",
+    "summary": "Unpublished blog post \"Audit Log Test Blog\""
+  },
+  {
+    "id": "act-1793773168458-h3z8f",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "audit-log-test-blog-mw1q8ax3",
+    "itemTitle": "Audit Log Test Blog",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T06:19:28.458Z",
+    "summary": "Created blog post \"Audit Log Test Blog\" (Published)",
+    "details": {
+      "post": {
+        "id": "audit-log-test-blog-mw1q8ax3",
+        "title": "Audit Log Test Blog",
+        "titleHi": "Audit Log Test Blog",
+        "category": "Test Category",
+        "categoryHi": "Test Category",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Audit Log Test Blog",
+        "excerptHi": "Audit Log Test Blog",
+        "content": [
+          "Testing audit"
+        ],
+        "contentHi": [
+          "Audit Log Test Blog"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": false,
+        "createdAt": "2026-11-04T06:19:28.456Z",
+        "updatedAt": "2026-11-04T06:19:28.467Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        },
+        "updatedBy": {
+          "id": "super-1",
+          "name": "Yash Deep (Superadmin)",
+          "email": "yash@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793773168430-5tybg",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw1q8avv-wqu1",
+    "itemTitle": "Photo to delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T06:19:28.430Z",
+    "summary": "Deleted gallery entry \"Photo to delete\"",
+    "details": {
+      "deletedItem": {
+        "id": "gal-mw1q8avv-wqu1",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T06:19:28.411Z",
+        "updatedAt": "2026-11-04T06:19:28.411Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793773168414-3epz2",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw1q8avv-wqu1",
+    "itemTitle": "Photo to delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T06:19:28.414Z",
+    "summary": "Added new gallery entry \"Photo to delete\"",
+    "details": {
+      "item": {
+        "id": "gal-mw1q8avv-wqu1",
+        "title": "Photo to delete",
+        "titleHi": "Photo to delete",
+        "category": "pooja",
+        "categoryLabel": "Sacred Poojas & Havan",
+        "categoryLabelHi": "वैदिक पूजा व महाहवन",
+        "image": "https://example.com/test.jpg",
+        "location": "Varanasi Sanctum",
+        "locationHi": "वाराणसी, काशी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Photo to delete",
+        "descriptionHi": "Photo to delete",
+        "isPublished": true,
+        "createdAt": "2026-11-04T06:19:28.411Z",
+        "updatedAt": "2026-11-04T06:19:28.411Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793773168377-kz4k5",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw1q8atw-k1om",
+    "itemTitle": "Updated Sacred Ritual Title",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T06:19:28.377Z",
+    "summary": "Updated gallery entry \"Updated Sacred Ritual Title\"",
+    "details": {
+      "changes": {
+        "title": "Updated Sacred Ritual Title",
+        "location": "Kedarnath Valley, Uttarakhand"
+      }
+    }
+  },
+  {
+    "id": "act-1793773168342-yakq9",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "gal-mw1q8atw-k1om",
+    "itemTitle": "Varanasi Ganga Aarti Special Shanti Yagya",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T06:19:28.342Z",
+    "summary": "Added new gallery entry \"Varanasi Ganga Aarti Special Shanti Yagya\"",
+    "details": {
+      "item": {
+        "id": "gal-mw1q8atw-k1om",
+        "title": "Varanasi Ganga Aarti Special Shanti Yagya",
+        "titleHi": "वाराणसी गंगा आरती विशेष शांति यज्ञ",
+        "category": "Vedic Rituals",
+        "categoryLabel": "Sacred Gallery",
+        "categoryLabelHi": "पावन दर्शन",
+        "image": "https://images.unsplash.com/photo-1544717305-2782549b5136",
+        "location": "Dashashwamedh Ghat, Varanasi",
+        "locationHi": "दशाश्वमेध घाट, वाराणसी",
+        "date": "Vedic Muhurta",
+        "dateHi": "शुभ मुहूर्त",
+        "description": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "descriptionHi": "Auspicious evening offerings performed on the banks of holy Ganga.",
+        "isPublished": true,
+        "createdAt": "2026-11-04T06:19:28.340Z",
+        "updatedAt": "2026-11-04T06:19:28.340Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793773168286-9hvcp",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw1q8as0",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "DELETE",
+    "timestamp": "2026-11-04T06:19:28.286Z",
+    "summary": "Deleted blog post \"Temporary Post to Delete\"",
+    "details": {
+      "deletedPost": {
+        "id": "temporary-post-to-delete-mw1q8as0",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T06:19:28.272Z",
+        "updatedAt": "2026-11-04T06:19:28.272Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793773168275-o4umh",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "temporary-post-to-delete-mw1q8as0",
+    "itemTitle": "Temporary Post to Delete",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T06:19:28.275Z",
+    "summary": "Created blog post \"Temporary Post to Delete\" (Published)",
+    "details": {
+      "post": {
+        "id": "temporary-post-to-delete-mw1q8as0",
+        "title": "Temporary Post to Delete",
+        "titleHi": "Temporary Post to Delete",
+        "category": "General",
+        "categoryHi": "General",
+        "author": "Admin Test",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Vedic Jyotishacharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Temporary Post to Delete",
+        "excerptHi": "Temporary Post to Delete",
+        "content": [
+          "Temporary test content"
+        ],
+        "contentHi": [
+          "Temporary Post to Delete"
+        ],
+        "keyTakeaways": [],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T06:19:28.272Z",
+        "updatedAt": "2026-11-04T06:19:28.272Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "act-1793773168235-eks84",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw1q8anv",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "PUBLISH",
+    "timestamp": "2026-11-04T06:19:28.236Z",
+    "summary": "Published blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793773168221-th4d6",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw1q8anv",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UNPUBLISH",
+    "timestamp": "2026-11-04T06:19:28.221Z",
+    "summary": "Unpublished blog post \"Updated Planetary Transits 2026 Guide\""
+  },
+  {
+    "id": "act-1793773168171-i42bl",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw1q8anv",
+    "itemTitle": "Updated Planetary Transits 2026 Guide",
+    "action": "UPDATE",
+    "timestamp": "2026-11-04T06:19:28.171Z",
+    "summary": "Updated blog post \"Updated Planetary Transits 2026 Guide\"",
+    "details": {
+      "changes": {
+        "title": "Updated Planetary Transits 2026 Guide",
+        "readTime": "12 min read"
+      }
+    }
+  },
+  {
+    "id": "act-1793773168128-sutnm",
+    "adminId": "admin-1",
+    "adminName": "Admin Test",
+    "adminEmail": "admin@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "BLOG",
+    "itemId": "solar-eclipse-2026-remedial-rituals-mw1q8anv",
+    "itemTitle": "Solar Eclipse 2026 Remedial Rituals",
+    "action": "CREATE",
+    "timestamp": "2026-11-04T06:19:28.128Z",
+    "summary": "Created blog post \"Solar Eclipse 2026 Remedial Rituals\" (Published)",
+    "details": {
+      "post": {
+        "id": "solar-eclipse-2026-remedial-rituals-mw1q8anv",
+        "title": "Solar Eclipse 2026 Remedial Rituals",
+        "titleHi": "सूर्य ग्रहण 2026: उपाय एवं अनुष्ठान",
+        "category": "Rituals & Upay",
+        "categoryHi": "अनुष्ठान एवं उपाय",
+        "author": "Pandit Vishal Dubey",
+        "authorHi": "डॉ. पंडित विशाल दुबे",
+        "authorRole": "Chief Acharya",
+        "authorRoleHi": "वैदिक ज्योतिषाचार्य",
+        "date": "Nov 4, 2026",
+        "dateHi": "आज",
+        "readTime": "5 min read",
+        "readTimeHi": "5 मिनट पठन",
+        "image": "/services/kundli.jpg",
+        "excerpt": "Guidance on spiritual chanting and charity during Grahan.",
+        "excerptHi": "ग्रहण के दौरान जप और दान की विधियां।",
+        "content": [
+          "Observe silent japa during the peak eclipse hours."
+        ],
+        "contentHi": [
+          "ग्रहण के दौरान जप और दान की विधियां।"
+        ],
+        "keyTakeaways": [
+          "Avoid eating during eclipse",
+          "Perform Shiva japa"
+        ],
+        "keyTakeawaysHi": [],
+        "isPublished": true,
+        "createdAt": "2026-11-04T06:19:28.126Z",
+        "updatedAt": "2026-11-04T06:19:28.126Z",
+        "createdBy": {
+          "id": "admin-1",
+          "name": "Admin Test",
+          "email": "admin@astrovd.com"
+        }
+      }
+    }
+  },
+  {
     "id": "act-1793692955436-a4rip",
     "adminId": "admin-1",
     "adminName": "Admin Test",

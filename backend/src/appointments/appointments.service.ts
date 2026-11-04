@@ -20,6 +20,10 @@ import { ListServicesQueryDto } from './dto/list-services-query.dto.js';
 import { RescheduleBookingDto } from './dto/reschedule-booking.dto.js';
 import { UpdateMeetLinkDto } from './dto/update-meet-link.dto.js';
 import { VerifyPaymentDto } from './dto/verify-payment.dto.js';
+import { CreateSlotDto } from './dto/create-slot.dto.js';
+import { UpdateSlotDto } from './dto/update-slot.dto.js';
+import { BlockDateDto } from './dto/block-date.dto.js';
+import { InitializeScheduleDto } from './dto/initialize-schedule.dto.js';
 import { normalizePhoneNumber, isValidE164 } from '../auth/phone.util.js';
 import type { JwtPayload } from '../auth/decorators/current-user.decorator.js';
 import { EmailService } from '../email/email.service.js';
@@ -57,6 +61,28 @@ export function getBookingTimestamp(dateStr?: string, timeStr?: string): number 
   const hours = minutes >= 0 ? Math.floor(minutes / 60) : 0;
   const mins = minutes >= 0 ? minutes % 60 : 0;
   return new Date(year, month - 1, day, hours, mins, 0).getTime();
+}
+
+export function normalizeDateStr(raw?: string | null): string {
+  if (!raw) return '';
+  const trimmed = String(raw).trim();
+  // Match DD-MM-YYYY or DD/MM/YYYY
+  const ddmmyyyy = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/.exec(trimmed);
+  if (ddmmyyyy) {
+    const day = ddmmyyyy[1].padStart(2, '0');
+    const month = ddmmyyyy[2].padStart(2, '0');
+    const year = ddmmyyyy[3];
+    return `${year}-${month}-${day}`;
+  }
+  // Match YYYY-MM-DD or YYYY/MM/DD
+  const yyyymmdd = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/.exec(trimmed);
+  if (yyyymmdd) {
+    const year = yyyymmdd[1];
+    const month = yyyymmdd[2].padStart(2, '0');
+    const day = yyyymmdd[3].padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  return trimmed;
 }
 
 @Injectable()
@@ -422,9 +448,17 @@ export class AppointmentsService {
     const service = this.servicesCatalogue[index];
 
     // Safety guard: Check if historical or active bookings reference this service
-    const bookingCount = await this.prisma.booking.count({
-      where: { serviceType: id },
-    });
+    let bookingCount = 0;
+    try {
+      bookingCount = await this.prisma.booking.count({
+        where: { serviceType: id },
+      });
+    } catch {
+      this.initFallbackBookings();
+      bookingCount = this.fallbackBookings.filter(
+        (b) => b.serviceType === id || b.serviceTitle === service.title,
+      ).length;
+    }
 
     if (bookingCount > 0) {
       throw new BadRequestException(
@@ -463,9 +497,11 @@ export class AppointmentsService {
   /**
    * Calculate published time slots for a service and date, querying PostgreSQL AppointmentSlot & BlockedDate.
    */
-  async getAvailableSlots(serviceId: string, dateStr: string, requestedDuration?: number) {
+  async getAvailableSlots(serviceId: string, rawDate: string, requestedDuration?: number) {
     this.initFallbackBookings();
+    this.initFallbackAvailability();
     const service = this.getServiceById(serviceId); // Validate service exists
+    const dateStr = normalizeDateStr(rawDate);
 
     // Validate date format YYYY-MM-DD
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -479,6 +515,18 @@ export class AppointmentsService {
       requestedDuration && requestedDuration >= 10 && requestedDuration <= 240
         ? requestedDuration
         : undefined;
+
+    // Check sanctuary block right away in persistent fallback registry
+    if (this.fallbackAvailability.blockedDates[dateStr]) {
+      return {
+        serviceId,
+        date: dateStr,
+        durationMinutes: durationMinutes || service.durationMinutes || 30,
+        isBlocked: true,
+        blockedReason: this.fallbackAvailability.blockedDates[dateStr] || 'Panditji is not accepting consultations on this date.',
+        slots: [],
+      };
+    }
 
     try {
       // Check if date is blocked in sanctuary registry
@@ -496,54 +544,65 @@ export class AppointmentsService {
         };
       }
 
-      // Query database-backed published slots
+      // Query database-backed slots for this date
       let dbSlots = await this.prisma.appointmentSlot.findMany({
         where: {
           date: dateStr,
-          isPublished: true,
         },
         orderBy: { startTime: 'asc' },
       });
 
-      let slotTimes: string[];
       let effectiveDuration: number;
 
       if (durationMinutes) {
-        slotTimes = generateWorkingHourSlots(durationMinutes);
         effectiveDuration = durationMinutes;
+      } else if (dbSlots.length > 0) {
+        effectiveDuration = dbSlots[0]?.durationMinutes || service.durationMinutes || 45;
       } else {
-        if (dbSlots.length > 0) {
-          slotTimes = dbSlots.map((s) => s.startTime);
-          effectiveDuration = dbSlots[0]?.durationMinutes || service.durationMinutes || 30;
-        } else {
-          effectiveDuration = service.durationMinutes || 30;
-          slotTimes = [...PUBLISHED_TIME_SLOTS];
+        effectiveDuration = service.durationMinutes || 45;
 
-          // Auto-seed missing standard slots into DB for persistence if date is not in past
-          if (!isPastDate) {
-            try {
-              await this.prisma.appointmentSlot.createMany({
-                data: PUBLISHED_TIME_SLOTS.map((time) => ({
-                  date: dateStr,
-                  startTime: time,
-                  durationMinutes: effectiveDuration,
-                  isPublished: true,
-                })),
-                skipDuplicates: true,
-              });
-            } catch (seedErr) {
-              // Silently ignore duplicate conflicts during auto-seeding
-            }
+        // Auto-seed missing standard slots into DB for persistence if date is not in past
+        if (!isPastDate) {
+          try {
+            await this.prisma.appointmentSlot.createMany({
+              data: PUBLISHED_TIME_SLOTS.map((time) => ({
+                date: dateStr,
+                startTime: time,
+                durationMinutes: effectiveDuration,
+                isPublished: true,
+              })),
+              skipDuplicates: true,
+            });
+            dbSlots = await this.prisma.appointmentSlot.findMany({
+              where: { date: dateStr },
+              orderBy: { startTime: 'asc' },
+            });
+          } catch (seedErr) {
+            // Silently ignore duplicate conflicts during auto-seeding
           }
         }
 
-        // Sort slot times chronologically (10:00 AM before 11:00 AM before 02:00 PM etc.)
-        slotTimes = slotTimes.sort((a, b) => {
-          const aMin = parseTimeToMinutes(a);
-          const bMin = parseTimeToMinutes(b);
-          return aMin - bMin;
-        });
+        // If still empty (e.g. past date or duplicate handling), create in-memory standard slots
+        if (dbSlots.length === 0) {
+          dbSlots = PUBLISHED_TIME_SLOTS.map((time, idx) => ({
+            id: `slot-${idx}`,
+            date: dateStr,
+            startTime: time,
+            durationMinutes: effectiveDuration,
+            isPublished: true,
+            notes: null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })) as any;
+        }
       }
+
+      // Sort slot times chronologically (10:00 AM before 11:00 AM before 02:00 PM etc.)
+      dbSlots = dbSlots.sort((a, b) => {
+        const aMin = parseTimeToMinutes(a.startTime);
+        const bMin = parseTimeToMinutes(b.startTime);
+        return aMin - bMin;
+      });
 
       // Fetch existing non-cancelled bookings for this date
       const existingBookings = await this.prisma.booking.findMany({
@@ -584,9 +643,10 @@ export class AppointmentsService {
 
       const bookedTimesExact = new Set(allBookings.map((b) => b.time));
 
-      const slots = slotTimes.map((time, idx) => {
+      const slots = dbSlots.map((slot, idx) => {
+        const time = slot.startTime;
         const slotStart = parseTimeToMinutes(time);
-        const slotEnd = slotStart + effectiveDuration;
+        const slotEnd = slotStart + (slot.durationMinutes || effectiveDuration);
         const isColliding =
           bookedTimesExact.has(time) ||
           bookedIntervals.some(
@@ -595,29 +655,55 @@ export class AppointmentsService {
 
         if (isPastDate) {
           return {
-            id: `slot-${idx}`,
+            id: slot.id || `slot-${idx}`,
             time,
-            durationMinutes: effectiveDuration,
+            durationMinutes: slot.durationMinutes || effectiveDuration,
             isAvailable: false,
+            isPublished: slot.isPublished ?? true,
+            isBooked: isColliding,
+            status: 'PAST',
             reason: 'Date is in the past',
           };
         }
 
+        // 1. When admin unpublishes from dashboard: shown as Unavailable
+        if (slot.isPublished === false) {
+          return {
+            id: slot.id || `slot-${idx}`,
+            time,
+            durationMinutes: slot.durationMinutes || effectiveDuration,
+            isAvailable: false,
+            isPublished: false,
+            isBooked: isColliding,
+            status: 'UNAVAILABLE',
+            reason: 'Unavailable',
+          };
+        }
+
+        // 2. When booked by someone else: shown as Reserved / Already Reserved
         if (isColliding) {
           return {
-            id: `slot-${idx}`,
+            id: slot.id || `slot-${idx}`,
             time,
-            durationMinutes: effectiveDuration,
+            durationMinutes: slot.durationMinutes || effectiveDuration,
             isAvailable: false,
+            isPublished: true,
+            isBooked: true,
+            status: 'RESERVED',
             reason: 'Already Reserved',
           };
         }
 
+        // 3. Otherwise: Available
         return {
-          id: `slot-${idx}`,
+          id: slot.id || `slot-${idx}`,
           time,
-          durationMinutes: effectiveDuration,
+          durationMinutes: slot.durationMinutes || effectiveDuration,
           isAvailable: true,
+          isPublished: true,
+          isBooked: false,
+          status: 'AVAILABLE',
+          reason: 'Available',
         };
       });
 
@@ -629,43 +715,117 @@ export class AppointmentsService {
         slots,
       };
     } catch (err: any) {
+      if (err instanceof BadRequestException) throw err;
       // Graceful fallback if database is temporarily offline
+      this.initFallbackAvailability();
+      this.initFallbackBookings();
+
+      const isBlocked = Boolean(this.fallbackAvailability.blockedDates[dateStr]);
+      const blockedReason = this.fallbackAvailability.blockedDates[dateStr] || null;
+
+      if (isBlocked) {
+        return {
+          serviceId,
+          date: dateStr,
+          durationMinutes: durationMinutes || service.durationMinutes || 45,
+          isBlocked: true,
+          blockedReason: blockedReason || 'Panditji is not accepting consultations on this date.',
+          slots: [],
+        };
+      }
+
+      let fallbackSlots = this.fallbackAvailability.slots[dateStr];
+      if (!fallbackSlots || fallbackSlots.length === 0) {
+        fallbackSlots = PUBLISHED_TIME_SLOTS.map((t, idx) => ({
+          id: `slot-${dateStr}-${idx}`,
+          date: dateStr,
+          startTime: t,
+          durationMinutes: 45,
+          isPublished: true,
+          notes: null,
+        }));
+        this.fallbackAvailability.slots[dateStr] = fallbackSlots;
+        this.saveFallbackAvailability();
+      }
+
       const fallbackOnDate = this.fallbackBookings.filter(
         (b) => b.scheduledDate === dateStr && !['CANCELLED', 'REJECTED'].includes(b.status),
       );
       const bookedIntervals = fallbackOnDate
         .map((b) => {
           const start = parseTimeToMinutes(b.scheduledTime);
-          return start >= 0 ? { start, end: start + (b.durationMinutes || 30) } : null;
+          return start >= 0 ? { start, end: start + (b.durationMinutes || 45) } : null;
         })
         .filter((iv) => iv !== null);
+      const bookedTimesExact = new Set(fallbackOnDate.map((b) => b.scheduledTime));
 
-      const slotTimes = durationMinutes
-        ? generateWorkingHourSlots(durationMinutes)
-        : PUBLISHED_TIME_SLOTS;
-      const effectiveDuration = durationMinutes || service.durationMinutes || 30;
+      const effectiveDuration = durationMinutes || service.durationMinutes || 45;
+
+      const sortedFallbackSlots = [...fallbackSlots].sort(
+        (a, b) => parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime),
+      );
 
       return {
         serviceId,
         date: dateStr,
         durationMinutes: effectiveDuration,
         isBlocked: false,
-        slots: slotTimes.map((time, idx) => {
+        slots: sortedFallbackSlots.map((slot, idx) => {
+          const time = slot.startTime;
           const slotStart = parseTimeToMinutes(time);
-          const slotEnd = slotStart + effectiveDuration;
-          const isColliding = bookedIntervals.some(
-            (b) => Math.max(slotStart, b.start) < Math.min(slotEnd, b.end),
-          );
+          const slotEnd = slotStart + (slot.durationMinutes || effectiveDuration);
+          const isColliding =
+            bookedTimesExact.has(time) ||
+            bookedIntervals.some((b) => Math.max(slotStart, b.start) < Math.min(slotEnd, b.end));
+
+          if (isPastDate) {
+            return {
+              id: slot.id || `slot-fallback-${idx}`,
+              time,
+              durationMinutes: slot.durationMinutes || effectiveDuration,
+              isAvailable: false,
+              isPublished: slot.isPublished ?? true,
+              isBooked: isColliding,
+              status: 'PAST',
+              reason: 'Date is in the past',
+            };
+          }
+
+          if (slot.isPublished === false) {
+            return {
+              id: slot.id || `slot-fallback-${idx}`,
+              time,
+              durationMinutes: slot.durationMinutes || effectiveDuration,
+              isAvailable: false,
+              isPublished: false,
+              isBooked: isColliding,
+              status: 'UNAVAILABLE',
+              reason: 'Unavailable',
+            };
+          }
+
+          if (isColliding) {
+            return {
+              id: slot.id || `slot-fallback-${idx}`,
+              time,
+              durationMinutes: slot.durationMinutes || effectiveDuration,
+              isAvailable: false,
+              isPublished: true,
+              isBooked: true,
+              status: 'RESERVED',
+              reason: 'Already Reserved',
+            };
+          }
+
           return {
-            id: `slot-fallback-${idx}`,
+            id: slot.id || `slot-fallback-${idx}`,
             time,
-            durationMinutes: effectiveDuration,
-            isAvailable: isPastDate ? false : !isColliding,
-            reason: isPastDate
-              ? 'Date is in the past'
-              : isColliding
-              ? 'Already Reserved'
-              : undefined,
+            durationMinutes: slot.durationMinutes || effectiveDuration,
+            isAvailable: true,
+            isPublished: true,
+            isBooked: false,
+            status: 'AVAILABLE',
+            reason: 'Available',
           };
         }),
       };
@@ -712,11 +872,13 @@ export class AppointmentsService {
    */
   async bookAppointment(actor: JwtPayload, dto: BookAppointmentDto, ipAddress?: string) {
     this.initFallbackBookings();
+    this.initFallbackAvailability();
     // 1. Validate canonical service definition (price is derived server-side only)
     const service = this.getServiceById(dto.serviceId);
     const bookingDuration = dto.durationMinutes || service.durationMinutes || 30;
 
     // 2. Validate appointment date and time slot
+    dto.scheduledDate = normalizeDateStr(dto.scheduledDate);
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(dto.scheduledDate)) {
       throw new BadRequestException('Scheduled date must be in YYYY-MM-DD format.');
@@ -724,6 +886,25 @@ export class AppointmentsService {
     const todayStr = new Date().toISOString().split('T')[0];
     if (dto.scheduledDate < todayStr) {
       throw new BadRequestException('Appointment date cannot be in the past.');
+    }
+
+    // Check sanctuary block right away!
+    if (this.fallbackAvailability.blockedDates[dto.scheduledDate]) {
+      const reason = this.fallbackAvailability.blockedDates[dto.scheduledDate];
+      throw new BadRequestException(
+        `Panditji is not accepting consultations on ${dto.scheduledDate}: ${reason || 'Sanctuary Closed / Holiday'}`,
+      );
+    }
+
+    // Check if slot on date was unpublished
+    const fallbackSlotsForDate = this.fallbackAvailability.slots[dto.scheduledDate];
+    if (fallbackSlotsForDate) {
+      const slot = fallbackSlotsForDate.find((s) => s.startTime === dto.scheduledTime);
+      if (slot && slot.isPublished === false) {
+        throw new BadRequestException(
+          `The requested time slot (${dto.scheduledTime}) on ${dto.scheduledDate} is currently unavailable.`,
+        );
+      }
     }
 
     // 3. Validate contact phone and customer name
@@ -1035,6 +1216,24 @@ export class AppointmentsService {
     normalizedPhone: string,
   ) {
     this.initFallbackBookings();
+    this.initFallbackAvailability();
+
+    if (this.fallbackAvailability.blockedDates[dto.scheduledDate]) {
+      throw new BadRequestException(
+        `Panditji is not accepting consultations on ${dto.scheduledDate}: ${this.fallbackAvailability.blockedDates[dto.scheduledDate]}`,
+      );
+    }
+
+    const fallbackSlotsForDate = this.fallbackAvailability.slots[dto.scheduledDate];
+    if (fallbackSlotsForDate) {
+      const slot = fallbackSlotsForDate.find((s) => s.startTime === dto.scheduledTime);
+      if (slot && slot.isPublished === false) {
+        throw new BadRequestException(
+          `The requested time slot (${dto.scheduledTime}) on ${dto.scheduledDate} is currently unavailable.`,
+        );
+      }
+    }
+
     const collision = this.fallbackBookings.find(
       (b) =>
         b.scheduledDate === dto.scheduledDate &&
@@ -2220,6 +2419,681 @@ export class AppointmentsService {
       message: `Booking #${booking.id.slice(0, 8)} (${booking.scheduledDate}) has been permanently deleted.`,
       bookingId: booking.id,
     };
+  }
+
+  // ----------------------------------------------------
+  // ADMIN APPOINTMENT AVAILABILITY & SCHEDULE MANAGEMENT
+  // ----------------------------------------------------
+
+  private availabilityFilePath = path.resolve(process.cwd(), 'data', 'availability.json');
+  private fallbackAvailability: {
+    blockedDates: Record<string, string>;
+    slots: Record<string, any[]>;
+  } = { blockedDates: {}, slots: {} };
+  private availabilityFallbackLoaded = false;
+
+  private initFallbackAvailability() {
+    if (this.availabilityFallbackLoaded) return;
+    try {
+      if (fs.existsSync(this.availabilityFilePath)) {
+        const raw = fs.readFileSync(this.availabilityFilePath, 'utf-8');
+        this.fallbackAvailability = JSON.parse(raw);
+      }
+    } catch {
+      this.fallbackAvailability = { blockedDates: {}, slots: {} };
+    }
+    this.availabilityFallbackLoaded = true;
+  }
+
+  private saveFallbackAvailability() {
+    try {
+      const dir = path.dirname(this.availabilityFilePath);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(this.availabilityFilePath, JSON.stringify(this.fallbackAvailability, null, 2), 'utf-8');
+    } catch (e) {
+      this.logger.error('Failed to persist availability.json fallback', e);
+    }
+  }
+
+  /**
+   * Return full availability management view for a date (Admin/Superadmin only).
+   */
+  async getAdminAvailability(dateStr: string) {
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(dateStr)) {
+      throw new BadRequestException('Date must be formatted as YYYY-MM-DD');
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isPastDate = dateStr < todayStr;
+
+    try {
+      // Check blocked status
+      const blockedDate = await this.prisma.blockedDate.findUnique({
+        where: { date: dateStr },
+      });
+
+      // Query all slots for this date
+      let dbSlots = await this.prisma.appointmentSlot.findMany({
+        where: { date: dateStr },
+        orderBy: { startTime: 'asc' },
+      });
+
+      // If no slots exist yet and date is not in past, auto-seed standard slots for convenience
+      if (dbSlots.length === 0 && !isPastDate) {
+        const defaultSlotsData = PUBLISHED_TIME_SLOTS.map((time) => ({
+          date: dateStr,
+          startTime: time,
+          durationMinutes: 45,
+          isPublished: true,
+        }));
+
+        await this.prisma.appointmentSlot.createMany({
+          data: defaultSlotsData,
+          skipDuplicates: true,
+        });
+
+        dbSlots = await this.prisma.appointmentSlot.findMany({
+          where: { date: dateStr },
+          orderBy: { startTime: 'asc' },
+        });
+      }
+
+      // Query active bookings for this date
+      const existingBookings = await this.prisma.booking.findMany({
+        where: {
+          scheduledDate: dateStr,
+          status: { notIn: ['CANCELLED', 'REJECTED'] },
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+        },
+      });
+
+      const bookingByTime = new Map(existingBookings.map((b: any) => [b.scheduledTime, b]));
+
+      const enrichedSlots = dbSlots.map((slot: any) => {
+        const booking = bookingByTime.get(slot.startTime);
+        const isBooked = Boolean(booking);
+
+        return {
+          id: slot.id,
+          date: slot.date,
+          startTime: slot.startTime,
+          durationMinutes: slot.durationMinutes,
+          isPublished: blockedDate ? false : slot.isPublished,
+          notes: slot.notes,
+          isBooked,
+          booking: booking
+            ? {
+                id: booking.id,
+                serviceType: booking.serviceType,
+                status: booking.status,
+                customerName: booking.user?.name || (booking as any).customerName || 'Vedic Seeker',
+                customerEmail: booking.user?.email || null,
+                customerPhone: booking.user?.phone || null,
+              }
+            : null,
+          canDelete: !isBooked,
+        };
+      });
+
+      return {
+        date: dateStr,
+        isBlocked: Boolean(blockedDate),
+        blockedReason: blockedDate?.reason || null,
+        slots: enrichedSlots,
+        totalSlots: enrichedSlots.length,
+        bookedCount: enrichedSlots.filter((s: any) => s.isBooked).length,
+      };
+    } catch (err: any) {
+      if (err instanceof BadRequestException) throw err;
+      this.logger.warn(`Prisma error in getAdminAvailability (${err.message}), using fallback.`);
+      
+      this.initFallbackAvailability();
+      this.initFallbackBookings();
+      const isBlocked = Boolean(this.fallbackAvailability.blockedDates[dateStr]);
+      const blockedReason = this.fallbackAvailability.blockedDates[dateStr] || null;
+
+      let slots = this.fallbackAvailability.slots[dateStr];
+      if (!slots || slots.length === 0) {
+        slots = PUBLISHED_TIME_SLOTS.map((t, idx) => ({
+          id: `slot-${dateStr}-${idx}`,
+          date: dateStr,
+          startTime: t,
+          durationMinutes: 45,
+          isPublished: !isBlocked,
+          notes: null,
+        }));
+        this.fallbackAvailability.slots[dateStr] = slots;
+        this.saveFallbackAvailability();
+      } else if (isBlocked) {
+        slots.forEach((s) => {
+          s.isPublished = false;
+        });
+      }
+
+      const existingBookings = this.fallbackBookings.filter(
+        (b) => b.scheduledDate === dateStr && !['CANCELLED', 'REJECTED'].includes(b.status),
+      );
+      const bookingByTime = new Map(existingBookings.map((b) => [b.scheduledTime, b]));
+
+      const enrichedSlots = slots.map((slot) => {
+        const booking = bookingByTime.get(slot.startTime);
+        const isBooked = Boolean(booking);
+        return {
+          ...slot,
+          isBooked,
+          booking: booking
+            ? {
+                id: booking.id,
+                serviceType: booking.serviceType,
+                status: booking.status,
+                customerName: (booking as any).customerName || 'Vedic Seeker',
+                customerEmail: (booking as any).customerEmail || null,
+                customerPhone: (booking as any).contactPhone || null,
+              }
+            : null,
+          canDelete: !isBooked,
+        };
+      });
+
+      return {
+        date: dateStr,
+        isBlocked,
+        blockedReason,
+        slots: enrichedSlots,
+        totalSlots: enrichedSlots.length,
+        bookedCount: enrichedSlots.filter((s) => s.isBooked).length,
+      };
+    }
+  }
+
+  /**
+   * Create an available consultation time slot (Admin/Superadmin only).
+   */
+  async createAdminSlot(actor: JwtPayload, dto: CreateSlotDto, ipAddress?: string) {
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (dto.date < todayStr) {
+      throw new BadRequestException('Appointment slot date cannot be in the past.');
+    }
+
+    const cleanStartTime = dto.startTime.trim();
+
+    try {
+      const existing = await this.prisma.appointmentSlot.findUnique({
+        where: {
+          date_startTime: {
+            date: dto.date,
+            startTime: cleanStartTime,
+          },
+        },
+      });
+
+      if (existing) {
+        throw new ConflictException(
+          `Slot on ${dto.date} at ${cleanStartTime} already exists in the sanctuary schedule.`,
+        );
+      }
+
+      const slot = await this.prisma.appointmentSlot.create({
+        data: {
+          date: dto.date,
+          startTime: cleanStartTime,
+          durationMinutes: dto.durationMinutes || 45,
+          isPublished: dto.isPublished !== undefined ? dto.isPublished : true,
+          notes: dto.notes?.trim() || null,
+        },
+      });
+
+      await this.prisma.auditLog.create({
+        data: {
+          action: 'SLOT_CREATED',
+          actorId: actor.sub,
+          actorEmail: actor.email,
+          targetId: slot.id,
+          details: {
+            date: slot.date,
+            startTime: slot.startTime,
+            durationMinutes: slot.durationMinutes,
+            isPublished: slot.isPublished,
+          },
+          ipAddress: ipAddress || null,
+        },
+      });
+
+      return {
+        message: 'Consultation slot successfully created.',
+        slot,
+      };
+    } catch (err: any) {
+      if (err instanceof BadRequestException || err instanceof ConflictException) throw err;
+      this.logger.warn(`Prisma error in createAdminSlot, fallback saving (${err.message})`);
+      this.initFallbackAvailability();
+      if (!this.fallbackAvailability.slots[dto.date]) {
+        this.fallbackAvailability.slots[dto.date] = [];
+      }
+      if (this.fallbackAvailability.slots[dto.date].some((s) => s.startTime === cleanStartTime)) {
+        throw new ConflictException(`Slot on ${dto.date} at ${cleanStartTime} already exists in the sanctuary schedule.`);
+      }
+      const newSlot = {
+        id: `slot-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        date: dto.date,
+        startTime: cleanStartTime,
+        durationMinutes: dto.durationMinutes || 45,
+        isPublished: dto.isPublished !== undefined ? dto.isPublished : true,
+        notes: dto.notes?.trim() || null,
+      };
+      this.fallbackAvailability.slots[dto.date].push(newSlot);
+      this.saveFallbackAvailability();
+      return { message: 'Consultation slot successfully created.', slot: newSlot };
+    }
+  }
+
+  /**
+   * Update or publish/unpublish a slot (Admin/Superadmin only).
+   */
+  async updateAdminSlot(actor: JwtPayload, slotId: string, dto: UpdateSlotDto, ipAddress?: string) {
+    try {
+      const slot = await this.prisma.appointmentSlot.findUnique({
+        where: { id: slotId },
+      });
+
+      if (!slot) {
+        throw new NotFoundException('Appointment slot not found.');
+      }
+
+      if (dto.startTime && dto.startTime.trim() !== slot.startTime) {
+        const cleanStartTime = dto.startTime.trim();
+        const activeBooking = await this.prisma.booking.findFirst({
+          where: {
+            scheduledDate: slot.date,
+            scheduledTime: slot.startTime,
+            status: { notIn: ['CANCELLED', 'REJECTED'] },
+          },
+        });
+
+        if (activeBooking) {
+          throw new BadRequestException(
+            'Cannot modify the start time of an appointment slot with an active booking. Please reschedule the booking first.',
+          );
+        }
+
+        const duplicate = await this.prisma.appointmentSlot.findUnique({
+          where: {
+            date_startTime: {
+              date: slot.date,
+              startTime: cleanStartTime,
+            },
+          },
+        });
+
+        if (duplicate && duplicate.id !== slot.id) {
+          throw new ConflictException(
+            `Another slot already exists on ${slot.date} at ${cleanStartTime}.`,
+          );
+        }
+      }
+
+      if (dto.isPublished === true) {
+        const isDateBlocked = await this.prisma.blockedDate.findUnique({
+          where: { date: slot.date },
+        });
+        if (isDateBlocked) {
+          throw new BadRequestException(
+            `Date ${slot.date} is currently blocked. Please unblock the date before publishing consultation slots.`,
+          );
+        }
+      }
+
+      const updated = await this.prisma.appointmentSlot.update({
+        where: { id: slotId },
+        data: {
+          ...(dto.startTime ? { startTime: dto.startTime.trim() } : {}),
+          ...(dto.durationMinutes !== undefined ? { durationMinutes: dto.durationMinutes } : {}),
+          ...(dto.isPublished !== undefined ? { isPublished: dto.isPublished } : {}),
+          ...(dto.notes !== undefined ? { notes: dto.notes.trim() } : {}),
+        },
+      });
+
+      await this.prisma.auditLog.create({
+        data: {
+          action: 'SLOT_UPDATED',
+          actorId: actor.sub,
+          actorEmail: actor.email,
+          targetId: slot.id,
+          details: {
+            date: updated.date,
+            startTime: updated.startTime,
+            isPublished: updated.isPublished,
+            durationMinutes: updated.durationMinutes,
+          },
+          ipAddress: ipAddress || null,
+        },
+      });
+
+      return {
+        message: 'Consultation slot successfully updated.',
+        slot: updated,
+      };
+    } catch (err: any) {
+      if (err instanceof NotFoundException || err instanceof BadRequestException || err instanceof ConflictException) {
+        throw err;
+      }
+      this.initFallbackAvailability();
+      for (const d of Object.keys(this.fallbackAvailability.slots)) {
+        const found = this.fallbackAvailability.slots[d].find((s) => s.id === slotId);
+        if (found) {
+          if (dto.isPublished === true && this.fallbackAvailability.blockedDates[d]) {
+            throw new BadRequestException(
+              `Date ${d} is currently blocked. Please unblock the date before publishing consultation slots.`,
+            );
+          }
+          if (dto.startTime) found.startTime = dto.startTime.trim();
+          if (dto.durationMinutes !== undefined) found.durationMinutes = dto.durationMinutes;
+          if (dto.isPublished !== undefined) found.isPublished = dto.isPublished;
+          if (dto.notes !== undefined) found.notes = dto.notes;
+          this.saveFallbackAvailability();
+          return { message: 'Consultation slot successfully updated.', slot: found };
+        }
+      }
+      throw new NotFoundException('Appointment slot not found.');
+    }
+  }
+
+  /**
+   * Delete an appointment slot, rejecting if active booking exists (Admin/Superadmin only).
+   */
+  async deleteAdminSlot(actor: JwtPayload, slotId: string, ipAddress?: string) {
+    try {
+      const slot = await this.prisma.appointmentSlot.findUnique({
+        where: { id: slotId },
+      });
+
+      if (!slot) {
+        throw new NotFoundException('Appointment slot not found.');
+      }
+
+      const activeBooking = await this.prisma.booking.findFirst({
+        where: {
+          scheduledDate: slot.date,
+          scheduledTime: slot.startTime,
+          status: { notIn: ['CANCELLED', 'REJECTED'] },
+        },
+      });
+
+      if (activeBooking) {
+        throw new BadRequestException(
+          'Cannot delete appointment slot with an active customer booking. Cancel the booking first to prevent invalidating confirmed consultations.',
+        );
+      }
+
+      await this.prisma.appointmentSlot.delete({
+        where: { id: slotId },
+      });
+
+      await this.prisma.auditLog.create({
+        data: {
+          action: 'SLOT_DELETED',
+          actorId: actor.sub,
+          actorEmail: actor.email,
+          targetId: slotId,
+          details: {
+            date: slot.date,
+            startTime: slot.startTime,
+          },
+          ipAddress: ipAddress || null,
+        },
+      });
+
+      return {
+        message: `Appointment slot on ${slot.date} at ${slot.startTime} has been permanently deleted.`,
+      };
+    } catch (err: any) {
+      if (err instanceof NotFoundException || err instanceof BadRequestException) {
+        throw err;
+      }
+      this.initFallbackAvailability();
+      for (const d of Object.keys(this.fallbackAvailability.slots)) {
+        const idx = this.fallbackAvailability.slots[d].findIndex((s) => s.id === slotId);
+        if (idx !== -1) {
+          const removed = this.fallbackAvailability.slots[d].splice(idx, 1)[0];
+          this.saveFallbackAvailability();
+          return { message: `Appointment slot on ${removed.date} at ${removed.startTime} has been permanently deleted.` };
+        }
+      }
+      throw new NotFoundException('Appointment slot not found.');
+    }
+  }
+
+  /**
+   * Block a date or holiday (Admin/Superadmin only).
+   */
+  async blockDate(actor: JwtPayload, dto: BlockDateDto, ipAddress?: string) {
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (dto.date < todayStr) {
+      throw new BadRequestException('Cannot block dates in the past.');
+    }
+
+    try {
+      const blocked = await this.prisma.blockedDate.upsert({
+        where: { date: dto.date },
+        create: {
+          date: dto.date,
+          reason: dto.reason?.trim() || 'Sanctuary Closed / Panditji Unavailable',
+        },
+        update: {
+          reason: dto.reason?.trim() || 'Sanctuary Closed / Panditji Unavailable',
+        },
+      });
+
+      // When date is blocked, all consultation slots must be unpublished and hidden from user booking catalogue
+      await this.prisma.appointmentSlot.updateMany({
+        where: { date: dto.date },
+        data: { isPublished: false },
+      });
+
+      this.initFallbackAvailability();
+      this.fallbackAvailability.blockedDates[dto.date] = blocked.reason || 'Sanctuary Closed / Panditji Unavailable';
+      if (this.fallbackAvailability.slots[dto.date]) {
+        this.fallbackAvailability.slots[dto.date].forEach((slot) => {
+          slot.isPublished = false;
+        });
+      }
+      this.saveFallbackAvailability();
+
+      await this.prisma.auditLog.create({
+        data: {
+          action: 'DATE_BLOCKED',
+          actorId: actor.sub,
+          actorEmail: actor.email,
+          targetId: blocked.id,
+          details: {
+            date: blocked.date,
+            reason: blocked.reason,
+            unpublishSlots: true,
+          },
+          ipAddress: ipAddress || null,
+        },
+      });
+
+      return {
+        message: `Date ${dto.date} is now blocked and all consultation slots have been unpublished. No customer bookings will be accepted for this date.`,
+        blockedDate: blocked,
+      };
+    } catch (err: any) {
+      if (err instanceof BadRequestException) throw err;
+      this.initFallbackAvailability();
+      this.fallbackAvailability.blockedDates[dto.date] = dto.reason?.trim() || 'Sanctuary Closed / Panditji Unavailable';
+      if (this.fallbackAvailability.slots[dto.date]) {
+        this.fallbackAvailability.slots[dto.date].forEach((slot) => {
+          slot.isPublished = false;
+        });
+      }
+      this.saveFallbackAvailability();
+      return {
+        message: `Date ${dto.date} is now blocked and all consultation slots have been unpublished. No customer bookings will be accepted for this date.`,
+        blockedDate: { id: `block-${dto.date}`, date: dto.date, reason: this.fallbackAvailability.blockedDates[dto.date] },
+      };
+    }
+  }
+
+  /**
+   * Unblock a date (Admin/Superadmin only).
+   */
+  async unblockDate(actor: JwtPayload, dateStr: string, ipAddress?: string) {
+    const cleanDate = normalizeDateStr(dateStr);
+    try {
+      const existing = await this.prisma.blockedDate.findUnique({
+        where: { date: cleanDate },
+      });
+
+      if (existing) {
+        await this.prisma.blockedDate.delete({
+          where: { date: cleanDate },
+        });
+
+        // Re-publish slots on unblocked date
+        await this.prisma.appointmentSlot.updateMany({
+          where: { date: cleanDate },
+          data: { isPublished: true },
+        });
+
+        await this.prisma.auditLog.create({
+          data: {
+            action: 'DATE_UNBLOCKED',
+            actorId: actor.sub,
+            actorEmail: actor.email,
+            targetId: existing.id,
+            details: {
+              date: cleanDate,
+            },
+            ipAddress: ipAddress || null,
+          },
+        });
+      }
+
+      this.initFallbackAvailability();
+      delete this.fallbackAvailability.blockedDates[cleanDate];
+      if (this.fallbackAvailability.slots[cleanDate]) {
+        this.fallbackAvailability.slots[cleanDate].forEach((slot) => {
+          slot.isPublished = true;
+        });
+      }
+      this.saveFallbackAvailability();
+
+      return {
+        message: `Date ${cleanDate} has been unblocked. Published slots are now available for customer bookings.`,
+      };
+    } catch (err: any) {
+      this.initFallbackAvailability();
+      delete this.fallbackAvailability.blockedDates[cleanDate];
+      if (this.fallbackAvailability.slots[cleanDate]) {
+        this.fallbackAvailability.slots[cleanDate].forEach((slot) => {
+          slot.isPublished = true;
+        });
+      }
+      this.saveFallbackAvailability();
+      return {
+        message: `Date ${cleanDate} has been unblocked. Published slots are now available for customer bookings.`,
+      };
+    }
+  }
+
+  /**
+   * Bulk initialize standard Vedic schedule for upcoming days (Admin/Superadmin only).
+   */
+  async initializeStandardSchedule(
+    actor: JwtPayload,
+    dto: InitializeScheduleDto,
+    ipAddress?: string,
+  ) {
+    const days = dto.daysCount || 7;
+    const start = new Date(dto.startDate);
+    let createdCount = 0;
+
+    try {
+      for (let i = 0; i < days; i++) {
+        const cur = new Date(start);
+        cur.setDate(start.getDate() + i);
+        const curDateStr = cur.toISOString().split('T')[0];
+
+        for (const time of PUBLISHED_TIME_SLOTS) {
+          await this.prisma.appointmentSlot.upsert({
+            where: {
+              date_startTime: {
+                date: curDateStr,
+                startTime: time,
+              },
+            },
+            create: {
+              date: curDateStr,
+              startTime: time,
+              durationMinutes: 45,
+              isPublished: true,
+            },
+            update: {},
+          });
+          createdCount++;
+        }
+      }
+
+      await this.prisma.auditLog.create({
+        data: {
+          action: 'SCHEDULE_INITIALIZED',
+          actorId: actor.sub,
+          actorEmail: actor.email,
+          details: {
+            startDate: dto.startDate,
+            daysCount: days,
+            slotsProcessed: createdCount,
+          },
+          ipAddress: ipAddress || null,
+        },
+      });
+
+      return {
+        message: `Standard Vedic schedule successfully initialized for ${days} days starting from ${dto.startDate}.`,
+        daysCount: days,
+        slotsProcessed: createdCount,
+      };
+    } catch (err: any) {
+      this.initFallbackAvailability();
+      for (let i = 0; i < days; i++) {
+        const cur = new Date(start);
+        cur.setDate(start.getDate() + i);
+        const curDateStr = cur.toISOString().split('T')[0];
+        if (!this.fallbackAvailability.slots[curDateStr]) {
+          this.fallbackAvailability.slots[curDateStr] = [];
+        }
+        for (const time of PUBLISHED_TIME_SLOTS) {
+          if (!this.fallbackAvailability.slots[curDateStr].some((s) => s.startTime === time)) {
+            this.fallbackAvailability.slots[curDateStr].push({
+              id: `slot-${curDateStr}-${time.replace(/[^a-zA-Z0-9]/g, '')}`,
+              date: curDateStr,
+              startTime: time,
+              durationMinutes: 45,
+              isPublished: true,
+              notes: null,
+            });
+            createdCount++;
+          }
+        }
+      }
+      this.saveFallbackAvailability();
+      return {
+        message: `Standard Vedic schedule successfully initialized for ${days} days starting from ${dto.startDate}.`,
+        daysCount: days,
+        slotsProcessed: createdCount,
+      };
+    }
   }
 }
 

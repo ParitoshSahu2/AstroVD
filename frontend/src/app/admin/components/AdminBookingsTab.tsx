@@ -487,24 +487,9 @@ export default function AdminBookingsTab({
                           </span>
                         </td>
 
-                        {/* 6. Actions (Single Compact Three-Dot Menu '⋮' + Quick Completed Button) */}
+                        {/* 6. Actions (Single Compact Three-Dot Menu '⋮') */}
                         <td className="py-3 px-3.5 text-right align-middle">
                           <div className="flex items-center justify-end gap-1.5">
-                            {(b.status === 'APPROVED' || b.status === 'CONFIRMED') && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleQuickStatus(b, 'COMPLETED');
-                                }}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] shadow-xs hover:shadow-md transition-all cursor-pointer active:scale-95 whitespace-nowrap"
-                                title="Mark consultation completed"
-                              >
-                                <CheckCircle2 className="w-3.5 h-3.5 text-blue-200" />
-                                <span>Completed</span>
-                              </button>
-                            )}
-
                             <div className="relative inline-block text-left">
                               <button
                                 type="button"
@@ -727,22 +712,6 @@ export default function AdminBookingsTab({
                               : b.status || 'Pending'}
                           </span>
                         </span>
-
-                        {/* Quick Completed Button */}
-                        {(b.status === 'APPROVED' || b.status === 'CONFIRMED') && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleQuickStatus(b, 'COMPLETED');
-                              }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] shadow-xs transition-all cursor-pointer active:scale-95 whitespace-nowrap"
-                              title="Mark consultation completed"
-                            >
-                              <CheckCircle2 className="w-3 h-3 text-blue-200" />
-                              <span>Completed</span>
-                            </button>
-                          )}
 
                           <div className="relative inline-block text-left">
                             <button

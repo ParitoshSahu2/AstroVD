@@ -490,8 +490,8 @@ export default function AdminAvailabilityTab({
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200/70">
               Booked: <strong>{availabilityData?.bookedCount || 0}</strong>
             </span>
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/70">
-              Available: <strong>{Math.max(0, (availabilityData?.totalSlots || 0) - (availabilityData?.bookedCount || 0))}</strong>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${availabilityData?.isBlocked ? 'bg-stone-50 text-stone-500 border-stone-200/70' : 'bg-emerald-50 text-emerald-800 border-emerald-200/70'}`}>
+              Available: <strong>{availabilityData?.isBlocked ? 0 : Math.max(0, (availabilityData?.slots?.filter((s: any) => s.isPublished && !s.isBooked).length || 0))}</strong>
             </span>
           </div>
         </div>
@@ -539,7 +539,7 @@ export default function AdminAvailabilityTab({
                   className={`rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md group ${
                     isBooked
                       ? 'bg-rose-50/30 border-rose-200/90 hover:border-rose-300'
-                      : isPublished
+                      : isPublished && !availabilityData?.isBlocked
                       ? 'bg-white border-stone-200/90 hover:border-amber-400'
                       : 'bg-stone-50/70 border-stone-200/80 opacity-80 hover:opacity-100'
                   }`}
@@ -570,10 +570,17 @@ export default function AdminAvailabilityTab({
                           Booked
                         </span>
                       ) : (
+                        isPublished && !availabilityData?.isBlocked ? (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wide flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                           Available
                         </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-600 border border-stone-200/80 uppercase tracking-wide flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-stone-400" />
+                          Unpublished
+                        </span>
+                      )
                       )}
                     </div>
                   </div>
@@ -599,7 +606,7 @@ export default function AdminAvailabilityTab({
                       <p className="text-xs text-stone-500 leading-relaxed">
                         {slot.notes ? (
                           <span className="italic text-stone-700">📝 {slot.notes}</span>
-                        ) : isPublished ? (
+                        ) : isPublished && !availabilityData?.isBlocked ? (
                           <span>Standard 1-on-1 consultation slot open for devotee bookings.</span>
                         ) : (
                           <span className="text-amber-800/90 italic font-medium">Unpublished — Hidden from devotee booking catalogue.</span>
@@ -619,9 +626,15 @@ export default function AdminAvailabilityTab({
                           ? 'border-stone-200 bg-white hover:bg-stone-100 text-stone-700 shadow-2xs'
                           : 'border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-900'
                       }`}
-                      title={isPublished ? 'Hide from seeker booking catalogue' : 'Publish to seeker booking catalogue'}
+                      title={
+                        availabilityData?.isBlocked
+                          ? 'Date is blocked. Unblock the date to publish this slot.'
+                          : isPublished
+                          ? 'Hide from seeker booking catalogue'
+                          : 'Publish to seeker booking catalogue'
+                      }
                     >
-                      {isPublished ? (
+                      {isPublished && !availabilityData?.isBlocked ? (
                         <>
                           <EyeOff className="w-3.5 h-3.5 text-stone-500" />
                           <span>Unpublish</span>

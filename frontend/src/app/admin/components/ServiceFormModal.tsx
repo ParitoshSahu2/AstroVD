@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useScrollLock } from '../../../lib/scrollLock';
 import {
   X,
@@ -14,7 +14,9 @@ import {
   Tag,
   Image as ImageIcon,
   CheckCircle2,
+  Upload,
 } from 'lucide-react';
+import { getAuthToken } from '../../../lib/auth';
 
 export interface ServiceFormData {
   id?: string;
@@ -63,6 +65,60 @@ export default function ServiceFormModal({
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const token = getAuthToken();
+    if (!token) {
+      setUploadError('Admin authorization token required.');
+      return;
+    }
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+    if (!validTypes.includes(file.type)) {
+      setUploadError('Invalid format. Please upload JPEG, PNG, WebP, GIF, or SVG.');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('Image size exceeds 10MB limit.');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError(null);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(`${backendUrl}/api/content/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Image upload failed');
+      }
+
+      setImage(data.url);
+    } catch (err: any) {
+      console.error('Service image upload error:', err);
+      setUploadError(err.message || 'Error uploading service image.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     if (service) {
@@ -93,6 +149,19 @@ export default function ServiceFormModal({
     setError(null);
   }, [service, isOpen]);
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleModalWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
+    if (
+      scrollRef.current &&
+      e.target !== scrollRef.current &&
+      !scrollRef.current.contains(e.target as Node)
+    ) {
+      scrollRef.current.scrollTop += e.deltaY;
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) onClose();
@@ -101,7 +170,17 @@ export default function ServiceFormModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  // Handles numeric price and duration inputs so leading zeros auto-strip when user starts typing
+  const handleNumericInput = (val: string, setter: (n: number) => void) => {
+    const digitsOnly = val.replace(/\D/g, '');
+    if (!digitsOnly) {
+      setter(0);
+      return;
+    }
+    // Automatically strip leading zeros if followed by other digits (e.g. "05" -> "5", "01100" -> "1100")
+    const stripped = digitsOnly.replace(/^0+(?=\d)/, '');
+    setter(Number(stripped));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,13 +232,20 @@ export default function ServiceFormModal({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <div
       data-lenis-prevent="true"
-      onWheel={(e) => e.stopPropagation()}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto animate-fadeIn"
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 animate-fadeIn"
     >
-      <div className="relative w-full max-w-2xl max-h-[calc(100dvh-32px)] flex flex-col rounded-2xl bg-[#FCFBF8] border border-amber-300/80 shadow-2xl overflow-hidden text-[#3B1E22]">
+      <div
+        data-lenis-prevent="true"
+        onWheel={handleModalWheel}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-2xl max-h-[calc(100dvh-32px)] flex flex-col rounded-2xl bg-[#FCFBF8] border border-amber-300/80 shadow-2xl overflow-hidden text-[#3B1E22]"
+      >
         {/* Header */}
         <div className="px-5 py-3.5 bg-gradient-to-r from-[#50080F] via-[#6B0D16] to-[#40080D] text-white flex items-center justify-between shrink-0 border-b border-amber-400/30">
           <div className="flex items-center gap-2.5">
@@ -187,10 +273,12 @@ export default function ServiceFormModal({
         </div>
 
         {/* Modal Form Body */}
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
           <div
+            ref={scrollRef}
             data-lenis-prevent="true"
-            className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 text-xs"
+            onWheel={(e) => e.stopPropagation()}
+            className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1 min-h-0 text-xs modal-scroll-container overscroll-contain modal-scrollbar"
           >
             {error && (
               <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
@@ -198,6 +286,66 @@ export default function ServiceFormModal({
                 <span>{error}</span>
               </div>
             )}
+
+            {/* Section 0: Service Image Upload (Top Section) */}
+            <div className="space-y-2 p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/80">
+              <label className="text-xs font-bold text-amber-950 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Service Cover Image *</span>
+                </span>
+                <span className="text-[11px] font-normal text-amber-800">
+                  Supports Direct Upload or Image URL
+                </span>
+              </label>
+
+              <div className="flex flex-col sm:flex-row gap-3.5 items-center">
+                {/* Image Preview Thumbnail */}
+                <div className="relative w-28 h-20 rounded-xl overflow-hidden border border-amber-300 bg-stone-100 shrink-0 shadow-xs">
+                  <img
+                    src={image.startsWith('/api') ? `${backendUrl}${image}` : image}
+                    alt="Service Preview"
+                    className="w-full h-full object-cover"
+                    onError={(e: any) => {
+                      e.target.src = '/services/consultation.jpg';
+                    }}
+                  />
+                </div>
+
+                {/* URL Input & Upload Button */}
+                <div className="flex-1 w-full space-y-2">
+                  <input
+                    type="text"
+                    required
+                    value={image}
+                    onChange={(e) => setImage(e.target.value)}
+                    placeholder="Enter image URL or click upload below..."
+                    className="w-full px-3 py-1.5 rounded-xl border border-stone-200 bg-white text-xs text-stone-800 focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
+                  />
+
+                  <div className="flex items-center gap-3">
+                    <label className="px-3.5 py-1.5 rounded-xl bg-white border border-amber-400/80 hover:bg-amber-100/60 text-[#5B0D15] font-semibold text-xs shadow-xs flex items-center gap-1.5 cursor-pointer transition-all">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{uploading ? 'Uploading...' : 'Upload Image File'}</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                        onChange={handleFileUpload}
+                        disabled={uploading}
+                        className="hidden"
+                      />
+                    </label>
+                    <span className="text-[11px] text-stone-500">
+                      Max 10MB (JPEG, PNG, WebP, GIF, SVG)
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {uploadError && (
+                <p className="text-[11px] text-rose-600 font-semibold">{uploadError}</p>
+              )}
+            </div>
 
             {/* Row 1: Title & Category */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -240,12 +388,14 @@ export default function ServiceFormModal({
                   <span>Dakshina / Price (INR) *</span>
                 </label>
                 <input
-                  type="number"
-                  min="0"
-                  step="50"
+                  type="text"
+                  inputMode="numeric"
                   required
-                  value={priceNumber}
-                  onChange={(e) => setPriceNumber(Number(e.target.value))}
+                  value={priceNumber === 0 ? '0' : priceNumber}
+                  onChange={(e) => handleNumericInput(e.target.value, setPriceNumber)}
+                  onFocus={(e) => {
+                    if (priceNumber === 0) e.target.select();
+                  }}
                   placeholder="1100"
                   className="w-full px-3 py-2 rounded-lg border border-stone-300 bg-white text-xs font-semibold text-stone-900 focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
                 />
@@ -258,12 +408,14 @@ export default function ServiceFormModal({
                   <span>Duration (Minutes) *</span>
                 </label>
                 <input
-                  type="number"
-                  min="10"
-                  max="240"
+                  type="text"
+                  inputMode="numeric"
                   required
-                  value={durationMinutes}
-                  onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                  value={durationMinutes === 0 ? '0' : durationMinutes}
+                  onChange={(e) => handleNumericInput(e.target.value, setDurationMinutes)}
+                  onFocus={(e) => {
+                    if (durationMinutes === 0) e.target.select();
+                  }}
                   placeholder="45"
                   className="w-full px-3 py-2 rounded-lg border border-stone-300 bg-white text-xs font-semibold text-stone-900 focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
                 />
@@ -285,36 +437,20 @@ export default function ServiceFormModal({
               </div>
             </div>
 
-            {/* Row 3: Pandit & Image */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1">
-                  <User className="w-3 h-3 text-amber-700" />
-                  <span>Spiritual Guide / Pandit *</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={pandit}
-                  onChange={(e) => setPandit(e.target.value)}
-                  placeholder="Dr. Pandit Vishal Dubey"
-                  className="w-full px-3 py-2 rounded-lg border border-stone-300 bg-white text-xs font-medium text-stone-900 focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1">
-                  <ImageIcon className="w-3 h-3 text-amber-700" />
-                  <span>Image URL / Asset Path</span>
-                </label>
-                <input
-                  type="text"
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
-                  placeholder="/services/consultation.jpg"
-                  className="w-full px-3 py-2 rounded-lg border border-stone-300 bg-white text-xs font-medium text-stone-900 focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
-                />
-              </div>
+            {/* Row 3: Pandit */}
+            <div className="space-y-1">
+              <label className="text-[11px] font-bold text-stone-700 uppercase tracking-wider flex items-center gap-1">
+                <User className="w-3 h-3 text-amber-700" />
+                <span>Spiritual Guide / Pandit *</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={pandit}
+                onChange={(e) => setPandit(e.target.value)}
+                placeholder="Dr. Pandit Vishal Dubey"
+                className="w-full px-3 py-2 rounded-lg border border-stone-300 bg-white text-xs font-medium text-stone-900 focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
+              />
             </div>
 
             {/* Row 4: Description */}

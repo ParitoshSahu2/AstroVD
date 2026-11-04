@@ -115,7 +115,6 @@ export const PoojaServicesSection: React.FC = () => {
             const displayDesc = tr ? tr.descHi : item.desc;
             const displayBadge = tr && tr.badgeHi ? tr.badgeHi : item.badge;
 
-
             return (
               <MotionServiceCard
                 key={item.id}
@@ -131,7 +130,6 @@ export const PoojaServicesSection: React.FC = () => {
               />
             );
           })}
-
         </div>
 
         {/* ================= 4. EXPLORE MORE SERVICES BUTTON ================= */}

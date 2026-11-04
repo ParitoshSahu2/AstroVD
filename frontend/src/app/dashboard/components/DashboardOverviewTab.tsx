@@ -359,7 +359,7 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                   nextBooking.slot || nextBooking.scheduledTime || nextBooking.time,
                   30
                 );
-                const meetUrl = formatGoogleMeetLink(nextBooking.id || nextBooking._id);
+                const meetUrl = (nextBooking.meetLink && nextBooking.meetLink.startsWith('http')) ? nextBooking.meetLink : formatGoogleMeetLink(nextBooking.id || nextBooking._id);
 
                 if (meetStatus.isJoinable) {
                   return (

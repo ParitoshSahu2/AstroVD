@@ -40,10 +40,10 @@ import {
   getServiceById,
   ServiceItem,
   PUBLISHED_TIME_SLOTS,
-  generateWorkingHourSlots,
   GURUJI_WORKING_HOURS,
   formatGoogleMeetLink,
   getMeetingTimeStatus,
+  parseTimeToMinutes,
 } from '../../data/servicesData';
 import { SERVICES_TRANSLATIONS } from '../../data/servicesTranslations';
 
@@ -78,9 +78,12 @@ function AppointmentContent() {
 
   const durationMinutes = 30;
 
-  const DEFAULT_FALLBACK_SLOTS = generateWorkingHourSlots(30).map((time: string) => ({
+  const DEFAULT_FALLBACK_SLOTS = PUBLISHED_TIME_SLOTS.map((time: string) => ({
     time,
     isAvailable: true,
+    isPublished: true,
+    status: 'AVAILABLE' as const,
+    reason: 'Available',
   }));
   const [date, setDate] = useState<string>(tomorrowStr);
   const [timeSlot, setTimeSlot] = useState<string>('');
@@ -92,7 +95,14 @@ function AppointmentContent() {
     selectedTimeSlotRef.current = timeSlot;
   }, [timeSlot]);
   const [availableSlots, setAvailableSlots] = useState<
-    Array<{ time: string; isAvailable: boolean; reason?: string }>
+    Array<{
+      time: string;
+      isAvailable: boolean;
+      reason?: string;
+      isPublished?: boolean;
+      status?: string;
+      isBooked?: boolean;
+    }>
   >([]);
   const [loadingSlots, setLoadingSlots] = useState<boolean>(true);
   const [isDateBlocked, setIsDateBlocked] = useState<boolean>(false);
@@ -245,10 +255,6 @@ function AppointmentContent() {
           )}&date=${encodeURIComponent(date)}&_t=${Date.now()}`,
           {
             cache: 'no-store',
-            headers: {
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              Pragma: 'no-cache',
-            },
           },
         );
         if (res.ok) {
@@ -257,23 +263,51 @@ function AppointmentContent() {
             if (data.isBlocked) {
               setIsDateBlocked(true);
               setBlockedReason(data.blockedReason || null);
-              setAvailableSlots([]);
+              const blockedSlots = PUBLISHED_TIME_SLOTS.map((t: string) => ({
+                time: t,
+                isAvailable: false,
+                isPublished: false,
+                status: 'UNAVAILABLE',
+                reason: 'Unavailable',
+              }));
+              setAvailableSlots(blockedSlots);
               selectedTimeSlotRef.current = '';
               setTimeSlot('');
             } else if (data.slots && Array.isArray(data.slots) && data.slots.length > 0) {
               setIsDateBlocked(false);
               setBlockedReason(null);
-              // Only display published slots returned by backend
-              setAvailableSlots(data.slots);
+              // Ensure strictly the canonical published consultation slots are displayed
+              const canonicalSlots = PUBLISHED_TIME_SLOTS.map((canonicalTime) => {
+                const match = data.slots.find((s: any) => {
+                  if (s.time === canonicalTime) return true;
+                  const sMin = parseTimeToMinutes(s.time);
+                  const cMin = parseTimeToMinutes(canonicalTime);
+                  return sMin >= 0 && sMin === cMin;
+                });
+                if (match) {
+                  return {
+                    ...match,
+                    time: canonicalTime,
+                  };
+                }
+                return {
+                  time: canonicalTime,
+                  isAvailable: true,
+                  isPublished: true,
+                  status: 'AVAILABLE',
+                  reason: 'Available',
+                };
+              });
+              setAvailableSlots(canonicalSlots);
 
               // If current selected timeSlot is still available among published slots, keep it!
               // Only fall back to first available if current slot is empty or became unavailable/reserved.
               const currentSlot = selectedTimeSlotRef.current;
-              const isCurrentAvailable = data.slots.some(
+              const isCurrentAvailable = canonicalSlots.some(
                 (s: any) => s.time === currentSlot && s.isAvailable,
               );
               if (!isCurrentAvailable) {
-                const firstAvailable = data.slots.find((s: any) => s.isAvailable);
+                const firstAvailable = canonicalSlots.find((s: any) => s.isAvailable);
                 const nextSlot = firstAvailable ? firstAvailable.time : '';
                 selectedTimeSlotRef.current = nextSlot;
                 setTimeSlot(nextSlot);
@@ -281,7 +315,13 @@ function AppointmentContent() {
             } else {
               setIsDateBlocked(false);
               setBlockedReason(null);
-              const dynFallback = generateWorkingHourSlots(durationMinutes).map((time: string) => ({ time, isAvailable: true }));
+              const dynFallback = PUBLISHED_TIME_SLOTS.map((time: string) => ({
+                time,
+                isAvailable: true,
+                isPublished: true,
+                status: 'AVAILABLE',
+                reason: 'Available',
+              }));
               setAvailableSlots(dynFallback);
               const currentSlot = selectedTimeSlotRef.current;
               if (!currentSlot || !dynFallback.some((s: any) => s.time === currentSlot)) {
@@ -294,7 +334,13 @@ function AppointmentContent() {
         } else {
           if (!isCancelled) {
             setIsDateBlocked(false);
-            const dynFallback = generateWorkingHourSlots(durationMinutes).map((time: string) => ({ time, isAvailable: true }));
+            const dynFallback = PUBLISHED_TIME_SLOTS.map((time: string) => ({
+              time,
+              isAvailable: true,
+              isPublished: true,
+              status: 'AVAILABLE',
+              reason: 'Available',
+            }));
             setAvailableSlots(dynFallback);
             const currentSlot = selectedTimeSlotRef.current;
             if (!currentSlot || !dynFallback.some((s: any) => s.time === currentSlot)) {
@@ -308,7 +354,13 @@ function AppointmentContent() {
         console.warn('Failed to load slots from backend', err);
         if (!isCancelled) {
           setIsDateBlocked(false);
-          const dynFallback = generateWorkingHourSlots(durationMinutes).map((time: string) => ({ time, isAvailable: true }));
+          const dynFallback = PUBLISHED_TIME_SLOTS.map((time: string) => ({
+            time,
+            isAvailable: true,
+            isPublished: true,
+            status: 'AVAILABLE',
+            reason: 'Available',
+          }));
           setAvailableSlots(dynFallback);
           const currentSlot = selectedTimeSlotRef.current;
           if (!currentSlot || !dynFallback.some((s: any) => s.time === currentSlot)) {
@@ -456,11 +508,20 @@ function AppointmentContent() {
 
     const chosenSlotObj = availableSlots.find((s) => s.time === timeSlot);
     if (chosenSlotObj && !chosenSlotObj.isAvailable) {
+      const isUnavailable =
+        chosenSlotObj.reason === 'Unavailable' ||
+        chosenSlotObj.status === 'UNAVAILABLE' ||
+        chosenSlotObj.isPublished === false;
       setErrorMsg(
-        t(
-          `The time slot at ${timeSlot} on ${date} is already reserved. Please select another available slot.`,
-          `${date} को ${timeSlot} का समय स्लॉट पहले ही आरक्षित है। कृपया कोई अन्य उपलब्ध स्लॉट चुनें।`,
-        ),
+        isUnavailable
+          ? t(
+              `The time slot at ${timeSlot} on ${date} is currently unavailable. Please select another available slot.`,
+              `${date} को ${timeSlot} का समय स्लॉट वर्तमान में अनुपलब्ध है। कृपया कोई अन्य उपलब्ध स्लॉट चुनें।`,
+            )
+          : t(
+              `The time slot at ${timeSlot} on ${date} is already reserved. Please select another available slot.`,
+              `${date} को ${timeSlot} का समय स्लॉट पहले ही आरक्षित है। कृपया कोई अन्य उपलब्ध स्लॉट चुनें।`,
+            ),
       );
       return;
     }
@@ -492,6 +553,18 @@ function AppointmentContent() {
           'Please sign in or create an account to confirm and reserve your consultation.',
           'अपने परामर्श सत्र को आरक्षित करने हेतु कृपया पहले साइन इन करें।',
         ),
+      );
+      return;
+    }
+
+    if (isDateBlocked) {
+      setConfirmationModalOpen(false);
+      setErrorMsg(
+        blockedReason ||
+          t(
+            'Panditji is not accepting consultations on this date. Please select another date.',
+            'पंडित जी इस तारीख को परामर्श स्वीकार नहीं कर रहे हैं। कृपया अन्य तारीख चुनें।',
+          ),
       );
       return;
     }
@@ -1428,7 +1501,7 @@ function AppointmentContent() {
                     <div className="relative">
                       <select
                         value={timeSlot}
-                        disabled={loadingSlots || isDateBlocked || availableSlots.length === 0}
+                        disabled={loadingSlots}
                         onChange={(e) => {
                           const chosen = e.target.value;
                           selectedTimeSlotRef.current = chosen;
@@ -1438,22 +1511,46 @@ function AppointmentContent() {
                         className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-xs font-semibold text-stone-800 bg-white focus:outline-none focus:border-amber-500 transition-all cursor-pointer shadow-xs appearance-none pr-10 disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed"
                       >
                         <option value="" disabled>
-                          -- {t('Select an Available Slot', 'उपलब्ध स्लॉट चुनें')} --
+                          -- {isDateBlocked ? t('Date Blocked - No Slots Available', 'दिनांक अवरुद्ध - कोई स्लॉट उपलब्ध नहीं') : t('Select an Available Slot', 'उपलब्ध स्लॉट चुनें')} --
                         </option>
                         {availableSlots.length > 0 ? (
-                          availableSlots.map((slot) => (
-                            <option
-                              key={slot.time}
-                              value={slot.time}
-                              disabled={!slot.isAvailable}
-                              className={!slot.isAvailable ? 'text-stone-400 bg-stone-50' : 'text-stone-800 font-medium'}
-                            >
-                              {slot.time} — {slot.isAvailable ? t('Available', 'उपलब्ध') : slot.reason || t('Reserved', 'आरक्षित')}
-                            </option>
-                          ))
+                          availableSlots.map((slot) => {
+                            const isUnavailable =
+                              isDateBlocked ||
+                              !slot.isAvailable &&
+                              (slot.reason === 'Unavailable' ||
+                                slot.status === 'UNAVAILABLE' ||
+                                slot.isPublished === false);
+                            const label = isDateBlocked
+                              ? t('Unavailable', 'अनुपलब्ध')
+                              : slot.isAvailable
+                              ? t('Available', 'उपलब्ध')
+                              : isUnavailable
+                              ? t('Unavailable', 'अनुपलब्ध')
+                              : t('Already Reserved', 'पहले से आरक्षित');
+
+                            return (
+                              <option
+                                key={slot.time}
+                                value={slot.time}
+                                disabled={!slot.isAvailable || isDateBlocked}
+                                className={
+                                  !slot.isAvailable || isDateBlocked
+                                    ? 'text-stone-400 bg-stone-50 font-normal'
+                                    : 'text-stone-800 font-medium'
+                                }
+                              >
+                                {slot.time} — {label}
+                              </option>
+                            );
+                          })
                         ) : (
                           <option value="">
-                            {loadingSlots ? t('Loading time slots...', 'समय स्लॉट लोड हो रहे हैं...') : t('No time slots available', 'कोई समय स्लॉट उपलब्ध नहीं')}
+                            {loadingSlots
+                              ? t('Loading time slots...', 'समय स्लॉट लोड हो रहे हैं...')
+                              : isDateBlocked
+                              ? t('No slots available (Date Blocked)', 'कोई स्लॉट उपलब्ध नहीं (दिनांक अवरुद्ध)')
+                              : t('No time slots available', 'कोई समय स्लॉट उपलब्ध नहीं')}
                           </option>
                         )}
                       </select>
@@ -1519,8 +1616,8 @@ function AppointmentContent() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#B8873E] via-[#A67530] to-[#8C5D1F] hover:from-[#c59348] hover:to-[#9a6925] disabled:opacity-50 text-white font-bold text-sm shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+                  disabled={loading || isDateBlocked || !timeSlot || loadingSlots}
+                  className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#B8873E] via-[#A67530] to-[#8C5D1F] hover:from-[#c59348] hover:to-[#9a6925] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>

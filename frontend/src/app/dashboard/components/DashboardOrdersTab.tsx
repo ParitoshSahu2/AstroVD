@@ -1647,14 +1647,14 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
                         onClick={() => {
                           addItem(selectedProductDetail, 1);
                         }}
-                        className="flex-1 py-2.5 sm:py-3 px-5 rounded-full bg-[#800000] hover:bg-[#5B0D15] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:shadow-lg active:scale-98"
+                        className="flex-1 h-[44px] px-5 rounded-full bg-[#800000] hover:bg-[#5B0D15] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:shadow-lg active:scale-98"
                       >
                         <ShoppingCart className="w-4 h-4 text-amber-300" />
                         <span>{t('Add to Cart', 'कार्ट में जोड़ें')}</span>
                       </button>
                     ) : (
                       /* Clean (- 1 +) Stepper matching product card */
-                      <div className="flex-1 flex items-center justify-between bg-[#5B0D15] text-white rounded-full px-3 py-1.5 shadow-md border border-amber-400/40">
+                      <div className="flex-1 h-[44px] flex items-center justify-between bg-[#5B0D15] text-white rounded-full px-3 shadow-md border border-amber-400/40">
                         <button
                           type="button"
                           onClick={() => {

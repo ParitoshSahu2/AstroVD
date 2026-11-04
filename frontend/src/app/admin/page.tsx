@@ -112,6 +112,15 @@ const AdminActivityTab = dynamic(() => import('./components/AdminActivityTab'), 
   ),
 });
 
+const AdminAvailabilityTab = dynamic(() => import('./components/AdminAvailabilityTab'), {
+  loading: () => (
+    <div className="p-12 text-center flex flex-col items-center justify-center space-y-3 bg-white/70 rounded-3xl border border-stone-200/80">
+      <RefreshCw className="w-6 h-6 animate-spin text-[#5B0D15]" />
+      <p className="text-xs text-stone-500 font-medium">Loading Panditji availability schedule...</p>
+    </div>
+  ),
+});
+
 const UserInspectionModal = dynamic(() => import('./components/UserInspectionModal'), { ssr: false });
 const BookingLifecycleModal = dynamic(() => import('./components/BookingLifecycleModal'), { ssr: false });
 const OrderLifecycleModal = dynamic(() => import('./components/OrderLifecycleModal'), { ssr: false });
@@ -119,6 +128,7 @@ const EditAdminProfileModal = dynamic(() => import('./components/EditAdminProfil
 const GenerateUserModal = dynamic(() => import('./components/GenerateUserModal'), { ssr: false });
 const DeleteUserModal = dynamic(() => import('./components/DeleteUserModal'), { ssr: false });
 const DeleteConfirmModal = dynamic(() => import('./components/DeleteConfirmModal'), { ssr: false });
+const AvailabilityModals = dynamic(() => import('./components/AvailabilityModals'), { ssr: false });
 
 export default function AdminPage() {
   const router = useRouter();
@@ -199,7 +209,7 @@ export default function AdminPage() {
   const [deleteItemError, setDeleteItemError] = useState<string | null>(null);
 
   // Admin Top-level Navigation: Overview vs Users Directory vs Services vs Products vs Customer Appointments vs Shopping Orders vs Panditji Availability vs Content Activity
-  const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'services' | 'products' | 'bookings' | 'orders' | 'activity' | 'reviews'>('overview');
+  const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'services' | 'products' | 'bookings' | 'orders' | 'activity' | 'reviews' | 'availability'>('overview');
   const [globalSearch, setGlobalSearch] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
@@ -378,6 +388,27 @@ export default function AdminPage() {
     } catch (e) {}
   };
 
+  const notificationsPopoverRef = useRef<HTMLDivElement>(null);
+  const notificationsScrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!notificationsOpen) return;
+    const popover = notificationsPopoverRef.current;
+    const scrollEl = notificationsScrollRef.current;
+    if (!popover || !scrollEl) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      scrollEl.scrollTop += e.deltaY;
+    };
+
+    popover.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      popover.removeEventListener('wheel', handleWheel);
+    };
+  }, [notificationsOpen]);
+
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -386,16 +417,18 @@ export default function AdminPage() {
   useScrollLock(mobileSidebarOpen || reportModalOpen);
 
   useEffect(() => {
-    if (!mobileSidebarOpen && !reportModalOpen) return;
+    if (!mobileSidebarOpen && !reportModalOpen && !notificationsOpen && !profileDropdownOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        if (notificationsOpen) setNotificationsOpen(false);
+        if (profileDropdownOpen) setProfileDropdownOpen(false);
         if (mobileSidebarOpen) setMobileSidebarOpen(false);
         if (reportModalOpen) setReportModalOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mobileSidebarOpen, reportModalOpen]);
+  }, [mobileSidebarOpen, reportModalOpen, notificationsOpen, profileDropdownOpen]);
 
   // Admin Bookings List & Filter State
   const [bookingsList, setBookingsList] = useState<any[]>([]);
@@ -430,6 +463,49 @@ export default function AdminPage() {
   const [orderStatusNotes, setOrderStatusNotes] = useState('');
   const [orderStatusError, setOrderStatusError] = useState<string | null>(null);
 
+  // Admin Availability & Schedule Management State
+  const [availabilityDate, setAvailabilityDate] = useState<string>('');
+  const [availabilityData, setAvailabilityData] = useState<{
+    date: string;
+    isBlocked: boolean;
+    blockedReason: string | null;
+    totalSlots: number;
+    bookedCount: number;
+    slots: any[];
+    upcomingBookings?: any[];
+    allUpcomingBookings?: any[];
+  } | null>(null);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+
+  // Availability Modals State
+  const [createSlotModalOpen, setCreateSlotModalOpen] = useState(false);
+  const [newSlotTime, setNewSlotTime] = useState('10:00 AM');
+  const [newSlotDuration, setNewSlotDuration] = useState(45);
+  const [newSlotPublished, setNewSlotPublished] = useState(true);
+  const [newSlotNotes, setNewSlotNotes] = useState('');
+  const [createSlotLoading, setCreateSlotLoading] = useState(false);
+  const [createSlotError, setCreateSlotError] = useState<string | null>(null);
+
+  const [editSlotModalOpen, setEditSlotModalOpen] = useState(false);
+  const [slotToEdit, setSlotToEdit] = useState<any | null>(null);
+  const [editSlotTime, setEditSlotTime] = useState('');
+  const [editSlotDuration, setEditSlotDuration] = useState(45);
+  const [editSlotPublished, setEditSlotPublished] = useState(true);
+  const [editSlotNotes, setEditSlotNotes] = useState('');
+  const [editSlotLoading, setEditSlotLoading] = useState(false);
+  const [editSlotError, setEditSlotError] = useState<string | null>(null);
+
+  const [blockDateModalOpen, setBlockDateModalOpen] = useState(false);
+  const [blockDateReason, setBlockDateReason] = useState('');
+  const [blockDateLoading, setBlockDateLoading] = useState(false);
+
+  const [initScheduleModalOpen, setInitScheduleModalOpen] = useState(false);
+  const [initScheduleDays, setInitScheduleDays] = useState(7);
+  const [initScheduleLoading, setInitScheduleLoading] = useState(false);
+
+  const [slotToDelete, setSlotToDelete] = useState<any | null>(null);
+  const [deleteSlotLoading, setDeleteSlotLoading] = useState(false);
+
   
   const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
 
@@ -452,6 +528,7 @@ export default function AdminPage() {
     setInspectUser(null);
     setActiveBooking(null);
     setActiveOrder(null);
+    setAvailabilityData(null);
     setNotification(null);
     setUserToDelete(null);
     setAdminTab('overview');
@@ -1390,6 +1467,320 @@ export default function AdminPage() {
     }
   };
 
+  // ==========================================
+  // PANDITJI AVAILABILITY MANAGEMENT HANDLERS
+  // ==========================================
+
+  const fetchAvailability = async (targetDate = availabilityDate) => {
+    const token = getAuthToken() || (typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null);
+    if (!token) {
+      setAvailabilityData(null);
+      setAvailabilityLoading(false);
+      return;
+    }
+
+    setAvailabilityLoading(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/availability?date=${encodeURIComponent(targetDate)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAvailabilityData(data);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setNotification({ type: 'error', message: err.message || 'Failed to fetch schedule availability.' });
+      }
+    } catch (err: any) {
+      setNotification({ type: 'error', message: err.message || 'Network error fetching availability.' });
+    } finally {
+      setAvailabilityLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!availabilityDate && typeof window !== 'undefined') {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      setAvailabilityDate(tomorrow.toISOString().split('T')[0]);
+    }
+  }, [availabilityDate]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam === 'availability' || tabParam === 'slots') {
+        setAdminTab('availability');
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isAdmin && adminTab === 'availability' && availabilityDate) {
+      fetchAvailability(availabilityDate);
+    }
+  }, [adminTab, availabilityDate, isAdmin]);
+
+  const handleCreateSlot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = getAuthToken() || (typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null);
+    if (!token) return;
+
+    setCreateSlotLoading(true);
+    setCreateSlotError(null);
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/availability/slots`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          date: availabilityDate,
+          startTime: newSlotTime.trim(),
+          durationMinutes: Number(newSlotDuration) || 45,
+          isPublished: newSlotPublished,
+          notes: newSlotNotes.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to create slot.');
+      }
+
+      setNotification({ type: 'success', message: data.message || 'Slot successfully created!' });
+      setCreateSlotModalOpen(false);
+      setNewSlotNotes('');
+      fetchAvailability(availabilityDate);
+    } catch (err: any) {
+      setCreateSlotError(err.message || 'Error creating consultation slot.');
+    } finally {
+      setCreateSlotLoading(false);
+    }
+  };
+
+  const handleOpenEditSlot = (slot: any) => {
+    setSlotToEdit(slot);
+    setEditSlotTime(slot.startTime);
+    setEditSlotDuration(slot.durationMinutes);
+    setEditSlotPublished(slot.isPublished);
+    setEditSlotNotes(slot.notes || '');
+    setEditSlotError(null);
+    setEditSlotModalOpen(true);
+  };
+
+  const handleUpdateSlot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!slotToEdit) return;
+    const token = getAuthToken() || (typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null);
+    if (!token) return;
+
+    setEditSlotLoading(true);
+    setEditSlotError(null);
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/availability/slots/${slotToEdit.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          startTime: editSlotTime.trim(),
+          durationMinutes: Number(editSlotDuration),
+          isPublished: editSlotPublished,
+          notes: editSlotNotes.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to update slot.');
+      }
+
+      setNotification({ type: 'success', message: data.message || 'Slot successfully updated!' });
+      setEditSlotModalOpen(false);
+      setSlotToEdit(null);
+      fetchAvailability(availabilityDate);
+    } catch (err: any) {
+      setEditSlotError(err.message || 'Error updating slot.');
+    } finally {
+      setEditSlotLoading(false);
+    }
+  };
+
+  const handleTogglePublish = async (slot: any) => {
+    if (availabilityData?.isBlocked && !slot.isPublished) {
+      setNotification({
+        type: 'error',
+        message: 'This date is currently blocked. Please unblock the date before publishing consultation slots.',
+      });
+      return;
+    }
+
+    const token = getAuthToken() || (typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null);
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/availability/slots/${slot.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          isPublished: !slot.isPublished,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to toggle publish status.');
+      }
+
+      setNotification({
+        type: 'success',
+        message: `Slot at ${slot.startTime} is now ${!slot.isPublished ? 'published & visible to seekers' : 'unpublished & hidden'}!`,
+      });
+      fetchAvailability(availabilityDate);
+    } catch (err: any) {
+      setNotification({ type: 'error', message: err.message || 'Error toggling publish state.' });
+    }
+  };
+
+  const handleDeleteSlot = (slot: any) => {
+    if (!slot.canDelete) {
+      setNotification({
+        type: 'error',
+        message: 'Cannot delete an appointment slot with an active customer booking. Cancel the booking first.',
+      });
+      return;
+    }
+    setSlotToDelete(slot);
+  };
+
+  const handleConfirmDeleteSlot = async () => {
+    if (!slotToDelete) return;
+    const token = getAuthToken() || (typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null);
+    if (!token) return;
+
+    setDeleteSlotLoading(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/availability/slots/${slotToDelete.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to delete slot.');
+      }
+
+      setNotification({ type: 'success', message: data.message || 'Slot deleted successfully.' });
+      setSlotToDelete(null);
+      fetchAvailability(availabilityDate);
+    } catch (err: any) {
+      setNotification({ type: 'error', message: err.message || 'Error deleting slot.' });
+    } finally {
+      setDeleteSlotLoading(false);
+    }
+  };
+
+  const handleBlockDate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = getAuthToken() || (typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null);
+    if (!token) return;
+
+    setBlockDateLoading(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/availability/block-date`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          date: availabilityDate,
+          reason: blockDateReason.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to block date.');
+      }
+
+      setNotification({ type: 'success', message: data.message || `Date ${availabilityDate} is now blocked.` });
+      setBlockDateModalOpen(false);
+      setBlockDateReason('');
+      fetchAvailability(availabilityDate);
+    } catch (err: any) {
+      setNotification({ type: 'error', message: err.message || 'Error blocking date.' });
+    } finally {
+      setBlockDateLoading(false);
+    }
+  };
+
+  const handleUnblockDate = async () => {
+    const token = getAuthToken() || (typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null);
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/availability/block-date/${availabilityDate}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to unblock date.');
+      }
+
+      setNotification({ type: 'success', message: data.message || `Date ${availabilityDate} has been unblocked!` });
+      fetchAvailability(availabilityDate);
+    } catch (err: any) {
+      setNotification({ type: 'error', message: err.message || 'Error unblocking date.' });
+    }
+  };
+
+  const handleInitStandardSchedule = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = getAuthToken() || (typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null);
+    if (!token) return;
+
+    setInitScheduleLoading(true);
+    try {
+      const res = await fetch(`${backendUrl}/api/admin/availability/initialize-standard-schedule`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          startDate: availabilityDate,
+          daysCount: Number(initScheduleDays) || 7,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to initialize schedule.');
+      }
+
+      setNotification({ type: 'success', message: data.message || 'Standard Vedic schedule initialized!' });
+      setInitScheduleModalOpen(false);
+      fetchAvailability(availabilityDate);
+    } catch (err: any) {
+      setNotification({ type: 'error', message: err.message || 'Error initializing schedule.' });
+    } finally {
+      setInitScheduleLoading(false);
+    }
+  };
+
   const canDeleteUser = (target: { id: string; role: string }) => {
     if (!currentUser || target.id === currentUser.id) return false;
     if (target.role === 'SUPERADMIN') return false;
@@ -1426,6 +1817,7 @@ export default function AdminPage() {
     if (adminTab === 'orders') return 'Orders';
     if (adminTab === 'activity') return 'Activity & Audit History';
     if (adminTab === 'reviews') return 'Reviews & Ratings';
+    if (adminTab === 'availability') return 'Pooja Services';
     return 'Overview';
   };
 
@@ -1479,6 +1871,11 @@ export default function AdminPage() {
       setAdminTab('activity');
     } else if (tabKey === 'reviews') {
       setAdminTab('reviews');
+    } else if (tabKey === 'availability' || tabKey === 'slots' || tabKey === 'pooja_services') {
+      setAdminTab('availability');
+      if (availabilityDate) {
+        fetchAvailability(availabilityDate);
+      }
     }
   };
 
@@ -1690,6 +2087,27 @@ export default function AdminPage() {
                   </div>
                 </div>
 
+                {/* Group 2.5: POOJA SERVICES */}
+                <div>
+                  <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
+                    Pooja Services
+                  </div>
+                  <div className="space-y-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleSidebarTabClick('availability')}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                        adminTab === 'availability'
+                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                      }`}
+                    >
+                      <Sparkles className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Pooja Services</span>
+                    </button>
+                  </div>
+                </div>
+
                 {/* Group 3: CONTENT */}
                 <div>
                   <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
@@ -1870,6 +2288,15 @@ export default function AdminPage() {
                     </button>
                     <button
                       type="button"
+                      onClick={() => handleSidebarTabClick('availability')}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium ${
+                        adminTab === 'availability' ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold' : 'text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      Pooja Services
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => handleSidebarTabClick('orders')}
                       className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-stone-600 hover:bg-stone-50"
                     >
@@ -1953,42 +2380,68 @@ export default function AdminPage() {
                     </button>
 
                     {notificationsOpen && (
-                      <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-30 space-y-3 animate-fadeIn">
-                        <div className="flex items-center justify-between pb-2 border-b border-stone-100">
-                          <span className="text-xs font-bold text-stone-900">Notifications</span>
-                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                            Live Updates
-                          </span>
-                        </div>
-                        <div className="space-y-1.5 text-xs max-h-72 overflow-y-auto">
-                          {notificationsList.map((item) => (
-                            <div
-                              key={item.id}
-                              onClick={() => handleNotificationClick(item)}
-                              className="p-2.5 rounded-xl cursor-pointer border border-transparent hover:bg-stone-50 transition-all flex items-start gap-2.5"
-                            >
-                              <span
-                                className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                                  item.read ? 'bg-stone-300' : 'bg-[#E11D48]'
-                                }`}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="font-bold text-stone-900 truncate">
-                                  {item.title}
-                                </div>
-                                <div className="text-[11px] text-stone-500 truncate">
-                                  {item.description} {item.time ? `• ${item.time}` : ''}
+                      <>
+                        <div
+                          className="fixed inset-0 z-20"
+                          onClick={() => setNotificationsOpen(false)}
+                        />
+                        <div
+                          ref={notificationsPopoverRef}
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute right-0 top-12 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-30 space-y-3 animate-fadeIn select-none"
+                        >
+                          <div className="flex items-center justify-between pb-2 border-b border-stone-100">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-stone-900">Notifications</span>
+                              {unreadNotificationsCount > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={handleMarkAllNotificationsRead}
+                                  className="text-[10px] text-stone-500 hover:text-stone-900 hover:underline cursor-pointer"
+                                >
+                                  Mark all read
+                                </button>
+                              )}
+                            </div>
+                            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                              Live Updates
+                            </span>
+                          </div>
+                          <div
+                            ref={notificationsScrollRef}
+                            tabIndex={0}
+                            style={{ maxHeight: '280px', overflowY: 'auto' }}
+                            className="space-y-1.5 text-xs max-h-72 overflow-y-auto overscroll-contain pr-1.5 admin-notif-scrollbar outline-none"
+                          >
+                            {notificationsList.map((item) => (
+                              <div
+                                key={item.id}
+                                onClick={() => handleNotificationClick(item)}
+                                className="p-2.5 rounded-xl cursor-pointer border border-transparent hover:bg-stone-50 transition-all flex items-start gap-2.5 select-none"
+                              >
+                                <span
+                                  className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                                    item.read ? 'bg-stone-300' : 'bg-[#E11D48]'
+                                  }`}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-bold text-stone-900 truncate">
+                                    {item.title}
+                                  </div>
+                                  <div className="text-[11px] text-stone-500 truncate">
+                                    {item.description} {item.time ? `• ${item.time}` : ''}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
-                          {notificationsList.length === 0 && (
-                            <p className="text-stone-400 text-center py-4 text-xs">
-                              No new notifications
-                            </p>
-                          )}
+                            ))}
+                            {notificationsList.length === 0 && (
+                              <p className="text-stone-400 text-center py-4 text-xs">
+                                No new notifications
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      </>
                     )}
                   </div>
 
@@ -2014,7 +2467,15 @@ export default function AdminPage() {
                     </button>
 
                     {profileDropdownOpen && (
-                      <div className="absolute right-0 top-12 w-48 bg-white rounded-2xl shadow-xl border border-stone-200 py-1.5 z-30 text-xs text-stone-700 animate-fadeIn">
+                      <>
+                        <div
+                          className="fixed inset-0 z-20"
+                          onClick={() => setProfileDropdownOpen(false)}
+                        />
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute right-0 top-12 w-48 bg-white rounded-2xl shadow-xl border border-stone-200 py-1.5 z-30 text-xs text-stone-700 animate-fadeIn"
+                        >
                         <div className="px-4 py-2 border-b border-stone-100">
                           <div className="font-bold text-stone-900 truncate">
                             {currentUser?.name || 'Dr. Pandit Vishal Dubey'}
@@ -2047,6 +2508,7 @@ export default function AdminPage() {
                           <span>Sign Out</span>
                         </button>
                       </div>
+                    </>
                     )}
                   </div>
                 </div>
@@ -2203,6 +2665,28 @@ export default function AdminPage() {
             
             {adminTab === 'activity' && <AdminActivityTab />}
             {adminTab === 'reviews' && <AdminReviewsTab />}
+            {adminTab === 'availability' && (
+              <AdminAvailabilityTab
+                availabilityDate={availabilityDate}
+                setAvailabilityDate={setAvailabilityDate}
+                availabilityData={availabilityData}
+                availabilityLoading={availabilityLoading}
+                fetchAvailability={fetchAvailability}
+                handleUnblockDate={handleUnblockDate}
+                handleTogglePublishSlot={handleTogglePublish}
+                handleOpenEditSlot={handleOpenEditSlot}
+                handleDeleteSlot={handleDeleteSlot}
+                setBlockDateModalOpen={setBlockDateModalOpen}
+                setCreateSlotModalOpen={setCreateSlotModalOpen}
+                setInitScheduleModalOpen={setInitScheduleModalOpen}
+                setInitScheduleDays={setInitScheduleDays}
+                onOpenBooking={(booking) => {
+                  setActiveBooking(booking);
+                  setStatusNotes('');
+                  setStatusError(null);
+                }}
+              />
+            )}
               </div>
             </div>
           </div>
@@ -2345,6 +2829,55 @@ export default function AdminPage() {
           }
         }}
         onConfirm={handleConfirmDeleteItem}
+      />
+
+      {/* AVAILABILITY MODALS */}
+      <AvailabilityModals
+        availabilityDate={availabilityDate}
+        createSlotModalOpen={createSlotModalOpen}
+        setCreateSlotModalOpen={setCreateSlotModalOpen}
+        newSlotTime={newSlotTime}
+        setNewSlotTime={setNewSlotTime}
+        newSlotDuration={newSlotDuration}
+        setNewSlotDuration={setNewSlotDuration}
+        newSlotPublished={newSlotPublished}
+        setNewSlotPublished={setNewSlotPublished}
+        newSlotNotes={newSlotNotes}
+        setNewSlotNotes={setNewSlotNotes}
+        createSlotLoading={createSlotLoading}
+        createSlotError={createSlotError}
+        handleCreateSlot={handleCreateSlot}
+        editSlotModalOpen={editSlotModalOpen}
+        setEditSlotModalOpen={setEditSlotModalOpen}
+        slotToEdit={slotToEdit}
+        setSlotToEdit={setSlotToEdit}
+        editSlotTime={editSlotTime}
+        setEditSlotTime={setEditSlotTime}
+        editSlotDuration={editSlotDuration}
+        setEditSlotDuration={setEditSlotDuration}
+        editSlotPublished={editSlotPublished}
+        setEditSlotPublished={setEditSlotPublished}
+        editSlotNotes={editSlotNotes}
+        setEditSlotNotes={setEditSlotNotes}
+        editSlotLoading={editSlotLoading}
+        editSlotError={editSlotError}
+        handleUpdateSlot={handleUpdateSlot}
+        blockDateModalOpen={blockDateModalOpen}
+        setBlockDateModalOpen={setBlockDateModalOpen}
+        blockDateReason={blockDateReason}
+        setBlockDateReason={setBlockDateReason}
+        blockDateLoading={blockDateLoading}
+        handleBlockDate={handleBlockDate}
+        initScheduleModalOpen={initScheduleModalOpen}
+        setInitScheduleModalOpen={setInitScheduleModalOpen}
+        initScheduleDays={initScheduleDays}
+        setInitScheduleDays={setInitScheduleDays}
+        initScheduleLoading={initScheduleLoading}
+        handleInitStandardSchedule={handleInitStandardSchedule}
+        slotToDelete={slotToDelete}
+        setSlotToDelete={setSlotToDelete}
+        deleteSlotLoading={deleteSlotLoading}
+        handleConfirmDeleteSlot={handleConfirmDeleteSlot}
       />
 
       

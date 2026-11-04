@@ -517,17 +517,6 @@ export function getMeetingTimeStatus(
   timeStr?: string,
   durationMinutes = 30
 ): MeetingTimeStatus {
-  // Temporary testing mode: Allow person to join immediately when consultation is accepted/confirmed
-  const DISABLE_5MIN_RESTRICTION_FOR_TESTING = true;
-  if (DISABLE_5MIN_RESTRICTION_FOR_TESTING) {
-    return {
-      isJoinable: true,
-      hasEnded: false,
-      isUpcoming: false,
-      diffMinutes: 0,
-    };
-  }
-
   if (!dateStr || !timeStr) {
     return { isJoinable: false, hasEnded: false, isUpcoming: true, diffMinutes: 999999 };
   }

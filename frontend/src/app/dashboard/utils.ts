@@ -1,6 +1,9 @@
-export const DEFAULT_GURUJI_MEET_LINK = 'https://meet.google.com/meet/hui-smdn-gtp';
+export const DEFAULT_GURUJI_MEET_LINK = 'https://meet.google.com/zrg-vfdz-jky';
 
 export function formatGoogleMeetLink(bookingId?: string): string {
+  if (bookingId && bookingId.trim().startsWith('http')) {
+    return bookingId.trim();
+  }
   if (bookingId && bookingId.startsWith('https://meet.google.com/')) {
     return bookingId;
   }
