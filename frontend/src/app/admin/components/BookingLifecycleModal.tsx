@@ -24,6 +24,7 @@ import {
   Edit2,
   CalendarCheck,
   Ban,
+  XCircle,
   Lock,
 } from 'lucide-react';
 
@@ -93,10 +94,8 @@ export default function BookingLifecycleModal({
 
   useEffect(() => {
     if (activeBooking) {
-      const validLink =
-        activeBooking.meetLink && activeBooking.meetLink.includes('hui-smdn-gtp')
-          ? activeBooking.meetLink
-          : formatGoogleMeetLink(activeBooking.id);
+      const raw = (activeBooking.meetLink || '').trim();
+      const validLink = raw && raw.startsWith('http') ? raw : formatGoogleMeetLink(raw || activeBooking.id);
       setCustomMeetLink(validLink);
       setRescheduleDate(activeBooking.scheduledDate || '');
       setRescheduleTime(activeBooking.scheduledTime || '10:00 AM');
@@ -140,7 +139,7 @@ export default function BookingLifecycleModal({
   const guideName = activeBooking.astrologer?.name || 'Dr. Pandit Vishal Dubey';
 
   const rawMeet = activeBooking.meetLink || customMeetLink || '';
-  const meetUrl = rawMeet && rawMeet.includes('hui-smdn-gtp') ? rawMeet : formatGoogleMeetLink(activeBooking.id);
+  const meetUrl = rawMeet && rawMeet.startsWith('http') ? rawMeet : formatGoogleMeetLink(rawMeet || activeBooking.id);
   const isTerminalState = activeBooking.status === 'COMPLETED' || activeBooking.status === 'CANCELLED' || activeBooking.status === 'REJECTED';
 
   const statusBadgeConfig: Record<string, { bg: string; text: string; border: string; label: string }> = {
@@ -192,16 +191,24 @@ export default function BookingLifecycleModal({
   const handleSaveMeetLink = async () => {
     if (!onUpdateMeetLink) return;
     setMeetLinkError(null);
-    if (!customMeetLink.trim()) {
+    let url = customMeetLink.trim();
+    if (!url) {
       setMeetLinkError('Meeting link URL cannot be empty.');
       return;
     }
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      if (/^[a-z]{3}-[a-z]{4}-[a-z]{3}$/i.test(url)) {
+        url = 'https://meet.google.com/' + url;
+      } else {
+        url = 'https://' + url;
+      }
+    }
     setMeetLinkLoading(true);
     try {
-      await onUpdateMeetLink(activeBooking.id, customMeetLink.trim());
+      await onUpdateMeetLink(activeBooking.id, url);
       setShowMeetLinkEdit(false);
     } catch (err: any) {
-      setMeetLinkError(err?.message || 'Invalid meeting URL. Must start with https:// and be from Google Meet, Zoom, or Teams.');
+      setMeetLinkError(err?.message || 'Invalid meeting URL. Please provide a valid meeting link.');
     } finally {
       setMeetLinkLoading(false);
     }
@@ -692,7 +699,7 @@ export default function BookingLifecycleModal({
                   type="url"
                   value={customMeetLink}
                   onChange={(e) => setCustomMeetLink(e.target.value)}
-                  placeholder="https://meet.google.com/xxx-xxxx-xxx or https://zoom.us/j/..."
+                  placeholder="https://meet.google.com/... or https://zoom.us/j/... or any meeting URL"
                   className="flex-1 px-2.5 py-1.5 rounded-lg border border-stone-300 bg-white text-xs font-mono focus:ring-1.5 focus:ring-[#5B0D15]"
                 />
                 <button
@@ -706,7 +713,7 @@ export default function BookingLifecycleModal({
                 </button>
               </div>
               <p className="text-[10px] text-emerald-900/80">
-                Supports secure HTTPS URLs on Google Meet, Zoom, or Microsoft Teams.
+                Supports any meeting platform URL (Google Meet, Zoom, Microsoft Teams, Webex, Jitsi, etc.)
               </p>
             </div>
           )}
@@ -764,7 +771,7 @@ export default function BookingLifecycleModal({
                 type="text"
                 value={statusNotes}
                 onChange={(e) => setStatusNotes(e.target.value)}
-                placeholder="Optional notes for this update (e.g. Conducted via phone call, reschedule requested)..."
+                placeholder="Optional note for devotee (e.g. Guruji unavailable due to temple rituals, please choose another slot)..."
                 className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 bg-white text-xs focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
               />
             )}
@@ -796,89 +803,50 @@ export default function BookingLifecycleModal({
                   <button
                     type="button"
                     disabled={updatingStatus}
-                    onClick={() => onTransitionStatus('REJECTED')}
-                    className="px-3.5 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                  >
-                    <Ban className="w-3.5 h-3.5" />
-                    <span>Reject Booking</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={updatingStatus}
                     onClick={() => onTransitionStatus('CANCELLED')}
-                    className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="px-3.5 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:scale-105 active:scale-95"
+                    title="Notify seeker that Guruji is unavailable and suggest selecting another date or time"
                   >
-                    <X className="w-3.5 h-3.5" />
-                    <span>Cancel Booking</span>
+                    <XCircle className="w-3.5 h-3.5" />
+                    <span>Guruji Unavailable (Decline Slot)</span>
                   </button>
                 </>
               )}
 
-              {activeBooking.status === 'CONFIRMED' && (
+              {(activeBooking.status === 'CONFIRMED' || activeBooking.status === 'APPROVED') && (
                 <>
                   <button
                     type="button"
                     disabled={updatingStatus}
                     onClick={() => onTransitionStatus('COMPLETED')}
-                    className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:scale-105 active:scale-95"
                   >
-                    {updatingStatus ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                    {updatingStatus ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5 text-blue-200" />}
                     <span>Mark as Completed</span>
                   </button>
                   <button
                     type="button"
                     disabled={updatingStatus}
                     onClick={() => onTransitionStatus('CANCELLED')}
-                    className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="px-3.5 py-1.5 rounded-lg bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:scale-105 active:scale-95"
+                    title="Notify seeker that Guruji is unavailable and suggest selecting another date or time"
                   >
-                    <X className="w-3.5 h-3.5" />
-                    <span>Cancel Appointment</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={updatingStatus}
-                    onClick={() => onTransitionStatus('REJECTED')}
-                    className="px-3.5 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                  >
-                    <Ban className="w-3.5 h-3.5" />
-                    <span>Reject Booking</span>
+                    <XCircle className="w-3.5 h-3.5" />
+                    <span>Guruji Unavailable (Cancel Slot)</span>
                   </button>
                 </>
               )}
 
               {(activeBooking.status === 'CANCELLED' || activeBooking.status === 'REJECTED') && (
-                <>
-                  <button
-                    type="button"
-                    disabled={updatingStatus}
-                    onClick={() => onTransitionStatus('PENDING')}
-                    className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    <span>Re-open as Pending</span>
-                  </button>
-                  {activeBooking.status === 'CANCELLED' ? (
-                    <button
-                      type="button"
-                      disabled={updatingStatus}
-                      onClick={() => onTransitionStatus('REJECTED')}
-                      className="px-3.5 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                    >
-                      <Ban className="w-3.5 h-3.5" />
-                      <span>Switch to Rejected</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={updatingStatus}
-                      onClick={() => onTransitionStatus('CANCELLED')}
-                      className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                      <span>Switch to Cancelled</span>
-                    </button>
-                  )}
-                </>
+                <button
+                  type="button"
+                  disabled={updatingStatus}
+                  onClick={() => onTransitionStatus('PENDING')}
+                  className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 hover:scale-105 active:scale-95"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Re-open Consultation</span>
+                </button>
               )}
             </div>
           </div>

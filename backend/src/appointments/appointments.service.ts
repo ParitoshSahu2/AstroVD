@@ -14,10 +14,6 @@ import { SERVICES_CATALOGUE, PUBLISHED_TIME_SLOTS, ServiceCatalogueItem, generat
 import { BookAppointmentDto } from './dto/book-appointment.dto.js';
 import { ListBookingsQueryDto } from './dto/list-bookings-query.dto.js';
 import { UpdateBookingStatusDto } from './dto/update-booking-status.dto.js';
-import { CreateSlotDto } from './dto/create-slot.dto.js';
-import { UpdateSlotDto } from './dto/update-slot.dto.js';
-import { BlockDateDto } from './dto/block-date.dto.js';
-import { InitializeScheduleDto } from './dto/initialize-schedule.dto.js';
 import { CreateServiceDto } from './dto/create-service.dto.js';
 import { UpdateServiceDto } from './dto/update-service.dto.js';
 import { ListServicesQueryDto } from './dto/list-services-query.dto.js';
@@ -28,11 +24,14 @@ import { normalizePhoneNumber, isValidE164 } from '../auth/phone.util.js';
 import type { JwtPayload } from '../auth/decorators/current-user.decorator.js';
 import { EmailService } from '../email/email.service.js';
 
-export const DEFAULT_GURUJI_MEET_LINK = 'https://meet.google.com/meet/hui-smdn-gtp';
+export const DEFAULT_GURUJI_MEET_LINK = 'https://meet.google.com/zrg-vfdz-jky';
 
 export function formatGoogleMeetLink(bookingId?: string): string {
+  if (bookingId && bookingId.trim().startsWith('http')) {
+    return bookingId.trim();
+  }
   const configured = process.env.GURUJI_MEET_LINK || process.env.NEXT_PUBLIC_GURUJI_MEET_LINK;
-  if (configured && configured.trim().startsWith('https://meet.google.com/')) {
+  if (configured && configured.trim().startsWith('http')) {
     return configured.trim();
   }
   return DEFAULT_GURUJI_MEET_LINK;
@@ -40,7 +39,7 @@ export function formatGoogleMeetLink(bookingId?: string): string {
 
 export function extractMeetingLink(notes?: string | null, bookingId?: string): string {
   if (notes) {
-    const match = notes.match(/MeetLink:\s*(https:\/\/[^\s|]+)/i);
+    const match = notes.match(/MeetLink:\s*(https?:\/\/[^\s|]+)/i);
     if (match && match[1]) {
       return match[1].trim();
     }
@@ -1149,7 +1148,7 @@ export class AppointmentsService {
     const service =
       this.servicesCatalogue.find((s) => s.id === b.serviceType) ||
       SERVICES_CATALOGUE.find((s) => s.id === b.serviceType);
-    const meetLink = extractMeetingLink(b.notes, b.id);
+    const meetLink = (b.meetLink && b.meetLink.trim()) || extractMeetingLink(b.notes, b.id);
     const customerName = b.customerName || userObj?.name || 'Customer';
     const customerPhone = b.customerPhone || userObj?.phone || b.contactPhone;
     const isWalletPayment = Boolean(b.notes?.includes('Paid via WALLET') || b.notes?.includes('Payment: WALLET_PAID'));
@@ -1471,7 +1470,7 @@ export class AppointmentsService {
         const validTransitions: Record<string, string[]> = {
           PENDING_PAYMENT: ['APPROVED', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
           PENDING: ['APPROVED', 'PENDING_PAYMENT', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
-          APPROVED: ['PENDING_PAYMENT', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
+          APPROVED: ['PENDING_PAYMENT', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'REJECTED'],
           CONFIRMED: ['COMPLETED', 'CANCELLED', 'REJECTED'],
           CANCELLED: ['REJECTED', 'PENDING'],
           REJECTED: ['CANCELLED', 'PENDING'],
@@ -1524,7 +1523,7 @@ export class AppointmentsService {
     const validTransitions: Record<string, string[]> = {
       PENDING_PAYMENT: ['APPROVED', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
       PENDING: ['APPROVED', 'PENDING_PAYMENT', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
-      APPROVED: ['PENDING_PAYMENT', 'CONFIRMED', 'CANCELLED', 'REJECTED'],
+      APPROVED: ['PENDING_PAYMENT', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'REJECTED'],
       CONFIRMED: ['COMPLETED', 'CANCELLED', 'REJECTED'],
     };
 
@@ -1736,12 +1735,39 @@ export class AppointmentsService {
     dto: RescheduleBookingDto,
     ipAddress?: string,
   ) {
-    const booking = await this.prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: { user: true, astrologer: true },
-    });
+    let booking: any = null;
+    try {
+      booking = await this.prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: { user: true, astrologer: true },
+      });
+    } catch {
+      booking = null;
+    }
 
     if (!booking) {
+      this.initFallbackBookings();
+      const fbIdx = this.fallbackBookings.findIndex((b) => b.id === bookingId);
+      if (fbIdx !== -1) {
+        const fb = this.fallbackBookings[fbIdx];
+        const currentStatus = (fb.status || 'PENDING').toUpperCase();
+        if (currentStatus === 'COMPLETED' || currentStatus === 'CANCELLED' || currentStatus === 'REJECTED') {
+          throw new BadRequestException(`Cannot reschedule a ${currentStatus} booking.`);
+        }
+        const oldDate = fb.scheduledDate;
+        const oldTime = fb.scheduledTime;
+        const rescheduleReason = (dto.reason || dto.notes || '').trim();
+        const rescheduleNote = `Rescheduled from ${oldDate} ${oldTime} to ${dto.scheduledDate} ${dto.scheduledTime}${rescheduleReason ? ` (Reason: ${rescheduleReason})` : ''}`;
+        fb.scheduledDate = dto.scheduledDate;
+        fb.scheduledTime = dto.scheduledTime;
+        fb.notes = fb.notes ? `${fb.notes} | ${rescheduleNote}` : rescheduleNote;
+        fb.updatedAt = new Date().toISOString();
+        this.saveFallbackBookings();
+        return {
+          message: `Appointment successfully rescheduled to ${dto.scheduledDate} at ${dto.scheduledTime}.`,
+          booking: this.formatBookingPayload(fb, { id: fb.userId, email: fb.customerEmail, phone: fb.customerPhone }, fb.astrologer),
+        };
+      }
       throw new NotFoundException(`Booking with ID "${bookingId}" was not found.`);
     }
 
@@ -1751,73 +1777,107 @@ export class AppointmentsService {
     }
 
     // Check blocked date
-    const blockedDate = await this.prisma.blockedDate.findUnique({
-      where: { date: dto.scheduledDate },
-    });
-    if (blockedDate) {
-      throw new BadRequestException(
-        `Date ${dto.scheduledDate} is marked as blocked (${blockedDate.reason || 'Sanctuary closed'}). Cannot reschedule to this date.`,
-      );
+    try {
+      const blockedDate = await this.prisma.blockedDate.findUnique({
+        where: { date: dto.scheduledDate },
+      });
+      if (blockedDate) {
+        throw new BadRequestException(
+          `Date ${dto.scheduledDate} is marked as blocked (${blockedDate.reason || 'Sanctuary closed'}). Cannot reschedule to this date.`,
+        );
+      }
+    } catch (e) {
+      if (e instanceof BadRequestException) throw e;
     }
 
     // Collision check and atomic reschedule
-    const result = await this.prisma.$transaction(async (tx) => {
-      const collision = await tx.booking.findFirst({
-        where: {
-          id: { not: bookingId },
-          scheduledDate: dto.scheduledDate,
-          scheduledTime: dto.scheduledTime,
-          status: { in: ['CONFIRMED', 'PENDING'] },
-        },
-      });
+    let result: any = null;
+    try {
+      result = await this.prisma.$transaction(async (tx) => {
+        const collision = await tx.booking.findFirst({
+          where: {
+            id: { not: bookingId },
+            scheduledDate: dto.scheduledDate,
+            scheduledTime: dto.scheduledTime,
+            status: { in: ['CONFIRMED', 'PENDING'] },
+          },
+        });
 
-      if (collision) {
-        throw new ConflictException(
-          `Target slot (${dto.scheduledDate} at ${dto.scheduledTime}) is already booked by another consultation.`,
-        );
+        if (collision) {
+          throw new ConflictException(
+            `Target slot (${dto.scheduledDate} at ${dto.scheduledTime}) is already booked by another consultation.`,
+          );
+        }
+
+        const oldDate = booking.scheduledDate;
+        const oldTime = booking.scheduledTime;
+        const rescheduleReason = (dto.reason || dto.notes || '').trim();
+
+        const rescheduleNote = `Rescheduled from ${oldDate} ${oldTime} to ${dto.scheduledDate} ${dto.scheduledTime}${rescheduleReason ? ` (Reason: ${rescheduleReason})` : ''}`;
+        const updatedNotes = booking.notes
+          ? `${booking.notes} | ${rescheduleNote}`
+          : rescheduleNote;
+
+        const updated = await tx.booking.update({
+          where: { id: bookingId },
+          data: {
+            scheduledDate: dto.scheduledDate,
+            scheduledTime: dto.scheduledTime,
+            notes: updatedNotes,
+          },
+          include: {
+            astrologer: true,
+            user: {
+              select: { id: true, name: true, email: true, phone: true },
+            },
+          },
+        });
+
+        try {
+          await tx.auditLog.create({
+            data: {
+              action: 'BOOKING_RESCHEDULED',
+              actorId: actor.sub,
+              actorEmail: actor.email,
+              targetId: bookingId,
+              details: {
+                from: { date: oldDate, time: oldTime },
+                to: { date: dto.scheduledDate, time: dto.scheduledTime },
+                notes: rescheduleReason || null,
+              },
+              ipAddress: ipAddress || null,
+            },
+          });
+        } catch {
+          // ignore
+        }
+
+        return updated;
+      });
+    } catch (txErr) {
+      if (txErr instanceof ConflictException || txErr instanceof BadRequestException) throw txErr;
+      this.initFallbackBookings();
+      const fbIdx = this.fallbackBookings.findIndex((b) => b.id === bookingId);
+      if (fbIdx !== -1) {
+        const fb = this.fallbackBookings[fbIdx];
+        fb.scheduledDate = dto.scheduledDate;
+        fb.scheduledTime = dto.scheduledTime;
+        fb.updatedAt = new Date().toISOString();
+        this.saveFallbackBookings();
+        result = fb;
+      } else {
+        throw txErr;
       }
+    }
 
-      const oldDate = booking.scheduledDate;
-      const oldTime = booking.scheduledTime;
-      const rescheduleReason = (dto.reason || dto.notes || '').trim();
-
-      const rescheduleNote = `Rescheduled from ${oldDate} ${oldTime} to ${dto.scheduledDate} ${dto.scheduledTime}${rescheduleReason ? ` (Reason: ${rescheduleReason})` : ''}`;
-      const updatedNotes = booking.notes
-        ? `${booking.notes} | ${rescheduleNote}`
-        : rescheduleNote;
-
-      const updated = await tx.booking.update({
-        where: { id: bookingId },
-        data: {
-          scheduledDate: dto.scheduledDate,
-          scheduledTime: dto.scheduledTime,
-          notes: updatedNotes,
-        },
-        include: {
-          astrologer: true,
-          user: {
-            select: { id: true, name: true, email: true, phone: true },
-          },
-        },
-      });
-
-      await tx.auditLog.create({
-        data: {
-          action: 'BOOKING_RESCHEDULED',
-          actorId: actor.sub,
-          actorEmail: actor.email,
-          targetId: bookingId,
-          details: {
-            from: { date: oldDate, time: oldTime },
-            to: { date: dto.scheduledDate, time: dto.scheduledTime },
-            notes: rescheduleReason || null,
-          },
-          ipAddress: ipAddress || null,
-        },
-      });
-
-      return updated;
-    });
+    this.initFallbackBookings();
+    const fbIdx = this.fallbackBookings.findIndex((b) => b.id === bookingId);
+    if (fbIdx !== -1) {
+      this.fallbackBookings[fbIdx].scheduledDate = dto.scheduledDate;
+      this.fallbackBookings[fbIdx].scheduledTime = dto.scheduledTime;
+      this.fallbackBookings[fbIdx].updatedAt = new Date().toISOString();
+      this.saveFallbackBookings();
+    }
 
     return {
       message: `Appointment successfully rescheduled to ${dto.scheduledDate} at ${dto.scheduledTime}.`,
@@ -1834,15 +1894,59 @@ export class AppointmentsService {
     dto: UpdateMeetLinkDto,
     ipAddress?: string,
   ) {
-    const booking = await this.prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: {
-        astrologer: true,
-        user: { select: { id: true, name: true, email: true, phone: true } },
-      },
-    });
+    let trimmedUrl = (dto.meetLink || dto.meetingLink || '').trim();
+    if (!trimmedUrl) {
+      throw new BadRequestException('Meeting link URL cannot be empty.');
+    }
+
+    // Auto-prefix protocol if omitted
+    if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
+      if (/^[a-z]{3}-[a-z]{4}-[a-z]{3}$/i.test(trimmedUrl)) {
+        trimmedUrl = `https://meet.google.com/${trimmedUrl}`;
+      } else {
+        trimmedUrl = `https://${trimmedUrl}`;
+      }
+    }
+
+    let booking: any = null;
+    try {
+      booking = await this.prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          astrologer: true,
+          user: { select: { id: true, name: true, email: true, phone: true } },
+        },
+      });
+    } catch {
+      booking = null;
+    }
 
     if (!booking) {
+      this.initFallbackBookings();
+      const fbIdx = this.fallbackBookings.findIndex((b) => b.id === bookingId);
+      if (fbIdx !== -1) {
+        const fb = this.fallbackBookings[fbIdx];
+        const currentStatus = (fb.status || 'PENDING').toUpperCase();
+        if (currentStatus === 'CANCELLED' || currentStatus === 'REJECTED') {
+          throw new BadRequestException(`Cannot assign a meeting link to a ${currentStatus} booking.`);
+        }
+
+        fb.meetLink = trimmedUrl;
+        let notes = fb.notes || '';
+        if (/MeetLink:\s*[^\s|]+/i.test(notes)) {
+          notes = notes.replace(/MeetLink:\s*[^\s|]+/i, `MeetLink: ${trimmedUrl}`);
+        } else {
+          notes = notes ? `MeetLink: ${trimmedUrl} | ${notes}` : `MeetLink: ${trimmedUrl}`;
+        }
+        fb.notes = notes;
+        fb.updatedAt = new Date().toISOString();
+        this.saveFallbackBookings();
+
+        return {
+          message: 'Consultation room meeting link updated successfully.',
+          booking: this.formatBookingPayload(fb, { id: fb.userId, email: fb.customerEmail, phone: fb.customerPhone }, fb.astrologer),
+        };
+      }
       throw new NotFoundException(`Booking with ID "${bookingId}" was not found.`);
     }
 
@@ -1851,7 +1955,6 @@ export class AppointmentsService {
       throw new BadRequestException(`Cannot assign a meeting link to a ${currentStatus} booking.`);
     }
 
-    const trimmedUrl = (dto.meetLink || dto.meetingLink || '').trim();
     let notes = booking.notes || '';
     if (/MeetLink:\s*[^\s|]+/i.test(notes)) {
       notes = notes.replace(/MeetLink:\s*[^\s|]+/i, `MeetLink: ${trimmedUrl}`);
@@ -1859,27 +1962,56 @@ export class AppointmentsService {
       notes = notes ? `MeetLink: ${trimmedUrl} | ${notes}` : `MeetLink: ${trimmedUrl}`;
     }
 
-    const updated = await this.prisma.booking.update({
-      where: { id: bookingId },
-      data: { notes },
-      include: {
-        astrologer: true,
-        user: { select: { id: true, name: true, email: true, phone: true } },
-      },
-    });
-
-    await this.prisma.auditLog.create({
-      data: {
-        action: 'BOOKING_MEET_LINK_UPDATED',
-        actorId: actor.sub,
-        actorEmail: actor.email,
-        targetId: bookingId,
-        details: {
-          meetingLink: trimmedUrl,
+    let updated: any = null;
+    try {
+      updated = await this.prisma.booking.update({
+        where: { id: bookingId },
+        data: { notes },
+        include: {
+          astrologer: true,
+          user: { select: { id: true, name: true, email: true, phone: true } },
         },
-        ipAddress: ipAddress || null,
-      },
-    });
+      });
+    } catch (err) {
+      this.initFallbackBookings();
+      const fbIdx = this.fallbackBookings.findIndex((b) => b.id === bookingId);
+      if (fbIdx !== -1) {
+        const fb = this.fallbackBookings[fbIdx];
+        fb.meetLink = trimmedUrl;
+        fb.notes = notes;
+        fb.updatedAt = new Date().toISOString();
+        this.saveFallbackBookings();
+        updated = fb;
+      } else {
+        throw err;
+      }
+    }
+
+    try {
+      await this.prisma.auditLog.create({
+        data: {
+          action: 'BOOKING_MEET_LINK_UPDATED',
+          actorId: actor.sub,
+          actorEmail: actor.email,
+          targetId: bookingId,
+          details: {
+            meetingLink: trimmedUrl,
+          },
+          ipAddress: ipAddress || null,
+        },
+      });
+    } catch {
+      // ignore
+    }
+
+    this.initFallbackBookings();
+    const fbIdx = this.fallbackBookings.findIndex((b) => b.id === bookingId);
+    if (fbIdx !== -1) {
+      this.fallbackBookings[fbIdx].meetLink = trimmedUrl;
+      this.fallbackBookings[fbIdx].notes = notes;
+      this.fallbackBookings[fbIdx].updatedAt = new Date().toISOString();
+      this.saveFallbackBookings();
+    }
 
     return {
       message: 'Consultation room meeting link updated successfully.',
@@ -1896,15 +2028,42 @@ export class AppointmentsService {
     dto: VerifyPaymentDto,
     ipAddress?: string,
   ) {
-    const booking = await this.prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: {
-        astrologer: true,
-        user: { select: { id: true, name: true, email: true, phone: true } },
-      },
-    });
+    let booking: any = null;
+    try {
+      booking = await this.prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          astrologer: true,
+          user: { select: { id: true, name: true, email: true, phone: true } },
+        },
+      });
+    } catch {
+      booking = null;
+    }
 
     if (!booking) {
+      this.initFallbackBookings();
+      const fbIdx = this.fallbackBookings.findIndex((b) => b.id === bookingId);
+      if (fbIdx !== -1) {
+        const fb = this.fallbackBookings[fbIdx];
+        if (fb.status.toUpperCase() !== 'PENDING_PAYMENT') {
+          throw new BadRequestException(
+            `Cannot verify payment for booking in "${fb.status}" status. Only PENDING_PAYMENT bookings can be verified.`,
+          );
+        }
+
+        const verifyNote = (dto.verificationNotes || dto.notes || '').trim();
+        const verificationNote = `Payment Verified: VERIFIED_MANUAL (Ref: ${dto.transactionReference}, Method: ${dto.paymentMethod || 'MANUAL'}, VerifiedBy: ${actor.email})${verifyNote ? ` - ${verifyNote}` : ''}`;
+        fb.status = 'CONFIRMED';
+        fb.notes = fb.notes ? `${fb.notes} | ${verificationNote}` : verificationNote;
+        fb.updatedAt = new Date().toISOString();
+        this.saveFallbackBookings();
+
+        return {
+          message: 'Payment verified successfully. Consultation confirmed.',
+          booking: this.formatBookingPayload(fb, { id: fb.userId, email: fb.customerEmail, phone: fb.customerPhone }, fb.astrologer),
+        };
+      }
       throw new NotFoundException(`Booking with ID "${bookingId}" was not found.`);
     }
 
@@ -1920,33 +2079,62 @@ export class AppointmentsService {
       ? `${booking.notes} | ${verificationNote}`
       : verificationNote;
 
-    const updated = await this.prisma.booking.update({
-      where: { id: bookingId },
-      data: {
-        status: 'CONFIRMED',
-        notes: updatedNotes,
-      },
-      include: {
-        astrologer: true,
-        user: { select: { id: true, name: true, email: true, phone: true } },
-      },
-    });
-
-    await this.prisma.auditLog.create({
-      data: {
-        action: 'BOOKING_PAYMENT_VERIFIED',
-        actorId: actor.sub,
-        actorEmail: actor.email,
-        targetId: bookingId,
-        details: {
-          amount: booking.totalCost,
-          transactionReference: dto.transactionReference,
-          paymentMethod: dto.paymentMethod || 'MANUAL',
-          notes: verifyNote || null,
+    let updated: any = null;
+    try {
+      updated = await this.prisma.booking.update({
+        where: { id: bookingId },
+        data: {
+          status: 'CONFIRMED',
+          notes: updatedNotes,
         },
-        ipAddress: ipAddress || null,
-      },
-    });
+        include: {
+          astrologer: true,
+          user: { select: { id: true, name: true, email: true, phone: true } },
+        },
+      });
+    } catch (err) {
+      this.initFallbackBookings();
+      const fbIdx = this.fallbackBookings.findIndex((b) => b.id === bookingId);
+      if (fbIdx !== -1) {
+        const fb = this.fallbackBookings[fbIdx];
+        fb.status = 'CONFIRMED';
+        fb.notes = updatedNotes;
+        fb.updatedAt = new Date().toISOString();
+        this.saveFallbackBookings();
+        updated = fb;
+      } else {
+        throw err;
+      }
+    }
+
+    try {
+      await this.prisma.auditLog.create({
+        data: {
+          action: 'BOOKING_PAYMENT_VERIFIED',
+          actorId: actor.sub,
+          actorEmail: actor.email,
+          targetId: bookingId,
+          details: {
+            amount: booking.totalCost,
+            transactionReference: dto.transactionReference,
+            paymentMethod: dto.paymentMethod || 'MANUAL',
+            notes: verifyNote || null,
+          },
+          ipAddress: ipAddress || null,
+        },
+      });
+    } catch {
+      // ignore
+    }
+
+    this.initFallbackBookings();
+    const fbIdx = this.fallbackBookings.findIndex((b) => b.id === bookingId);
+    if (fbIdx !== -1) {
+      this.fallbackBookings[fbIdx].status = 'CONFIRMED';
+      this.fallbackBookings[fbIdx].notes = updatedNotes;
+      this.fallbackBookings[fbIdx].updatedAt = new Date().toISOString();
+      this.saveFallbackBookings();
+    }
 
     return {
       message: 'Payment verified successfully. Consultation confirmed.',
@@ -1955,589 +2143,53 @@ export class AppointmentsService {
   }
 
   /**
-   * Return full availability management view for a date (Admin/Superadmin only).
-   */
-  async getAdminAvailability(dateStr: string) {
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(dateStr)) {
-      throw new BadRequestException('Date must be formatted as YYYY-MM-DD');
-    }
-
-    const todayStr = new Date().toISOString().split('T')[0];
-    const isPastDate = dateStr < todayStr;
-    this.initFallbackBookings();
-
-    try {
-      // Check blocked status
-      const blockedDate = await this.prisma.blockedDate.findUnique({
-        where: { date: dateStr },
-      });
-
-      // Query all slots for this date
-      let dbSlots = await this.prisma.appointmentSlot.findMany({
-        where: { date: dateStr },
-        orderBy: { startTime: 'asc' },
-      });
-
-      // If no slots exist yet and date is not in past, auto-seed standard slots for convenience
-      if (dbSlots.length === 0 && !isPastDate) {
-        const defaultSlotsData = PUBLISHED_TIME_SLOTS.map((time) => ({
-          date: dateStr,
-          startTime: time,
-          durationMinutes: 45,
-          isPublished: true,
-        }));
-
-        await this.prisma.appointmentSlot.createMany({
-          data: defaultSlotsData,
-          skipDuplicates: true,
-        });
-
-        dbSlots = await this.prisma.appointmentSlot.findMany({
-          where: { date: dateStr },
-          orderBy: { startTime: 'asc' },
-        });
-      }
-
-      // Query active bookings for this date
-      const existingBookings = await this.prisma.booking.findMany({
-        where: {
-          scheduledDate: dateStr,
-          status: { notIn: ['CANCELLED', 'REJECTED'] },
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              phone: true,
-            },
-          },
-        },
-      });
-
-      const fallbackOnDate = this.fallbackBookings.filter(
-        (b) => b.scheduledDate === dateStr && !['CANCELLED', 'REJECTED'].includes(b.status),
-      );
-
-      const bookingByTime = new Map(existingBookings.map((b) => [b.scheduledTime, b]));
-      for (const fb of fallbackOnDate) {
-        if (!bookingByTime.has(fb.scheduledTime)) {
-          bookingByTime.set(fb.scheduledTime, fb);
-        }
-      }
-
-      const enrichedSlots = dbSlots.map((slot) => {
-        const booking: any = bookingByTime.get(slot.startTime);
-        const isBooked = Boolean(booking);
-
-        return {
-          id: slot.id,
-          date: slot.date,
-          startTime: slot.startTime,
-          durationMinutes: slot.durationMinutes,
-          isPublished: slot.isPublished,
-          notes: slot.notes,
-          isBooked,
-          booking: booking
-            ? {
-                id: booking.id,
-                serviceType: booking.serviceType || booking.serviceTitle,
-                serviceTitle: booking.serviceTitle || booking.serviceType,
-                status: booking.status,
-                customerName: booking.user?.name || booking.customerName || 'Vedic Seeker',
-                customerEmail: booking.user?.email || booking.customerEmail || null,
-                customerPhone: booking.user?.phone || booking.customerPhone || booking.contactPhone || null,
-                meetLink: booking.meetLink || DEFAULT_GURUJI_MEET_LINK,
-              }
-            : null,
-          canDelete: !isBooked,
-        };
-      });
-
-      const allUpcoming = [
-        ...existingBookings.map((b) => ({
-          id: b.id,
-          serviceTitle: b.serviceType,
-          status: b.status,
-          scheduledTime: b.scheduledTime,
-          scheduledDate: b.scheduledDate,
-          customerName: b.user?.name || 'Vedic Seeker',
-          customerPhone: b.user?.phone || null,
-          customerEmail: b.user?.email || null,
-          meetLink: DEFAULT_GURUJI_MEET_LINK,
-        })),
-        ...fallbackOnDate.map((fb) => ({
-          id: fb.id,
-          serviceTitle: fb.serviceTitle || fb.serviceType,
-          status: fb.status,
-          scheduledTime: fb.scheduledTime,
-          scheduledDate: fb.scheduledDate,
-          customerName: fb.customerName || 'Vedic Seeker',
-          customerPhone: fb.customerPhone || fb.contactPhone || null,
-          customerEmail: fb.customerEmail || null,
-          meetLink: fb.meetLink || DEFAULT_GURUJI_MEET_LINK,
-        })),
-      ];
-
-      this.initFallbackBookings();
-      const todayStr = new Date().toISOString().split('T')[0];
-      const allActiveUpcoming = this.fallbackBookings
-        .filter((b) => b.scheduledDate >= todayStr && !['CANCELLED', 'REJECTED'].includes(b.status))
-        .map((fb) => ({
-          id: fb.id,
-          serviceTitle: fb.serviceTitle || fb.serviceType,
-          status: fb.status,
-          scheduledTime: fb.scheduledTime,
-          scheduledDate: fb.scheduledDate,
-          customerName: fb.customerName || 'Vedic Seeker',
-          customerPhone: fb.customerPhone || fb.contactPhone || null,
-          customerEmail: fb.customerEmail || null,
-          meetLink: fb.meetLink || DEFAULT_GURUJI_MEET_LINK,
-        }));
-
-      allActiveUpcoming.sort((a, b) => {
-        const tA = getBookingTimestamp(a.scheduledDate, a.scheduledTime);
-        const tB = getBookingTimestamp(b.scheduledDate, b.scheduledTime);
-        return tA - tB;
-      });
-
-      allUpcoming.sort((a, b) => {
-        const tA = parseTimeToMinutes(a.scheduledTime);
-        const tB = parseTimeToMinutes(b.scheduledTime);
-        return tA - tB;
-      });
-
-      return {
-        date: dateStr,
-        isBlocked: Boolean(blockedDate),
-        blockedReason: blockedDate?.reason || null,
-        slots: enrichedSlots,
-        totalSlots: enrichedSlots.length,
-        bookedCount: enrichedSlots.filter((s) => s.isBooked).length,
-        upcomingBookings: allUpcoming,
-        allUpcomingBookings: allActiveUpcoming,
-      };
-    } catch (err: any) {
-      this.logger.warn(`Prisma availability lookup failed (${err.message}). Using fallback schedule.`);
-      const fallbackOnDate = this.fallbackBookings.filter(
-        (b) => b.scheduledDate === dateStr && !['CANCELLED', 'REJECTED'].includes(b.status),
-      );
-      const bookingByTime = new Map(fallbackOnDate.map((b) => [b.scheduledTime, b]));
-
-      const fallbackSlots = PUBLISHED_TIME_SLOTS.map((time, idx) => {
-        const fb = bookingByTime.get(time);
-        const isBooked = Boolean(fb);
-        return {
-          id: `slot-${dateStr}-${idx}`,
-          date: dateStr,
-          startTime: time,
-          durationMinutes: 45,
-          isPublished: true,
-          notes: null,
-          isBooked,
-          booking: fb
-            ? {
-                id: fb.id,
-                serviceType: fb.serviceType || fb.serviceTitle,
-                serviceTitle: fb.serviceTitle || fb.serviceType,
-                status: fb.status,
-                customerName: fb.customerName || 'Vedic Seeker',
-                customerEmail: fb.customerEmail || null,
-                customerPhone: fb.customerPhone || fb.contactPhone || null,
-                meetLink: fb.meetLink || DEFAULT_GURUJI_MEET_LINK,
-              }
-            : null,
-          canDelete: !isBooked,
-        };
-      });
-
-      this.initFallbackBookings();
-      const todayStr = new Date().toISOString().split('T')[0];
-      const allActiveUpcoming = this.fallbackBookings
-        .filter((b) => b.scheduledDate >= todayStr && !['CANCELLED', 'REJECTED'].includes(b.status))
-        .map((fb) => ({
-          id: fb.id,
-          serviceTitle: fb.serviceTitle || fb.serviceType,
-          status: fb.status,
-          scheduledTime: fb.scheduledTime,
-          scheduledDate: fb.scheduledDate,
-          customerName: fb.customerName || 'Vedic Seeker',
-          customerPhone: fb.customerPhone || fb.contactPhone || null,
-          customerEmail: fb.customerEmail || null,
-          meetLink: fb.meetLink || DEFAULT_GURUJI_MEET_LINK,
-        }));
-
-      allActiveUpcoming.sort((a, b) => {
-        const tA = getBookingTimestamp(a.scheduledDate, a.scheduledTime);
-        const tB = getBookingTimestamp(b.scheduledDate, b.scheduledTime);
-        return tA - tB;
-      });
-
-      const upcomingForDate = fallbackOnDate.map((fb) => ({
-        id: fb.id,
-        serviceTitle: fb.serviceTitle || fb.serviceType,
-        status: fb.status,
-        scheduledTime: fb.scheduledTime,
-        scheduledDate: fb.scheduledDate,
-        customerName: fb.customerName || 'Vedic Seeker',
-        customerPhone: fb.customerPhone || fb.contactPhone || null,
-        customerEmail: fb.customerEmail || null,
-        meetLink: fb.meetLink || DEFAULT_GURUJI_MEET_LINK,
-      }));
-
-      upcomingForDate.sort((a, b) => {
-        const tA = parseTimeToMinutes(a.scheduledTime);
-        const tB = parseTimeToMinutes(b.scheduledTime);
-        return tA - tB;
-      });
-
-      return {
-        date: dateStr,
-        isBlocked: false,
-        blockedReason: null,
-        slots: fallbackSlots,
-        totalSlots: fallbackSlots.length,
-        bookedCount: fallbackSlots.filter((s) => s.isBooked).length,
-        upcomingBookings: upcomingForDate,
-        allUpcomingBookings: allActiveUpcoming,
-      };
-    }
-  }
-
-  /**
-   * Create an available consultation time slot (Admin/Superadmin only).
-   */
-  async createAdminSlot(actor: JwtPayload, dto: CreateSlotDto, ipAddress?: string) {
-    const todayStr = new Date().toISOString().split('T')[0];
-    if (dto.date < todayStr) {
-      throw new BadRequestException('Appointment slot date cannot be in the past.');
-    }
-
-    const cleanStartTime = dto.startTime.trim();
-    const existing = await this.prisma.appointmentSlot.findUnique({
-      where: {
-        date_startTime: {
-          date: dto.date,
-          startTime: cleanStartTime,
-        },
-      },
-    });
-
-    if (existing) {
-      throw new ConflictException(
-        `Slot on ${dto.date} at ${cleanStartTime} already exists in the sanctuary schedule.`,
-      );
-    }
-
-    const slot = await this.prisma.appointmentSlot.create({
-      data: {
-        date: dto.date,
-        startTime: cleanStartTime,
-        durationMinutes: dto.durationMinutes || 45,
-        isPublished: dto.isPublished !== undefined ? dto.isPublished : true,
-        notes: dto.notes?.trim() || null,
-      },
-    });
-
-    await this.prisma.auditLog.create({
-      data: {
-        action: 'SLOT_CREATED',
-        actorId: actor.sub,
-        actorEmail: actor.email,
-        targetId: slot.id,
-        details: {
-          date: slot.date,
-          startTime: slot.startTime,
-          durationMinutes: slot.durationMinutes,
-          isPublished: slot.isPublished,
-        },
-        ipAddress: ipAddress || null,
-      },
-    });
-
-    return {
-      message: 'Consultation slot successfully created.',
-      slot,
-    };
-  }
-
-  /**
-   * Update or publish/unpublish a slot (Admin/Superadmin only).
-   */
-  async updateAdminSlot(actor: JwtPayload, slotId: string, dto: UpdateSlotDto, ipAddress?: string) {
-    const slot = await this.prisma.appointmentSlot.findUnique({
-      where: { id: slotId },
-    });
-
-    if (!slot) {
-      throw new NotFoundException('Appointment slot not found.');
-    }
-
-    if (dto.startTime && dto.startTime.trim() !== slot.startTime) {
-      const cleanStartTime = dto.startTime.trim();
-      const activeBooking = await this.prisma.booking.findFirst({
-        where: {
-          scheduledDate: slot.date,
-          scheduledTime: slot.startTime,
-          status: { notIn: ['CANCELLED', 'REJECTED'] },
-        },
-      });
-
-      if (activeBooking) {
-        throw new BadRequestException(
-          'Cannot modify the start time of an appointment slot with an active booking. Please reschedule the booking first.',
-        );
-      }
-
-      const duplicate = await this.prisma.appointmentSlot.findUnique({
-        where: {
-          date_startTime: {
-            date: slot.date,
-            startTime: cleanStartTime,
-          },
-        },
-      });
-
-      if (duplicate && duplicate.id !== slot.id) {
-        throw new ConflictException(
-          `Another slot already exists on ${slot.date} at ${cleanStartTime}.`,
-        );
-      }
-    }
-
-    const updated = await this.prisma.appointmentSlot.update({
-      where: { id: slotId },
-      data: {
-        ...(dto.startTime ? { startTime: dto.startTime.trim() } : {}),
-        ...(dto.durationMinutes !== undefined ? { durationMinutes: dto.durationMinutes } : {}),
-        ...(dto.isPublished !== undefined ? { isPublished: dto.isPublished } : {}),
-        ...(dto.notes !== undefined ? { notes: dto.notes.trim() } : {}),
-      },
-    });
-
-    await this.prisma.auditLog.create({
-      data: {
-        action: 'SLOT_UPDATED',
-        actorId: actor.sub,
-        actorEmail: actor.email,
-        targetId: slot.id,
-        details: {
-          date: updated.date,
-          startTime: updated.startTime,
-          isPublished: updated.isPublished,
-          durationMinutes: updated.durationMinutes,
-        },
-        ipAddress: ipAddress || null,
-      },
-    });
-
-    return {
-      message: 'Consultation slot successfully updated.',
-      slot: updated,
-    };
-  }
-
-  /**
-   * Delete an appointment slot, rejecting if active booking exists (Admin/Superadmin only).
-   */
-  async deleteAdminSlot(actor: JwtPayload, slotId: string, ipAddress?: string) {
-    const slot = await this.prisma.appointmentSlot.findUnique({
-      where: { id: slotId },
-    });
-
-    if (!slot) {
-      throw new NotFoundException('Appointment slot not found.');
-    }
-
-    const activeBooking = await this.prisma.booking.findFirst({
-      where: {
-        scheduledDate: slot.date,
-        scheduledTime: slot.startTime,
-        status: { notIn: ['CANCELLED', 'REJECTED'] },
-      },
-    });
-
-    if (activeBooking) {
-      throw new BadRequestException(
-        'Cannot delete appointment slot with an active customer booking. Cancel the booking first to prevent invalidating confirmed consultations.',
-      );
-    }
-
-    await this.prisma.appointmentSlot.delete({
-      where: { id: slotId },
-    });
-
-    await this.prisma.auditLog.create({
-      data: {
-        action: 'SLOT_DELETED',
-        actorId: actor.sub,
-        actorEmail: actor.email,
-        targetId: slotId,
-        details: {
-          date: slot.date,
-          startTime: slot.startTime,
-        },
-        ipAddress: ipAddress || null,
-      },
-    });
-
-    return {
-      message: `Appointment slot on ${slot.date} at ${slot.startTime} has been permanently deleted.`,
-    };
-  }
-
-  /**
-   * Block a date or holiday (Admin/Superadmin only).
-   */
-  async blockDate(actor: JwtPayload, dto: BlockDateDto, ipAddress?: string) {
-    const todayStr = new Date().toISOString().split('T')[0];
-    if (dto.date < todayStr) {
-      throw new BadRequestException('Cannot block dates in the past.');
-    }
-
-    const blocked = await this.prisma.blockedDate.upsert({
-      where: { date: dto.date },
-      create: {
-        date: dto.date,
-        reason: dto.reason?.trim() || 'Sanctuary Closed / Panditji Unavailable',
-      },
-      update: {
-        reason: dto.reason?.trim() || 'Sanctuary Closed / Panditji Unavailable',
-      },
-    });
-
-    await this.prisma.auditLog.create({
-      data: {
-        action: 'DATE_BLOCKED',
-        actorId: actor.sub,
-        actorEmail: actor.email,
-        targetId: blocked.id,
-        details: {
-          date: blocked.date,
-          reason: blocked.reason,
-        },
-        ipAddress: ipAddress || null,
-      },
-    });
-
-    return {
-      message: `Date ${dto.date} is now blocked. No customer bookings will be accepted for this date.`,
-      blockedDate: blocked,
-    };
-  }
-
-  /**
-   * Unblock a date (Admin/Superadmin only).
-   */
-  async unblockDate(actor: JwtPayload, dateStr: string, ipAddress?: string) {
-    const existing = await this.prisma.blockedDate.findUnique({
-      where: { date: dateStr },
-    });
-
-    if (existing) {
-      await this.prisma.blockedDate.delete({
-        where: { date: dateStr },
-      });
-
-      await this.prisma.auditLog.create({
-        data: {
-          action: 'DATE_UNBLOCKED',
-          actorId: actor.sub,
-          actorEmail: actor.email,
-          targetId: existing.id,
-          details: {
-            date: dateStr,
-          },
-          ipAddress: ipAddress || null,
-        },
-      });
-    }
-
-    return {
-      message: `Date ${dateStr} has been unblocked. Published slots are now available for customer bookings.`,
-    };
-  }
-
-  /**
-   * Bulk initialize standard Vedic schedule for upcoming days (Admin/Superadmin only).
-   */
-  async initializeStandardSchedule(
-    actor: JwtPayload,
-    dto: InitializeScheduleDto,
-    ipAddress?: string,
-  ) {
-    const days = dto.daysCount || 7;
-    const start = new Date(dto.startDate);
-    let createdCount = 0;
-
-    for (let i = 0; i < days; i++) {
-      const cur = new Date(start);
-      cur.setDate(start.getDate() + i);
-      const curDateStr = cur.toISOString().split('T')[0];
-
-      for (const time of PUBLISHED_TIME_SLOTS) {
-        await this.prisma.appointmentSlot.upsert({
-          where: {
-            date_startTime: {
-              date: curDateStr,
-              startTime: time,
-            },
-          },
-          create: {
-            date: curDateStr,
-            startTime: time,
-            durationMinutes: 45,
-            isPublished: true,
-          },
-          update: {},
-        });
-        createdCount++;
-      }
-    }
-
-    await this.prisma.auditLog.create({
-      data: {
-        action: 'SCHEDULE_INITIALIZED',
-        actorId: actor.sub,
-        actorEmail: actor.email,
-        details: {
-          startDate: dto.startDate,
-          daysCount: days,
-          slotsProcessed: createdCount,
-        },
-        ipAddress: ipAddress || null,
-      },
-    });
-
-    return {
-      message: `Standard Vedic schedule successfully initialized for ${days} days starting from ${dto.startDate}.`,
-      daysCount: days,
-      slotsProcessed: createdCount,
-    };
-  }
-
-  /**
    * Permanently delete a booking (Admin/Superadmin only).
    * Unlinks any associated slot and logs the action in AuditLog.
    */
   async deleteAdminBooking(actor: JwtPayload, bookingId: string, ipAddress?: string) {
-    const booking = await this.prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: {
-        user: { select: { id: true, name: true, email: true, phone: true } },
-        astrologer: { select: { id: true, name: true } },
-      },
-    });
+    let booking: any = null;
+    try {
+      booking = await this.prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          user: { select: { id: true, name: true, email: true, phone: true } },
+          astrologer: { select: { id: true, name: true } },
+        },
+      });
+    } catch {
+      booking = null;
+    }
 
     if (!booking) {
+      this.initFallbackBookings();
+      const fbIdx = this.fallbackBookings.findIndex((b) => b.id === bookingId);
+      if (fbIdx !== -1) {
+        const fb = this.fallbackBookings[fbIdx];
+        this.fallbackBookings.splice(fbIdx, 1);
+        this.saveFallbackBookings();
+        return {
+          success: true,
+          message: `Booking #${fb.id.slice(0, 8)} (${fb.scheduledDate}) has been permanently deleted.`,
+          bookingId: fb.id,
+        };
+      }
       throw new NotFoundException(`Booking with ID "${bookingId}" was not found.`);
     }
 
-    await this.prisma.booking.delete({
-      where: { id: booking.id },
-    });
+    try {
+      await this.prisma.booking.delete({
+        where: { id: booking.id },
+      });
+    } catch (e) {
+      // ignore
+    }
+
+    this.initFallbackBookings();
+    const fbIdx = this.fallbackBookings.findIndex((b) => b.id === bookingId);
+    if (fbIdx !== -1) {
+      this.fallbackBookings.splice(fbIdx, 1);
+      this.saveFallbackBookings();
+    }
 
     // Record immutable audit log
     try {

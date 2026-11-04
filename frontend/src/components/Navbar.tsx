@@ -599,8 +599,21 @@ export const Navbar: React.FC = () => {
       }
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSearchOpen(false);
+        setNotificationOpen(false);
+        setProfileDropdownOpen(false);
+        setAboutDropdownOpen(false);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   useEffect(() => {
@@ -1054,7 +1067,8 @@ export const Navbar: React.FC = () => {
             </div>
 
             {/* Center: Clean Navigation Links Matching Reference Design */}
-            <div className="relative z-10 hidden lg:flex items-center gap-7 xl:gap-9 text-[#3B1E22] font-medium text-sm">
+            {!searchOpen && (
+              <div className="relative z-10 hidden lg:flex items-center gap-7 xl:gap-9 text-[#3B1E22] font-medium text-sm animate-fadeIn">
               {topNavLinks.map((link) => {
                 const isActive =
                   pathname === link.href ||
@@ -1157,57 +1171,75 @@ export const Navbar: React.FC = () => {
                 )}
               </div>
             </div>
+            )}
 
             {/* Right: Search, Language Pill, Cart Badge & Sign Up Pill */}
-            <div className="relative z-10 flex items-center gap-3 sm:gap-3.5 md:gap-4">
-              {/* Search Icon with Expandable Input & Live Suggestions Dropdown */}
-              <div className="relative" ref={searchRef}>
-                {searchOpen ? (
+            <div className="relative z-10 flex items-center gap-2 sm:gap-3 md:gap-3.5 shrink-0">
+              {/* Search Icon with Non-Breaking Floating Overlay Input & Live Suggestions Dropdown */}
+              <div className="relative shrink-0 flex items-center" ref={searchRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchOpen((prev) => !prev);
+                    setNotificationOpen(false);
+                    setProfileDropdownOpen(false);
+                    setAboutDropdownOpen(false);
+                  }}
+                  className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                    searchOpen
+                      ? 'bg-amber-100/80 text-[#5B0D15]'
+                      : 'text-stone-700 hover:text-[#5B0D15] hover:bg-stone-100'
+                  }`}
+                  aria-label="Search"
+                  title={t('Search', 'खोजें')}
+                >
+                  <Search className="w-5 h-5 stroke-[1.8]" />
+                </button>
+
+                {searchOpen && (
                   <form
                     onSubmit={handleSearchSubmit}
-                    className="flex items-center bg-white/95 backdrop-blur-md border border-amber-300/90 rounded-full px-3 py-1.5 shadow-md animate-fadeIn"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-40 flex items-center bg-white/98 backdrop-blur-xl border border-amber-300 rounded-full px-3.5 py-1.5 shadow-2xl animate-fadeIn w-72 sm:w-80 md:w-96 text-[#3B1E22]"
+                    style={{
+                      boxShadow: '0 12px 36px -4px rgba(91, 13, 21, 0.2), 0 4px 12px -2px rgba(0, 0, 0, 0.08)',
+                    }}
                   >
                     <button
                       type="submit"
                       title={t('Search', 'खोजें')}
-                      className="text-[#4A262B] hover:text-[#5B0D15] mr-1.5 cursor-pointer focus:outline-none"
+                      className="text-[#4A262B] hover:text-[#5B0D15] mr-2 cursor-pointer focus:outline-none shrink-0"
                     >
                       <Search className="w-4 h-4 shrink-0" />
                     </button>
                     <input
                       type="text"
                       autoFocus
-                      placeholder={t('Search crystals, services...', 'क्रिस्टल या सेवाएं खोजें...')}
+                      placeholder={t('Search crystals, services, poojas...', 'क्रिस्टल, सेवाएं या पूजा खोजें...')}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-transparent text-xs text-[#3B1E22] placeholder-stone-400 focus:outline-none w-32 sm:w-44"
+                      className="bg-transparent text-xs sm:text-sm text-[#3B1E22] placeholder-stone-400 focus:outline-none flex-1 min-w-0"
                     />
+                    {searchQuery ? (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery('')}
+                        className="text-stone-400 hover:text-stone-700 p-0.5 ml-1 cursor-pointer shrink-0"
+                        title={t('Clear', 'साफ़ करें')}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => {
                         setSearchOpen(false);
                         setSearchQuery('');
                       }}
-                      className="text-stone-400 hover:text-stone-700 ml-1.5 cursor-pointer"
+                      className="text-xs text-stone-500 hover:text-[#5B0D15] font-medium ml-2 px-2.5 py-1 rounded-full hover:bg-stone-100 cursor-pointer shrink-0"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      {t('Cancel', 'रद्द करें')}
                     </button>
                   </form>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchOpen(true);
-                      setNotificationOpen(false);
-                      setProfileDropdownOpen(false);
-                      setAboutDropdownOpen(false);
-                    }}
-                    className="p-1.5 text-stone-700 hover:text-[#5B0D15] transition-colors cursor-pointer"
-                    aria-label="Search"
-                    title={t('Search', 'खोजें')}
-                  >
-                    <Search className="w-5 h-5 stroke-[1.8]" />
-                  </button>
                 )}
 
                 {/* Instant Live Search Results Popover */}
@@ -1326,7 +1358,7 @@ export const Navbar: React.FC = () => {
               {/* Hindi / English Language Pill */}
               <button
                 onClick={toggleLanguage}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-xs border border-stone-200/90 hover:border-amber-300/80 text-stone-600 hover:text-[#5B0D15] shadow-2xs transition-all duration-200 cursor-pointer active:scale-95"
+                className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-xs border border-stone-200/90 hover:border-amber-300/80 text-stone-600 hover:text-[#5B0D15] shadow-2xs transition-all duration-200 cursor-pointer active:scale-95"
                 title={language === 'en' ? 'हिन्दी में पढ़ें' : 'Read in English'}
                 aria-label="Toggle Language"
               >
@@ -1341,7 +1373,7 @@ export const Navbar: React.FC = () => {
               </button>
 
               {/* Notification Bell in Top Right Corner */}
-              <div className="relative" ref={notificationRef}>
+              <div className="relative shrink-0" ref={notificationRef}>
                 <button
                   type="button"
                   onClick={() => {
@@ -1459,7 +1491,7 @@ export const Navbar: React.FC = () => {
                     router.prefetch('/cart');
                   } catch {}
                 }}
-                className="p-1.5 text-stone-700 hover:text-[#5B0D15] transition-colors relative cursor-pointer"
+                className="shrink-0 p-1.5 text-stone-700 hover:text-[#5B0D15] transition-colors relative cursor-pointer"
                 aria-label="Shopping Cart"
                 title={t('Cart', 'कार्ट')}
               >
@@ -1473,7 +1505,7 @@ export const Navbar: React.FC = () => {
 
               {/* User Avatar Menu OR Dedicated "Sign Up" Pill Button */}
               {mounted && user ? (
-                <div className="relative" ref={profileDropdownRef}>
+                <div className="relative shrink-0" ref={profileDropdownRef}>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1603,7 +1635,7 @@ export const Navbar: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center">
+                <div className="flex items-center shrink-0">
                   <button
                     onClick={() => {
                       setAuthMode('register');
@@ -1619,7 +1651,7 @@ export const Navbar: React.FC = () => {
               {/* Mobile Menu Hamburger */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-1.5 rounded-full text-[#3B1E22] hover:text-[#5B0D15] focus:outline-none cursor-pointer"
+                className="shrink-0 lg:hidden p-1.5 rounded-full text-[#3B1E22] hover:text-[#5B0D15] focus:outline-none cursor-pointer"
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

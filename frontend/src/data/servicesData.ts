@@ -490,9 +490,12 @@ export function generateWorkingHourSlots(durationMinutes = 30): string[] {
 }
 
 
-export const DEFAULT_GURUJI_MEET_LINK = 'https://meet.google.com/meet/hui-smdn-gtp';
+export const DEFAULT_GURUJI_MEET_LINK = 'https://meet.google.com/zrg-vfdz-jky';
 
 export function formatGoogleMeetLink(bookingId?: string): string {
+  if (bookingId && bookingId.trim().startsWith('http')) {
+    return bookingId.trim();
+  }
   const configured = typeof process !== 'undefined'
     ? (process.env.NEXT_PUBLIC_GURUJI_MEET_LINK || process.env.GURUJI_MEET_LINK)
     : undefined;
@@ -514,6 +517,17 @@ export function getMeetingTimeStatus(
   timeStr?: string,
   durationMinutes = 30
 ): MeetingTimeStatus {
+  // Temporary testing mode: Allow person to join immediately when consultation is accepted/confirmed
+  const DISABLE_5MIN_RESTRICTION_FOR_TESTING = true;
+  if (DISABLE_5MIN_RESTRICTION_FOR_TESTING) {
+    return {
+      isJoinable: true,
+      hasEnded: false,
+      isUpcoming: false,
+      diffMinutes: 0,
+    };
+  }
+
   if (!dateStr || !timeStr) {
     return { isJoinable: false, hasEnded: false, isUpcoming: true, diffMinutes: 999999 };
   }

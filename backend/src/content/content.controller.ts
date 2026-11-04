@@ -26,6 +26,8 @@ import {
   UpdateBlogPostDto,
   CreateGalleryItemDto,
   UpdateGalleryItemDto,
+  CreateReviewDto,
+  UpdateReviewStatusDto,
 } from './content.types.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
@@ -250,4 +252,48 @@ export class ContentController {
       limit: limit ? parseInt(limit, 10) : 100,
     });
   }
+
+  // ================= REVIEWS & FEEDBACK =================
+
+  @Get('reviews/public')
+  getPublicReviews() {
+    return this.contentService.getPublicReviews();
+  }
+
+  @Post('reviews')
+  submitReview(
+    @Body() dto: CreateReviewDto,
+    @CurrentUser() user?: JwtPayload,
+  ) {
+    return this.contentService.createReview(dto, user);
+  }
+
+  @Get('reviews/admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'SUPERADMIN')
+  getAllReviewsForAdmin(@CurrentUser() user: JwtPayload) {
+    return this.contentService.getAllReviews(user);
+  }
+
+  @Patch('reviews/:id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'SUPERADMIN')
+  updateReviewStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateReviewStatusDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.contentService.updateReviewStatus(id, dto.status, user);
+  }
+
+  @Delete('reviews/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'SUPERADMIN')
+  deleteReview(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.contentService.deleteReview(id, user);
+  }
+
 }

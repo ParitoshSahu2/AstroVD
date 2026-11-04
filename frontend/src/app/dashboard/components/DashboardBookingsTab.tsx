@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getAuthToken } from '../../../lib/auth';
 import {
   Calendar,
   Clock,
@@ -62,15 +63,18 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
     return {};
   });
 
-  const handleReviewSubmit = (e: React.FormEvent) => {
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedReviewBooking) return;
+    if (!selectedReviewBooking || !reviewComment.trim()) return;
+    setReviewSubmitting(true);
     const bId = String(selectedReviewBooking.id || selectedReviewBooking._id || '');
     const newReviews = {
       ...consultationReviews,
       [bId]: {
         rating: reviewRating,
-        comment: reviewComment,
+        comment: reviewComment.trim(),
         date: new Date().toISOString(),
       },
     };
@@ -80,12 +84,42 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
         localStorage.setItem('astro_consultation_reviews', JSON.stringify(newReviews));
       } catch (e) {}
     }
-    setReviewSubmitted(true);
-    setTimeout(() => {
-      setSelectedReviewBooking(null);
-      setReviewSubmitted(false);
-      setReviewComment('');
-    }, 1500);
+
+    try {
+      const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
+      const token = getAuthToken() || (typeof window !== 'undefined' ? (localStorage.getItem('astro_token') || localStorage.getItem('token') || localStorage.getItem('astrovd_token')) : null);
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      await fetch(`${backendUrl}/api/content/reviews`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          bookingId: bId,
+          serviceName: selectedReviewBooking.serviceTitle || selectedReviewBooking.service?.title || 'Vedic Consultation',
+          userName: profile?.name || selectedReviewBooking.customerName || selectedReviewBooking.customer?.name || 'Devotee',
+          userEmail: profile?.email || selectedReviewBooking.customer?.email,
+          userPhone: profile?.phone || selectedReviewBooking.customerPhone,
+          city: profile?.city || selectedReviewBooking.customer?.city || 'India',
+          rating: reviewRating,
+          review: reviewComment.trim(),
+        }),
+      });
+    } catch (err) {
+      console.error('Failed submitting review to backend:', err);
+    } finally {
+      setReviewSubmitting(false);
+      setReviewSubmitted(true);
+      setTimeout(() => {
+        setSelectedReviewBooking(null);
+        setReviewSubmitted(false);
+        setReviewComment('');
+      }, 2500);
+    }
   };
 
   const [payingBooking, setPayingBooking] = useState<any | null>(null);
@@ -104,7 +138,7 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ paymentMethod: 'WALLET' }),
+        body: JSON.stringify({ paymentMethod: 'ONLINE' }),
       });
 
       const data = await res.json();
@@ -715,8 +749,8 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                 </h4>
                 <p className="text-xs text-stone-600 max-w-xs mx-auto">
                   {t(
-                    'Your sacred feedback helps other seekers connect with authentic astrological wisdom.',
-                    'आपका अनुभव अन्य साधकों का मार्गदर्शन करेगा।'
+                    'Your sacred review has been submitted to Dr. Pandit Vishal Dubey for moderation. Once published, it will appear on the homepage!',
+                    'आपकी पावन समीक्षा पूज्य गुरुजी को प्रेषित कर दी गई है। स्वीकृति उपरांत यह मुख्य पृष्ठ पर प्रदर्शित होगी!'
                   )}
                 </p>
               </div>
@@ -799,9 +833,11 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-xs active:scale-95 cursor-pointer"
+                    disabled={reviewSubmitting}
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-xs active:scale-95 cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
                   >
-                    {t('Submit Review', 'समीक्षा भेजें')}
+                    {reviewSubmitting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+                    <span>{reviewSubmitting ? t('Submitting...', 'भेजा जा रहा है...') : t('Submit Review', 'समीक्षा भेजें')}</span>
                   </button>
                 </div>
               </form>
@@ -852,15 +888,19 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-white border border-stone-200 text-xs space-y-2">
+                <div className="p-3.5 rounded-xl bg-amber-50/50 border border-amber-200/80 text-xs space-y-2">
                   <div className="flex items-center justify-between font-bold text-stone-800">
-                    <span>🪙 {t('Astro Wallet Balance', 'एस्ट्रो वॉलेट बैलेंस')}</span>
-                    <span className="text-[#5B0D15]">₹{profile?.walletBalance || 0}</span>
+                    <span className="flex items-center gap-2 text-stone-800">
+                      <CreditCard className="w-4 h-4 text-[#800000]" />
+                      <span>{t('Secure Online Payment', 'सुरक्षित ऑनलाइन भुगतान')}</span>
+                    </span>
+                    <span className="text-[#5B0D15] font-bold text-sm">₹{payingBooking.totalCost || payingBooking.fee || 2100}</span>
                   </div>
-                  <p className="text-[11px] text-stone-500">
-                    {Number(profile?.walletBalance || 0) >= Number(payingBooking.totalCost || 2100)
-                      ? t('Available balance will be used for instant payment.', 'उपलब्ध बैलेंस से तत्काल भुगतान होगा।')
-                      : t('Instant secure payment with Astro Wallet or UPI/Cards.', 'वॉलेट या यूपीआई से सुरक्षित भुगतान।')}
+                  <p className="text-[11px] text-stone-600 leading-relaxed">
+                    {t(
+                      'Instant confirmed booking via UPI (Google Pay, PhonePe, Paytm), Net Banking, or Credit/Debit Cards.',
+                      'यूपीआई (गूगल पे, फोनपे, पेटीएम), नेट बैंकिंग अथवा कार्ड द्वारा तत्काल सुरक्षित भुगतान।'
+                    )}
                   </p>
                 </div>
 

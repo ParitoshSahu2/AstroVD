@@ -16,6 +16,7 @@ import {
   ShieldAlert,
   User as UserIcon,
   Sparkles,
+  Star,
   Lock,
   RefreshCw,
   Crown,
@@ -92,11 +93,12 @@ const AdminOrdersTab = dynamic(() => import('./components/AdminOrdersTab'), {
   ),
 });
 
-const AdminAvailabilityTab = dynamic(() => import('./components/AdminAvailabilityTab'), {
+
+const AdminReviewsTab = dynamic(() => import('./components/AdminReviewsTab'), {
   loading: () => (
     <div className="p-12 text-center flex flex-col items-center justify-center space-y-3 bg-white/70 rounded-3xl border border-stone-200/80">
       <RefreshCw className="w-6 h-6 animate-spin text-[#5B0D15]" />
-      <p className="text-xs text-stone-500 font-medium">Loading Panditji availability schedule...</p>
+      <p className="text-xs text-stone-500 font-medium">Loading devotee reviews & feedback...</p>
     </div>
   ),
 });
@@ -116,7 +118,6 @@ const OrderLifecycleModal = dynamic(() => import('./components/OrderLifecycleMod
 const EditAdminProfileModal = dynamic(() => import('./components/EditAdminProfileModal'), { ssr: false });
 const GenerateUserModal = dynamic(() => import('./components/GenerateUserModal'), { ssr: false });
 const DeleteUserModal = dynamic(() => import('./components/DeleteUserModal'), { ssr: false });
-const AvailabilityModals = dynamic(() => import('./components/AvailabilityModals'), { ssr: false });
 const DeleteConfirmModal = dynamic(() => import('./components/DeleteConfirmModal'), { ssr: false });
 
 export default function AdminPage() {
@@ -155,6 +156,7 @@ export default function AdminPage() {
   // Edit Profile State (Current User)
   const [editProfileModalOpen, setEditProfileModalOpen] = useState(false);
   const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
   const [editDateOfBirth, setEditDateOfBirth] = useState('');
   const [editTimeOfBirth, setEditTimeOfBirth] = useState('');
   const [editPlaceOfBirth, setEditPlaceOfBirth] = useState('');
@@ -197,7 +199,7 @@ export default function AdminPage() {
   const [deleteItemError, setDeleteItemError] = useState<string | null>(null);
 
   // Admin Top-level Navigation: Overview vs Users Directory vs Services vs Products vs Customer Appointments vs Shopping Orders vs Panditji Availability vs Content Activity
-  const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'services' | 'products' | 'bookings' | 'orders' | 'availability' | 'activity'>('overview');
+  const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'services' | 'products' | 'bookings' | 'orders' | 'activity' | 'reviews'>('overview');
   const [globalSearch, setGlobalSearch] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
@@ -428,46 +430,7 @@ export default function AdminPage() {
   const [orderStatusNotes, setOrderStatusNotes] = useState('');
   const [orderStatusError, setOrderStatusError] = useState<string | null>(null);
 
-  // Admin Availability & Schedule Management State
-  const [availabilityDate, setAvailabilityDate] = useState<string>('');
-  const [availabilityData, setAvailabilityData] = useState<{
-    date: string;
-    isBlocked: boolean;
-    blockedReason: string | null;
-    slots: any[];
-    totalSlots: number;
-    bookedCount: number;
-  } | null>(null);
-  const [availabilityLoading, setAvailabilityLoading] = useState(false);
-
-  // Availability Modals State
-  const [createSlotModalOpen, setCreateSlotModalOpen] = useState(false);
-  const [newSlotTime, setNewSlotTime] = useState('10:00 AM');
-  const [newSlotDuration, setNewSlotDuration] = useState(45);
-  const [newSlotPublished, setNewSlotPublished] = useState(true);
-  const [newSlotNotes, setNewSlotNotes] = useState('');
-  const [createSlotLoading, setCreateSlotLoading] = useState(false);
-  const [createSlotError, setCreateSlotError] = useState<string | null>(null);
-
-  const [editSlotModalOpen, setEditSlotModalOpen] = useState(false);
-  const [slotToEdit, setSlotToEdit] = useState<any | null>(null);
-  const [editSlotTime, setEditSlotTime] = useState('');
-  const [editSlotDuration, setEditSlotDuration] = useState(45);
-  const [editSlotPublished, setEditSlotPublished] = useState(true);
-  const [editSlotNotes, setEditSlotNotes] = useState('');
-  const [editSlotLoading, setEditSlotLoading] = useState(false);
-  const [editSlotError, setEditSlotError] = useState<string | null>(null);
-
-  const [blockDateModalOpen, setBlockDateModalOpen] = useState(false);
-  const [blockDateReason, setBlockDateReason] = useState('');
-  const [blockDateLoading, setBlockDateLoading] = useState(false);
-
-  const [initScheduleModalOpen, setInitScheduleModalOpen] = useState(false);
-  const [initScheduleDays, setInitScheduleDays] = useState(7);
-  const [initScheduleLoading, setInitScheduleLoading] = useState(false);
-  const [slotToDelete, setSlotToDelete] = useState<any | null>(null);
-  const [deleteSlotLoading, setDeleteSlotLoading] = useState(false);
-
+  
   const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
 
   const clearAdminData = () => {
@@ -485,13 +448,11 @@ export default function AdminPage() {
     setOrderPage(1);
     setOrderTotalPages(1);
     setOrderTotalCount(0);
-    setAvailabilityData(null);
     setSelectedUserId(null);
     setInspectUser(null);
     setActiveBooking(null);
     setActiveOrder(null);
     setNotification(null);
-    setSlotToEdit(null);
     setUserToDelete(null);
     setAdminTab('overview');
   };
@@ -865,6 +826,13 @@ export default function AdminPage() {
     setUpdatingStatus(true);
     setStatusError(null);
 
+    const defaultUnavailableNote = 'Dr. Pandit Vishal Dubey is unavailable for this meeting slot due to emergency temple rituals or prior sacred commitments. Please reschedule your consultation for another suitable slot.';
+    const effectiveNote = statusNotes.trim() || (
+      targetStatus === 'CANCELLED' || targetStatus === 'REJECTED'
+        ? defaultUnavailableNote
+        : undefined
+    );
+
     try {
       const res = await fetch(`${backendUrl}/api/admin/bookings/${activeBooking.id}/status`, {
         method: 'PATCH',
@@ -874,7 +842,7 @@ export default function AdminPage() {
         },
         body: JSON.stringify({
           status: targetStatus,
-          notes: statusNotes.trim() || undefined,
+          notes: effectiveNote,
         }),
       });
 
@@ -890,9 +858,6 @@ export default function AdminPage() {
       setActiveBooking(null);
       setStatusNotes('');
       fetchBookingsList(bookingPage);
-      if (typeof fetchAvailability === 'function') {
-        fetchAvailability(availabilityDate);
-      }
     } catch (err: any) {
       if (err.name === 'TypeError' || err.message === 'Failed to fetch' || err.message?.includes('fetch')) {
         setStatusError('Network connection error: Unable to reach backend server on port 5001. Please make sure the backend server is running.');
@@ -1006,332 +971,6 @@ export default function AdminPage() {
     fetchBookingsList(bookingPage);
   };
 
-  // ==========================================
-  // PANDITJI AVAILABILITY MANAGEMENT HANDLERS
-  // ==========================================
-
-  const fetchAvailability = async (targetDate = availabilityDate) => {
-    const token = getAuthToken();
-    if (!token) {
-      setAvailabilityData(null);
-      setAvailabilityLoading(false);
-      return;
-    }
-
-    setAvailabilityLoading(true);
-    try {
-      const res = await fetch(
-        `${backendUrl}/api/admin/availability?date=${encodeURIComponent(targetDate)}&_t=${Date.now()}`,
-        {
-          cache: 'no-store',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            Pragma: 'no-cache',
-          },
-        },
-      );
-
-      if (res.ok) {
-        const data = await res.json();
-        setAvailabilityData(data);
-      } else {
-        const err = await res.json();
-        setNotification({ type: 'error', message: err.message || 'Failed to fetch schedule availability.' });
-      }
-    } catch (err: any) {
-      setNotification({ type: 'error', message: err.message || 'Network error fetching availability.' });
-    } finally {
-      setAvailabilityLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!availabilityDate && typeof window !== 'undefined') {
-      const today = new Date().toISOString().split('T')[0];
-      setAvailabilityDate(today);
-    }
-  }, [availabilityDate]);
-
-  useEffect(() => {
-    if (isAdmin && adminTab === 'availability' && availabilityDate) {
-      fetchAvailability(availabilityDate);
-    }
-  }, [adminTab, availabilityDate, isAdmin]);
-
-  const handleCreateSlot = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const token = getAuthToken();
-    if (!token) return;
-
-    setCreateSlotLoading(true);
-    setCreateSlotError(null);
-
-    try {
-      const res = await fetch(`${backendUrl}/api/admin/availability/slots`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          date: availabilityDate,
-          startTime: newSlotTime.trim(),
-          durationMinutes: Number(newSlotDuration) || 45,
-          isPublished: newSlotPublished,
-          notes: newSlotNotes.trim() || undefined,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Failed to create slot.');
-      }
-
-      setNotification({ type: 'success', message: data.message || 'Slot successfully created!' });
-      setCreateSlotModalOpen(false);
-      setNewSlotNotes('');
-      fetchAvailability(availabilityDate);
-    } catch (err: any) {
-      setCreateSlotError(err.message || 'Error creating consultation slot.');
-    } finally {
-      setCreateSlotLoading(false);
-    }
-  };
-
-  const handleOpenEditSlot = (slot: any) => {
-    setSlotToEdit(slot);
-    setEditSlotTime(slot.startTime);
-    setEditSlotDuration(slot.durationMinutes);
-    setEditSlotPublished(slot.isPublished);
-    setEditSlotNotes(slot.notes || '');
-    setEditSlotError(null);
-    setEditSlotModalOpen(true);
-  };
-
-  const handleUpdateSlot = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!slotToEdit) return;
-    const token = getAuthToken();
-    if (!token) return;
-
-    setEditSlotLoading(true);
-    setEditSlotError(null);
-
-    try {
-      const res = await fetch(`${backendUrl}/api/admin/availability/slots/${slotToEdit.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          startTime: editSlotTime.trim(),
-          durationMinutes: Number(editSlotDuration),
-          isPublished: editSlotPublished,
-          notes: editSlotNotes.trim() || undefined,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Failed to update slot.');
-      }
-
-      setNotification({ type: 'success', message: data.message || 'Slot successfully updated!' });
-      setEditSlotModalOpen(false);
-      setSlotToEdit(null);
-      fetchAvailability(availabilityDate);
-    } catch (err: any) {
-      setEditSlotError(err.message || 'Error updating slot.');
-    } finally {
-      setEditSlotLoading(false);
-    }
-  };
-
-  const handleTogglePublish = async (slot: any) => {
-    const token = getAuthToken();
-    if (!token) return;
-
-    const nextPublished = !slot.isPublished;
-    // Optimistically toggle in local UI immediately
-    setAvailabilityData((prev: any) => {
-      if (!prev || !prev.slots) return prev;
-      return {
-        ...prev,
-        slots: prev.slots.map((s: any) =>
-          s.id === slot.id ? { ...s, isPublished: nextPublished } : s,
-        ),
-      };
-    });
-
-    try {
-      const res = await fetch(`${backendUrl}/api/admin/availability/slots/${slot.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          isPublished: nextPublished,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Failed to toggle publish status.');
-      }
-
-      setNotification({
-        type: 'success',
-        message: `Slot at ${slot.startTime} is now ${nextPublished ? 'published & visible to seekers' : 'unpublished & hidden'}!`,
-      });
-      fetchAvailability(availabilityDate);
-    } catch (err: any) {
-      // Rollback on failure
-      setAvailabilityData((prev: any) => {
-        if (!prev || !prev.slots) return prev;
-        return {
-          ...prev,
-          slots: prev.slots.map((s: any) =>
-            s.id === slot.id ? { ...s, isPublished: slot.isPublished } : s,
-          ),
-        };
-      });
-      setNotification({ type: 'error', message: err.message || 'Error toggling publish state.' });
-    }
-  };
-
-  const handleDeleteSlot = (slot: any) => {
-    if (!slot.canDelete) {
-      setNotification({
-        type: 'error',
-        message: 'Cannot delete an appointment slot with an active customer booking. Cancel the booking first.',
-      });
-      return;
-    }
-
-    setSlotToDelete(slot);
-  };
-
-  const handleConfirmDeleteSlot = async () => {
-    if (!slotToDelete) return;
-    const token = getAuthToken();
-    if (!token) return;
-
-    setDeleteSlotLoading(true);
-    try {
-      const res = await fetch(`${backendUrl}/api/admin/availability/slots/${slotToDelete.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Failed to delete slot.');
-      }
-
-      setNotification({ type: 'success', message: data.message || 'Slot deleted successfully.' });
-      setSlotToDelete(null);
-      fetchAvailability(availabilityDate);
-    } catch (err: any) {
-      setNotification({ type: 'error', message: err.message || 'Error deleting slot.' });
-    } finally {
-      setDeleteSlotLoading(false);
-    }
-  };
-
-  const handleBlockDate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const token = getAuthToken();
-    if (!token) return;
-
-    setBlockDateLoading(true);
-    try {
-      const res = await fetch(`${backendUrl}/api/admin/availability/block-date`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          date: availabilityDate,
-          reason: blockDateReason.trim() || undefined,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Failed to block date.');
-      }
-
-      setNotification({ type: 'success', message: data.message || `Date ${availabilityDate} is now blocked.` });
-      setBlockDateModalOpen(false);
-      setBlockDateReason('');
-      fetchAvailability(availabilityDate);
-    } catch (err: any) {
-      setNotification({ type: 'error', message: err.message || 'Error blocking date.' });
-    } finally {
-      setBlockDateLoading(false);
-    }
-  };
-
-  const handleUnblockDate = async () => {
-    const token = getAuthToken();
-    if (!token) return;
-
-    try {
-      const res = await fetch(`${backendUrl}/api/admin/availability/block-date/${availabilityDate}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Failed to unblock date.');
-      }
-
-      setNotification({ type: 'success', message: data.message || `Date ${availabilityDate} has been unblocked!` });
-      fetchAvailability(availabilityDate);
-    } catch (err: any) {
-      setNotification({ type: 'error', message: err.message || 'Error unblocking date.' });
-    }
-  };
-
-  const handleInitStandardSchedule = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const token = getAuthToken();
-    if (!token) return;
-
-    setInitScheduleLoading(true);
-    try {
-      const res = await fetch(`${backendUrl}/api/admin/availability/initialize-standard-schedule`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          startDate: availabilityDate,
-          daysCount: Number(initScheduleDays) || 7,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Failed to initialize schedule.');
-      }
-
-      setNotification({ type: 'success', message: data.message || 'Standard Vedic schedule initialized!' });
-      setInitScheduleModalOpen(false);
-      fetchAvailability(availabilityDate);
-    } catch (err: any) {
-      setNotification({ type: 'error', message: err.message || 'Error initializing schedule.' });
-    } finally {
-      setInitScheduleLoading(false);
-    }
-  };
-
   // Open 360 Inspection Modal
   const handleInspectUser = async (userId: string) => {
     setSelectedUserId(userId);
@@ -1428,6 +1067,7 @@ export default function AdminPage() {
   // Open Edit Profile modal with current user's profile data
   const handleOpenEditProfile = () => {
     setEditName(currentUser?.name || '');
+    setEditPhone(currentUser?.phone || '');
     setEditDateOfBirth(currentUser?.dateOfBirth || '');
     setEditTimeOfBirth(currentUser?.timeOfBirth || '');
     setEditPlaceOfBirth(currentUser?.placeOfBirth || '');
@@ -1459,6 +1099,7 @@ export default function AdminPage() {
         },
         body: JSON.stringify({
           name: editName.trim(),
+          phone: editPhone.trim() || undefined,
           dateOfBirth: editDateOfBirth || undefined,
           timeOfBirth: editTimeOfBirth || undefined,
           placeOfBirth: editPlaceOfBirth.trim() || undefined,
@@ -1475,6 +1116,7 @@ export default function AdminPage() {
         const updatedUser = {
           ...currentUser,
           name: editName.trim(),
+          phone: editPhone.trim() || currentUser.phone,
           dateOfBirth: editDateOfBirth || currentUser.dateOfBirth,
           timeOfBirth: editTimeOfBirth || currentUser.timeOfBirth,
           placeOfBirth: editPlaceOfBirth.trim() || currentUser.placeOfBirth,
@@ -1482,6 +1124,9 @@ export default function AdminPage() {
         };
         setCurrentUser(updatedUser);
         localStorage.setItem('astro_user', JSON.stringify(updatedUser));
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('astro-auth-change', { detail: { user: updatedUser } }));
+        }
         setEditProfileModalOpen(false);
 
         // Also update local list if current user is present
@@ -1779,8 +1424,8 @@ export default function AdminPage() {
       return bookingServiceFilter === 'INSPECTION' ? 'Inspections' : 'Appointments';
     }
     if (adminTab === 'orders') return 'Orders';
-    if (adminTab === 'availability') return 'Upcoming Consultations';
     if (adminTab === 'activity') return 'Activity & Audit History';
+    if (adminTab === 'reviews') return 'Reviews & Ratings';
     return 'Overview';
   };
 
@@ -1826,15 +1471,14 @@ export default function AdminPage() {
       setAdminTab('activity');
     } else if (tabKey === 'payments') {
       setAdminTab('orders');
-    } else if (tabKey === 'pooja') {
-      setAdminTab('availability');
-      fetchAvailability(availabilityDate);
     } else if (tabKey === 'messages' || tabKey === 'notifications') {
       setNotificationsOpen(true);
     } else if (tabKey === 'settings') {
       handleOpenEditProfile();
     } else if (tabKey === 'activity') {
       setAdminTab('activity');
+    } else if (tabKey === 'reviews') {
+      setAdminTab('reviews');
     }
   };
 
@@ -2046,28 +1690,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Group 3: UPCOMING CONSULTATIONS */}
-                <div>
-                  <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
-                    Upcoming Consultations
-                  </div>
-                  <div className="space-y-0.5">
-                    <button
-                      type="button"
-                      onClick={() => handleSidebarTabClick('pooja')}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                        adminTab === 'availability'
-                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
-                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
-                      }`}
-                    >
-                      <Calendar className="w-4 h-4 text-stone-400 shrink-0" />
-                      <span>Upcoming Consultations</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Group 4: CONTENT */}
+                {/* Group 3: CONTENT */}
                 <div>
                   <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
                     Content
@@ -2108,6 +1731,18 @@ export default function AdminPage() {
                     Communication
                   </div>
                   <div className="space-y-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleSidebarTabClick('reviews')}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                        adminTab === 'reviews'
+                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                      }`}
+                    >
+                      <Star className="w-4 h-4 text-stone-400 shrink-0" />
+                      <span>Reviews & Ratings</span>
+                    </button>
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('notifications')}
@@ -2240,14 +1875,14 @@ export default function AdminPage() {
                     >
                       Orders
                     </button>
-                    <button
+                                        <button
                       type="button"
-                      onClick={() => handleSidebarTabClick('pooja')}
+                      onClick={() => handleSidebarTabClick('reviews')}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium ${
-                        adminTab === 'availability' ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold' : 'text-stone-600 hover:bg-stone-50'
+                        adminTab === 'reviews' ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold' : 'text-stone-600 hover:bg-stone-50'
                       }`}
                     >
-                      Pooja Services
+                      Reviews & Ratings
                     </button>
                     <button
                       type="button"
@@ -2565,26 +2200,9 @@ export default function AdminPage() {
               />
             )}
 
-            {adminTab === 'availability' && (
-              <AdminAvailabilityTab
-                availabilityDate={availabilityDate}
-                setAvailabilityDate={setAvailabilityDate}
-                availabilityData={availabilityData}
-                availabilityLoading={availabilityLoading}
-                fetchAvailability={fetchAvailability}
-                handleUnblockDate={handleUnblockDate}
-                handleTogglePublishSlot={handleTogglePublish}
-                handleOpenEditSlot={handleOpenEditSlot}
-                handleDeleteSlot={handleDeleteSlot}
-                setBlockDateModalOpen={setBlockDateModalOpen}
-                setCreateSlotModalOpen={setCreateSlotModalOpen}
-                setInitScheduleModalOpen={setInitScheduleModalOpen}
-                setInitScheduleDays={setInitScheduleDays}
-                onOpenBooking={(b) => setActiveBooking(b)}
-              />
-            )}
-
+            
             {adminTab === 'activity' && <AdminActivityTab />}
+            {adminTab === 'reviews' && <AdminReviewsTab />}
               </div>
             </div>
           </div>
@@ -2656,6 +2274,8 @@ export default function AdminPage() {
         currentUser={currentUser}
         editName={editName}
         setEditName={setEditName}
+        editPhone={editPhone}
+        setEditPhone={setEditPhone}
         editDateOfBirth={editDateOfBirth}
         setEditDateOfBirth={setEditDateOfBirth}
         editTimeOfBirth={editTimeOfBirth}
@@ -2727,55 +2347,7 @@ export default function AdminPage() {
         onConfirm={handleConfirmDeleteItem}
       />
 
-      {/* AVAILABILITY MODALS */}
-      <AvailabilityModals
-        availabilityDate={availabilityDate}
-        createSlotModalOpen={createSlotModalOpen}
-        setCreateSlotModalOpen={setCreateSlotModalOpen}
-        newSlotTime={newSlotTime}
-        setNewSlotTime={setNewSlotTime}
-        newSlotDuration={newSlotDuration}
-        setNewSlotDuration={setNewSlotDuration}
-        newSlotPublished={newSlotPublished}
-        setNewSlotPublished={setNewSlotPublished}
-        newSlotNotes={newSlotNotes}
-        setNewSlotNotes={setNewSlotNotes}
-        createSlotLoading={createSlotLoading}
-        createSlotError={createSlotError}
-        handleCreateSlot={handleCreateSlot}
-        editSlotModalOpen={editSlotModalOpen}
-        setEditSlotModalOpen={setEditSlotModalOpen}
-        slotToEdit={slotToEdit}
-        setSlotToEdit={setSlotToEdit}
-        editSlotTime={editSlotTime}
-        setEditSlotTime={setEditSlotTime}
-        editSlotDuration={editSlotDuration}
-        setEditSlotDuration={setEditSlotDuration}
-        editSlotPublished={editSlotPublished}
-        setEditSlotPublished={setEditSlotPublished}
-        editSlotNotes={editSlotNotes}
-        setEditSlotNotes={setEditSlotNotes}
-        editSlotLoading={editSlotLoading}
-        editSlotError={editSlotError}
-        handleUpdateSlot={handleUpdateSlot}
-        blockDateModalOpen={blockDateModalOpen}
-        setBlockDateModalOpen={setBlockDateModalOpen}
-        blockDateReason={blockDateReason}
-        setBlockDateReason={setBlockDateReason}
-        blockDateLoading={blockDateLoading}
-        handleBlockDate={handleBlockDate}
-        initScheduleModalOpen={initScheduleModalOpen}
-        setInitScheduleModalOpen={setInitScheduleModalOpen}
-        initScheduleDays={initScheduleDays}
-        setInitScheduleDays={setInitScheduleDays}
-        initScheduleLoading={initScheduleLoading}
-        handleInitStandardSchedule={handleInitStandardSchedule}
-        slotToDelete={slotToDelete}
-        setSlotToDelete={setSlotToDelete}
-        deleteSlotLoading={deleteSlotLoading}
-        handleConfirmDeleteSlot={handleConfirmDeleteSlot}
-      />
-
+      
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}

@@ -75,7 +75,7 @@ export default function AdminBookingsTab({
   const handleQuickStatus = async (b: any, targetStatus: string) => {
     setActiveMenuId(null);
     if (targetStatus === 'CANCELLED') {
-      const ok = window.confirm(`Are you sure you want to cancel booking ${b.id}?`);
+      const ok = window.confirm(`Mark Guruji unavailable for consultation ${b.id}? The devotee will be notified to choose another date or time.`);
       if (!ok) return;
     }
 
@@ -487,27 +487,43 @@ export default function AdminBookingsTab({
                           </span>
                         </td>
 
-                        {/* 6. Actions (Single Compact Three-Dot Menu '⋮') */}
+                        {/* 6. Actions (Single Compact Three-Dot Menu '⋮' + Quick Completed Button) */}
                         <td className="py-3 px-3.5 text-right align-middle">
-                          <div className="relative inline-block text-left">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveMenuId((prev) => (prev === b.id ? null : b.id));
-                              }}
-                              className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
-                                activeMenuId === b.id
-                                  ? 'bg-stone-100 text-stone-900 border-stone-300'
-                                  : 'border-transparent text-stone-400 hover:text-stone-700 hover:bg-stone-100 hover:border-stone-200'
-                              }`}
-                              title="Booking actions"
-                              aria-label={`Actions for booking ${shortId}`}
-                              aria-haspopup="true"
-                              aria-expanded={activeMenuId === b.id}
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            {(b.status === 'APPROVED' || b.status === 'CONFIRMED') && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuickStatus(b, 'COMPLETED');
+                                }}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] shadow-xs hover:shadow-md transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+                                title="Mark consultation completed"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5 text-blue-200" />
+                                <span>Completed</span>
+                              </button>
+                            )}
+
+                            <div className="relative inline-block text-left">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveMenuId((prev) => (prev === b.id ? null : b.id));
+                                }}
+                                className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                  activeMenuId === b.id
+                                    ? 'bg-stone-100 text-stone-900 border-stone-300'
+                                    : 'border-transparent text-stone-400 hover:text-stone-700 hover:bg-stone-100 hover:border-stone-200'
+                                }`}
+                                title="Booking actions"
+                                aria-label={`Actions for booking ${shortId}`}
+                                aria-haspopup="true"
+                                aria-expanded={activeMenuId === b.id}
+                              >
+                                <MoreVertical className="w-4 h-4" />
+                              </button>
 
                             {activeMenuId === b.id && (
                               <>
@@ -538,7 +554,7 @@ export default function AdminBookingsTab({
 
                                   {canMeet && (
                                     <a
-                                      href={b.meetLink && b.meetLink.includes('hui-smdn-gtp') ? b.meetLink : formatGoogleMeetLink(b.id)}
+                                      href={b.meetLink && b.meetLink.startsWith('http') ? b.meetLink : formatGoogleMeetLink(b.meetLink || b.id)}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       onClick={() => setActiveMenuId(null)}
@@ -570,6 +586,17 @@ export default function AdminBookingsTab({
                                     </button>
                                   )}
 
+                                  {(b.status === 'APPROVED' || b.status === 'CONFIRMED') && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleQuickStatus(b, 'COMPLETED')}
+                                      className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-blue-50 hover:text-blue-900 text-blue-700 transition-colors cursor-pointer font-bold"
+                                    >
+                                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                                      <span>Mark as Completed</span>
+                                    </button>
+                                  )}
+
                                   {canCancel && (
                                     <button
                                       type="button"
@@ -577,7 +604,7 @@ export default function AdminBookingsTab({
                                       className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-rose-50 text-rose-700 transition-colors cursor-pointer border-t border-stone-100"
                                     >
                                       <XCircle className="w-3.5 h-3.5 text-rose-500" />
-                                      <span>Cancel Booking</span>
+                                      <span>Guruji Unavailable</span>
                                     </button>
                                   )}
 
@@ -597,6 +624,7 @@ export default function AdminBookingsTab({
                                 </div>
                               </>
                             )}
+                          </div>
                           </div>
                         </td>
                       </tr>
@@ -700,19 +728,34 @@ export default function AdminBookingsTab({
                           </span>
                         </span>
 
-                        {/* Three-Dot Menu Button */}
-                        <div className="relative inline-block text-left">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveMenuId((prev) => (prev === b.id ? null : b.id));
-                            }}
-                            className="p-1 rounded-md text-stone-400 hover:text-stone-700 hover:bg-stone-100"
-                            title="Actions"
-                          >
-                            <MoreVertical className="w-3.5 h-3.5" />
-                          </button>
+                        {/* Quick Completed Button */}
+                        {(b.status === 'APPROVED' || b.status === 'CONFIRMED') && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuickStatus(b, 'COMPLETED');
+                              }}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] shadow-xs transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+                              title="Mark consultation completed"
+                            >
+                              <CheckCircle2 className="w-3 h-3 text-blue-200" />
+                              <span>Completed</span>
+                            </button>
+                          )}
+
+                          <div className="relative inline-block text-left">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuId((prev) => (prev === b.id ? null : b.id));
+                              }}
+                              className="p-1 rounded-md text-stone-400 hover:text-stone-700 hover:bg-stone-100"
+                              title="Actions"
+                            >
+                              <MoreVertical className="w-3.5 h-3.5" />
+                            </button>
 
                           {activeMenuId === b.id && (
                             <>
@@ -743,7 +786,7 @@ export default function AdminBookingsTab({
 
                                 {canMeet && (
                                   <a
-                                    href={b.meetLink && b.meetLink.includes('hui-smdn-gtp') ? b.meetLink : formatGoogleMeetLink(b.id)}
+                                    href={b.meetLink && b.meetLink.startsWith('http') ? b.meetLink : formatGoogleMeetLink(b.meetLink || b.id)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={() => setActiveMenuId(null)}
@@ -776,6 +819,17 @@ export default function AdminBookingsTab({
                                   </button>
                                 )}
 
+                                {(b.status === 'APPROVED' || b.status === 'CONFIRMED') && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleQuickStatus(b, 'COMPLETED')}
+                                    className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-blue-50 text-blue-700 font-bold"
+                                  >
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                                    <span>Mark Completed</span>
+                                  </button>
+                                )}
+
                                 {canCancel && (
                                   <button
                                     type="button"
@@ -783,7 +837,7 @@ export default function AdminBookingsTab({
                                     className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-rose-50 text-rose-700 border-t border-stone-100"
                                   >
                                     <XCircle className="w-3.5 h-3.5 text-rose-500" />
-                                    <span>Cancel</span>
+                                    <span>Guruji Unavailable</span>
                                   </button>
                                 )}
 

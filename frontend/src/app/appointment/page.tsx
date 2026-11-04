@@ -51,6 +51,11 @@ function AppointmentContent() {
   const { t, language } = useLanguage();
   const [, setTick] = useState(0);
 
+  const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(
+    /\/api\/?$/,
+    '',
+  );
+
   useEffect(() => {
     const timer = setInterval(() => setTick((v) => v + 1), 30000);
     return () => clearInterval(timer);
@@ -82,6 +87,7 @@ function AppointmentContent() {
   const selectedTimeSlotRef = useRef<string>('');
 
   // Keep ref synchronized with state to prevent stale closure during live polling
+
   useEffect(() => {
     selectedTimeSlotRef.current = timeSlot;
   }, [timeSlot]);
@@ -123,19 +129,68 @@ function AppointmentContent() {
   }, [confirmationModalOpen]);
 
   useEffect(() => {
-    const checkAuth = () => {
+    let isCancelled = false;
+    const checkAuth = async () => {
       const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
       setIsLoggedIn(!!token);
       if (typeof window !== 'undefined') {
         const storedUser = localStorage.getItem('astro_user');
         if (storedUser) {
           try {
-            setAccountUser(JSON.parse(storedUser));
+            const parsed = JSON.parse(storedUser);
+            if (!isCancelled) {
+              setAccountUser(parsed);
+              if (!isBookingForSomeoneElse) {
+                if (parsed.name) setName(parsed.name);
+                if (parsed.phone) setPhone(parsed.phone);
+                const u = parsed as any;
+                const parts: string[] = [];
+                if (u.dateOfBirth) parts.push(`DOB: ${u.dateOfBirth}`);
+                if (u.timeOfBirth) parts.push(`TOB: ${u.timeOfBirth}`);
+                if (u.placeOfBirth) parts.push(`POB: ${u.placeOfBirth}`);
+                if (u.zodiacSign) parts.push(`Rashi: ${u.zodiacSign}`);
+                if (parts.length > 0) {
+                  setBirthDetails((prev) => prev ? prev : parts.join(', '));
+                }
+              }
+            }
           } catch (e) {
-            setAccountUser(null);
+            if (!isCancelled) setAccountUser(null);
           }
         } else {
-          setAccountUser(null);
+          if (!isCancelled) setAccountUser(null);
+        }
+      }
+
+      // Synchronize latest profile updates directly from backend
+      if (token) {
+        try {
+          const res = await fetch(`${backendUrl}/api/users/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok && !isCancelled) {
+            const data = await res.json();
+            const freshUser = data.user || data;
+            if (freshUser) {
+              setAccountUser(freshUser);
+              localStorage.setItem('astro_user', JSON.stringify(freshUser));
+              if (!isBookingForSomeoneElse) {
+                if (freshUser.name) setName(freshUser.name);
+                if (freshUser.phone) setPhone(freshUser.phone);
+                const u = freshUser as any;
+                const parts: string[] = [];
+                if (u.dateOfBirth) parts.push(`DOB: ${u.dateOfBirth}`);
+                if (u.timeOfBirth) parts.push(`TOB: ${u.timeOfBirth}`);
+                if (u.placeOfBirth) parts.push(`POB: ${u.placeOfBirth}`);
+                if (u.zodiacSign) parts.push(`Rashi: ${u.zodiacSign}`);
+                if (parts.length > 0) {
+                  setBirthDetails((prev) => prev ? prev : parts.join(', '));
+                }
+              }
+            }
+          }
+        } catch (err) {
+          // Keep cached accountUser
         }
       }
     };
@@ -143,25 +198,32 @@ function AppointmentContent() {
     window.addEventListener('astro-auth-change', checkAuth);
     window.addEventListener('storage', checkAuth);
     return () => {
+      isCancelled = true;
       window.removeEventListener('astro-auth-change', checkAuth);
       window.removeEventListener('storage', checkAuth);
     };
-  }, []);
+  }, [backendUrl, isBookingForSomeoneElse]);
 
   // Auto-fill account info whenever "I'm booking for someone else" is unchecked
+
   useEffect(() => {
     if (!isBookingForSomeoneElse && accountUser) {
       if (accountUser.name) setName(accountUser.name);
       if (accountUser.phone) setPhone(accountUser.phone);
+      const u = accountUser as any;
+      const parts: string[] = [];
+      if (u.dateOfBirth) parts.push(`DOB: ${u.dateOfBirth}`);
+      if (u.timeOfBirth) parts.push(`TOB: ${u.timeOfBirth}`);
+      if (u.placeOfBirth) parts.push(`POB: ${u.placeOfBirth}`);
+      if (u.zodiacSign) parts.push(`Rashi: ${u.zodiacSign}`);
+      if (parts.length > 0) {
+        setBirthDetails((prev) => prev ? prev : parts.join(', '));
+      }
     }
   }, [accountUser, isBookingForSomeoneElse]);
 
-  const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(
-    /\/api\/?$/,
-    '',
-  );
-
   // Keep selectedService in sync if URL query parameter changes
+
   useEffect(() => {
     if (queryServiceId && getServiceById(queryServiceId)) {
       setSelectedServiceId(queryServiceId);
@@ -172,6 +234,7 @@ function AppointmentContent() {
   // the logged-in user's account details automatically populate. Checking the box enables manual entry.
 
   // Fetch real available slots whenever selectedServiceId or date changes, with live polling & cache-busting
+
   useEffect(() => {
     let isCancelled = false;
     const fetchSlots = async () => {
@@ -1397,43 +1460,6 @@ function AppointmentContent() {
                       <ChevronDown className="w-4 h-4 text-stone-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
 
-                    {/* Quick-Select Interactive Slot Pills */}
-                    {availableSlots.length > 0 && !isDateBlocked && (
-                      <div className="pt-1.5 flex flex-wrap gap-1.5">
-                        {availableSlots.map((slot) => {
-                          const isSelected = timeSlot === slot.time;
-                          const isAvail = slot.isAvailable;
-                          return (
-                            <button
-                              key={slot.time}
-                              type="button"
-                              disabled={!isAvail}
-                              onClick={() => {
-                                if (isAvail) {
-                                  selectedTimeSlotRef.current = slot.time;
-                                  setTimeSlot(slot.time);
-                                  setErrorMsg(null);
-                                }
-                              }}
-                              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all flex items-center gap-1 cursor-pointer ${
-                                !isAvail
-                                  ? 'bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed line-through opacity-70'
-                                  : isSelected
-                                  ? 'bg-[#5B0D15] text-white border border-[#5B0D15] shadow-xs'
-                                  : 'bg-white text-stone-700 border border-stone-200 hover:border-amber-400 hover:bg-amber-50/50'
-                              }`}
-                            >
-                              <span>{slot.time}</span>
-                              {!isAvail && (
-                                <span className="text-[9px] uppercase tracking-wider text-rose-700/80 no-underline font-bold">
-                                  ({t('Reserved', 'आरक्षित')})
-                                </span>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
 
                     <span className="text-[10px] text-stone-500 block">
                       {timeSlot ? (

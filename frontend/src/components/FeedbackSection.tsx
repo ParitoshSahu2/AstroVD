@@ -111,6 +111,8 @@ const DEFAULT_FEEDBACKS: FeedbackItem[] = [
   },
 ];
 
+const BACKEND_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
+
 export const FeedbackSection: React.FC = () => {
   const { t, language } = useLanguage();
 
@@ -133,22 +135,66 @@ export const FeedbackSection: React.FC = () => {
   const [newReview, setNewReview] = useState('');
   const [newRating, setNewRating] = useState(5);
 
-  const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
 
-  // Load verified user reviews from localStorage and keep updated dynamically
+  // Load verified user reviews from backend API and local storage
   useEffect(() => {
-    const loadReviews = () => {
+    const loadReviews = async () => {
+      let combined: FeedbackItem[] = [...DEFAULT_FEEDBACKS];
+
+      // 1. Fetch live published reviews from backend API
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/content/reviews/public`);
+        if (res.ok) {
+          const backendReviews = await res.json();
+          if (Array.isArray(backendReviews) && backendReviews.length > 0) {
+            const mapped: FeedbackItem[] = backendReviews.map((r: any) => ({
+              id: r.id,
+              name: r.userName || 'Verified Seeker',
+              city: r.city || 'India',
+              cityHi: r.cityHi || r.city || 'भारत',
+              country: r.country || 'India',
+              countryHi: r.countryHi || r.country || 'भारत',
+              rating: Number(r.rating) || 5,
+              review: r.review,
+              reviewHi: r.reviewHi || r.review,
+              service: r.serviceName || 'Vedic Guidance',
+              serviceHi: r.serviceNameHi || r.serviceName || 'वैदिक परामर्श',
+              date: r.createdAt
+                ? new Date(r.createdAt).toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                  })
+                : 'Recently',
+              dateHi: 'हाल ही में',
+              isVerifiedClient: true,
+            }));
+
+            // Filter out any default IDs if matched, or prepend new published reviews
+            const existingIds = new Set(mapped.map((m) => m.id));
+            const remainingDefaults = DEFAULT_FEEDBACKS.filter((df) => !existingIds.has(df.id));
+            combined = [...mapped, ...remainingDefaults];
+          }
+        }
+      } catch (e) {
+        console.warn('Backend reviews endpoint unreachable, falling back to local storage:', e);
+      }
+
+      // 2. Also check local storage for instant client-side updates
       try {
         const stored = localStorage.getItem('astro_verified_reviews');
         if (stored) {
           const parsed: FeedbackItem[] = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setFeedbacksList([...parsed, ...DEFAULT_FEEDBACKS]);
+            const currentIds = new Set(combined.map((c) => c.id));
+            const newLocal = parsed.filter((p) => !currentIds.has(p.id));
+            combined = [...newLocal, ...combined];
           }
         }
       } catch (e) {
         console.error('Failed to load local reviews:', e);
       }
+
+      setFeedbacksList(combined);
     };
 
     loadReviews();
@@ -159,10 +205,12 @@ export const FeedbackSection: React.FC = () => {
 
     window.addEventListener('storage', handleReviewAdded);
     window.addEventListener('astro_review_added', handleReviewAdded);
+    window.addEventListener('astro_review_published', handleReviewAdded);
 
     return () => {
       window.removeEventListener('storage', handleReviewAdded);
       window.removeEventListener('astro_review_added', handleReviewAdded);
+      window.removeEventListener('astro_review_published', handleReviewAdded);
     };
   }, []);
 
@@ -183,8 +231,8 @@ export const FeedbackSection: React.FC = () => {
 
       // 1. Check backend for bookings & orders
       const [bookingsRes, ordersRes] = await Promise.allSettled([
-        fetch(`${backendUrl}/api/appointments/my-bookings`, { headers }),
-        fetch(`${backendUrl}/api/orders/my-orders`, { headers }),
+        fetch(`${BACKEND_URL}/api/appointments/my-bookings`, { headers }),
+        fetch(`${BACKEND_URL}/api/orders/my-orders`, { headers }),
       ]);
 
       const eligibleItems: string[] = [];
@@ -259,7 +307,7 @@ export const FeedbackSection: React.FC = () => {
       console.error('Eligibility check error:', err);
       setEligibility('not_eligible');
     }
-  }, [backendUrl]);
+  }, []);
 
   // Listen to auth changes
   useEffect(() => {
