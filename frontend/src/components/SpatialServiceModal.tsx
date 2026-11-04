@@ -200,7 +200,12 @@ export const SpatialServiceModal: React.FC<SpatialServiceModalProps> = ({
           <div className="w-full sm:w-auto">
             <Link
               href={`/appointment?service=${service.id}`}
-              onClick={onClose}
+              onClick={() => {
+                onClose();
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('astro_reset_booking', { detail: { serviceId: service.id } }));
+                }
+              }}
               className="w-full sm:w-auto px-7 py-3 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#7B121C] to-[#5B0D15] hover:from-[#7B121C] hover:to-[#5B0D15] text-amber-100 text-xs sm:text-sm font-bold shadow-lg shadow-rose-950/20 hover:scale-105 transition-all flex items-center justify-center gap-2 active:scale-95"
             >
               <span>{t('Book Consultation', 'परामर्श बुक करें')}</span>

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { getAuthToken, performLogout } from '../../lib/auth';
+import { getAuthToken, getStoredUser, performLogout } from '../../lib/auth';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { PageHeader } from '../../components/PageHeader';
@@ -110,6 +110,24 @@ const AdminActivityTab = dynamic(() => import('./components/AdminActivityTab'), 
   ),
 });
 
+const AdminBlogsTab = dynamic(() => import('./components/AdminBlogsTab'), {
+  loading: () => (
+    <div className="p-12 text-center flex flex-col items-center justify-center space-y-3 bg-white/70 rounded-3xl border border-stone-200/80">
+      <RefreshCw className="w-6 h-6 animate-spin text-[#5B0D15]" />
+      <p className="text-xs text-stone-500 font-medium">Loading blog articles & spiritual wisdom...</p>
+    </div>
+  ),
+});
+
+const AdminGalleryTab = dynamic(() => import('./components/AdminGalleryTab'), {
+  loading: () => (
+    <div className="p-12 text-center flex flex-col items-center justify-center space-y-3 bg-white/70 rounded-3xl border border-stone-200/80">
+      <RefreshCw className="w-6 h-6 animate-spin text-[#5B0D15]" />
+      <p className="text-xs text-stone-500 font-medium">Loading sacred gallery media & darshan...</p>
+    </div>
+  ),
+});
+
 const UserInspectionModal = dynamic(() => import('./components/UserInspectionModal'), { ssr: false });
 const BookingLifecycleModal = dynamic(() => import('./components/BookingLifecycleModal'), { ssr: false });
 const OrderLifecycleModal = dynamic(() => import('./components/OrderLifecycleModal'), { ssr: false });
@@ -126,7 +144,7 @@ export default function AdminPage() {
   const isAdmin = currentUser?.role === 'ADMIN' || isSuperadmin;
 
   const [users, setUsers] = useState<UserSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
@@ -150,6 +168,15 @@ export default function AdminPage() {
   // Action states
   const [actionLoading, setActionLoading] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  useEffect(() => {
+    if (!notification) return;
+    const timer = setTimeout(() => {
+      setNotification(null);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [notification]);
+
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
   // Edit Profile State (Current User)
@@ -196,8 +223,25 @@ export default function AdminPage() {
   const [deleteItemLoading, setDeleteItemLoading] = useState(false);
   const [deleteItemError, setDeleteItemError] = useState<string | null>(null);
 
-  // Admin Top-level Navigation: Overview vs Users Directory vs Services vs Products vs Customer Appointments vs Shopping Orders vs Panditji Availability vs Content Activity
-  const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'services' | 'products' | 'bookings' | 'orders' | 'availability' | 'activity'>('overview');
+  // Admin Top-level Navigation: Overview vs Users Directory vs Services vs Products vs Customer Appointments vs Shopping Orders vs Panditji Availability vs Content Activity vs Blogs vs Gallery
+  const [adminTab, setAdminTab] = useState<'overview' | 'users' | 'services' | 'products' | 'bookings' | 'orders' | 'availability' | 'activity' | 'blogs' | 'gallery'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const search = new URLSearchParams(window.location.search);
+        let tabParam = search.get('tab') || localStorage.getItem('astrovd_admin_active_tab');
+        if (tabParam === 'pooja') tabParam = 'availability';
+        if (tabParam === 'appointments' || tabParam === 'consultations') tabParam = 'bookings';
+        if (tabParam === 'seekers' || tabParam === 'pandits' || tabParam === 'admins') tabParam = 'users';
+        if (tabParam === 'blog') tabParam = 'blogs';
+
+        const validTabs = ['overview', 'users', 'services', 'products', 'bookings', 'orders', 'availability', 'activity', 'blogs', 'gallery'];
+        if (tabParam && validTabs.includes(tabParam)) {
+          return tabParam as any;
+        }
+      } catch (e) {}
+    }
+    return 'overview';
+  });
   const [globalSearch, setGlobalSearch] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
@@ -380,6 +424,37 @@ export default function AdminPage() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
 
+  const notificationsRef = useRef<HTMLDivElement>(null);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (notificationsRef.current && !notificationsRef.current.contains(target)) {
+        setNotificationsOpen(false);
+      }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(target)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setNotificationsOpen(false);
+        setProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   // Lock body scroll and prevent background scroll chaining for admin overlays
   useScrollLock(mobileSidebarOpen || reportModalOpen);
 
@@ -494,6 +569,12 @@ export default function AdminPage() {
     setSlotToEdit(null);
     setUserToDelete(null);
     setAdminTab('overview');
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('astrovd_admin_active_tab');
+        localStorage.removeItem('astrovd_admin_role_filter');
+      } catch (e) {}
+    }
   };
 
   // Verify access & load profile with strict route protection & cache invalidation
@@ -518,6 +599,7 @@ export default function AdminPage() {
             return;
           }
           setCurrentUser(parsed);
+          setLoading(false);
         } catch (e) {
           setCurrentUser(null);
         }
@@ -580,6 +662,46 @@ export default function AdminPage() {
       window.removeEventListener('pageshow', handlePageShow);
     };
   }, [backendUrl, router]);
+
+  // Tab persistence: ensure active tab is restored and synced with filters on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const search = new URLSearchParams(window.location.search);
+      let tabParam = search.get('tab') || localStorage.getItem('astrovd_admin_active_tab');
+
+      if (tabParam) {
+        // Alias mappings for admin sections
+        if (tabParam === 'pooja') tabParam = 'availability';
+        if (tabParam === 'appointments' || tabParam === 'consultations') tabParam = 'bookings';
+        if (tabParam === 'seekers') {
+          tabParam = 'users';
+          setRoleFilter('USER');
+        } else if (tabParam === 'pandits') {
+          tabParam = 'users';
+          setRoleFilter('ADMIN');
+        } else if (tabParam === 'admins') {
+          tabParam = 'users';
+          setRoleFilter('SUPERADMIN');
+        }
+
+        const validTabs: Array<'overview' | 'users' | 'services' | 'products' | 'bookings' | 'orders' | 'availability' | 'activity'> = [
+          'overview', 'users', 'services', 'products', 'bookings', 'orders', 'availability', 'activity'
+        ];
+        if (validTabs.includes(tabParam as any)) {
+          setAdminTab(tabParam as any);
+          // Sync URL search param
+          const url = new URL(window.location.href);
+          if (url.searchParams.get('tab') !== tabParam) {
+            url.searchParams.set('tab', tabParam);
+            window.history.replaceState(null, '', url.toString());
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error restoring active admin tab:', e);
+    }
+  }, []);
 
   // Auto-dismiss popup notification after 4 seconds
   useEffect(() => {
@@ -1178,7 +1300,7 @@ export default function AdminPage() {
 
       setNotification({
         type: 'success',
-        message: `Slot at ${slot.startTime} is now ${nextPublished ? 'published & visible to seekers' : 'unpublished & hidden'}!`,
+        message: `Slot at ${slot.startTime} is now ${nextPublished ? 'Available (Published)' : 'Unavailable (Unpublished)'}!`,
       });
       fetchAvailability(availabilityDate);
     } catch (err: any) {
@@ -1262,6 +1384,15 @@ export default function AdminPage() {
       setNotification({ type: 'success', message: data.message || `Date ${availabilityDate} is now blocked.` });
       setBlockDateModalOpen(false);
       setBlockDateReason('');
+      setAvailabilityData((prev: any) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          isBlocked: true,
+          blockedReason: blockDateReason.trim() || 'Sanctuary Closed / Panditji Unavailable',
+          slots: (prev.slots || []).map((s: any) => ({ ...s, isPublished: false })),
+        };
+      });
       fetchAvailability(availabilityDate);
     } catch (err: any) {
       setNotification({ type: 'error', message: err.message || 'Error blocking date.' });
@@ -1286,9 +1417,19 @@ export default function AdminPage() {
       }
 
       setNotification({ type: 'success', message: data.message || `Date ${availabilityDate} has been unblocked!` });
+      setAvailabilityData((prev: any) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          isBlocked: false,
+          blockedReason: null,
+        };
+      });
       fetchAvailability(availabilityDate);
+      return true;
     } catch (err: any) {
       setNotification({ type: 'error', message: err.message || 'Error unblocking date.' });
+      throw err;
     }
   };
 
@@ -1775,60 +1916,78 @@ export default function AdminPage() {
     if (adminTab === 'orders') return 'Orders';
     if (adminTab === 'availability') return 'Pooja Services';
     if (adminTab === 'activity') return 'Activity & Audit History';
+    if (adminTab === 'blogs') return 'Spiritual Blogs';
+    if (adminTab === 'gallery') return 'Sacred Gallery';
     return 'Overview';
   };
 
   const handleSidebarTabClick = (tabKey: string) => {
     setMobileSidebarOpen(false);
+    let resolvedTab: 'overview' | 'users' | 'services' | 'products' | 'bookings' | 'orders' | 'availability' | 'activity' | 'blogs' | 'gallery' | null = null;
+
     if (tabKey === 'overview' || tabKey === 'dashboard') {
-      setAdminTab('overview');
+      resolvedTab = 'overview';
     } else if (tabKey === 'seekers' || tabKey === 'users') {
+      resolvedTab = 'users';
       setRoleFilter('USER');
-      setAdminTab('users');
       setPage(1);
       fetchUsers(1);
     } else if (tabKey === 'pandits' || tabKey === 'astrologers') {
+      resolvedTab = 'users';
       setRoleFilter('ADMIN');
-      setAdminTab('users');
       setPage(1);
       fetchUsers(1);
     } else if (tabKey === 'admins') {
+      resolvedTab = 'users';
       setRoleFilter('SUPERADMIN');
-      setAdminTab('users');
       setPage(1);
       fetchUsers(1);
     } else if (tabKey === 'appointments' || tabKey === 'consultations' || tabKey === 'bookings') {
-      setAdminTab('bookings');
+      resolvedTab = 'bookings';
       setBookingServiceFilter('ALL');
       fetchBookingsList(1);
     } else if (tabKey === 'orders') {
-      setAdminTab('orders');
+      resolvedTab = 'orders';
       fetchOrdersList(1);
     } else if (tabKey === 'inspections') {
-      setAdminTab('bookings');
+      resolvedTab = 'bookings';
       setBookingServiceFilter('INSPECTION');
       fetchBookingsList(1);
-    } else if (tabKey === 'blogs') {
-      router.push('/blog');
+    } else if (tabKey === 'blogs' || tabKey === 'blog') {
+      resolvedTab = 'blogs';
     } else if (tabKey === 'gallery') {
-      router.push('/gallery');
+      resolvedTab = 'gallery';
     } else if (tabKey === 'products') {
-      setAdminTab('products');
+      resolvedTab = 'products';
     } else if (tabKey === 'services') {
-      setAdminTab('services');
+      resolvedTab = 'services';
     } else if (tabKey === 'wallet' || tabKey === 'ledger') {
-      setAdminTab('activity');
+      resolvedTab = 'activity';
     } else if (tabKey === 'payments') {
-      setAdminTab('orders');
+      resolvedTab = 'orders';
     } else if (tabKey === 'pooja') {
-      setAdminTab('availability');
+      resolvedTab = 'availability';
       fetchAvailability(availabilityDate);
     } else if (tabKey === 'messages' || tabKey === 'notifications') {
       setNotificationsOpen(true);
+      return;
     } else if (tabKey === 'settings') {
       handleOpenEditProfile();
+      return;
     } else if (tabKey === 'activity') {
-      setAdminTab('activity');
+      resolvedTab = 'activity';
+    }
+
+    if (resolvedTab) {
+      setAdminTab(resolvedTab);
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('astrovd_admin_active_tab', resolvedTab);
+          const url = new URL(window.location.href);
+          url.searchParams.set('tab', resolvedTab);
+          window.history.replaceState(null, '', url.toString());
+        } catch (e) {}
+      }
     }
   };
 
@@ -1842,7 +2001,7 @@ export default function AdminPage() {
       {/* Website Navbar is hidden in the admin panel to provide a clean, dedicated full-viewport dashboard */}
       {false && <Navbar />}
 
-      {(!currentUser || !isAdmin) && (
+      {!loading && (!currentUser || !isAdmin) && (
         <PageHeader
           breadcrumb="Administrative Portal"
           title="Admin Control & Seeker 360° Inspection"
@@ -1852,7 +2011,12 @@ export default function AdminPage() {
 
       <main className={`flex-1 w-full ${currentUser && isAdmin ? 'p-0 max-w-none flex flex-col min-h-screen' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12'}`}>
         {/* ACCESS CONTROL CHECK */}
-        {!currentUser ? (
+        {loading && !currentUser ? (
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+            <RefreshCw className="w-8 h-8 animate-spin text-[#5B0D15]" />
+            <p className="text-sm font-medium text-stone-600">Verifying administrative access...</p>
+          </div>
+        ) : !currentUser ? (
           <div className="max-w-xl mx-auto my-12 p-8 sm:p-12 text-center rounded-3xl bg-white/80 backdrop-blur-xl border border-amber-200/80 shadow-xl space-y-6">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#5B0D15] to-[#7B121C] text-amber-200 flex items-center justify-center mx-auto shadow-md">
               <Lock className="w-8 h-8" />
@@ -2070,27 +2234,39 @@ export default function AdminPage() {
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('blogs')}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                        adminTab === 'blogs'
+                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                      }`}
                     >
-                      <FileText className="w-4 h-4 text-stone-400 shrink-0" />
+                      <FileText className={`w-4 h-4 shrink-0 ${adminTab === 'blogs' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
                       <span>Blogs</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('gallery')}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                        adminTab === 'gallery'
+                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                      }`}
                     >
-                      <ImageIcon className="w-4 h-4 text-stone-400 shrink-0" />
+                      <ImageIcon className={`w-4 h-4 shrink-0 ${adminTab === 'gallery' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
                       <span>Gallery</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleSidebarTabClick('activity')}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all cursor-pointer"
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                        adminTab === 'activity'
+                          ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                      }`}
                     >
-                      <History className="w-4 h-4 text-stone-400 shrink-0" />
+                      <History className={`w-4 h-4 shrink-0 ${adminTab === 'activity' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
                       <span>Activity</span>
                     </button>
                   </div>
@@ -2245,8 +2421,28 @@ export default function AdminPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setAdminTab('activity')}
-                      className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-stone-600 hover:bg-stone-50"
+                      onClick={() => handleSidebarTabClick('blogs')}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium ${
+                        adminTab === 'blogs' ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold' : 'text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      Blogs
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSidebarTabClick('gallery')}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium ${
+                        adminTab === 'gallery' ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold' : 'text-stone-600 hover:bg-stone-50'
+                      }`}
+                    >
+                      Gallery
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSidebarTabClick('activity')}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium ${
+                        adminTab === 'activity' ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold' : 'text-stone-600 hover:bg-stone-50'
+                      }`}
                     >
                       Audit Activity
                     </button>
@@ -2283,7 +2479,7 @@ export default function AdminPage() {
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         if (adminTab === 'overview') {
-                          setAdminTab('users');
+                          handleSidebarTabClick('seekers');
                         }
                         fetchUsers(1);
                       }
@@ -2295,10 +2491,13 @@ export default function AdminPage() {
                 {/* Right Header Items: Notifications & Admin Profile */}
                 <div className="flex items-center gap-4">
                   {/* Notification Bell */}
-                  <div className="relative">
+                  <div className="relative" ref={notificationsRef}>
                     <button
                       type="button"
-                      onClick={() => setNotificationsOpen(!notificationsOpen)}
+                      onClick={() => {
+                        setNotificationsOpen((prev) => !prev);
+                        setProfileDropdownOpen(false);
+                      }}
                       className="w-10 h-10 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-600 relative cursor-pointer transition-colors"
                       title="Notifications"
                       aria-label="Notifications"
@@ -2312,50 +2511,61 @@ export default function AdminPage() {
                     </button>
 
                     {notificationsOpen && (
-                      <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-30 space-y-3 animate-fadeIn">
-                        <div className="flex items-center justify-between pb-2 border-b border-stone-100">
-                          <span className="text-xs font-bold text-stone-900">Notifications</span>
-                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                            Live Updates
-                          </span>
-                        </div>
-                        <div className="space-y-1.5 text-xs max-h-72 overflow-y-auto">
-                          {notificationsList.map((item) => (
-                            <div
-                              key={item.id}
-                              onClick={() => handleNotificationClick(item)}
-                              className="p-2.5 rounded-xl cursor-pointer border border-transparent hover:bg-stone-50 transition-all flex items-start gap-2.5"
-                            >
-                              <span
-                                className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                                  item.read ? 'bg-stone-300' : 'bg-[#E11D48]'
-                                }`}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <div className="font-bold text-stone-900 truncate">
-                                  {item.title}
-                                </div>
-                                <div className="text-[11px] text-stone-500 truncate">
-                                  {item.description} {item.time ? `• ${item.time}` : ''}
+                      <>
+                        {/* Backdrop overlay for closing on click outside / blank space */}
+                        <div
+                          className="fixed inset-0 z-20 cursor-default"
+                          onClick={() => setNotificationsOpen(false)}
+                          aria-hidden="true"
+                        />
+                        <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-30 space-y-3 animate-fadeIn">
+                          <div className="flex items-center justify-between pb-2 border-b border-stone-100">
+                            <span className="text-xs font-bold text-stone-900">Notifications</span>
+                            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                              Live Updates
+                            </span>
+                          </div>
+                          <div className="space-y-1.5 text-xs max-h-72 overflow-y-auto">
+                            {notificationsList.map((item) => (
+                              <div
+                                key={item.id}
+                                onClick={() => handleNotificationClick(item)}
+                                className="p-2.5 rounded-xl cursor-pointer border border-transparent hover:bg-stone-50 transition-all flex items-start gap-2.5"
+                              >
+                                <span
+                                  className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                                    item.read ? 'bg-stone-300' : 'bg-[#E11D48]'
+                                  }`}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-bold text-stone-900 truncate">
+                                    {item.title}
+                                  </div>
+                                  <div className="text-[11px] text-stone-500 truncate">
+                                    {item.description} {item.time ? `• ${item.time}` : ''}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
-                          {notificationsList.length === 0 && (
-                            <p className="text-stone-400 text-center py-4 text-xs">
-                              No new notifications
-                            </p>
-                          )}
+                            ))}
+                            {notificationsList.length === 0 && (
+                              <p className="text-stone-400 text-center py-4 text-xs">
+                                No new notifications
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      </>
                     )}
                   </div>
 
                   {/* Profile Badge (Initials AD in dark maroon, Admin / Administrator) */}
-                  <div className="relative">
+                  <div className="relative" ref={profileDropdownRef}>
                     <button
                       type="button"
-                      onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                      onClick={() => {
+                        setProfileDropdownOpen((prev) => !prev);
+                        setNotificationsOpen(false);
+                      }}
                       className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-full hover:bg-stone-50 transition-all cursor-pointer"
                     >
                       <div className="w-9 h-9 rounded-full bg-[#5B0D15] text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
@@ -2373,7 +2583,14 @@ export default function AdminPage() {
                     </button>
 
                     {profileDropdownOpen && (
-                      <div className="absolute right-0 top-12 w-48 bg-white rounded-2xl shadow-xl border border-stone-200 py-1.5 z-30 text-xs text-stone-700 animate-fadeIn">
+                      <>
+                        {/* Backdrop overlay for closing on click outside / blank space */}
+                        <div
+                          className="fixed inset-0 z-20 cursor-default"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          aria-hidden="true"
+                        />
+                        <div className="absolute right-0 top-12 w-48 bg-white rounded-2xl shadow-xl border border-stone-200 py-1.5 z-30 text-xs text-stone-700 animate-fadeIn">
                         <div className="px-4 py-2 border-b border-stone-100">
                           <div className="font-bold text-stone-900 truncate">
                             {currentUser?.name || 'Dr. Pandit Vishal Dubey'}
@@ -2406,6 +2623,7 @@ export default function AdminPage() {
                           <span>Sign Out</span>
                         </button>
                       </div>
+                      </>
                     )}
                   </div>
                 </div>
@@ -2413,42 +2631,33 @@ export default function AdminPage() {
 
               {/* Main Content Body */}
               <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto min-w-0">
-            {/* Global Notification Floating Toast */}
+            {/* Global Notification Floating Toast - Top Right */}
             {notification && (
               <div
                 role="status"
                 aria-live="polite"
-                className="fixed bottom-6 right-6 z-50 max-w-sm sm:max-w-md w-full sm:w-auto animate-fadeIn transition-all duration-300 pointer-events-auto"
+                className="fixed top-6 right-6 z-[100] animate-fadeIn pointer-events-auto"
               >
-                <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] border border-stone-200/90 flex items-start gap-3.5 ring-1 ring-black/5">
-                  <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
-                      notification.type === 'success'
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200/80'
-                        : 'bg-rose-50 text-rose-600 border-rose-200/80'
-                    }`}
-                  >
-                    {notification.type === 'success' ? (
-                      <CheckCircle2 className="w-5 h-5" />
-                    ) : (
-                      <AlertCircle className="w-5 h-5" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0 pt-0.5">
-                    <p className="text-xs font-bold text-stone-900 tracking-tight">
-                      {notification.type === 'success' ? 'Successful' : 'Attention Needed'}
-                    </p>
-                    <p className="text-xs text-stone-600 leading-relaxed font-normal mt-0.5 break-words">
-                      {notification.message}
-                    </p>
-                  </div>
+                <div
+                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full shadow-lg border text-xs font-semibold backdrop-blur-md ${
+                    notification.type === 'success'
+                      ? 'bg-emerald-950/95 text-emerald-100 border-emerald-500/50 shadow-emerald-950/40'
+                      : 'bg-rose-950/95 text-rose-100 border-rose-500/50 shadow-rose-950/40'
+                  }`}
+                >
+                  {notification.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                  )}
+                  <span className="max-w-[280px] sm:max-w-md truncate">{notification.message}</span>
                   <button
                     type="button"
                     onClick={() => setNotification(null)}
-                    className="p-1 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer shrink-0 mt-0.5"
+                    className="ml-1 p-0.5 hover:bg-white/20 rounded-full cursor-pointer text-white/70 hover:text-white shrink-0"
                     aria-label="Dismiss notification"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -2507,7 +2716,19 @@ export default function AdminPage() {
 
             {adminTab === 'services' && <AdminServicesTab />}
 
-            {adminTab === 'products' && <AdminProductsTab />}
+            {adminTab === 'products' && (
+              <AdminProductsTab
+                ordersList={ordersList}
+                ordersLoading={ordersLoading}
+                orderTotalCount={orderTotalCount}
+                fetchOrdersList={fetchOrdersList}
+                onSelectOrder={(order) => {
+                  setActiveOrder(order);
+                  setOrderStatusNotes('');
+                  setOrderStatusError(null);
+                }}
+              />
+            )}
 
             {adminTab === 'bookings' && (
               <AdminBookingsTab
@@ -2578,6 +2799,8 @@ export default function AdminPage() {
             )}
 
             {adminTab === 'activity' && <AdminActivityTab />}
+            {adminTab === 'blogs' && <AdminBlogsTab />}
+            {adminTab === 'gallery' && <AdminGalleryTab />}
               </div>
             </div>
           </div>

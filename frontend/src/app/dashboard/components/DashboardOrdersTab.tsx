@@ -849,8 +849,8 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
                 {/* 3. Action Buttons Footer (Curved Rounded-Full & Styled) */}
                 <div className="bg-stone-50/60 border-t border-stone-100 px-4 py-3 sm:px-5 flex flex-wrap items-center justify-between gap-2.5">
                   <div className="flex items-center gap-2.5 flex-wrap">
-                    {/* Rate & Review Button */}
-                    {!entry.isCancelled && (
+                    {/* Rate & Review Button - Show only when order is DELIVERED */}
+                    {entry.isDelivered && (
                       <button
                         type="button"
                         onClick={() => {
@@ -1351,7 +1351,26 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
             </div>
 
             {/* Modal Footer (Fixed at bottom) */}
-            <div className="pt-3 border-t border-stone-100 flex justify-end shrink-0">
+            <div className="pt-3 border-t border-stone-100 flex items-center justify-between gap-3 shrink-0">
+              {(activeTrackOrder?.status || '').toUpperCase() === 'DELIVERED' ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const orderToReview = activeTrackOrder;
+                    setSelectedTrackOrder(null);
+                    setSelectedReviewOrder(orderToReview);
+                    setReviewSubmitted(false);
+                    setReviewComment('');
+                    setReviewRating(5);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+                >
+                  <Star className="w-3.5 h-3.5 fill-white text-white" />
+                  <span>{t('Rate & Review Product', 'उत्पाद की समीक्षा करें')}</span>
+                </button>
+              ) : (
+                <div />
+              )}
               <button
                 type="button"
                 onClick={() => setSelectedTrackOrder(null)}

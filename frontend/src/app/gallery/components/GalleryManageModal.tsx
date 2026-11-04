@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { getAuthToken } from '../../../lib/auth';
 import { translateEnToHi } from '../../../lib/translator';
+import { useScrollLock } from '../../../lib/scrollLock';
 
 export interface GalleryItemData {
   id: string;
@@ -46,6 +47,8 @@ export default function GalleryManageModal({
   itemToEdit,
   onSaved,
 }: GalleryManageModalProps) {
+  useScrollLock(isOpen);
+
   const isEdit = Boolean(itemToEdit);
 
   const [title, setTitle] = useState('');
@@ -184,7 +187,30 @@ export default function GalleryManageModal({
     return () => clearTimeout(timer);
   }, [description, autoTranslateEnabled, isEdit, itemToEdit?.description, translateField]);
 
-  if (!isOpen) return null;
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const handleFormWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
+    if (
+      formRef.current &&
+      e.target !== formRef.current &&
+      !formRef.current.contains(e.target as Node)
+    ) {
+      formRef.current.scrollTop += e.deltaY;
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) onClose();
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -311,11 +337,22 @@ export default function GalleryManageModal({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-md overflow-y-auto">
-      <div className="relative w-full max-w-2xl my-8 rounded-3xl bg-white border border-stone-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div
+      data-lenis-prevent="true"
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-md animate-fadeIn"
+    >
+      <div
+        data-lenis-prevent="true"
+        onWheel={handleFormWheel}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-2xl my-8 rounded-3xl bg-white border border-stone-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+      >
         {/* Header */}
-        <div className="px-6 py-5 bg-gradient-to-r from-[#2A0E13] via-[#3B1218] to-[#2A0E13] text-white flex items-center justify-between border-b border-amber-500/30">
+        <div className="shrink-0 px-6 py-5 bg-gradient-to-r from-[#2A0E13] via-[#3B1218] to-[#2A0E13] text-white flex items-center justify-between border-b border-amber-500/30">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center">
               <ImageIcon className="w-5 h-5" />
@@ -338,13 +375,73 @@ export default function GalleryManageModal({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5 flex-1">
+        <form
+          ref={formRef}
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          onSubmit={handleSubmit}
+          className="p-6 overflow-y-auto overscroll-contain modal-scroll-container modal-scrollbar space-y-5 flex-1 min-h-0 pr-4 sm:pr-6"
+        >
           {formError && (
             <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
               <span>{formError}</span>
             </div>
           )}
+
+          {/* Section 0: Photo Image Upload (Top Section) */}
+          <div className="space-y-2 p-4 rounded-2xl bg-amber-50/50 border border-amber-200/80">
+            <label className="text-xs font-bold text-amber-950 flex items-center justify-between">
+              <span>Photo Image / Media</span>
+              <span className="text-[11px] font-normal text-amber-800">
+                Supports URL or Direct Upload
+              </span>
+            </label>
+
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+              <div className="relative w-32 h-24 rounded-xl overflow-hidden border border-amber-300 bg-stone-100 shrink-0 shadow-sm">
+                <img
+                  src={image.startsWith('/api') ? `${backendUrl}${image}` : image}
+                  alt="Gallery Preview"
+                  className="w-full h-full object-cover"
+                  onError={(e: any) => {
+                    e.target.src = '/gallery/IMG_2542.jpg';
+                  }}
+                />
+              </div>
+
+              <div className="flex-1 w-full space-y-2">
+                <input
+                  type="text"
+                  value={image}
+                  onChange={(e) => setImage(e.target.value)}
+                  placeholder="Enter image URL or upload image below..."
+                  className="w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-white text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20"
+                />
+
+                <div className="flex items-center gap-3">
+                  <label className="px-3.5 py-1.5 rounded-xl bg-white border border-amber-400/80 hover:bg-amber-100/60 text-[#5B0D15] font-semibold text-xs shadow-xs flex items-center gap-1.5 cursor-pointer transition-all">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{uploading ? 'Uploading...' : 'Upload Image File'}</span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                      onChange={handleFileUpload}
+                      disabled={uploading}
+                      className="hidden"
+                    />
+                  </label>
+                  <span className="text-[11px] text-stone-500">
+                    Max 10MB (JPEG, PNG, WebP, GIF)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {uploadError && (
+              <p className="text-[11px] text-rose-600 font-semibold">{uploadError}</p>
+            )}
+          </div>
 
           {/* Smart Auto-Translate Banner */}
           <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50/50 border border-amber-300 shadow-2xs">
@@ -514,60 +611,6 @@ export default function GalleryManageModal({
             </div>
           </div>
 
-          {/* Image Upload Area */}
-          <div className="space-y-2 p-4 rounded-2xl bg-amber-50/50 border border-amber-200/80">
-            <label className="text-xs font-bold text-amber-950 flex items-center justify-between">
-              <span>Photo Image / Media</span>
-              <span className="text-[11px] font-normal text-amber-800">
-                Supports URL or Direct Upload
-              </span>
-            </label>
-
-            <div className="flex flex-col sm:flex-row gap-4 items-center">
-              <div className="relative w-32 h-24 rounded-xl overflow-hidden border border-amber-300 bg-stone-100 shrink-0 shadow-sm">
-                <img
-                  src={image.startsWith('/api') ? `${backendUrl}${image}` : image}
-                  alt="Gallery Preview"
-                  className="w-full h-full object-cover"
-                  onError={(e: any) => {
-                    e.target.src = '/gallery/IMG_2542.jpg';
-                  }}
-                />
-              </div>
-
-              <div className="flex-1 w-full space-y-2">
-                <input
-                  type="text"
-                  value={image}
-                  onChange={(e) => setImage(e.target.value)}
-                  placeholder="Enter image URL or upload image below..."
-                  className="w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-white text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20"
-                />
-
-                <div className="flex items-center gap-3">
-                  <label className="px-3.5 py-1.5 rounded-xl bg-white border border-amber-400/80 hover:bg-amber-100/60 text-[#5B0D15] font-semibold text-xs shadow-xs flex items-center gap-1.5 cursor-pointer transition-all">
-                    <Upload className="w-3.5 h-3.5" />
-                    <span>{uploading ? 'Uploading...' : 'Upload Image File'}</span>
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
-                      onChange={handleFileUpload}
-                      disabled={uploading}
-                      className="hidden"
-                    />
-                  </label>
-                  <span className="text-[11px] text-stone-500">
-                    Max 10MB (JPEG, PNG, WebP, GIF)
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {uploadError && (
-              <p className="text-[11px] text-rose-600 font-semibold">{uploadError}</p>
-            )}
-          </div>
-
           {/* Description */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -632,7 +675,7 @@ export default function GalleryManageModal({
           </div>
 
           {/* Actions */}
-          <div className="pt-4 border-t border-stone-100 flex items-center justify-end gap-3">
+          <div className="shrink-0 pt-4 border-t border-stone-100 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}

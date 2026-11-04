@@ -44,6 +44,7 @@ import {
   ChevronUp,
   Loader2,
   AlertCircle,
+  Copy,
 } from 'lucide-react';
 
 interface RecommendedProduct {
@@ -197,14 +198,48 @@ export default function CartPage() {
   const [completedOrderNumber, setCompletedOrderNumber] = useState<string>('');
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [idempotencyKey, setIdempotencyKey] = useState<string>('');
+  const [copiedOrderNumber, setCopiedOrderNumber] = useState(false);
+  const [lastOrderSummary, setLastOrderSummary] = useState<{
+    orderNumber: string;
+    itemsCount: number;
+    totalAmount: number;
+    paymentMethod: string;
+  } | null>(null);
 
-  // Automatically reset step to 1 whenever new items are present in cart, preventing stuck confirmation view
-  useEffect(() => {
-    if (items.length > 0 && currentStep === 3) {
-      setCurrentStep(1);
-      setCompletedOrderNumber('');
+  const handleCopyOrderNumber = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const textToCopy = completedOrderNumber || 'AVD-ORD-PENDING';
+    if (typeof navigator !== 'undefined' && navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(textToCopy);
+      setCopiedOrderNumber(true);
+      setTimeout(() => setCopiedOrderNumber(false), 2000);
     }
-  }, [items.length, currentStep]);
+  };
+
+  // Allow direct preview or deep-linking to step 3 / order confirmation via ?step=3 / ?placed=true
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.get('step') === '3' || sp.get('placed') === 'true' || sp.get('success') === 'true') {
+        const ref = sp.get('order') || sp.get('ref') || 'AVD-ORD-78692';
+        setCompletedOrderNumber(ref);
+        setLastOrderSummary({
+          orderNumber: ref,
+          itemsCount: 2,
+          totalAmount: 1850,
+          paymentMethod: 'upi',
+        });
+        setCurrentStep(3);
+      }
+    }
+  }, []);
+
+  // Automatically reset step to 1 ONLY if user actually adds new items while on confirmation view without an active completed order
+  useEffect(() => {
+    if (items.length > 0 && currentStep === 3 && !completedOrderNumber) {
+      setCurrentStep(1);
+    }
+  }, [items.length, currentStep, completedOrderNumber]);
 
   // Clean up completion state on unmount so next visit always starts fresh at step 1
   useEffect(() => {
@@ -702,6 +737,12 @@ export default function CartPage() {
       const realOrderId = createdOrder.id || `ORD-${Date.now()}`;
 
       setCompletedOrderNumber(realOrderId);
+      setLastOrderSummary({
+        orderNumber: realOrderId,
+        itemsCount: items.length,
+        totalAmount: createdOrder.totalAmount || orderTotal,
+        paymentMethod: activePaymentMethod,
+      });
       setIsSubmitting(false);
       setIsCheckoutModalOpen(false);
       setCurrentStep(3);
@@ -727,68 +768,122 @@ export default function CartPage() {
       <Navbar />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl xl:max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 pb-16">
-        {/* Step 3: Order Confirmation View */}
+      <main
+        className={
+          currentStep === 3
+            ? 'flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 flex flex-col justify-center items-center pt-20 sm:pt-24 pb-4 min-h-[calc(100vh-80px)]'
+            : 'flex-1 max-w-7xl xl:max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 pb-16'
+        }
+      >
+        {/* Step 3: Order Confirmation View - Redesigned to fit completely in the 1st viewport without scrolling */}
         {currentStep === 3 ? (
-          <div className="bg-white rounded-3xl border border-[#ECE5DC] p-8 sm:p-12 text-center max-w-2xl mx-auto shadow-sm my-8 space-y-6">
-            <div className="w-16 h-16 bg-[#FAF5EE] border border-amber-200 text-[#3E1F18] rounded-full flex items-center justify-center mx-auto shadow-sm">
-              <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+          <div className="w-full max-w-xl mx-auto bg-white rounded-3xl border border-[#ECE5DC] shadow-[0_12px_40px_rgba(42,24,16,0.07)] p-5 sm:p-7 relative overflow-hidden text-center my-auto transition-all">
+            {/* Top decorative gradient accent line */}
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-500 via-amber-500 to-[#3E1F18]" />
+            <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-64 h-64 bg-emerald-100/30 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Sacred Checkmark Badge */}
+            <div className="relative mx-auto w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-emerald-50 to-emerald-100/80 border border-emerald-200 text-emerald-600 rounded-2xl flex items-center justify-center shadow-xs">
+              <CheckCircle2 className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600 stroke-[2.2]" />
             </div>
 
-            <div>
-              <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-3.5 py-1 rounded-full border border-emerald-200 mb-2">
-                Order Placed Successfully
+            {/* Header info */}
+            <div className="mt-2.5">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50/90 px-3 py-0.5 rounded-full border border-emerald-200/80">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                <span>Order Placed Successfully</span>
               </span>
-              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#2A1810]">
+              <h2 className="text-xl sm:text-2xl font-serif font-bold text-[#2A1810] mt-1.5 tracking-tight">
                 Thank You for Your Order!
               </h2>
-              <p className="text-sm sm:text-base text-[#736B63] mt-2">
-                Your order has been placed and registered with reference{' '}
-                <span className="font-bold font-mono text-[#3E1F18]">#{completedOrderNumber}</span>.
-              </p>
+              <div className="text-xs sm:text-sm text-[#736B63] mt-1 flex flex-wrap items-center justify-center gap-1">
+                <span>Your order has been placed and registered with reference</span>
+                <span className="inline-flex items-center gap-1 font-bold font-mono text-[#3E1F18] bg-[#FAF5EE] border border-[#E8DFD5] px-2 py-0.5 rounded-md text-xs">
+                  <span>#{completedOrderNumber || 'AVD-ORD-PENDING'}</span>
+                  <button
+                    type="button"
+                    onClick={handleCopyOrderNumber}
+                    className="hover:text-amber-800 text-[#8C8075] p-0.5 transition-colors cursor-pointer"
+                    title="Copy Order Reference"
+                  >
+                    {copiedOrderNumber ? (
+                      <Check className="w-3 h-3 text-emerald-600" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
+                  </button>
+                </span>
+                {copiedOrderNumber && (
+                  <span className="text-[10px] text-emerald-700 font-semibold animate-in fade-in">
+                    Copied!
+                  </span>
+                )}
+              </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#FAF7F2] border border-[#ECE5DC] text-left text-xs sm:text-sm text-[#5C5248] space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-[#ECE5DC]">
-                <span className="font-semibold text-[#2A1810]">Order Status:</span>
-                <span className="font-bold text-amber-900 bg-amber-100 border border-amber-300 px-2.5 py-0.5 rounded-full text-xs flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+            {/* Order Status & Payment Method in Compact 2-Column Grid */}
+            <div className="mt-3.5 grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-left">
+              <div className="p-3 rounded-xl bg-[#FAF7F2] border border-[#ECE5DC] flex items-center justify-between sm:flex-col sm:items-start sm:justify-center gap-1">
+                <span className="text-[11px] font-semibold text-[#736B63] uppercase tracking-wider">
+                  Order Status
+                </span>
+                <span className="font-bold text-amber-900 bg-amber-100/90 border border-amber-300/80 px-2.5 py-0.5 rounded-full text-xs flex items-center gap-1.5 w-fit">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
                   <span>Pending</span>
                 </span>
               </div>
-              <div className="flex items-center justify-between pb-2 border-b border-[#ECE5DC]">
-                <span className="font-semibold text-[#2A1810]">Payment Method:</span>
-                <span className="font-semibold text-[#2A1810]">
-                  {shippingForm.paymentMethod === 'cod'
+
+              <div className="p-3 rounded-xl bg-[#FAF7F2] border border-[#ECE5DC] flex items-center justify-between sm:flex-col sm:items-start sm:justify-center gap-1">
+                <span className="text-[11px] font-semibold text-[#736B63] uppercase tracking-wider">
+                  Payment Method
+                </span>
+                <span
+                  className="font-semibold text-xs sm:text-sm text-[#2A1810] truncate max-w-[210px]"
+                  title={
+                    (lastOrderSummary?.paymentMethod || shippingForm.paymentMethod) === 'cod'
+                      ? 'Cash on Delivery (Pay upon Receipt)'
+                      : (lastOrderSummary?.paymentMethod || shippingForm.paymentMethod) === 'upi'
+                      ? 'UPI Payment (Pending)'
+                      : (lastOrderSummary?.paymentMethod || shippingForm.paymentMethod) === 'netbanking'
+                      ? 'Net Banking (Pending)'
+                      : 'Credit / Debit Card (Pending)'
+                  }
+                >
+                  {(lastOrderSummary?.paymentMethod || shippingForm.paymentMethod) === 'cod'
                     ? 'Cash on Delivery (Pay upon Receipt)'
-                    : shippingForm.paymentMethod === 'upi'
+                    : (lastOrderSummary?.paymentMethod || shippingForm.paymentMethod) === 'upi'
                     ? 'UPI Payment (Pending)'
-                    : shippingForm.paymentMethod === 'netbanking'
+                    : (lastOrderSummary?.paymentMethod || shippingForm.paymentMethod) === 'netbanking'
                     ? 'Net Banking (Pending)'
                     : 'Credit / Debit Card (Pending)'}
                 </span>
               </div>
-              <div className="flex items-center gap-2 font-semibold text-[#2A1810] pt-1">
-                <Package className="w-4 h-4 text-[#800000]" />
+            </div>
+
+            {/* Order Confirmation & Updates Banner */}
+            <div className="mt-2.5 p-3 rounded-xl bg-[#FAF7F2] border border-[#ECE5DC] text-left">
+              <div className="flex items-center gap-1.5 font-semibold text-xs text-[#2A1810]">
+                <Package className="w-3.5 h-3.5 text-[#800000]" />
                 <span>Order Confirmation & Updates</span>
               </div>
-              <p className="text-xs text-[#736B63] leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-[#736B63] leading-relaxed mt-1">
                 Your order details have been securely registered to your account. You can view the status, consecration updates, and delivery tracking anytime from your customer dashboard.
               </p>
             </div>
 
-            <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
+            {/* Action Buttons */}
+            <div className="mt-4 pt-1 flex flex-col sm:flex-row gap-2.5 justify-center">
               <Link
                 href="/dashboard?tab=orders"
                 onClick={() => {
                   setCurrentStep(1);
                   setCompletedOrderNumber('');
                 }}
-                className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#3E1F18] via-[#4D241B] to-[#3E1F18] hover:from-[#2B140F] hover:to-[#2B140F] text-white font-serif font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#3E1F18] via-[#4D241B] to-[#3E1F18] hover:from-[#2B140F] hover:to-[#2B140F] text-white font-serif font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer group"
               >
                 <Package className="w-4 h-4 text-amber-300" />
                 <span>View in My Orders (Dashboard)</span>
-                <ArrowRight className="w-4 h-4 text-amber-300" />
+                <ArrowRight className="w-4 h-4 text-amber-300 group-hover:translate-x-0.5 transition-transform" />
               </Link>
               <Link
                 href="/products"
@@ -796,7 +891,7 @@ export default function CartPage() {
                   setCurrentStep(1);
                   setCompletedOrderNumber('');
                 }}
-                className="px-5 py-3 rounded-xl border border-[#ECE5DC] text-[#736B63] hover:text-[#2A1810] font-medium text-xs sm:text-sm hover:bg-[#FAF7F2] transition-colors"
+                className="px-4 py-2.5 rounded-xl border border-[#ECE5DC] text-[#736B63] hover:text-[#2A1810] font-medium text-xs sm:text-sm hover:bg-[#FAF7F2] transition-colors flex items-center justify-center"
               >
                 Continue Browsing Store
               </Link>
@@ -2515,7 +2610,13 @@ export default function CartPage() {
         </aside>
       )}
 
-      <Footer />
+      {currentStep !== 3 ? (
+        <Footer />
+      ) : (
+        <footer className="w-full py-2.5 border-t border-[#ECE5DC] text-center text-[11px] text-[#8C8075] bg-[#FAF7F2] shrink-0">
+          © {new Date().getFullYear()} AstroVD. Consecrated Vedic Sanctum. All sacred rights reserved.
+        </footer>
+      )}
     </div>
   );
 }

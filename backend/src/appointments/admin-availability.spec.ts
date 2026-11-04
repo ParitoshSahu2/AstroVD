@@ -83,6 +83,7 @@ describe('Admin Availability Management (Stage 7B)', () => {
         update: vi.fn().mockImplementation((args: any) =>
           Promise.resolve({ id: args.where.id, ...args.data }),
         ),
+        updateMany: vi.fn().mockResolvedValue({ count: 6 }),
         delete: vi.fn().mockResolvedValue({ id: 'slot-uuid-1' }),
         upsert: vi.fn().mockImplementation((args: any) =>
           Promise.resolve({ id: 'slot-uuid-1', ...args.create }),

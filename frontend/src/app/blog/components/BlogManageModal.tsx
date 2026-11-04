@@ -12,6 +12,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { getAuthToken } from '../../../lib/auth';
+import { useScrollLock } from '../../../lib/scrollLock';
 
 export interface BlogPostItem {
   id: string;
@@ -50,6 +51,8 @@ export default function BlogManageModal({
   postToEdit,
   onSaved,
 }: BlogManageModalProps) {
+  useScrollLock(isOpen);
+
   const isEdit = Boolean(postToEdit);
 
   const [title, setTitle] = useState('');
@@ -338,7 +341,7 @@ export default function BlogManageModal({
                 {isEdit ? 'Edit Sacred Discourse / Article' : 'Compose New Sacred Article'}
               </h3>
               <p className="text-xs text-amber-200/80">
-                Admin Content Management with Bilingual &amp; Media Support
+                Admin Content Management &amp; Sacred Article Publishing
               </p>
             </div>
           </div>
@@ -365,120 +368,7 @@ export default function BlogManageModal({
             </div>
           )}
 
-          {/* Title Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">
-                Article Title (English) <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Major Planetary Transits of 2026..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">
-                Article Title (Hindi - शीर्षक)
-              </label>
-              <input
-                type="text"
-                value={titleHi}
-                onChange={(e) => setTitleHi(e.target.value)}
-                placeholder="e.g. वर्ष 2026 के प्रमुख ग्रह गोचर..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
-              />
-            </div>
-          </div>
-
-          {/* Category & Read Time Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">Category (English)</label>
-              <input
-                type="text"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                placeholder="e.g. Vedic Jyotish"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">Category (Hindi)</label>
-              <input
-                type="text"
-                value={categoryHi}
-                onChange={(e) => setCategoryHi(e.target.value)}
-                placeholder="e.g. वैदिक ज्योतिष"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">Read Time (English)</label>
-              <input
-                type="text"
-                value={readTime}
-                onChange={(e) => setReadTime(e.target.value)}
-                placeholder="e.g. 6 min read"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">Date Display</label>
-              <input
-                type="text"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                placeholder="e.g. Oct 23, 2026"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
-              />
-            </div>
-          </div>
-
-          {/* Author Details Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">Author Name</label>
-              <input
-                type="text"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">Author Name (Hindi)</label>
-              <input
-                type="text"
-                value={authorHi}
-                onChange={(e) => setAuthorHi(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">Author Role</label>
-              <input
-                type="text"
-                value={authorRole}
-                onChange={(e) => setAuthorRole(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">Author Role (Hindi)</label>
-              <input
-                type="text"
-                value={authorRoleHi}
-                onChange={(e) => setAuthorRoleHi(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
-              />
-            </div>
-          </div>
-
-          {/* Image & Upload Area */}
+          {/* Section 0: Image & Upload Area (Top Section) */}
           <div className="space-y-2 p-4 rounded-2xl bg-amber-50/50 border border-amber-200/80">
             <label className="text-xs font-bold text-amber-950 flex items-center justify-between">
               <span>Article Cover Image</span>
@@ -534,100 +424,128 @@ export default function BlogManageModal({
             )}
           </div>
 
-          {/* Excerpt Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Title */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-stone-700">
+              Article Title <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Major Planetary Transits of 2026 and Their Spiritual Influence..."
+              className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
+            />
+          </div>
+
+          {/* Category, Read Time & Date Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">
-                Short Excerpt (English) <span className="text-rose-500">*</span>
-              </label>
-              <textarea
-                rows={3}
+              <label className="text-xs font-bold text-stone-700">Category *</label>
+              <input
+                type="text"
                 required
-                value={excerpt}
-                onChange={(e) => setExcerpt(e.target.value)}
-                placeholder="2-3 sentences summarizing the discourse..."
-                className="w-full p-3 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="e.g. Vedic Jyotish"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">
-                Short Excerpt (Hindi - संक्षिप्त विवरण)
-              </label>
-              <textarea
-                rows={3}
-                value={excerptHi}
-                onChange={(e) => setExcerptHi(e.target.value)}
-                placeholder="संक्षिप्त सारांश (हिंदी)..."
-                className="w-full p-3 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
+              <label className="text-xs font-bold text-stone-700">Read Time</label>
+              <input
+                type="text"
+                value={readTime}
+                onChange={(e) => setReadTime(e.target.value)}
+                placeholder="e.g. 6 min read"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-stone-700">Date Display</label>
+              <input
+                type="text"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                placeholder="e.g. Oct 23, 2026"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
               />
             </div>
           </div>
 
-          {/* Full Discourse Content */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Author Details Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">
-                Full Article Content (English)
-                <span className="text-[10px] font-normal text-stone-400 ml-1">
-                  (Separate paragraphs with blank lines)
-                </span>
-              </label>
-              <textarea
-                rows={6}
-                value={contentText}
-                onChange={(e) => setContentText(e.target.value)}
-                placeholder="Detailed discourse text. Write paragraphs separated by new lines..."
-                className="w-full p-3 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 font-sans leading-relaxed"
+              <label className="text-xs font-bold text-stone-700">Author Name</label>
+              <input
+                type="text"
+                value={author}
+                onChange={(e) => setAuthor(e.target.value)}
+                placeholder="e.g. Dr. Pandit Vishal Dubey"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">
-                Full Article Content (Hindi - पूर्ण लेख सामग्री)
-                <span className="text-[10px] font-normal text-stone-400 ml-1">
-                  (अनुच्छेदों को नई पंक्ति से अलग करें)
-                </span>
-              </label>
-              <textarea
-                rows={6}
-                value={contentTextHi}
-                onChange={(e) => setContentTextHi(e.target.value)}
-                placeholder="लेख की पूर्ण सामग्री (हिंदी)..."
-                className="w-full p-3 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 font-sans leading-relaxed"
+              <label className="text-xs font-bold text-stone-700">Author Role / Credentials</label>
+              <input
+                type="text"
+                value={authorRole}
+                onChange={(e) => setAuthorRole(e.target.value)}
+                placeholder="e.g. PhD, Jyotishacharya"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
               />
             </div>
+          </div>
+
+          {/* Short Excerpt */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-stone-700">
+              Short Excerpt <span className="text-rose-500">*</span>
+            </label>
+            <textarea
+              rows={3}
+              required
+              value={excerpt}
+              onChange={(e) => setExcerpt(e.target.value)}
+              placeholder="2-3 sentences summarizing the discourse..."
+              className="w-full p-3 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 focus:border-[#5B0D15]"
+            />
+          </div>
+
+          {/* Full Article Content */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-stone-700">
+              Full Article Content
+              <span className="text-[10px] font-normal text-stone-400 ml-1">
+                (Separate paragraphs with blank lines)
+              </span>
+            </label>
+            <textarea
+              rows={7}
+              value={contentText}
+              onChange={(e) => setContentText(e.target.value)}
+              placeholder="Detailed discourse text. Write paragraphs separated by blank lines..."
+              className="w-full p-3 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20 font-sans leading-relaxed"
+            />
           </div>
 
           {/* Key Takeaways */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">
-                Key Takeaways (English)
-                <span className="text-[10px] font-normal text-stone-400 ml-1">(One bullet per line)</span>
-              </label>
-              <textarea
-                rows={3}
-                value={takeawaysText}
-                onChange={(e) => setTakeawaysText(e.target.value)}
-                placeholder="One core takeaway per line..."
-                className="w-full p-3 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-stone-700">
-                Key Takeaways (Hindi - मुख्य बिंदु)
-                <span className="text-[10px] font-normal text-stone-400 ml-1">(प्रति पंक्ति एक बिंदु)</span>
-              </label>
-              <textarea
-                rows={3}
-                value={takeawaysTextHi}
-                onChange={(e) => setTakeawaysTextHi(e.target.value)}
-                placeholder="प्रति पंक्ति एक मुख्य बिंदु..."
-                className="w-full p-3 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20"
-              />
-            </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-stone-700">
+              Key Takeaways
+              <span className="text-[10px] font-normal text-stone-400 ml-1">(One bullet per line)</span>
+            </label>
+            <textarea
+              rows={3}
+              value={takeawaysText}
+              onChange={(e) => setTakeawaysText(e.target.value)}
+              placeholder="One core takeaway per line..."
+              className="w-full p-3 rounded-xl border border-stone-200 text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#5B0D15]/20"
+            />
           </div>
 
-          {/* Publish Checkbox */}
+          {/* Active Status Checkbox */}
           <div className="flex items-center gap-3 p-3.5 rounded-xl bg-stone-50 border border-stone-200">
             <input
               type="checkbox"
@@ -637,7 +555,7 @@ export default function BlogManageModal({
               className="w-4 h-4 rounded text-[#5B0D15] focus:ring-[#5B0D15] cursor-pointer"
             />
             <label htmlFor="isPublishedCheck" className="text-xs font-semibold text-stone-800 cursor-pointer">
-              Publish immediately (visible to all seekers and public website visitors)
+              Activate article (immediately active and visible to seekers)
             </label>
           </div>
 
@@ -664,7 +582,7 @@ export default function BlogManageModal({
               ) : (
                 <>
                   <CheckCircle2 className="w-3.5 h-3.5 text-amber-300" />
-                  <span>{isEdit ? 'Save Changes' : 'Publish Article'}</span>
+                  <span>{isEdit ? 'Save Changes' : 'Activate & Save Article'}</span>
                 </>
               )}
             </button>

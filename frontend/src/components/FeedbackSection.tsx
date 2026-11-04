@@ -520,6 +520,11 @@ export const FeedbackSection: React.FC = () => {
                   <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                     <Link
                       href="/appointment"
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          window.dispatchEvent(new CustomEvent('astro_reset_booking'));
+                        }
+                      }}
                       className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#5B0D15] hover:bg-[#78121d] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm"
                     >
                       <Compass className="w-3.5 h-3.5" />

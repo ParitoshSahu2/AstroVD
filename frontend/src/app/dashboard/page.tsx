@@ -43,7 +43,30 @@ export default function DashboardPage() {
   const pathname = usePathname();
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
+  const [activeTab, setActiveTab] = useState<DashboardTab>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const search = new URLSearchParams(window.location.search);
+        const tabParam = (search.get('tab') || localStorage.getItem('astrovd_dashboard_active_tab')) as DashboardTab | null;
+        if (tabParam && ['overview', 'consultations', 'orders', 'kundli', 'settings'].includes(tabParam)) {
+          return tabParam;
+        }
+      } catch (e) {}
+    }
+    return 'overview';
+  });
+
+  const switchDashboardTab = (tab: DashboardTab) => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('astrovd_dashboard_active_tab', tab);
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', tab);
+        window.history.replaceState(null, '', url.toString());
+      } catch (e) {}
+    }
+  };
 
   // Core Data States
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -81,6 +104,37 @@ export default function DashboardPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [mobileSidebarOpen, editKundliModalOpen]);
 
+  const notificationsRef = useRef<HTMLDivElement>(null);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (notificationsRef.current && !notificationsRef.current.contains(target)) {
+        setNotificationsOpen(false);
+      }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(target)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setNotificationsOpen(false);
+        setProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   // Edit Kundli Form Fields
   const [editName, setEditName] = useState('');
   const [editDob, setEditDob] = useState('');
@@ -94,6 +148,11 @@ export default function DashboardPage() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const clearDashboardData = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('astrovd_dashboard_active_tab');
+      } catch (e) {}
+    }
     setProfile(null);
     setWallet(null);
     setTransactions([]);
@@ -236,10 +295,10 @@ export default function DashboardPage() {
   useEffect(() => {
     loadDashboardData();
 
-    // Query string tab sync
+    // Query string and localStorage tab sync on mount
     if (typeof window !== 'undefined') {
       const search = new URLSearchParams(window.location.search);
-      const tabParam = search.get('tab') as DashboardTab | null;
+      const tabParam = (search.get('tab') || localStorage.getItem('astrovd_dashboard_active_tab')) as DashboardTab | null;
       if (tabParam && ['overview', 'consultations', 'orders', 'kundli', 'settings'].includes(tabParam)) {
         setActiveTab(tabParam);
       }
@@ -403,7 +462,7 @@ export default function DashboardPage() {
               <div>
                 <button
                   type="button"
-                  onClick={() => setActiveTab('overview')}
+                  onClick={() => switchDashboardTab('overview')}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                     activeTab === 'overview'
                       ? 'bg-[#FDF2F4] text-[#8B1D2C]'
@@ -423,7 +482,7 @@ export default function DashboardPage() {
                 <div className="space-y-0.5">
                   <button
                     type="button"
-                    onClick={() => setActiveTab('consultations')}
+                    onClick={() => switchDashboardTab('consultations')}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                       activeTab === 'consultations'
                         ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
@@ -447,7 +506,7 @@ export default function DashboardPage() {
 
                   <button
                     type="button"
-                    onClick={() => setActiveTab('orders')}
+                    onClick={() => switchDashboardTab('orders')}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                       activeTab === 'orders'
                         ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
@@ -479,7 +538,7 @@ export default function DashboardPage() {
                 <div className="space-y-0.5">
                   <button
                     type="button"
-                    onClick={() => setActiveTab('kundli')}
+                    onClick={() => switchDashboardTab('kundli')}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                       activeTab === 'kundli'
                         ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
@@ -501,7 +560,7 @@ export default function DashboardPage() {
                 <div className="space-y-0.5">
                   <button
                     type="button"
-                    onClick={() => setActiveTab('settings')}
+                    onClick={() => switchDashboardTab('settings')}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                       activeTab === 'settings'
                         ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
@@ -569,7 +628,7 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      setActiveTab('overview');
+                      switchDashboardTab('overview');
                       setMobileSidebarOpen(false);
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
@@ -590,7 +649,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          setActiveTab('consultations');
+                          switchDashboardTab('consultations');
                           setMobileSidebarOpen(false);
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
@@ -617,7 +676,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          setActiveTab('orders');
+                          switchDashboardTab('orders');
                           setMobileSidebarOpen(false);
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
@@ -651,7 +710,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          setActiveTab('kundli');
+                          switchDashboardTab('kundli');
                           setMobileSidebarOpen(false);
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
@@ -675,7 +734,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          setActiveTab('settings');
+                          switchDashboardTab('settings');
                           setMobileSidebarOpen(false);
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
@@ -748,10 +807,13 @@ export default function DashboardPage() {
               {/* Right Header Items: Notifications & User Profile */}
               <div className="flex items-center gap-4">
                 {/* Notification Bell */}
-                <div className="relative">
+                <div className="relative" ref={notificationsRef}>
                   <button
                     type="button"
-                    onClick={() => setNotificationsOpen(!notificationsOpen)}
+                    onClick={() => {
+                      setNotificationsOpen((prev) => !prev);
+                      setProfileDropdownOpen(false);
+                    }}
                     className="w-10 h-10 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-600 relative cursor-pointer transition-colors"
                     title={t('Notifications', 'सूचनाएं')}
                     aria-label="Notifications"
@@ -765,49 +827,60 @@ export default function DashboardPage() {
                   </button>
 
                   {notificationsOpen && (
-                    <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-30 space-y-3 animate-fadeIn">
-                      <div className="flex items-center justify-between pb-2 border-b border-stone-100">
-                        <span className="text-xs font-bold text-stone-900">{t('Notifications', 'सूचनाएं')}</span>
-                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                          {t('Live Updates', 'सक्रिय')}
-                        </span>
-                      </div>
-                      <div className="space-y-1.5 text-xs max-h-72 overflow-y-auto">
-                        {bookings.slice(0, 3).map((b, idx) => (
-                          <div
-                            key={b.id || idx}
-                            onClick={() => {
-                              setActiveTab('consultations');
-                              setNotificationsOpen(false);
-                            }}
-                            className="p-2.5 rounded-xl cursor-pointer border border-transparent hover:bg-stone-50 transition-all flex items-start gap-2.5"
-                          >
-                            <span className="w-2 h-2 rounded-full mt-1.5 shrink-0 bg-[#E11D48]" />
-                            <div className="flex-1 min-w-0">
-                              <div className="font-bold text-stone-900 truncate">
-                                {b.serviceType || t('Consultation Scheduled', 'परामर्श सत्र')}
-                              </div>
-                              <div className="text-[11px] text-stone-500 truncate">
-                                {b.bookingDate} {b.bookingTime ? `• ${b.bookingTime}` : ''}
+                    <>
+                      {/* Backdrop overlay for closing on click outside / blank space */}
+                      <div
+                        className="fixed inset-0 z-20 cursor-default"
+                        onClick={() => setNotificationsOpen(false)}
+                        aria-hidden="true"
+                      />
+                      <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-30 space-y-3 animate-fadeIn">
+                        <div className="flex items-center justify-between pb-2 border-b border-stone-100">
+                          <span className="text-xs font-bold text-stone-900">{t('Notifications', 'सूचनाएं')}</span>
+                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                            {t('Live Updates', 'सक्रिय')}
+                          </span>
+                        </div>
+                        <div className="space-y-1.5 text-xs max-h-72 overflow-y-auto">
+                          {bookings.slice(0, 3).map((b, idx) => (
+                            <div
+                              key={b.id || idx}
+                              onClick={() => {
+                                switchDashboardTab('consultations');
+                                setNotificationsOpen(false);
+                              }}
+                              className="p-2.5 rounded-xl cursor-pointer border border-transparent hover:bg-stone-50 transition-all flex items-start gap-2.5"
+                            >
+                              <span className="w-2 h-2 rounded-full mt-1.5 shrink-0 bg-[#E11D48]" />
+                              <div className="flex-1 min-w-0">
+                                <div className="font-bold text-stone-900 truncate">
+                                  {b.serviceType || t('Consultation Scheduled', 'परामर्श सत्र')}
+                                </div>
+                                <div className="text-[11px] text-stone-500 truncate">
+                                  {b.bookingDate} {b.bookingTime ? `• ${b.bookingTime}` : ''}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                        {bookings.length === 0 && (
-                          <p className="text-stone-400 text-center py-4 text-xs">
-                            {t('No new notifications', 'कोई नई सूचना नहीं है')}
-                          </p>
-                        )}
+                          ))}
+                          {bookings.length === 0 && (
+                            <p className="text-stone-400 text-center py-4 text-xs">
+                              {t('No new notifications', 'कोई नई सूचना नहीं है')}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    </>
                   )}
                 </div>
 
                 {/* Profile Badge (Initials in dark maroon circle, Name, Role 'Seeker / Devotee', ChevronDown) */}
-                <div className="relative">
+                <div className="relative" ref={profileDropdownRef}>
                   <button
                     type="button"
-                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                    onClick={() => {
+                      setProfileDropdownOpen((prev) => !prev);
+                      setNotificationsOpen(false);
+                    }}
                     className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-full hover:bg-stone-50 transition-all cursor-pointer"
                   >
                     <div className="w-9 h-9 rounded-full bg-[#5B0D15] text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
@@ -825,50 +898,58 @@ export default function DashboardPage() {
                   </button>
 
                   {profileDropdownOpen && (
-                    <div className="absolute right-0 top-12 w-52 bg-white rounded-2xl shadow-xl border border-stone-200 py-1.5 z-30 text-xs text-stone-700 animate-fadeIn">
-                      <div className="px-4 py-2 border-b border-stone-100">
-                        <div className="font-bold text-stone-900 truncate">{profile.name}</div>
-                        <div className="text-[10px] text-stone-400 truncate">{profile.email || 'seeker@astrovd.com'}</div>
+                    <>
+                      {/* Backdrop overlay for closing on click outside / blank space */}
+                      <div
+                        className="fixed inset-0 z-20 cursor-default"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        aria-hidden="true"
+                      />
+                      <div className="absolute right-0 top-12 w-52 bg-white rounded-2xl shadow-xl border border-stone-200 py-1.5 z-30 text-xs text-stone-700 animate-fadeIn">
+                        <div className="px-4 py-2 border-b border-stone-100">
+                          <div className="font-bold text-stone-900 truncate">{profile.name}</div>
+                          <div className="text-[10px] text-stone-400 truncate">{profile.email || 'seeker@astrovd.com'}</div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            switchDashboardTab('kundli');
+                            setProfileDropdownOpen(false);
+                          }}
+                          className="w-full px-4 py-2 hover:bg-stone-50 flex items-center gap-2 text-left cursor-pointer"
+                        >
+                          <Compass className="w-3.5 h-3.5 text-amber-700" />
+                          <span>{t('Janam Kundli', 'जन्म कुंडली')}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            switchDashboardTab('settings');
+                            setProfileDropdownOpen(false);
+                          }}
+                          className="w-full px-4 py-2 hover:bg-stone-50 flex items-center gap-2 text-left cursor-pointer"
+                        >
+                          <Settings className="w-3.5 h-3.5 text-stone-500" />
+                          <span>{t('Account Settings', 'खाता सेटिंग्स')}</span>
+                        </button>
+
+                        <div className="my-1 border-t border-stone-100" />
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProfileDropdownOpen(false);
+                            handleLogout();
+                          }}
+                          className="w-full px-4 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2 text-left font-medium cursor-pointer"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          <span>{t('Sign Out', 'लॉगआउट')}</span>
+                        </button>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab('kundli');
-                          setProfileDropdownOpen(false);
-                        }}
-                        className="w-full px-4 py-2 hover:bg-stone-50 flex items-center gap-2 text-left cursor-pointer"
-                      >
-                        <Compass className="w-3.5 h-3.5 text-amber-700" />
-                        <span>{t('Janam Kundli', 'जन्म कुंडली')}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab('settings');
-                          setProfileDropdownOpen(false);
-                        }}
-                        className="w-full px-4 py-2 hover:bg-stone-50 flex items-center gap-2 text-left cursor-pointer"
-                      >
-                        <Settings className="w-3.5 h-3.5 text-stone-500" />
-                        <span>{t('Account Settings', 'खाता सेटिंग्स')}</span>
-                      </button>
-
-                      <div className="my-1 border-t border-stone-100" />
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setProfileDropdownOpen(false);
-                          handleLogout();
-                        }}
-                        className="w-full px-4 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2 text-left font-medium cursor-pointer"
-                      >
-                        <LogOut className="w-3.5 h-3.5" />
-                        <span>{t('Sign Out', 'लॉगआउट')}</span>
-                      </button>
-                    </div>
+                    </>
                   )}
                 </div>
               </div>
@@ -881,7 +962,7 @@ export default function DashboardPage() {
                   profile={profile}
                   bookings={bookings}
                   orders={orders}
-                  onTabChange={(tab) => setActiveTab(tab)}
+                  onTabChange={(tab) => switchDashboardTab(tab)}
                   onEditKundli={() => setEditKundliModalOpen(true)}
                   formatGoogleMeetLink={formatGoogleMeetLink}
                   t={t}

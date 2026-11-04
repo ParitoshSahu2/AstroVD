@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useScrollLock } from '../../../lib/scrollLock';
 import {
   X,
@@ -14,7 +14,11 @@ import {
   Tag,
   Image as ImageIcon,
   CheckCircle2,
+  Upload,
+  Languages,
 } from 'lucide-react';
+import { getAuthToken } from '../../../lib/auth';
+import { translateEnToHi } from '../../../lib/translator';
 
 export interface ProductFormData {
   id?: string;
@@ -75,6 +79,62 @@ export default function ProductFormModal({
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isTranslatingName, setIsTranslatingName] = useState(false);
+  const [isTranslatingDesc, setIsTranslatingDesc] = useState(false);
+
+  const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const token = getAuthToken();
+    if (!token) {
+      setUploadError('Admin authorization token required.');
+      return;
+    }
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+    if (!validTypes.includes(file.type)) {
+      setUploadError('Invalid format. Please upload JPEG, PNG, WebP, GIF, or SVG.');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('Image size exceeds 10MB limit.');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError(null);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(`${backendUrl}/api/content/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Image upload failed');
+      }
+
+      setImage(data.url);
+    } catch (err: any) {
+      console.error('Product image upload error:', err);
+      setUploadError(err.message || 'Error uploading product image.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     if (product) {
@@ -115,6 +175,109 @@ export default function ProductFormModal({
     setError(null);
   }, [product, isOpen]);
 
+  // Auto-translate product name from English to Hindi (debounced)
+  useEffect(() => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    if (isEditing && product?.name === name) return;
+
+    const timer = setTimeout(async () => {
+      setIsTranslatingName(true);
+      try {
+        const translated = await translateEnToHi(trimmed);
+        if (translated) {
+          setNameHi(translated);
+        }
+      } catch (err) {
+        console.error('Error auto-translating product name:', err);
+      } finally {
+        setIsTranslatingName(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [name, isEditing, product?.name]);
+
+  const handleTranslateNameNow = async (text?: string) => {
+    const src = (text !== undefined ? text : name).trim();
+    if (!src) return;
+    setIsTranslatingName(true);
+    try {
+      const translated = await translateEnToHi(src);
+      if (translated) {
+        setNameHi(translated);
+      }
+    } catch (err) {
+      console.error('Error translating product name:', err);
+    } finally {
+      setIsTranslatingName(false);
+    }
+  };
+
+  // Auto-translate product description from English to Hindi (debounced)
+  useEffect(() => {
+    const trimmed = desc.trim();
+    if (!trimmed) return;
+    if (isEditing && product?.desc === desc) return;
+
+    const timer = setTimeout(async () => {
+      setIsTranslatingDesc(true);
+      try {
+        const translated = await translateEnToHi(trimmed);
+        if (translated) {
+          setDescHi(translated);
+        }
+      } catch (err) {
+        console.error('Error auto-translating description:', err);
+      } finally {
+        setIsTranslatingDesc(false);
+      }
+    }, 700);
+
+    return () => clearTimeout(timer);
+  }, [desc, isEditing, product?.desc]);
+
+  const handleTranslateDescNow = async (text?: string) => {
+    const src = (text !== undefined ? text : desc).trim();
+    if (!src) return;
+    setIsTranslatingDesc(true);
+    try {
+      const translated = await translateEnToHi(src);
+      if (translated) {
+        setDescHi(translated);
+      }
+    } catch (err) {
+      console.error('Error translating description:', err);
+    } finally {
+      setIsTranslatingDesc(false);
+    }
+  };
+
+  // Handles numeric price and inventory inputs so leading zeros auto-strip when user starts typing
+  const handleNumericInput = (val: string, setter: (n: number) => void) => {
+    const digitsOnly = val.replace(/\D/g, '');
+    if (!digitsOnly) {
+      setter(0);
+      return;
+    }
+    // Automatically strip leading zeros if followed by other digits (e.g. "05" -> "5", "01299" -> "1299")
+    const stripped = digitsOnly.replace(/^0+(?=\d)/, '');
+    setter(Number(stripped));
+  };
+
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const handleFormWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
+    if (
+      formRef.current &&
+      e.target !== formRef.current &&
+      !formRef.current.contains(e.target as Node)
+    ) {
+      formRef.current.scrollTop += e.deltaY;
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) onClose();
@@ -122,8 +285,6 @@ export default function ProductFormModal({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,9 +331,17 @@ export default function ProductFormModal({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn">
+    <div
+      data-lenis-prevent="true"
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn"
+    >
       <div
+        data-lenis-prevent="true"
+        onWheel={handleFormWheel}
         className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-stone-200 overflow-hidden flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
@@ -201,13 +370,79 @@ export default function ProductFormModal({
         </div>
 
         {/* Modal Form Body */}
-        <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-4 text-xs">
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          className="p-5 overflow-y-auto space-y-4 text-xs modal-scroll-container overscroll-contain flex-1 min-h-0 modal-scrollbar"
+        >
           {error && (
             <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-center gap-2 text-xs">
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
               <span>{error}</span>
             </div>
           )}
+
+          {/* Section 0: Product Image Upload (Top Section) */}
+          <div className="space-y-2 p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/80">
+            <label className="text-xs font-bold text-amber-950 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5 text-amber-700" />
+                <span>Product Image *</span>
+              </span>
+              <span className="text-[11px] font-normal text-amber-800">
+                Supports Direct Upload or Image URL
+              </span>
+            </label>
+
+            <div className="flex flex-col sm:flex-row gap-3.5 items-center">
+              {/* Image Preview Thumbnail */}
+              <div className="relative w-28 h-20 rounded-xl overflow-hidden border border-amber-300 bg-stone-100 shrink-0 shadow-xs">
+                <img
+                  src={image.startsWith('/api') ? `${backendUrl}${image}` : image}
+                  alt="Product Preview"
+                  className="w-full h-full object-cover"
+                  onError={(e: any) => {
+                    e.target.src = '/products/prod-tiger-eye-macro.jpg';
+                  }}
+                />
+              </div>
+
+              {/* URL Input & Upload Button */}
+              <div className="flex-1 w-full space-y-2">
+                <input
+                  type="text"
+                  required
+                  value={image}
+                  onChange={(e) => setImage(e.target.value)}
+                  placeholder="Enter image URL or click upload below..."
+                  className="w-full px-3 py-1.5 rounded-xl border border-stone-200 bg-white text-xs text-stone-800 focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
+                />
+
+                <div className="flex items-center gap-3">
+                  <label className="px-3.5 py-1.5 rounded-xl bg-white border border-amber-400/80 hover:bg-amber-100/60 text-[#5B0D15] font-semibold text-xs shadow-xs flex items-center gap-1.5 cursor-pointer transition-all">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{uploading ? 'Uploading...' : 'Upload Image File'}</span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+                      onChange={handleFileUpload}
+                      disabled={uploading}
+                      className="hidden"
+                    />
+                  </label>
+                  <span className="text-[11px] text-stone-500">
+                    Max 10MB (JPEG, PNG, WebP, GIF, SVG)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {uploadError && (
+              <p className="text-[11px] text-rose-600 font-semibold">{uploadError}</p>
+            )}
+          </div>
 
           {/* Section 1: Product Identification */}
           <div className="space-y-3">
@@ -224,13 +459,37 @@ export default function ProductFormModal({
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  onBlur={() => {
+                    if (name.trim() && !nameHi.trim()) {
+                      handleTranslateNameNow(name);
+                    }
+                  }}
                   placeholder="e.g. TIGER EYE BRACELET"
                   className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/50 focus:bg-white focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="font-medium text-stone-700">Product Name (Hindi)</label>
+                <div className="flex items-center justify-between">
+                  <label className="font-medium text-stone-700">Product Name (Hindi)</label>
+                  {isTranslatingName ? (
+                    <span className="text-[10px] text-amber-700 font-semibold flex items-center gap-1 animate-pulse">
+                      <Sparkles className="w-3 h-3 text-amber-600 animate-spin" />
+                      <span>Translating...</span>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleTranslateNameNow()}
+                      disabled={!name.trim() || isTranslatingName}
+                      className="text-[10px] text-[#5B0D15] hover:text-[#78121d] font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                      title="Auto-translate name from English"
+                    >
+                      <Languages className="w-3 h-3 text-amber-700" />
+                      <span>Auto-translate</span>
+                    </button>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={nameHi}
@@ -280,11 +539,13 @@ export default function ProductFormModal({
               <div className="space-y-1">
                 <label className="font-medium text-stone-700">Selling Price (₹) *</label>
                 <input
-                  type="number"
-                  min="1"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   required
                   value={price}
-                  onChange={(e) => setPrice(Number(e.target.value))}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => handleNumericInput(e.target.value, setPrice)}
                   className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/50 focus:bg-white focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
                 />
               </div>
@@ -292,10 +553,12 @@ export default function ProductFormModal({
               <div className="space-y-1">
                 <label className="font-medium text-stone-700">Original MRP (₹)</label>
                 <input
-                  type="number"
-                  min="1"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={originalPrice}
-                  onChange={(e) => setOriginalPrice(Number(e.target.value))}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => handleNumericInput(e.target.value, setOriginalPrice)}
                   className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/50 focus:bg-white focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
                 />
               </div>
@@ -303,11 +566,13 @@ export default function ProductFormModal({
               <div className="space-y-1">
                 <label className="font-medium text-stone-700">Inventory Stock Count *</label>
                 <input
-                  type="number"
-                  min="0"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   required
                   value={stock}
-                  onChange={(e) => setStock(Number(e.target.value))}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => handleNumericInput(e.target.value, setStock)}
                   className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/50 focus:bg-white focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
                 />
               </div>
@@ -350,33 +615,42 @@ export default function ProductFormModal({
                 required
                 value={desc}
                 onChange={(e) => setDesc(e.target.value)}
+                onBlur={() => {
+                  if (desc.trim() && !descHi.trim()) {
+                    handleTranslateDescNow(desc);
+                  }
+                }}
                 placeholder="Comprehensive spiritual description of the consecrated gemstone bracelet..."
                 className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/50 focus:bg-white focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
               />
             </div>
 
             <div className="space-y-1">
-              <label className="font-medium text-stone-700">Description (Hindi)</label>
+              <div className="flex items-center justify-between">
+                <label className="font-medium text-stone-700">Description (Hindi)</label>
+                {isTranslatingDesc ? (
+                  <span className="text-[10px] text-amber-700 font-semibold flex items-center gap-1 animate-pulse">
+                    <Sparkles className="w-3 h-3 text-amber-600 animate-spin" />
+                    <span>Translating...</span>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleTranslateDescNow()}
+                    disabled={!desc.trim() || isTranslatingDesc}
+                    className="text-[10px] text-[#5B0D15] hover:text-[#78121d] font-semibold flex items-center gap-1 cursor-pointer disabled:opacity-40"
+                    title="Auto-translate description from English"
+                  >
+                    <Languages className="w-3 h-3 text-amber-700" />
+                    <span>Auto-translate</span>
+                  </button>
+                )}
+              </div>
               <textarea
                 rows={2}
                 value={descHi}
                 onChange={(e) => setDescHi(e.target.value)}
                 placeholder="प्राकृतिक रत्न का आध्यात्मिक महत्व एवं लाभ..."
-                className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/50 focus:bg-white focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="font-medium text-stone-700 flex items-center gap-1">
-                <ImageIcon className="w-3.5 h-3.5 text-amber-700" />
-                <span>Product Image URL *</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
-                placeholder="/products/prod-tiger-eye-macro.jpg"
                 className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/50 focus:bg-white focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
               />
             </div>
@@ -439,7 +713,7 @@ export default function ProductFormModal({
           </div>
 
           {/* Modal Footer */}
-          <div className="pt-4 border-t flex items-center justify-end gap-2.5">
+          <div className="shrink-0 pt-4 border-t flex items-center justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}

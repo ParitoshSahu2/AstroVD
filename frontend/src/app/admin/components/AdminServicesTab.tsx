@@ -20,6 +20,8 @@ import {
   Tag,
   ShieldAlert,
   SlidersHorizontal,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import ServiceFormModal, { ServiceFormData } from './ServiceFormModal';
 
@@ -67,8 +69,16 @@ export default function AdminServicesTab() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // Notifications
+  // Notifications (2-second auto-dismiss)
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  useEffect(() => {
+    if (!notification) return;
+    const timer = setTimeout(() => {
+      setNotification(null);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [notification]);
 
   const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
 
@@ -157,9 +167,9 @@ export default function AdminServicesTab() {
 
       setNotification({
         type: 'success',
-        message: `Service "${service.title}" is now ${nextStatus ? 'ACTIVE' : 'DEACTIVATED'}.`,
+        message: `Service "${service.title}" is now ${nextStatus ? 'Available (Published)' : 'Unavailable (Unpublished)'}.`,
       });
-      setTimeout(() => setNotification(null), 4000);
+      setTimeout(() => setNotification(null), 3000);
 
       // Local state optimistic update
       setServices((prev) =>
@@ -245,30 +255,34 @@ export default function AdminServicesTab() {
 
   return (
     <div className="space-y-4">
-      {/* Toast Notification */}
+      {/* Compact 2-Second Toast Notification */}
       {notification && (
         <div
-          className={`p-3 rounded-xl border flex items-center justify-between text-xs font-medium animate-fadeIn ${
-            notification.type === 'success'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              : 'bg-rose-50 border-rose-200 text-rose-800'
-          }`}
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 z-50 animate-fadeIn pointer-events-auto"
         >
-          <div className="flex items-center gap-2">
-            {notification.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-            )}
-            <span>{notification.message}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setNotification(null)}
-            className="p-1 hover:bg-black/5 rounded cursor-pointer"
+          <div
+            className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full shadow-lg border text-xs font-semibold backdrop-blur-md ${
+              notification.type === 'success'
+                ? 'bg-emerald-950/95 text-emerald-100 border-emerald-500/50 shadow-emerald-950/40'
+                : 'bg-rose-950/95 text-rose-100 border-rose-500/50 shadow-rose-950/40'
+            }`}
           >
-            <X className="w-3.5 h-3.5" />
-          </button>
+            {notification.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            )}
+            <span className="max-w-[280px] truncate">{notification.message}</span>
+            <button
+              type="button"
+              onClick={() => setNotification(null)}
+              className="ml-1 p-0.5 hover:bg-white/20 rounded-full cursor-pointer text-white/70 hover:text-white"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -352,8 +366,8 @@ export default function AdminServicesTab() {
             className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white text-xs font-medium text-stone-800 focus:outline-none focus:ring-1.5 focus:ring-[#5B0D15]"
           >
             <option value="ALL">All Statuses</option>
-            <option value="ACTIVE">Active (Published)</option>
-            <option value="INACTIVE">Inactive (Hidden)</option>
+            <option value="ACTIVE">Available (Published)</option>
+            <option value="INACTIVE">Unavailable (Unpublished)</option>
           </select>
         </div>
       </div>
@@ -401,95 +415,107 @@ export default function AdminServicesTab() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3">
-          {services.map((item) => (
-            <div
-              key={item.id}
-              className={`p-4 sm:p-5 rounded-2xl border transition-all ${
-                item.isActive
-                  ? 'bg-white/95 border-stone-200/90 hover:border-amber-400/60 hover:shadow-xs'
-                  : 'bg-stone-50/90 border-stone-200/80 opacity-80'
-              }`}
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="min-w-0 flex-1 space-y-2 sm:space-y-2.5">
-                  {/* 1. Top row — status and identification */}
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
-                          item.isActive
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                            : 'bg-stone-100 text-stone-600 border-stone-200'
-                        }`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${item.isActive ? 'bg-emerald-600' : 'bg-stone-400'}`} />
-                        <span>{item.isActive ? 'Active' : 'Inactive'}</span>
-                      </span>
-
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-900 border border-amber-200 uppercase tracking-wide">
-                        {item.categoryTag || item.categoryKey}
-                      </span>
-
-                      {item.badge && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-purple-50 text-purple-900 border border-purple-200">
-                          ★ {item.badge}
+          {services.map((item) => {
+            const isUnavailable = !item.isActive;
+            return (
+              <div
+                key={item.id}
+                className={`p-4 sm:p-5 rounded-2xl border transition-all duration-200 relative overflow-hidden ${
+                  item.isActive
+                    ? 'bg-white/95 border-stone-200/90 hover:border-amber-400/60 hover:shadow-xs'
+                    : 'bg-stone-100/90 border-stone-300/80'
+                }`}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className={`min-w-0 flex-1 space-y-2 sm:space-y-2.5 transition-all duration-200 ${isUnavailable ? 'filter blur-[1.5px] opacity-60 select-none' : ''}`}>
+                    {/* 1. Top row — status and identification */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
+                            item.isActive
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                              : 'bg-rose-100 text-rose-800 border-rose-200'
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${item.isActive ? 'bg-emerald-600' : 'bg-rose-600'}`} />
+                          <span>{item.isActive ? 'Available' : 'Unavailable'}</span>
                         </span>
-                      )}
-                    </div>
 
-                    <span className="font-mono text-[11px] text-stone-400 select-all shrink-0">
-                      ID: {item.id}
-                    </span>
-                  </div>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-900 border border-amber-200 uppercase tracking-wide">
+                          {item.categoryTag || item.categoryKey}
+                        </span>
 
-                  {/* 2. Service title */}
-                  <h3 className="text-[17px] sm:text-[18px] font-semibold text-stone-900 leading-snug tracking-tight break-words">
-                    {item.title}
-                  </h3>
+                        {item.badge && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-purple-50 text-purple-900 border border-purple-200">
+                            ★ {item.badge}
+                          </span>
+                        )}
+                      </div>
 
-                  {/* 3. Description */}
-                  <p className="text-[13px] sm:text-[14px] text-stone-600 line-clamp-2 leading-relaxed break-words">
-                    {item.desc}
-                  </p>
-
-                  {/* 4. Service information */}
-                  <div className="flex items-center flex-wrap gap-x-6 gap-y-1.5 pt-0.5 text-[13px] text-stone-600">
-                    <div className="flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-amber-700/80 shrink-0" />
-                      <span className="text-stone-500 font-normal">Astrologer:</span>
-                      <span className="font-medium text-stone-800">{item.pandit}</span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-amber-700/80 shrink-0" />
-                      <span className="text-stone-500 font-normal">Duration:</span>
-                      <span className="font-medium text-stone-800">{item.durationMinutes} mins</span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <IndianRupee className="w-3.5 h-3.5 text-[#5B0D15] shrink-0" />
-                      <span className="text-stone-500 font-normal">Price:</span>
-                      <span className="font-semibold text-[#5B0D15]">
-                        {item.price || (item.priceNumber === 0 ? '100% Free' : `₹${item.priceNumber.toLocaleString('en-IN')}`)}
+                      <span className="font-mono text-[11px] text-stone-400 select-all shrink-0">
+                        ID: {item.id}
                       </span>
                     </div>
-                  </div>
-                </div>
 
-                {/* 5. Actions */}
-                <div className="flex items-center gap-2 shrink-0 self-start sm:self-center pt-2 sm:pt-0">
-                  <button
-                    type="button"
-                    onClick={() => handleToggleStatus(item)}
-                    className={`px-3 py-1.5 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
-                      item.isActive
-                        ? 'bg-stone-100 hover:bg-stone-200 text-stone-700 border-stone-300/80'
-                        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300/80'
-                    }`}
-                    title={item.isActive ? 'Deactivate this service' : 'Activate this service'}
-                  >
-                    <span>{item.isActive ? 'Deactivate' : 'Activate'}</span>
-                  </button>
+                    {/* 2. Service title */}
+                    <h3 className="text-[17px] sm:text-[18px] font-semibold text-stone-900 leading-snug tracking-tight break-words">
+                      {item.title}
+                    </h3>
+
+                    {/* 3. Description */}
+                    <p className="text-[13px] sm:text-[14px] text-stone-600 line-clamp-2 leading-relaxed break-words">
+                      {item.desc}
+                    </p>
+
+                    {/* 4. Service information */}
+                    <div className="flex items-center flex-wrap gap-x-6 gap-y-1.5 pt-0.5 text-[13px] text-stone-600">
+                      <div className="flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-amber-700/80 shrink-0" />
+                        <span className="text-stone-500 font-normal">Astrologer:</span>
+                        <span className="font-medium text-stone-800">{item.pandit}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-amber-700/80 shrink-0" />
+                        <span className="text-stone-500 font-normal">Duration:</span>
+                        <span className="font-medium text-stone-800">{item.durationMinutes} mins</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <IndianRupee className="w-3.5 h-3.5 text-[#5B0D15] shrink-0" />
+                        <span className="text-stone-500 font-normal">Price:</span>
+                        <span className="font-semibold text-[#5B0D15]">
+                          {item.price || (item.priceNumber === 0 ? '100% Free' : `₹${item.priceNumber.toLocaleString('en-IN')}`)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 5. Actions */}
+                  <div className="flex items-center gap-2 shrink-0 self-start sm:self-center pt-2 sm:pt-0 z-20 relative">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleStatus(item)}
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 ${
+                        item.isActive
+                          ? 'border-emerald-300/80 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 shadow-2xs'
+                          : 'border-stone-300 bg-stone-100 hover:bg-stone-200 text-stone-700 shadow-2xs'
+                      }`}
+                      title={item.isActive ? 'Currently Available. Click to unpublish.' : 'Currently Unavailable. Click to publish.'}
+                    >
+                      {item.isActive ? (
+                        <>
+                          <Eye className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>Publish</span>
+                        </>
+                      ) : (
+                        <>
+                          <EyeOff className="w-3.5 h-3.5 text-stone-500" />
+                          <span>Unpublish</span>
+                        </>
+                      )}
+                    </button>
 
                   <button
                     type="button"
@@ -515,10 +541,11 @@ export default function AdminServicesTab() {
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -630,6 +657,37 @@ export default function AdminServicesTab() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Toast Notification at Top-Right */}
+      {notification && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed top-6 right-6 z-[100] animate-fadeIn pointer-events-auto"
+        >
+          <div
+            className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full shadow-xl border text-xs font-semibold backdrop-blur-md ${
+              notification.type === 'success'
+                ? 'bg-emerald-950/95 text-emerald-100 border-emerald-500/50 shadow-emerald-950/40'
+                : 'bg-rose-950/95 text-rose-100 border-rose-500/50 shadow-rose-950/40'
+            }`}
+          >
+            {notification.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            )}
+            <span className="max-w-[280px] sm:max-w-md truncate">{notification.message}</span>
+            <button
+              type="button"
+              onClick={() => setNotification(null)}
+              className="ml-1 p-0.5 hover:bg-white/20 rounded-full cursor-pointer text-white/70 hover:text-white shrink-0"
+              aria-label="Dismiss notification"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       )}

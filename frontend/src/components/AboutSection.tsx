@@ -326,6 +326,11 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                 ) : (
                   <Link
                     href="/appointment?service=astrological_consultation"
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('astro_reset_booking', { detail: { serviceId: 'astrological_consultation' } }));
+                      }
+                    }}
                     className="px-8 py-3.5 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#73121D] to-[#480A10] hover:from-[#73121D] hover:to-[#5B0D15] text-amber-100 font-bold text-xs sm:text-sm shadow-xl shadow-rose-950/25 hover:scale-105 transition-all inline-flex items-center gap-2 cursor-pointer"
                   >
                     <span>{t('Book Consultation with Dr. Vishal Dubey', 'डॉ. विशाल दुबे से परामर्श लें')}</span>
@@ -393,6 +398,11 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ isHomePage = false }
                   <div className="pt-2">
                     <Link
                       href="/appointment?service=tarot_reading"
+                      onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          window.dispatchEvent(new CustomEvent('astro_reset_booking', { detail: { serviceId: 'tarot_reading' } }));
+                        }
+                      }}
                       className="px-7 py-3 rounded-full bg-white hover:bg-amber-50 border-2 border-amber-400 text-[#2A1810] font-bold text-xs sm:text-sm shadow-md hover:border-amber-500 hover:scale-105 transition-all inline-flex items-center gap-2 cursor-pointer"
                     >
                       <span>{t('Book Tarot Reading with Madhuri Ji', 'माधुरी जी संग टैरो रीडिंग बुक करें')}</span>

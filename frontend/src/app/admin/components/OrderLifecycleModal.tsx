@@ -21,8 +21,10 @@ import {
   Settings,
   Calendar,
   Trash2,
+  Eye,
 } from 'lucide-react';
 import { getFulfillmentStatusInfo, getPaymentStatusInfo } from './AdminOrdersTab';
+import { resolveProductImage } from '../../dashboard/utils';
 
 interface OrderLifecycleModalProps {
   activeOrder: any | null;
@@ -49,6 +51,24 @@ export default function OrderLifecycleModal({
   const [courierNameInput, setCourierNameInput] = useState<string>('');
   const [trackingNumberInput, setTrackingNumberInput] = useState<string>('');
   const [shippingInputError, setShippingInputError] = useState<string | null>(null);
+  const [hoveredProduct, setHoveredProduct] = useState<{
+    id: string | number;
+    title: string;
+    category: string;
+    image: string;
+    isCertified: boolean;
+    qty: number;
+    unitPrice: number;
+    totalPrice: number;
+    description?: string;
+    energizedBy?: string;
+    sku?: string | null;
+  } | null>(null);
+
+  // Reset hovered product when activeOrder changes
+  useEffect(() => {
+    setHoveredProduct(null);
+  }, [activeOrder?.id]);
 
   // Synchronize courier fields whenever activeOrder changes
   useEffect(() => {
@@ -217,7 +237,7 @@ export default function OrderLifecycleModal({
               </div>
               <div className="min-w-0">
                 <span className="text-[10px] font-medium text-stone-500 block leading-tight">Final Total</span>
-                <span className="text-sm sm:text-base font-bold text-stone-900 block truncate leading-tight mt-0.5">
+                <span className="font-serif font-black text-sm sm:text-base text-[#550E17] block truncate leading-tight mt-0.5">
                   ₹{Number(activeOrder.totalAmount).toLocaleString('en-IN')}
                 </span>
               </div>
@@ -258,7 +278,7 @@ export default function OrderLifecycleModal({
             {/* Subtotal */}
             <div className="text-center sm:text-left pr-2 sm:pr-4">
               <span className="text-[10px] font-medium text-stone-500 block">Subtotal</span>
-              <span className="text-xs sm:text-sm font-bold text-stone-900 block mt-0.5">
+              <span className="font-serif font-black text-xs sm:text-sm text-[#550E17] block mt-0.5">
                 ₹{Number(subtotal).toLocaleString('en-IN')}
               </span>
             </div>
@@ -287,43 +307,55 @@ export default function OrderLifecycleModal({
           </div>
 
           {/* Row 3: Customer & Delivery Address Card */}
-          <div className="p-2.5 sm:p-3 rounded-2xl bg-white border border-amber-200/70 shadow-xs">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <UserIcon className="w-3.5 h-3.5 text-[#A85A28]" />
-              <span className="text-xs font-bold text-stone-900">
+          <div className="p-2.5 sm:p-3 rounded-2xl bg-white border border-stone-200/80 shadow-xs">
+            <div className="flex items-center gap-1.5 mb-2 pb-1.5 border-b border-stone-100">
+              <UserIcon className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+              <span className="text-[10px] sm:text-[11px] font-sans font-semibold text-stone-500 uppercase tracking-wider">
                 Customer &amp; Attendee Information
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               {/* Left Column: Customer Details */}
-              <div className="space-y-0.5">
-                <p className="font-bold text-stone-900 flex items-center gap-2 text-xs">
-                  <UserIcon className="w-3 h-3 text-stone-400 shrink-0" />
-                  <span className="truncate">{recipientName}</span>
-                </p>
-                <p className="text-stone-600 flex items-center gap-2 text-xs">
-                  <Mail className="w-3 h-3 text-stone-400 shrink-0" />
-                  <span className="truncate">{recipientEmail}</span>
-                </p>
-                <p className="text-stone-800 flex items-center gap-2 text-xs font-mono">
-                  <Phone className="w-3 h-3 text-stone-400 shrink-0" />
-                  <span>{recipientPhone}</span>
-                </p>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-full bg-[#5B0D15]/10 border border-[#5B0D15]/20 text-[#5B0D15] font-bold text-xs flex items-center justify-center shrink-0">
+                    {(recipientName || 'U').charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-serif font-bold text-stone-900 text-sm sm:text-[15px] leading-tight tracking-tight capitalize truncate" title={recipientName}>
+                      {recipientName}
+                    </p>
+                    <span className="text-[10px] font-sans text-stone-400 block leading-none mt-0.5">
+                      Verified Customer
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-1 pl-9">
+                  <p className="text-stone-600 flex items-center gap-1.5 text-xs font-sans">
+                    <Mail className="w-3 h-3 text-stone-400 shrink-0" />
+                    <span className="truncate">{recipientEmail}</span>
+                  </p>
+                  <p className="text-stone-700 flex items-center gap-1.5 text-xs font-mono font-medium">
+                    <Phone className="w-3 h-3 text-stone-400 shrink-0" />
+                    <span>{recipientPhone}</span>
+                  </p>
+                </div>
               </div>
 
               {/* Right Column: Delivery Address */}
               <div className="sm:border-l sm:border-stone-200/70 sm:pl-3.5">
-                <div className="flex items-center gap-1.5 text-stone-700 font-semibold mb-0.5">
+                <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-sans font-semibold text-stone-500 uppercase tracking-wider mb-1">
                   <MapPin className="w-3.5 h-3.5 text-[#C27827] shrink-0" />
                   <span>Delivery Address</span>
                 </div>
-                <p className="text-stone-600 leading-snug text-xs">
+                <p className="text-stone-700 leading-snug text-xs font-sans">
                   {activeOrder.shippingAddress?.addressLine || activeOrder.shippingAddress?.street || 'Address on file'}
                   <br />
                   {activeOrder.shippingAddress?.city ? `${activeOrder.shippingAddress.city}, ` : ''}
                   {activeOrder.shippingAddress?.state ? `${activeOrder.shippingAddress.state} - ` : ''}
-                  <span className="font-mono">{activeOrder.shippingAddress?.pincode || activeOrder.shippingAddress?.postalCode || ''}</span>
+                  <span className="font-mono font-medium text-stone-900">{activeOrder.shippingAddress?.pincode || activeOrder.shippingAddress?.postalCode || ''}</span>
                 </p>
               </div>
             </div>
@@ -331,21 +363,22 @@ export default function OrderLifecycleModal({
 
           {/* Row 4: Ordered Products Card */}
           <div className="p-2.5 sm:p-3 rounded-2xl bg-white border border-amber-200/70 shadow-xs">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <Package className="w-3.5 h-3.5 text-[#A85A28]" />
-              <span className="text-xs font-bold text-stone-900">
-                Ordered Products ({itemsCount})
+            <div className="flex items-center justify-between gap-1.5 mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <Package className="w-3.5 h-3.5 text-[#A85A28]" />
+                <span className="text-xs font-bold text-stone-900">
+                  Ordered Products ({itemsCount})
+                </span>
+              </div>
+              <span className="text-[10px] text-stone-400 font-normal flex items-center gap-1">
+                <Eye className="w-3 h-3 text-stone-400" />
+                <span>Hover to inspect details</span>
               </span>
             </div>
 
-            <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
+            <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
               {itemsToRender.map((item: any, idx: number) => {
-                const itemImg =
-                  item.product?.image ||
-                  item.image ||
-                  (item.productName?.toLowerCase().includes('tourmaline')
-                    ? '/products/prod-black-tourmaline.png'
-                    : null);
+                const itemImg = resolveProductImage(item);
                 const itemTitle = item.productName || item.product?.name || 'BLACK TOURMALINE BRACELET';
                 const itemCategory = item.productCategory || item.product?.categoryLabel || item.product?.category || 'Gemstone';
                 const isCertified = item.labCertified || item.product?.labCertified !== false;
@@ -354,15 +387,55 @@ export default function OrderLifecycleModal({
                   item.lineTotal ||
                   (item.purchasePrice || item.price || 0) * itemQty ||
                   activeOrder.totalAmount;
+                const unitPrice =
+                  item.purchasePrice ||
+                  item.price ||
+                  (itemQty > 0 ? itemPrice / itemQty : itemPrice);
+                const isHovered = hoveredProduct?.id === (item.id || idx);
 
                 return (
-                  <div key={idx} className="flex items-center justify-between gap-3 text-xs py-0.5">
+                  <div
+                    key={idx}
+                    onMouseEnter={() =>
+                      setHoveredProduct({
+                        id: item.id || idx,
+                        title: itemTitle,
+                        category: itemCategory,
+                        image: itemImg,
+                        isCertified,
+                        qty: itemQty,
+                        unitPrice,
+                        totalPrice: itemPrice,
+                        description: item.product?.description || item.description || '',
+                        energizedBy:
+                          item.product?.energizedBy ||
+                          (item.consecrationDetails ? 'Sanctified & Vedic Energized' : 'Consecrated by Vedic Priests'),
+                        sku:
+                          item.product?.sku ||
+                          item.sku ||
+                          (item.productId ? `PRD-${item.productId.slice(0, 8).toUpperCase()}` : null),
+                      })
+                    }
+                    onMouseLeave={() => setHoveredProduct(null)}
+                    className={`flex items-center justify-between gap-3 text-xs py-1.5 px-2 rounded-xl cursor-pointer border transition-all ${
+                      isHovered
+                        ? 'bg-stone-100/90 border-stone-300 shadow-2xs'
+                        : 'hover:bg-stone-50/70 border-transparent'
+                    }`}
+                  >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-9 h-9 rounded-xl bg-stone-100 border border-stone-200/80 flex items-center justify-center shrink-0 overflow-hidden">
+                      <div className="w-11 h-11 rounded-xl bg-stone-100 border border-stone-200/80 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
                         {itemImg ? (
-                          <img src={itemImg} alt="" className="w-full h-full object-cover" />
+                          <img
+                            src={itemImg}
+                            alt={itemTitle}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/products/prod-tiger-eye-macro.jpg';
+                            }}
+                          />
                         ) : (
-                          <Package className="w-4 h-4 text-stone-500" />
+                          <Package className="w-5 h-5 text-stone-500" />
                         )}
                       </div>
                       <div className="min-w-0">
@@ -376,11 +449,12 @@ export default function OrderLifecycleModal({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-5 shrink-0">
+                    <div className="flex items-center gap-4 shrink-0">
                       <span className="text-xs text-stone-700 font-medium">Qty: {itemQty}</span>
                       <span className="font-serif font-black text-xs sm:text-sm text-[#550E17]">
                         ₹{Number(itemPrice).toLocaleString('en-IN')}
                       </span>
+                      <Eye className={`w-3.5 h-3.5 transition-colors ${isHovered ? 'text-amber-800' : 'text-stone-300'}`} />
                     </div>
                   </div>
                 );
@@ -432,257 +506,363 @@ export default function OrderLifecycleModal({
             </div>
           )}
 
-          {/* Row 6: Fulfillment Section & Actions */}
-          <div className="p-2.5 sm:p-3 rounded-2xl bg-[#FFF9EE] border border-amber-300/80 shadow-xs space-y-2.5">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Settings className="w-3.5 h-3.5 text-[#A85A28]" />
-                <span className="text-xs font-bold text-stone-800">
-                  Fulfillment Lifecycle Stage
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FDECC8] text-[#9A520E] border border-[#FCD98B]">
-                  ● {fulfillment.label}
-                </span>
-              </div>
-              <span className="text-[10px] font-medium text-stone-500">
-                Stage {activeOrder.status === 'PENDING' || activeOrder.status === 'PENDING_PAYMENT' || activeOrder.status === 'ORDER_PLACED' ? '1/5: Order Placed' : activeOrder.status === 'CONFIRMED' ? '2/5: Order Confirmed' : activeOrder.status === 'PROCESSING' || activeOrder.status === 'PACKED' ? '3/5: Preparation & Sanctification' : activeOrder.status === 'SHIPPED' || activeOrder.status === 'OUT_FOR_DELIVERY' ? '4/5: Shipped & On the Way' : activeOrder.status === 'DELIVERED' ? '5/5: Delivered' : 'Cancelled'}
-              </span>
-            </div>
-
-            {/* Courier & Tracking Input (Required when status is PACKED to move to SHIPPED) */}
-            {activeOrder.status === 'PACKED' && (
-              <div className="p-2.5 rounded-xl bg-purple-50/90 border border-purple-200/90 space-y-2">
-                <div className="flex items-center gap-1.5 text-purple-950 font-bold text-xs">
-                  <Truck className="w-3.5 h-3.5 text-purple-700 shrink-0" />
-                  <span>Courier &amp; Tracking / AWB Information (Required for Dispatch)</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10px] font-bold text-stone-600 block mb-0.5">
-                      Courier Service Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={courierNameInput}
-                      onChange={(e) => {
-                        setCourierNameInput(e.target.value);
-                        setShippingInputError(null);
-                      }}
-                      placeholder="e.g. BlueDart Express, Delhivery, DTDC"
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white text-xs text-stone-800 focus:outline-none focus:ring-1.5 focus:ring-purple-500 shadow-2xs"
-                    />
+          {/* Row 6: Static-Height Fulfillment Section OR Product Details Hover Preview */}
+          <div
+            className={`p-2.5 sm:p-3 rounded-2xl shadow-xs relative overflow-hidden flex flex-col justify-between transition-colors duration-150 ${
+              hoveredProduct
+                ? 'bg-gradient-to-br from-[#FAF9F7] via-[#F5F4F1] to-[#EFECE6] border border-stone-300/90'
+                : 'bg-[#FFF9EE] border border-amber-300/80'
+            } ${
+              activeOrder.status === 'PACKED'
+                ? 'h-[215px] min-h-[215px] max-h-[215px]'
+                : 'h-[148px] min-h-[148px] max-h-[148px]'
+            }`}
+          >
+            {hoveredProduct ? (
+              <div className="h-full flex flex-col justify-between select-none animate-in fade-in duration-75">
+                {/* Header: Logical categorization & status */}
+                <div className="flex items-center justify-between gap-2 border-b border-stone-200/90 pb-1 shrink-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-sans font-bold uppercase tracking-wider bg-stone-200/80 text-stone-700">
+                      {hoveredProduct.category}
+                    </span>
+                    {hoveredProduct.isCertified && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-sans font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/80">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        100% Lab Certified
+                      </span>
+                    )}
+                    {hoveredProduct.sku && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono text-stone-500 bg-white/80 border border-stone-200/60">
+                        {hoveredProduct.sku}
+                      </span>
+                    )}
                   </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-stone-600 block mb-0.5">
-                      Tracking / AWB Number *
-                    </label>
-                    <input
-                      type="text"
-                      value={trackingNumberInput}
-                      onChange={(e) => {
-                        setTrackingNumberInput(e.target.value);
-                        setShippingInputError(null);
-                      }}
-                      placeholder="e.g. BD-99482019"
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white text-xs font-mono text-stone-800 focus:outline-none focus:ring-1.5 focus:ring-purple-500 shadow-2xs"
-                    />
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-sans font-bold bg-rose-50 text-rose-800 border border-rose-200/80 shrink-0">
+                    <Eye className="w-2.5 h-2.5 text-rose-600" />
+                    <span>Product Preview</span>
+                  </span>
+                </div>
+
+                {/* Main Product Info (Image + Title + Sanctification + Price) */}
+                <div className="flex items-center gap-3 py-0.5 min-w-0">
+                  <div className="w-13 h-13 sm:w-15 sm:h-15 rounded-xl bg-white border border-stone-200/90 shadow-2xs shrink-0 overflow-hidden flex items-center justify-center p-0.5">
+                    {hoveredProduct.image ? (
+                      <img
+                        src={hoveredProduct.image}
+                        alt={hoveredProduct.title}
+                        className="w-full h-full object-cover rounded-lg"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/products/prod-tiger-eye-macro.jpg';
+                        }}
+                      />
+                    ) : (
+                      <Package className="w-6 h-6 text-stone-400" />
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0 pr-1">
+                    <h4
+                      className="font-serif font-bold text-stone-900 text-xs sm:text-[14px] leading-snug tracking-tight truncate uppercase"
+                      title={hoveredProduct.title}
+                    >
+                      {hoveredProduct.title}
+                    </h4>
+
+                    {hoveredProduct.energizedBy && (
+                      <div className="flex items-center gap-1.5 text-[11px] font-sans font-semibold text-[#6E141D] mt-0.5 truncate">
+                        <Sparkles className="w-3 h-3 text-[#99202D] shrink-0" />
+                        <span className="truncate">{hoveredProduct.energizedBy}</span>
+                      </div>
+                    )}
+
+                    <p className="text-[11px] font-sans text-stone-500 line-clamp-1 italic font-normal mt-0.5 leading-normal truncate">
+                      {hoveredProduct.description || 'Authentic consecrated artifact prepared in sacred sanctum.'}
+                    </p>
+                  </div>
+
+                  {/* Price & Quantity Block */}
+                  <div className="text-right shrink-0 border-l border-stone-200/90 pl-3 min-w-[85px] sm:min-w-[105px]">
+                    <span className="text-[10px] font-sans text-stone-500 font-medium block leading-tight">
+                      Total ({hoveredProduct.qty}x)
+                    </span>
+                    <span className="font-serif font-extrabold text-sm sm:text-base text-[#5B0D15] block tabular-nums leading-tight">
+                      ₹{Number(hoveredProduct.totalPrice).toLocaleString('en-IN')}
+                    </span>
+                    <span className="text-[10px] font-mono text-stone-400 block tabular-nums leading-tight mt-0.5">
+                      ₹{Number(hoveredProduct.unitPrice).toLocaleString('en-IN')}/ea
+                    </span>
                   </div>
                 </div>
-                {shippingInputError && (
-                  <p className="text-[11px] font-semibold text-rose-600 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3 text-rose-600 shrink-0" />
-                    <span>{shippingInputError}</span>
-                  </p>
-                )}
+
+                {/* Footer Bar: Subtle Hint & Close Action */}
+                <div className="flex items-center justify-between pt-1 border-t border-stone-200/80 text-[10px] text-stone-400 shrink-0">
+                  <span className="italic flex items-center gap-1">
+                    <Eye className="w-3 h-3 text-stone-400 shrink-0" />
+                    <span>Move cursor away to restore fulfillment controls</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-3.5 py-0.5 rounded-lg border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 text-[11px] font-semibold cursor-pointer shadow-2xs transition-colors shrink-0"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
-            )}
+            ) : (
+              <div className="h-full flex flex-col justify-between space-y-2 select-none">
+                <div className="flex items-center justify-between gap-2 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <Settings className="w-3.5 h-3.5 text-[#A85A28]" />
+                    <span className="text-xs font-bold text-stone-800">
+                      Fulfillment Lifecycle Stage
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FDECC8] text-[#9A520E] border border-[#FCD98B]">
+                      ● {fulfillment.label}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-medium text-stone-500">
+                    Stage {activeOrder.status === 'PENDING' || activeOrder.status === 'PENDING_PAYMENT' || activeOrder.status === 'ORDER_PLACED' ? '1/5: Order Placed' : activeOrder.status === 'CONFIRMED' ? '2/5: Order Confirmed' : activeOrder.status === 'PROCESSING' || activeOrder.status === 'PACKED' ? '3/5: Preparation & Sanctification' : activeOrder.status === 'SHIPPED' || activeOrder.status === 'OUT_FOR_DELIVERY' ? '4/5: Shipped & On the Way' : activeOrder.status === 'DELIVERED' ? '5/5: Delivered' : 'Cancelled'}
+                  </span>
+                </div>
 
-            {/* Optional Remarks Input with placeholder matching reference */}
-            {!isTerminalState && (
-              <input
-                type="text"
-                value={orderStatusNotes}
-                onChange={(e) => setOrderStatusNotes(e.target.value)}
-                placeholder="Add optional fulfillment remarks..."
-                className="w-full px-3 py-1.5 rounded-xl border border-stone-200 bg-white text-xs placeholder:text-stone-400 focus:outline-none focus:ring-1.5 focus:ring-amber-500 shadow-2xs"
-              />
-            )}
-
-            {/* Action Buttons styled matching visual reference */}
-            <div className="flex items-center justify-between gap-3 pt-0.5">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                {/* 1. Order Placed -> Confirm Order */}
-                {(activeOrder.status === 'PENDING' ||
-                  activeOrder.status === 'PENDING_PAYMENT' ||
-                  activeOrder.status === 'ORDER_PLACED') && (
-                  <>
-                    <button
-                      type="button"
-                      disabled={orderStatusUpdating}
-                      onClick={() => onTransitionOrderStatus('CONFIRMED')}
-                      className="px-4 py-1.5 rounded-xl bg-[#0066FF] hover:bg-[#0055D4] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
-                    >
-                      {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                      <span>Accept &amp; Confirm Order</span>
-                    </button>
-                    <button
-                      type="button"
-                      disabled={orderStatusUpdating}
-                      onClick={() => onTransitionOrderStatus('CANCELLED')}
-                      className="px-4 py-1.5 rounded-xl bg-[#E60039] hover:bg-[#CC0033] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                      <span>Cancel Order</span>
-                    </button>
-                  </>
-                )}
-
-                {/* 2. Confirmed -> Start Processing */}
-                {activeOrder.status === 'CONFIRMED' && (
-                  <>
-                    <button
-                      type="button"
-                      disabled={orderStatusUpdating}
-                      onClick={() => onTransitionOrderStatus('PROCESSING')}
-                      className="px-4 py-1.5 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
-                    >
-                      {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Settings className="w-3.5 h-3.5" />}
-                      <span>Start Product Preparing &amp; Packaging</span>
-                    </button>
-                    <button
-                      type="button"
-                      disabled={orderStatusUpdating}
-                      onClick={() => onTransitionOrderStatus('CANCELLED')}
-                      className="px-4 py-1.5 rounded-xl bg-[#E60039] hover:bg-[#CC0033] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                      <span>Cancel Order</span>
-                    </button>
-                  </>
-                )}
-
-                {/* 3. Processing -> Mark Packing Complete */}
-                {activeOrder.status === 'PROCESSING' && (
-                  <>
-                    <button
-                      type="button"
-                      disabled={orderStatusUpdating}
-                      onClick={() => onTransitionOrderStatus('PACKED')}
-                      className="px-4 py-1.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
-                    >
-                      {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Package className="w-3.5 h-3.5" />}
-                      <span>Mark Packing Complete</span>
-                    </button>
-                    <button
-                      type="button"
-                      disabled={orderStatusUpdating}
-                      onClick={() => onTransitionOrderStatus('CANCELLED')}
-                      className="px-4 py-1.5 rounded-xl bg-[#E60039] hover:bg-[#CC0033] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                      <span>Cancel Order</span>
-                    </button>
-                  </>
-                )}
-
-                {/* 4. Packed -> Ship Order (Courier & Tracking required) */}
+                {/* Courier & Tracking Input (Required when status is PACKED to move to SHIPPED) */}
                 {activeOrder.status === 'PACKED' && (
-                  <>
+                  <div className="p-2 rounded-xl bg-purple-50/90 border border-purple-200/90 space-y-1.5 shrink-0">
+                    <div className="flex items-center gap-1.5 text-purple-950 font-bold text-xs">
+                      <Truck className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                      <span>Courier &amp; Tracking / AWB Information (Required for Dispatch)</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] font-bold text-stone-600 block mb-0.5">
+                          Courier Service Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={courierNameInput}
+                          onChange={(e) => {
+                            setCourierNameInput(e.target.value);
+                            setShippingInputError(null);
+                          }}
+                          placeholder="e.g. BlueDart Express, Delhivery, DTDC"
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white text-xs text-stone-800 focus:outline-none focus:ring-1.5 focus:ring-purple-500 shadow-2xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-stone-600 block mb-0.5">
+                          Tracking / AWB Number *
+                        </label>
+                        <input
+                          type="text"
+                          value={trackingNumberInput}
+                          onChange={(e) => {
+                            setTrackingNumberInput(e.target.value);
+                            setShippingInputError(null);
+                          }}
+                          placeholder="e.g. BD-99482019"
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white text-xs font-mono text-stone-800 focus:outline-none focus:ring-1.5 focus:ring-purple-500 shadow-2xs"
+                        />
+                      </div>
+                    </div>
+                    {shippingInputError && (
+                      <p className="text-[11px] font-semibold text-rose-600 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3 text-rose-600 shrink-0" />
+                        <span>{shippingInputError}</span>
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Optional Remarks Input with placeholder matching reference */}
+                {!isTerminalState && (
+                  <input
+                    type="text"
+                    value={orderStatusNotes}
+                    onChange={(e) => setOrderStatusNotes(e.target.value)}
+                    placeholder="Add optional fulfillment remarks..."
+                    className="w-full px-3 py-1.5 rounded-xl border border-stone-200 bg-white text-xs placeholder:text-stone-400 focus:outline-none focus:ring-1.5 focus:ring-amber-500 shadow-2xs shrink-0"
+                  />
+                )}
+
+                {/* Action Buttons styled matching visual reference */}
+                <div className="flex items-center justify-between gap-3 pt-0.5 shrink-0">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    {/* 1. Order Placed -> Confirm Order */}
+                    {(activeOrder.status === 'PENDING' ||
+                      activeOrder.status === 'PENDING_PAYMENT' ||
+                      activeOrder.status === 'ORDER_PLACED') && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={orderStatusUpdating}
+                          onClick={() => onTransitionOrderStatus('CONFIRMED')}
+                          className="px-4 py-1.5 rounded-xl bg-[#0066FF] hover:bg-[#0055D4] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                        >
+                          {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                          <span>Accept &amp; Confirm Order</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={orderStatusUpdating}
+                          onClick={() => onTransitionOrderStatus('CANCELLED')}
+                          className="px-4 py-1.5 rounded-xl bg-[#E60039] hover:bg-[#CC0033] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          <span>Cancel Order</span>
+                        </button>
+                      </>
+                    )}
+
+                    {/* 2. Confirmed -> Start Processing */}
+                    {activeOrder.status === 'CONFIRMED' && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={orderStatusUpdating}
+                          onClick={() => onTransitionOrderStatus('PROCESSING')}
+                          className="px-4 py-1.5 rounded-xl bg-[#0284C7] hover:bg-[#0369A1] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                        >
+                          {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Settings className="w-3.5 h-3.5" />}
+                          <span>Start Product Preparing &amp; Packaging</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={orderStatusUpdating}
+                          onClick={() => onTransitionOrderStatus('CANCELLED')}
+                          className="px-4 py-1.5 rounded-xl bg-[#E60039] hover:bg-[#CC0033] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          <span>Cancel Order</span>
+                        </button>
+                      </>
+                    )}
+
+                    {/* 3. Processing -> Mark Packing Complete */}
+                    {activeOrder.status === 'PROCESSING' && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={orderStatusUpdating}
+                          onClick={() => onTransitionOrderStatus('PACKED')}
+                          className="px-4 py-1.5 rounded-xl bg-[#4F46E5] hover:bg-[#4338CA] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                        >
+                          {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Package className="w-3.5 h-3.5" />}
+                          <span>Mark Packing Complete</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={orderStatusUpdating}
+                          onClick={() => onTransitionOrderStatus('CANCELLED')}
+                          className="px-4 py-1.5 rounded-xl bg-[#E60039] hover:bg-[#CC0033] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          <span>Cancel Order</span>
+                        </button>
+                      </>
+                    )}
+
+                    {/* 4. Packed -> Ship Order (Courier & Tracking required) */}
+                    {activeOrder.status === 'PACKED' && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={orderStatusUpdating}
+                          onClick={() => {
+                            if (!courierNameInput.trim() || !trackingNumberInput.trim()) {
+                              setShippingInputError('Courier service partner and tracking/AWB number are required before dispatching.');
+                              return;
+                            }
+                            setShippingInputError(null);
+                            onTransitionOrderStatus('SHIPPED', {
+                              courierName: courierNameInput.trim(),
+                              trackingNumber: trackingNumberInput.trim(),
+                            });
+                          }}
+                          className="px-4 py-1.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                        >
+                          {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
+                          <span>Dispatch &amp; Ship Order</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={orderStatusUpdating}
+                          onClick={() => onTransitionOrderStatus('CANCELLED')}
+                          className="px-4 py-1.5 rounded-xl bg-[#E60039] hover:bg-[#CC0033] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          <span>Cancel Order</span>
+                        </button>
+                      </>
+                    )}
+
+                    {/* 5. Shipped -> Out for Delivery */}
+                    {activeOrder.status === 'SHIPPED' && (
+                      <button
+                        type="button"
+                        disabled={orderStatusUpdating}
+                        onClick={() => onTransitionOrderStatus('OUT_FOR_DELIVERY')}
+                        className="px-4 py-1.5 rounded-xl bg-[#D97706] hover:bg-[#B45309] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                      >
+                        {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
+                        <span>Mark Out for Delivery</span>
+                      </button>
+                    )}
+
+                    {/* 6. Out for Delivery -> Mark Delivered */}
+                    {activeOrder.status === 'OUT_FOR_DELIVERY' && (
+                      <button
+                        type="button"
+                        disabled={orderStatusUpdating}
+                        onClick={() => onTransitionOrderStatus('DELIVERED')}
+                        className="px-4 py-1.5 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                      >
+                        {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                        <span>Mark as Delivered to Customer</span>
+                      </button>
+                    )}
+
+                    {/* 7. Delivered (Terminal State) */}
+                    {activeOrder.status === 'DELIVERED' && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100/80 text-emerald-800 text-xs font-bold border border-emerald-300">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Order Completed &amp; Delivered</span>
+                      </span>
+                    )}
+
+                    {/* Cancelled State */}
+                    {activeOrder.status === 'CANCELLED' && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold border border-stone-200">
+                        <X className="w-3.5 h-3.5 text-stone-500" />
+                        <span>Order Cancelled &amp; Stock Restored</span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Action buttons on right side */}
+                  <div className="flex items-center gap-2 shrink-0 ml-auto">
+                    {onDeleteOrder && (
+                      <button
+                        type="button"
+                        onClick={() => onDeleteOrder(activeOrder)}
+                        className="px-3.5 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold cursor-pointer shadow-2xs transition-colors flex items-center gap-1.5"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                        <span>Delete Order</span>
+                      </button>
+                    )}
                     <button
                       type="button"
-                      disabled={orderStatusUpdating}
-                      onClick={() => {
-                        if (!courierNameInput.trim() || !trackingNumberInput.trim()) {
-                          setShippingInputError('Courier service partner and tracking/AWB number are required before dispatching.');
-                          return;
-                        }
-                        setShippingInputError(null);
-                        onTransitionOrderStatus('SHIPPED', {
-                          courierName: courierNameInput.trim(),
-                          trackingNumber: trackingNumberInput.trim(),
-                        });
-                      }}
-                      className="px-4 py-1.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
+                      onClick={onClose}
+                      className="px-5 py-1.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 text-xs font-semibold cursor-pointer shadow-2xs transition-colors shrink-0"
                     >
-                      {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
-                      <span>Dispatch &amp; Ship Order</span>
+                      Close
                     </button>
-                    <button
-                      type="button"
-                      disabled={orderStatusUpdating}
-                      onClick={() => onTransitionOrderStatus('CANCELLED')}
-                      className="px-4 py-1.5 rounded-xl bg-[#E60039] hover:bg-[#CC0033] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                      <span>Cancel Order</span>
-                    </button>
-                  </>
-                )}
-
-                {/* 5. Shipped -> Out for Delivery */}
-                {activeOrder.status === 'SHIPPED' && (
-                  <button
-                    type="button"
-                    disabled={orderStatusUpdating}
-                    onClick={() => onTransitionOrderStatus('OUT_FOR_DELIVERY')}
-                    className="px-4 py-1.5 rounded-xl bg-[#D97706] hover:bg-[#B45309] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
-                  >
-                    {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
-                    <span>Mark Out for Delivery</span>
-                  </button>
-                )}
-
-                {/* 6. Out for Delivery -> Mark Delivered */}
-                {activeOrder.status === 'OUT_FOR_DELIVERY' && (
-                  <button
-                    type="button"
-                    disabled={orderStatusUpdating}
-                    onClick={() => onTransitionOrderStatus('DELIVERED')}
-                    className="px-4 py-1.5 rounded-xl bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors"
-                  >
-                    {orderStatusUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                    <span>Mark as Delivered to Customer</span>
-                  </button>
-                )}
-
-                {/* 7. Delivered (Terminal State) */}
-                {activeOrder.status === 'DELIVERED' && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100/80 text-emerald-800 text-xs font-bold border border-emerald-300">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Order Completed &amp; Delivered</span>
-                  </span>
-                )}
-
-                {/* Cancelled State */}
-                {activeOrder.status === 'CANCELLED' && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-stone-100 text-stone-600 text-xs font-bold border border-stone-200">
-                    <X className="w-3.5 h-3.5 text-stone-500" />
-                    <span>Order Cancelled &amp; Stock Restored</span>
-                  </span>
-                )}
+                  </div>
+                </div>
               </div>
-
-              {/* Action buttons on right side */}
-              <div className="flex items-center gap-2 shrink-0 ml-auto">
-                {onDeleteOrder && (
-                  <button
-                    type="button"
-                    onClick={() => onDeleteOrder(activeOrder)}
-                    className="px-3.5 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold cursor-pointer shadow-2xs transition-colors flex items-center gap-1.5"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                    <span>Delete Order</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-5 py-1.5 rounded-xl border border-stone-300 bg-white hover:bg-stone-50 text-stone-700 text-xs font-semibold cursor-pointer shadow-2xs transition-colors shrink-0"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

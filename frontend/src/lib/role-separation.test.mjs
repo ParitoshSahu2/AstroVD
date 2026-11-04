@@ -164,4 +164,34 @@ describe('User & Admin Role Separation & Data Isolation Tests', () => {
       'Navbar must use isProfileIncomplete helper to conditionally render reminders',
     );
   });
+
+  it('TEST-10: Admin page and Customer Dashboard persist active tab in URL and localStorage across full page refreshes', () => {
+    const adminPath = path.resolve('src/app/admin/page.tsx');
+    const adminContent = fs.readFileSync(adminPath, 'utf-8');
+
+    assert.ok(
+      adminContent.includes('astrovd_admin_active_tab'),
+      'Admin page must store and restore active tab from astrovd_admin_active_tab',
+    );
+    assert.ok(
+      adminContent.includes("tabParam === 'pooja'"),
+      'Admin page must map pooja alias to availability tab',
+    );
+    assert.ok(
+      adminContent.includes('url.searchParams.set'),
+      'Admin page must update browser URL with active tab',
+    );
+
+    const dashboardPath = path.resolve('src/app/dashboard/page.tsx');
+    const dashboardContent = fs.readFileSync(dashboardPath, 'utf-8');
+
+    assert.ok(
+      dashboardContent.includes('astrovd_dashboard_active_tab'),
+      'Dashboard page must persist active tab in astrovd_dashboard_active_tab',
+    );
+    assert.ok(
+      dashboardContent.includes('switchDashboardTab'),
+      'Dashboard page must use switchDashboardTab helper to synchronize URL and localStorage',
+    );
+  });
 });

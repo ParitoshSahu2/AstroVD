@@ -17,21 +17,11 @@ import {
   Sparkles,
   User,
   MessageCircle,
-  Plus,
-  Edit3,
-  Trash2,
-  Eye,
-  EyeOff,
   CheckCircle2,
   AlertCircle,
   ChevronDown,
-  Loader2,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
-import { getStoredUser, getAuthToken, AUTH_CHANGE_EVENT } from '../../lib/auth';
-import dynamic from 'next/dynamic';
-import type { BlogPostItem } from './components/BlogManageModal';
-const BlogManageModal = dynamic(() => import('./components/BlogManageModal'), { ssr: false });
 
 interface BlogPost {
   id: string;
@@ -358,15 +348,8 @@ export default function BlogPage() {
   const [query, setQuery] = useState('');
   const [readingArticle, setReadingArticle] = useState<BlogPost | null>(null);
 
-  // Dynamic Content & Admin Management State
+  // Dynamic Content State
   const [articles, setArticles] = useState<BlogPost[]>(allArticles);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [showDrafts, setShowDrafts] = useState(false);
-  const [manageModalOpen, setManageModalOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [actionToast, setActionToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [postToDelete, setPostToDelete] = useState<BlogPost | null>(null);
 
   const blogContentRef = useRef<HTMLDivElement>(null);
 
@@ -423,8 +406,7 @@ export default function BlogPage() {
 
   const fetchArticles = useCallback(async () => {
     try {
-      const queryParam = isAdmin && showDrafts ? '?includeUnpublished=true' : '';
-      const res = await fetch(`${backendUrl}/api/content/blog${queryParam}`);
+      const res = await fetch(`${backendUrl}/api/content/blog`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
@@ -434,118 +416,11 @@ export default function BlogPage() {
     } catch (err) {
       console.error('Error fetching blogs from API, using fallback:', err);
     }
-  }, [backendUrl, isAdmin, showDrafts]);
-
-  useEffect(() => {
-    const checkAuth = () => {
-      const user = getStoredUser();
-      const admin = user?.role === 'ADMIN' || user?.role === 'SUPERADMIN';
-      setIsAdmin(admin);
-    };
-    checkAuth();
-    window.addEventListener(AUTH_CHANGE_EVENT, checkAuth);
-    window.addEventListener('storage', checkAuth);
-    return () => {
-      window.removeEventListener(AUTH_CHANGE_EVENT, checkAuth);
-      window.removeEventListener('storage', checkAuth);
-    };
-  }, []);
+  }, [backendUrl]);
 
   useEffect(() => {
     fetchArticles();
   }, [fetchArticles]);
-
-  // Auto-dismiss action feedback toast after 4 seconds
-  useEffect(() => {
-    if (!actionToast) return;
-    const timer = setTimeout(() => {
-      setActionToast(null);
-    }, 4000);
-    return () => clearTimeout(timer);
-  }, [actionToast]);
-
-  const handleTogglePublish = async (post: BlogPost, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const token = getAuthToken();
-    if (!token) return;
-
-    const newStatus = post.isPublished === false ? true : false;
-    setActionLoading(true);
-
-    try {
-      const res = await fetch(`${backendUrl}/api/content/blog/${post.id}/publish`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ isPublished: newStatus }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Failed to update publish state');
-      }
-
-      setActionToast({
-        type: 'success',
-        message: `"${post.title}" is now ${newStatus ? 'published & live' : 'saved as draft'}.`,
-      });
-      fetchArticles();
-    } catch (err: any) {
-      setActionToast({ type: 'error', message: err.message || 'Error updating status.' });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleDeletePost = (post: BlogPost, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setPostToDelete(post);
-  };
-
-  const handleConfirmDeletePost = async () => {
-    if (!postToDelete) return;
-
-    const token = getAuthToken();
-    if (!token) return;
-
-    const post = postToDelete;
-    setActionLoading(true);
-    try {
-      const res = await fetch(`${backendUrl}/api/content/blog/${post.id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Failed to delete blog article');
-      }
-
-      setActionToast({
-        type: 'success',
-        message: `"${post.title}" was successfully deleted.`,
-      });
-      setPostToDelete(null);
-      fetchArticles();
-    } catch (err: any) {
-      setActionToast({ type: 'error', message: err.message || 'Error deleting article.' });
-      setPostToDelete(null);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handlePostSaved = () => {
-    setActionToast({
-      type: 'success',
-      message: 'Article saved successfully!',
-    });
-    fetchArticles();
-  };
 
   const categories = [
     { id: 'All', label: `${t('All Articles', 'सभी लेख')} (${articles.length})` },
@@ -558,8 +433,7 @@ export default function BlogPage() {
   ];
 
   const filtered = articles.filter((a) => {
-    if (!isAdmin && a.isPublished === false) return false;
-    if (isAdmin && !showDrafts && a.isPublished === false) return false;
+    if (a.isPublished === false) return false;
 
     const matchCat = selectedCategory === 'All' || a.category === selectedCategory;
     const matchQuery =
@@ -637,46 +511,6 @@ export default function BlogPage() {
       </section>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-6 sm:py-10 space-y-6 sm:space-y-8">
-        {/* Action Feedback Floating Toast */}
-        {actionToast && (
-          <div
-            role="status"
-            aria-live="polite"
-            className="fixed bottom-6 right-6 z-50 max-w-sm sm:max-w-md w-full sm:w-auto animate-fadeIn transition-all duration-300 pointer-events-auto"
-          >
-            <div className="bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.06)] border border-stone-200/90 flex items-start gap-3.5 ring-1 ring-black/5">
-              <div
-                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
-                  actionToast.type === 'success'
-                    ? 'bg-emerald-50 text-emerald-600 border-emerald-200/80'
-                    : 'bg-rose-50 text-rose-600 border-rose-200/80'
-                }`}
-              >
-                {actionToast.type === 'success' ? (
-                  <CheckCircle2 className="w-5 h-5" />
-                ) : (
-                  <AlertCircle className="w-5 h-5" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0 pt-0.5">
-                <p className="text-xs font-bold text-stone-900 tracking-tight">
-                  {actionToast.type === 'success' ? 'Successful' : 'Attention Needed'}
-                </p>
-                <p className="text-xs text-stone-600 leading-relaxed font-normal mt-0.5 break-words">
-                  {actionToast.message}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActionToast(null)}
-                className="p-1 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer shrink-0 mt-0.5"
-                aria-label="Dismiss notification"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Featured Article Hero Banner */}
         {featured && (
@@ -801,36 +635,6 @@ export default function BlogPage() {
               );
             })}
           </div>
-
-          {isAdmin && (
-            <div aria-label="Admin Content Controls" className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setShowDrafts(!showDrafts)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer shadow-xs ${
-                  showDrafts
-                    ? 'bg-amber-100 text-amber-950 border-amber-400 ring-1 ring-amber-300/40'
-                    : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
-                }`}
-              >
-                {showDrafts ? <Eye className="w-3.5 h-3.5 text-amber-800" /> : <EyeOff className="w-3.5 h-3.5 text-stone-500" />}
-                <span>{showDrafts ? t('Showing Drafts', 'ड्राफ्ट दिख रहे हैं') : t('Include Drafts', 'ड्राफ्ट शामिल करें')}</span>
-              </button>
-
-              <button
-                type="button"
-                title="Admin Content Controls - Add New Article"
-                onClick={() => {
-                  setEditingPost(null);
-                  setManageModalOpen(true);
-                }}
-                className="px-4 py-1.5 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-amber-100 text-xs font-bold shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5 text-amber-300" />
-                <span>{t('Add New Article', 'नया लेख जोड़ें')}</span>
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Articles Grid */}
@@ -864,57 +668,6 @@ export default function BlogPage() {
                       {readTime}
                     </span>
 
-                    {/* Admin Actions Pill - ONLY VISIBLE TO AUTHENTICATED ADMINS */}
-                    {isAdmin && (
-                      <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md px-2 py-1 rounded-full border border-amber-400/80 shadow-lg">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                            post.isPublished === false
-                              ? 'bg-amber-400 text-stone-950 font-black'
-                              : 'bg-emerald-500 text-white'
-                          }`}
-                        >
-                          {post.isPublished === false ? 'Draft' : 'Live'}
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingPost(post);
-                            setManageModalOpen(true);
-                          }}
-                          title="Edit Article"
-                          className="w-6 h-6 rounded-full bg-white/20 hover:bg-amber-400 hover:text-stone-950 text-white flex items-center justify-center transition-colors cursor-pointer"
-                        >
-                          <Edit3 className="w-3 h-3" />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={(e) => handleTogglePublish(post, e)}
-                          title={post.isPublished === false ? 'Publish Article' : 'Unpublish Article'}
-                          disabled={actionLoading}
-                          className="w-6 h-6 rounded-full bg-white/20 hover:bg-amber-400 hover:text-stone-950 text-white flex items-center justify-center transition-colors cursor-pointer"
-                        >
-                          {post.isPublished === false ? (
-                            <Eye className="w-3 h-3" />
-                          ) : (
-                            <EyeOff className="w-3 h-3" />
-                          )}
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={(e) => handleDeletePost(post, e)}
-                          title="Delete Article"
-                          disabled={actionLoading}
-                          className="w-6 h-6 rounded-full bg-white/20 hover:bg-rose-600 hover:text-white text-white flex items-center justify-center transition-colors cursor-pointer"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    )}
                   </div>
 
                   <div className="p-5 space-y-2.5">
@@ -1054,108 +807,6 @@ export default function BlogPage() {
                 >
                   {t('Book Consultation', 'परामर्श बुक करें')}
                 </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Admin Blog Management Modal */}
-      {isAdmin && (
-        <BlogManageModal
-          isOpen={manageModalOpen}
-          onClose={() => setManageModalOpen(false)}
-          postToEdit={editingPost as any}
-          onSaved={handlePostSaved}
-        />
-      )}
-
-      {/* Custom Delete Confirmation Modal */}
-      {postToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-md bg-white rounded-3xl border border-rose-200 shadow-2xl overflow-hidden flex flex-col">
-            <div className="px-6 py-5 bg-gradient-to-r from-rose-900 via-rose-800 to-[#5B0D15] text-white flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-200 border border-rose-300/40 flex items-center justify-center shrink-0">
-                  <Trash2 className="w-5 h-5 text-rose-300" />
-                </div>
-                <div>
-                  <h3 className="font-serif text-lg font-bold text-rose-100">
-                    Delete Blog Article
-                  </h3>
-                  <p className="text-[11px] text-rose-200">
-                    Are you sure you want to permanently delete this?
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPostToDelete(null)}
-                disabled={actionLoading}
-                className="p-1.5 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer disabled:opacity-50"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-amber-200/80 space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-stone-500">Article Title:</span>
-                  <span className="font-bold text-[#3B1E22] truncate max-w-[220px]">{postToDelete.title}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-stone-500">Category:</span>
-                  <span className="font-semibold text-stone-800">{postToDelete.category}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-stone-500">Status:</span>
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      postToDelete.isPublished
-                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                        : 'bg-amber-100 text-amber-800 border border-amber-200'
-                    }`}
-                  >
-                    {postToDelete.isPublished ? 'Published' : 'Draft'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-rose-800 leading-relaxed">
-                  This blog post and its contents will be permanently removed. This action cannot be undone.
-                </p>
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setPostToDelete(null)}
-                  disabled={actionLoading}
-                  className="px-5 py-2.5 rounded-xl border border-stone-300 text-stone-600 hover:bg-stone-50 text-xs font-semibold cursor-pointer disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmDeletePost}
-                  disabled={actionLoading}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-700 to-rose-900 hover:opacity-95 disabled:opacity-50 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2 cursor-pointer"
-                >
-                  {actionLoading ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Deleting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Permanently Delete</span>
-                    </>
-                  )}
-                </button>
               </div>
             </div>
           </div>

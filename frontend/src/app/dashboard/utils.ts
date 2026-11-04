@@ -23,6 +23,7 @@ export function formatGoogleMeetLink(bookingId: string): string {
 export function resolveProductImage(item: any): string {
   const direct =
     item?.image ||
+    item?.productImage ||
     item?.product?.image ||
     (Array.isArray(item?.product?.images) ? item.product.images[0] : null) ||
     (Array.isArray(item?.images) ? item.images[0] : null);
@@ -52,6 +53,13 @@ export function resolveProductImage(item: any): string {
   if (name.includes('aventurine') || name.includes('green') || name.includes('luck')) return '/products/prod-aventurine.png';
   if (name.includes('carnelian') || name.includes('fire')) return '/products/prod-carnelian.png';
   if (name.includes('moonstone')) return '/products/prod-moonstone.png';
+  if (name.includes('hakik') || name.includes('sulemani')) return '/products/prod-sulemani-hakik.png';
+  if (name.includes('hematite')) return '/products/prod-hematite.png';
+  if (name.includes('moss') || name.includes('agate')) return '/products/prod-moss-agate.png';
+  if (name.includes('jasper') || name.includes('dalmation')) return '/products/prod-dalmation-jasper.png';
+  if (name.includes('unakite')) return '/products/prod-unakite.png';
+  if (name.includes('serpentine')) return '/products/prod-serpentine.png';
+  if (name.includes('chalcedony')) return '/products/prod-yellow-chalcedony.png';
   if (name.includes('yantra') || name.includes('shree') || name.includes('copper')) return '/products/shree-yantra.jpg';
   if (name.includes('rudraksha') || name.includes('mala') || name.includes('mukhi')) return '/products/rudraksha-mala.jpg';
   return '/products/prod-tiger-eye-macro.jpg';

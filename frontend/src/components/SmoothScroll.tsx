@@ -21,6 +21,30 @@ export function SmoothScroll() {
       wheelMultiplier: 1.0,
       touchMultiplier: 1.5,
       infinite: false,
+      prevent: (node) => {
+        if (!node || !(node instanceof HTMLElement)) return false;
+        if (
+          node.hasAttribute('data-lenis-prevent') ||
+          Boolean(node.closest('[data-lenis-prevent]'))
+        ) {
+          return true;
+        }
+        if (
+          document.body.classList.contains('scroll-locked') ||
+          document.documentElement.classList.contains('scroll-locked')
+        ) {
+          if (
+            Boolean(
+              node.closest(
+                '[role="dialog"], .fixed, .modal-scroll-container, .modal-backdrop-contain, form'
+              )
+            )
+          ) {
+            return true;
+          }
+        }
+        return false;
+      },
     });
 
     let rafId: number;

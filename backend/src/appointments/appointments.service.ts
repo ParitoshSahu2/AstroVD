@@ -48,6 +48,32 @@ export function extractMeetingLink(notes?: string | null, bookingId?: string): s
   return formatGoogleMeetLink(bookingId);
 }
 
+const SNAPSHOT_DELIMITER = '__SLOT_SNAPSHOT__:';
+
+function encodeBlockedReason(reason: string | undefined, publishedTimes: string[]): string {
+  const baseReason = reason?.trim() || 'Sanctuary Closed / Panditji Unavailable';
+  const snapshotJson = JSON.stringify(publishedTimes);
+  return `${baseReason} ${SNAPSHOT_DELIMITER}${snapshotJson}`;
+}
+
+function decodeBlockedReason(storedReason: string | null | undefined): { cleanReason: string; publishedTimes: string[] } {
+  if (!storedReason) {
+    return { cleanReason: 'Sanctuary Closed / Panditji Unavailable', publishedTimes: [] };
+  }
+  const idx = storedReason.indexOf(SNAPSHOT_DELIMITER);
+  if (idx === -1) {
+    return { cleanReason: storedReason.trim(), publishedTimes: [] };
+  }
+  const cleanReason = storedReason.substring(0, idx).trim();
+  const rawJson = storedReason.substring(idx + SNAPSHOT_DELIMITER.length).trim();
+  try {
+    const publishedTimes = JSON.parse(rawJson);
+    return { cleanReason, publishedTimes: Array.isArray(publishedTimes) ? publishedTimes : [] };
+  } catch {
+    return { cleanReason, publishedTimes: [] };
+  }
+}
+
 @Injectable()
 export class AppointmentsService {
   private readonly logger = new Logger(AppointmentsService.name);
@@ -474,12 +500,13 @@ export class AppointmentsService {
         where: { date: dateStr },
       });
       if (blockedDate) {
+        const { cleanReason } = decodeBlockedReason(blockedDate.reason);
         return {
           serviceId,
           date: dateStr,
           durationMinutes: durationMinutes || service.durationMinutes || 30,
           isBlocked: true,
-          blockedReason: blockedDate.reason || 'Panditji is not accepting consultations on this date.',
+          blockedReason: cleanReason || 'Panditji is not accepting consultations on this date.',
           slots: [],
         };
       }
@@ -1760,7 +1787,7 @@ export class AppointmentsService {
         date: dateStr,
         startTime: time,
         durationMinutes: 45,
-        isPublished: true,
+        isPublished: blockedDate ? false : true,
       }));
 
       await this.prisma.appointmentSlot.createMany({
@@ -1803,7 +1830,7 @@ export class AppointmentsService {
         date: slot.date,
         startTime: slot.startTime,
         durationMinutes: slot.durationMinutes,
-        isPublished: slot.isPublished,
+        isPublished: blockedDate ? false : slot.isPublished,
         notes: slot.notes,
         isBooked,
         booking: booking
@@ -1820,10 +1847,12 @@ export class AppointmentsService {
       };
     });
 
+    const decodedBlocked = blockedDate ? decodeBlockedReason(blockedDate.reason) : null;
+
     return {
       date: dateStr,
       isBlocked: Boolean(blockedDate),
-      blockedReason: blockedDate?.reason || null,
+      blockedReason: decodedBlocked?.cleanReason || null,
       slots: enrichedSlots,
       totalSlots: enrichedSlots.length,
       bookedCount: enrichedSlots.filter((s) => s.isBooked).length,
@@ -2021,16 +2050,57 @@ export class AppointmentsService {
       throw new BadRequestException('Cannot block dates in the past.');
     }
 
+    // 1. Check existing slots for this date
+    let existingSlots = await this.prisma.appointmentSlot.findMany({
+      where: { date: dto.date },
+    });
+
+    // If no slots exist yet, auto-seed standard slots first so their original state is preserved
+    if (existingSlots.length === 0) {
+      await this.prisma.appointmentSlot.createMany({
+        data: PUBLISHED_TIME_SLOTS.map((time) => ({
+          date: dto.date,
+          startTime: time,
+          durationMinutes: 45,
+          isPublished: true,
+        })),
+        skipDuplicates: true,
+      });
+      existingSlots = await this.prisma.appointmentSlot.findMany({
+        where: { date: dto.date },
+      });
+    }
+
+    // 2. Capture which slots were published before blocking so we can restore them on unblock
+    const publishedTimesBeforeBlock = existingSlots
+      .filter((s) => s.isPublished)
+      .map((s) => s.startTime);
+
+    // Fallback to standard slots if none were marked published
+    const snapshotTimes = publishedTimesBeforeBlock.length > 0
+      ? publishedTimesBeforeBlock
+      : [...PUBLISHED_TIME_SLOTS];
+
+    const encodedReason = encodeBlockedReason(dto.reason, snapshotTimes);
+
     const blocked = await this.prisma.blockedDate.upsert({
       where: { date: dto.date },
       create: {
         date: dto.date,
-        reason: dto.reason?.trim() || 'Sanctuary Closed / Panditji Unavailable',
+        reason: encodedReason,
       },
       update: {
-        reason: dto.reason?.trim() || 'Sanctuary Closed / Panditji Unavailable',
+        reason: encodedReason,
       },
     });
+
+    // 3. Mark all slots for this blocked date as unpublished
+    await this.prisma.appointmentSlot.updateMany({
+      where: { date: dto.date },
+      data: { isPublished: false },
+    });
+
+    const { cleanReason } = decodeBlockedReason(blocked.reason);
 
     await this.prisma.auditLog.create({
       data: {
@@ -2040,7 +2110,8 @@ export class AppointmentsService {
         targetId: blocked.id,
         details: {
           date: blocked.date,
-          reason: blocked.reason,
+          reason: cleanReason,
+          publishedTimesPreserved: snapshotTimes,
         },
         ipAddress: ipAddress || null,
       },
@@ -2048,7 +2119,10 @@ export class AppointmentsService {
 
     return {
       message: `Date ${dto.date} is now blocked. No customer bookings will be accepted for this date.`,
-      blockedDate: blocked,
+      blockedDate: {
+        ...blocked,
+        reason: cleanReason,
+      },
     };
   }
 
@@ -2060,7 +2134,21 @@ export class AppointmentsService {
       where: { date: dateStr },
     });
 
+    let restoredSlots: string[] = [];
+
     if (existing) {
+      const { publishedTimes } = decodeBlockedReason(existing.reason);
+      restoredSlots = publishedTimes.length > 0 ? publishedTimes : [...PUBLISHED_TIME_SLOTS];
+
+      // Restore slots to their previous state!
+      await this.prisma.appointmentSlot.updateMany({
+        where: {
+          date: dateStr,
+          startTime: { in: restoredSlots },
+        },
+        data: { isPublished: true },
+      });
+
       await this.prisma.blockedDate.delete({
         where: { date: dateStr },
       });
@@ -2073,9 +2161,20 @@ export class AppointmentsService {
           targetId: existing.id,
           details: {
             date: dateStr,
+            restoredSlots,
           },
           ipAddress: ipAddress || null,
         },
+      });
+    } else {
+      // Even if no blockedDate record existed, restore standard slots to published
+      restoredSlots = [...PUBLISHED_TIME_SLOTS];
+      await this.prisma.appointmentSlot.updateMany({
+        where: {
+          date: dateStr,
+          startTime: { in: restoredSlots },
+        },
+        data: { isPublished: true },
       });
     }
 

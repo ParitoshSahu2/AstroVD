@@ -54,6 +54,11 @@ export const HeroSection: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3.5 pt-2">
             <Link
               href="/appointment"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('astro_reset_booking'));
+                }
+              }}
               className="px-6 sm:px-7 py-3 rounded-full bg-[#520F16] hover:bg-[#68141d] text-amber-100 font-serif font-bold text-xs sm:text-sm shadow-xl shadow-rose-950/20 hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
             >
               <Calendar className="w-4 h-4 text-amber-300 stroke-[2]" />

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Calendar,
   Ban,
   CheckCircle2,
   Lock,
+  Unlock,
   Plus,
   Sparkles,
   Phone,
@@ -13,7 +14,9 @@ import {
   Trash2,
   RefreshCw,
   Clock,
+  X,
 } from 'lucide-react';
+import { useScrollLock } from '../../../lib/scrollLock';
 
 interface AdminAvailabilityTabProps {
   availabilityDate: string;
@@ -46,6 +49,11 @@ export default function AdminAvailabilityTab({
   setInitScheduleModalOpen,
   setInitScheduleDays,
 }: AdminAvailabilityTabProps) {
+  const [unblockConfirmOpen, setUnblockConfirmOpen] = useState(false);
+  const [unblockLoading, setUnblockLoading] = useState(false);
+
+  useScrollLock(unblockConfirmOpen);
+
   return (
     <div className="space-y-6">
       {/* Control Bar: Date Selector, Quick Jumps & Sanctuary Status */}
@@ -138,10 +146,10 @@ export default function AdminAvailabilityTab({
             {availabilityData?.isBlocked ? (
               <button
                 type="button"
-                onClick={handleUnblockDate}
-                className="px-4 py-2 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-semibold text-xs shadow-2xs transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+                onClick={() => setUnblockConfirmOpen(true)}
+                className="px-4 py-2 rounded-xl border border-rose-600 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95"
               >
-                <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                <Unlock className="w-4 h-4 text-white" />
                 <span>Unblock This Date</span>
               </button>
             ) : (
@@ -250,8 +258,11 @@ export default function AdminAvailabilityTab({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4.5">
             {availabilityData.slots.map((slot: any) => {
+              const isDateBlocked = Boolean(availabilityData?.isBlocked);
               const isBooked = slot.isBooked;
-              const isPublished = slot.isPublished;
+              // If the entire date is blocked, the slot cannot be published
+              const isPublished = isDateBlocked ? false : Boolean(slot.isPublished);
+              const isUnavailable = !isBooked && !isPublished;
 
               // Parse time into large digits and smaller AM/PM so "10" is prominent and "AM" doesn't overpower it
               const timeParts = (slot.startTime || '').trim().split(' ');
@@ -261,19 +272,19 @@ export default function AdminAvailabilityTab({
               return (
                 <div
                   key={slot.id}
-                  className={`rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden shadow-2xs hover:shadow-md group ${
+                  className={`rounded-2xl border transition-all duration-200 flex flex-col justify-between overflow-hidden shadow-2xs relative group ${
                     isBooked
                       ? 'bg-rose-50/30 border-rose-200/90 hover:border-rose-300'
-                      : isPublished
-                      ? 'bg-white border-stone-200/90 hover:border-amber-400'
-                      : 'bg-stone-50/70 border-stone-200/80 opacity-80 hover:opacity-100'
+                      : isUnavailable
+                      ? 'bg-stone-100/90 border-stone-300/90'
+                      : 'bg-white border-stone-200/90 hover:border-amber-400 hover:shadow-md'
                   }`}
                 >
                   {/* Card Header: Slot Time with prominent digits + small AM/PM & Clean Status */}
                   <div className="p-4 pb-3 bg-stone-50/50 border-b border-stone-100 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5">
-                      <Clock className="w-4 h-4 text-amber-700 shrink-0" />
-                      <div className="flex items-baseline gap-1">
+                      <Clock className={`w-4 h-4 shrink-0 ${isUnavailable ? 'text-stone-400' : 'text-amber-700'}`} />
+                      <div className={`flex items-baseline gap-1 ${isUnavailable ? 'opacity-60' : ''}`}>
                         <span className="font-sans font-semibold text-lg text-stone-900 group-hover:text-[#5B0D15] transition-colors tabular-nums">
                           {timeDigits}
                         </span>
@@ -294,17 +305,32 @@ export default function AdminAvailabilityTab({
                           <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse" />
                           Booked
                         </span>
-                      ) : (
+                      ) : isPublished ? (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wide flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                           Available
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200 uppercase tracking-wide flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
+                          Unpublished
                         </span>
                       )}
                     </div>
                   </div>
 
-                  {/* Card Body: Meaningful Slot Context */}
-                  <div className="p-4 space-y-2 flex-1">
+                  {/* Unavailable Central Indicator */}
+                  {isUnavailable && (
+                    <div className="absolute inset-x-0 top-[38%] flex items-center justify-center pointer-events-none z-10">
+                      <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-stone-900/80 text-white shadow-md backdrop-blur-xs flex items-center gap-1.5 border border-white/20">
+                        <EyeOff className="w-3.5 h-3.5 text-amber-300" />
+                        <span>Unpublished</span>
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Card Body: Meaningful Slot Context (Blurred when unavailable) */}
+                  <div className={`p-4 space-y-2 flex-1 transition-all duration-200 ${isUnavailable ? 'filter blur-[1.5px] opacity-60 select-none' : ''}`}>
                     {isBooked && slot.booking ? (
                       <div className="p-3 rounded-xl bg-white border border-rose-200/80 space-y-1.5 shadow-2xs">
                         <div className="flex items-center justify-between gap-1">
@@ -334,27 +360,36 @@ export default function AdminAvailabilityTab({
                   </div>
 
                   {/* Card Footer: Structured & Harmonized Action Controls */}
-                  <div className="px-4 py-3 bg-stone-50/70 border-t border-stone-100 flex items-center justify-between gap-2">
+                  <div className="px-4 py-3 bg-stone-50/70 border-t border-stone-100 flex items-center justify-between gap-2 z-20 relative">
                     {/* Toggle Visibility Button */}
                     <button
                       type="button"
+                      disabled={isDateBlocked}
                       onClick={() => handleTogglePublishSlot(slot)}
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer active:scale-95 ${
-                        isPublished
-                          ? 'border-stone-200 bg-white hover:bg-stone-100 text-stone-700 shadow-2xs'
-                          : 'border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-900'
+                        isDateBlocked
+                          ? 'opacity-50 cursor-not-allowed border-stone-200 bg-stone-100 text-stone-500'
+                          : isPublished
+                          ? 'border-emerald-300/80 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 shadow-2xs'
+                          : 'border-stone-300 bg-stone-100 hover:bg-stone-200 text-stone-700 shadow-2xs'
                       }`}
-                      title={isPublished ? 'Hide from seeker booking catalogue' : 'Publish to seeker booking catalogue'}
+                      title={
+                        isDateBlocked
+                          ? 'Date is blocked. Unblock the date first to manage individual slots.'
+                          : isPublished
+                          ? 'Currently Available. Click to unpublish.'
+                          : 'Currently Unpublished. Click to publish.'
+                      }
                     >
                       {isPublished ? (
                         <>
-                          <EyeOff className="w-3.5 h-3.5 text-stone-500" />
-                          <span>Unpublish</span>
+                          <Eye className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>Publish</span>
                         </>
                       ) : (
                         <>
-                          <Eye className="w-3.5 h-3.5 text-amber-700" />
-                          <span>Publish</span>
+                          <EyeOff className="w-3.5 h-3.5 text-stone-500" />
+                          <span>Unpublish</span>
                         </>
                       )}
                     </button>
@@ -395,6 +430,107 @@ export default function AdminAvailabilityTab({
           </div>
         )}
       </div>
+
+      {/* UNBLOCK DATE CONFIRMATION MODAL */}
+      {unblockConfirmOpen && (
+        <div
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overscroll-contain modal-backdrop-contain animate-fadeIn"
+          onClick={() => !unblockLoading && setUnblockConfirmOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-md bg-white rounded-3xl border border-rose-200 shadow-2xl overflow-hidden flex flex-col modal-scroll-container"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-6 py-5 bg-gradient-to-r from-rose-900 via-rose-800 to-[#5B0D15] text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-200 border border-rose-300/40 flex items-center justify-center shrink-0">
+                  <Unlock className="w-5 h-5 text-rose-300" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-rose-100">
+                    Unblock Date
+                  </h3>
+                  <p className="text-[11px] text-rose-200">
+                    Are you sure to unblock the date?
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setUnblockConfirmOpen(false)}
+                disabled={unblockLoading}
+                className="p-1.5 rounded-full hover:bg-white/20 text-white transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-amber-200/80 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500 font-medium">Selected Date:</span>
+                  <span className="font-mono font-bold text-base text-[#5B0D15]">{availabilityDate}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500 font-medium">Current Status:</span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                    <Ban className="w-3 h-3 text-rose-600" />
+                    <span>Blocked ({availabilityData?.blockedReason || 'Holiday / Closed'})</span>
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-xs text-stone-600 leading-relaxed">
+                Are you sure to unblock the date? Unblocking this date will reopen the sanctuary for bookings. You can then publish specific consultation slots for seekers.
+              </p>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setUnblockConfirmOpen(false)}
+                  disabled={unblockLoading}
+                  className="px-4 py-2.5 rounded-xl border border-stone-300 text-stone-700 hover:bg-stone-100 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setUnblockLoading(true);
+                    try {
+                      await handleUnblockDate();
+                      setUnblockConfirmOpen(false);
+                    } catch (err) {
+                      // Handled by notification
+                    } finally {
+                      setUnblockLoading(false);
+                    }
+                  }}
+                  disabled={unblockLoading}
+                  className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95"
+                >
+                  {unblockLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Unblocking...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Unlock className="w-4 h-4" />
+                      <span>Yes, Unblock Date</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

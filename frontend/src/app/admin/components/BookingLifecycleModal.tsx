@@ -424,11 +424,14 @@ export default function BookingLifecycleModal({
           )}
 
           {/* Row 2: Customer & Attendee Information */}
-          <div className="p-2.5 rounded-xl bg-amber-50/30 border border-amber-200/70">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-bold text-amber-900/80 uppercase tracking-wider">
-                Customer &amp; Attendee Information
-              </span>
+          <div className="p-2.5 sm:p-3 rounded-2xl bg-white border border-stone-200/80 shadow-xs">
+            <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-stone-100">
+              <div className="flex items-center gap-1.5">
+                <UserIcon className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                <span className="text-[10px] sm:text-[11px] font-sans font-semibold text-stone-500 uppercase tracking-wider">
+                  Customer &amp; Attendee Information
+                </span>
+              </div>
               {isForSomeoneElse && (
                 <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1">
                   <HeartHandshake className="w-3 h-3 text-purple-600" />
@@ -438,12 +441,16 @@ export default function BookingLifecycleModal({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-              <div className="p-1.5 px-2 rounded-lg bg-white/90 border border-amber-200/50 shadow-2xs">
-                <span className="text-stone-400 block text-[9px] uppercase font-semibold">Attendee</span>
-                <span className="font-semibold text-stone-900 flex items-center gap-1.5 mt-0.5 truncate" title={custName}>
-                  <UserIcon className="w-3 h-3 text-stone-500 shrink-0" />
-                  <span className="truncate">{custName}</span>
-                </span>
+              <div className="p-2 rounded-xl bg-stone-50/70 border border-stone-200/60 shadow-2xs">
+                <span className="text-stone-400 block text-[9px] uppercase font-semibold tracking-wider">Attendee</span>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="w-6 h-6 rounded-full bg-[#5B0D15]/10 border border-[#5B0D15]/20 text-[#5B0D15] font-bold text-[11px] flex items-center justify-center shrink-0">
+                    {(custName || 'U').charAt(0).toUpperCase()}
+                  </div>
+                  <span className="font-serif font-bold text-stone-900 text-xs sm:text-[13px] capitalize truncate" title={custName}>
+                    {custName}
+                  </span>
+                </div>
               </div>
 
               <div className="p-1.5 px-2 rounded-lg bg-white/90 border border-amber-200/50 shadow-2xs">

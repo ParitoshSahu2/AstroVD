@@ -477,35 +477,51 @@ export const Navbar: React.FC = () => {
 
   // Close dropdowns on outside click or route change
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
       if (
         profileDropdownRef.current &&
-        !profileDropdownRef.current.contains(event.target as Node)
+        !profileDropdownRef.current.contains(target)
       ) {
         setProfileDropdownOpen(false);
       }
       if (
         aboutDropdownRef.current &&
-        !aboutDropdownRef.current.contains(event.target as Node)
+        !aboutDropdownRef.current.contains(target)
       ) {
         setAboutDropdownOpen(false);
       }
       if (
         notificationRef.current &&
-        !notificationRef.current.contains(event.target as Node)
+        !notificationRef.current.contains(target)
       ) {
         setNotificationOpen(false);
       }
       if (
         searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
+        !searchRef.current.contains(target)
       ) {
         setSearchOpen(false);
       }
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setNotificationOpen(false);
+        setProfileDropdownOpen(false);
+        setSearchOpen(false);
+        setAboutDropdownOpen(false);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   useEffect(() => {
@@ -687,6 +703,13 @@ export const Navbar: React.FC = () => {
                     key={link.name}
                     href={link.href}
                     prefetch={true}
+                    onClick={() => {
+                      if (link.href === '/appointment') {
+                        if (typeof window !== 'undefined') {
+                          window.dispatchEvent(new CustomEvent('astro_reset_booking'));
+                        }
+                      }
+                    }}
                     onMouseEnter={() => {
                       try {
                         router.prefetch(link.href);
@@ -986,10 +1009,17 @@ export const Navbar: React.FC = () => {
 
                 {/* Notifications Popover Dropdown (Exact Same as Admin Dashboard) */}
                 {notificationOpen && (
-                  <div
-                    onClick={(e) => e.stopPropagation()}
-                    className="absolute top-full right-0 mt-3 w-80 sm:w-88 rounded-2xl bg-white shadow-xl border border-stone-200 p-4 z-50 animate-fadeIn space-y-3"
-                  >
+                  <>
+                    {/* Backdrop overlay for closing on click outside / blank space */}
+                    <div
+                      className="fixed inset-0 z-40 cursor-default"
+                      onClick={() => setNotificationOpen(false)}
+                      aria-hidden="true"
+                    />
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute top-full right-0 mt-3 w-80 sm:w-88 rounded-2xl bg-white shadow-xl border border-stone-200 p-4 z-50 animate-fadeIn space-y-3"
+                    >
                     <div className="flex items-center justify-between pb-2 border-b border-stone-100">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-stone-900">
@@ -1056,7 +1086,8 @@ export const Navbar: React.FC = () => {
                         </p>
                       )}
                     </div>
-                  </div>
+                    </div>
+                  </>
                 )}
               </div>
 
@@ -1289,7 +1320,14 @@ export const Navbar: React.FC = () => {
                     key={link.name}
                     href={link.href}
                     prefetch={true}
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      if (link.href === '/appointment') {
+                        if (typeof window !== 'undefined') {
+                          window.dispatchEvent(new CustomEvent('astro_reset_booking'));
+                        }
+                      }
+                    }}
                     className={`p-2.5 rounded-xl text-xs font-semibold transition-colors ${
                       pathname === link.href
                         ? 'bg-rose-100/60 text-[#5B0D15]'

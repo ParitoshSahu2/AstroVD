@@ -63,6 +63,7 @@ html.scroll-locked,
 body.scroll-locked {
   overflow: hidden !important;
   overscroll-behavior: none !important;
+  touch-action: none;
 }
 
 /* Ensure modal overlays, scrollable containers and dialogs prevent scroll chaining */

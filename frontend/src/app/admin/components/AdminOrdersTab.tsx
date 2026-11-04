@@ -14,6 +14,7 @@ import {
   Truck,
   Trash2,
 } from 'lucide-react';
+import { resolveProductImage } from '../../dashboard/utils';
 
 interface AdminOrdersTabProps {
   orderSearch: string;
@@ -499,26 +500,30 @@ export default function AdminOrdersTab({
 
                         {/* 3. Items */}
                         <td className="py-2.5 px-3.5 align-middle overflow-hidden">
-                          <div className="min-w-0 pr-2">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <span
-                                className="font-medium text-stone-900 block truncate text-xs leading-snug"
-                                title={`${primaryItemName} (Qty: ${primaryQty})`}
-                              >
-                                {primaryItemName}
-                              </span>
-                              {additionalItems > 0 && (
-                                <span
-                                  className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-stone-100 text-stone-600 border border-stone-200/80 shrink-0"
-                                  title={`${additionalItems} more item${additionalItems > 1 ? 's' : ''}`}
-                                >
-                                  +{additionalItems} more
-                                </span>
-                              )}
+                          <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                            <div className="w-8 h-8 rounded-lg bg-stone-100 border border-stone-200/80 shrink-0 overflow-hidden flex items-center justify-center shadow-2xs">
+                              <img
+                                src={resolveProductImage(primaryItem)}
+                                alt=""
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = '/products/prod-tiger-eye-macro.jpg';
+                                }}
+                              />
                             </div>
-                            <span className="text-[11px] text-stone-400 block truncate mt-0.5" title={`${totalUnits} unit(s) total`}>
-                              {totalUnits} {totalUnits === 1 ? 'unit' : 'units'} total
-                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span
+                                  className="font-medium text-stone-900 block truncate text-xs leading-snug"
+                                  title={`${primaryItemName} (Qty: ${primaryQty})`}
+                                >
+                                  {primaryItemName}
+                                </span>
+                              </div>
+                              <span className="text-[11px] text-stone-400 block truncate mt-0.5" title={`${totalUnits} unit(s) total`}>
+                                {totalUnits} {totalUnits === 1 ? 'unit' : 'units'} total
+                              </span>
+                            </div>
                           </div>
                         </td>
 
@@ -821,11 +826,6 @@ export default function AdminOrdersTab({
                         <span className="text-[10px] text-stone-400 block">Ordered Items</span>
                         <div className="flex items-center gap-1 flex-wrap">
                           <span className="font-medium text-stone-900 truncate">{primaryItemName}</span>
-                          {additionalItems > 0 && (
-                            <span className="text-[9px] font-semibold text-stone-600 bg-stone-100 border border-stone-200/80 px-1 rounded">
-                              +{additionalItems} more
-                            </span>
-                          )}
                         </div>
                         <span className="text-[11px] text-stone-400 truncate block">
                           {totalUnits} {totalUnits === 1 ? 'unit' : 'units'} total

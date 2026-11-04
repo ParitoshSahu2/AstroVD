@@ -138,6 +138,11 @@ export const MotionServiceCard: React.FC<MotionServiceCardProps> = ({
             {/* Direct Booking Button */}
             <Link
               href={`/appointment?service=${item.id}`}
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('astro_reset_booking', { detail: { serviceId: item.id } }));
+                }
+              }}
               className="px-3 sm:px-3.5 py-1.5 rounded-full bg-[#5B0D15] hover:bg-[#72111c] text-white text-xs font-bold shadow-xs hover:scale-105 transition-all flex items-center gap-1 active:scale-95"
               title={t('Book appointment directly', 'सीधे परामर्श बुक करें')}
             >

@@ -96,6 +96,11 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
         <div className="flex items-center gap-2 shrink-0 pt-1 md:pt-0">
           <Link
             href="/appointment"
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('astro_reset_booking'));
+              }
+            }}
             className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#5B0D15] to-[#78121d] hover:from-[#480a11] hover:to-[#5B0D15] text-white font-semibold text-xs shadow-xs hover:shadow-md transition-all whitespace-nowrap active:scale-95"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-300 transition-transform group-hover:scale-110" />
@@ -259,6 +264,11 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
           <div className="pt-2">
             <Link
               href="/appointment"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('astro_reset_booking'));
+                }
+              }}
               className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#5B0D15] hover:bg-[#480a11] text-white font-bold text-sm shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <Sparkles className="w-4 h-4 text-amber-300" />
