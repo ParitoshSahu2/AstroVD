@@ -70,6 +70,10 @@ export const Navbar: React.FC = () => {
     type?: 'booking' | 'order' | 'system';
   }[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [userBookings, setUserBookings] = useState<any[]>([]);
+  const [userOrders, setUserOrders] = useState<any[]>([]);
+  const [userWalletBalance, setUserWalletBalance] = useState<number | null>(null);
+  const [adminPendingBookings, setAdminPendingBookings] = useState<any[]>([]);
   const [mounted, setMounted] = useState(false);
 
   // Profile completion reminders and ribbons are strictly reserved for normal seekers (USER) - never ADMIN or SUPERADMIN
@@ -132,9 +136,14 @@ export const Navbar: React.FC = () => {
       const saved = localStorage.getItem('astro_user');
       const token = localStorage.getItem('astro_token');
 
+      let parsedUser: any = null;
       if (saved) {
         try {
-          setUser(JSON.parse(saved));
+          parsedUser = JSON.parse(saved);
+          setUser(parsedUser);
+          if (typeof parsedUser?.walletBalance === 'number') {
+            setUserWalletBalance(parsedUser.walletBalance);
+          }
         } catch (e) {
           setUser(null);
         }
@@ -142,10 +151,27 @@ export const Navbar: React.FC = () => {
         setUser(null);
       }
 
+      // Local fallback collections for orders & bookings
+      let localOrders: any[] = [];
+      try {
+        const rawOrders = localStorage.getItem('astro_placed_orders');
+        if (rawOrders) localOrders = JSON.parse(rawOrders);
+      } catch {}
+
+      let localBookings: any[] = [];
+      try {
+        const rawBookings =
+          localStorage.getItem('astro_confirmed_appointments') ||
+          localStorage.getItem('astro_consultations_saved');
+        if (rawBookings) localBookings = JSON.parse(rawBookings);
+      } catch {}
+
       if (token) {
         const backendBase = (
           process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api'
         ).replace(/\/api\/?$/, '');
+
+        // 1. Fresh user profile
         fetch(`${backendBase}/api/auth/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -160,9 +186,76 @@ export const Navbar: React.FC = () => {
             if (freshUser) {
               setUser(freshUser);
               localStorage.setItem('astro_user', JSON.stringify(freshUser));
+              if (typeof freshUser.walletBalance === 'number') {
+                setUserWalletBalance(freshUser.walletBalance);
+              }
             }
           })
           .catch(() => {});
+
+        // 2. Live wallet balance
+        fetch(`${backendBase}/api/users/me/wallet`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((res) => (res.ok ? res.json() : null))
+          .then((wData) => {
+            if (wData && typeof wData.balance === 'number') {
+              setUserWalletBalance(wData.balance);
+            }
+          })
+          .catch(() => {});
+
+        // 3. User consultation bookings
+        fetch(`${backendBase}/api/appointments/my-bookings`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((res) => (res.ok ? res.json() : null))
+          .then((bData) => {
+            const list = Array.isArray(bData) ? bData : (bData?.bookings || []);
+            if (list.length > 0) {
+              setUserBookings(list);
+            } else {
+              setUserBookings(localBookings);
+            }
+          })
+          .catch(() => {
+            setUserBookings(localBookings);
+          });
+
+        // 4. User orders
+        fetch(`${backendBase}/api/orders/my-orders`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((res) => (res.ok ? res.json() : null))
+          .then((oData) => {
+            const list = Array.isArray(oData) ? oData : (oData?.orders || []);
+            if (list.length > 0) {
+              setUserOrders(list);
+            } else {
+              setUserOrders(localOrders);
+            }
+          })
+          .catch(() => {
+            setUserOrders(localOrders);
+          });
+
+        // 5. Admin: fetch pending consultation reservations awaiting approval
+        const isAdmin = parsedUser?.role === 'ADMIN' || parsedUser?.role === 'SUPERADMIN';
+        if (isAdmin) {
+          fetch(`${backendBase}/api/admin/bookings?status=PENDING&limit=10`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+            .then((res) => (res.ok ? res.json() : null))
+            .then((admData) => {
+              const list = Array.isArray(admData) ? admData : (admData?.bookings || []);
+              setAdminPendingBookings(list);
+            })
+            .catch(() => {});
+        }
+      } else {
+        setUserWalletBalance(null);
+        setUserBookings(localBookings);
+        setUserOrders(localOrders);
       }
     };
 
@@ -193,10 +286,12 @@ export const Navbar: React.FC = () => {
       } catch (err) {}
     }
     window.addEventListener('astro-auth-change', handleAuthEvent);
+    window.addEventListener('astro-booking-created', syncUser);
     window.addEventListener('storage', syncUser);
 
     return () => {
       window.removeEventListener('astro-auth-change', handleAuthEvent);
+      window.removeEventListener('astro-booking-created', syncUser);
       window.removeEventListener('storage', syncUser);
     };
   }, []);
@@ -507,9 +602,9 @@ export const Navbar: React.FC = () => {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        setSearchOpen(false);
         setNotificationOpen(false);
         setProfileDropdownOpen(false);
-        setSearchOpen(false);
         setAboutDropdownOpen(false);
       }
     };
@@ -660,6 +755,288 @@ export const Navbar: React.FC = () => {
     pathname === '/gallery' ||
     pathname === '/contact';
 
+  // Dynamic, user-specific notifications
+  const notifications = React.useMemo(() => {
+    const items: Array<{
+      id: string;
+      icon: string;
+      title: string;
+      badge?: string;
+      badgeColor?: string;
+      desc: string;
+      time?: string;
+      onClick: () => void;
+    }> = [];
+
+    if (user) {
+      if (isNormalSeeker) {
+        // 1. Profile Completion (Action Needed - only when incomplete)
+        if (isProfileIncomplete) {
+          items.push({
+            id: 'profile-incomplete',
+            icon: '🪷',
+            title: t('Complete Your Vedic Profile', 'वैदिक प्रोफ़ाइल पूर्ण करें'),
+            badge: t('Action Needed', 'अनिवार्य'),
+            badgeColor: 'text-rose-700 bg-rose-100 border-rose-200',
+            desc: t(
+              'Add your Date, Time, and Place of birth for personalized astrological consultations and remedies.',
+              'सटीक फलादेश व उपायों हेतु जन्म समय, तिथि व स्थान दर्ज करें।'
+            ),
+            time: t('Important', 'महत्वपूर्ण'),
+            onClick: () => {
+              setNotificationOpen(false);
+              setProfileModalOpen(true);
+            },
+          });
+        }
+
+        // 2. Real Consultation Bookings (Active / Upcoming)
+        if (userBookings && userBookings.length > 0) {
+          userBookings.slice(0, 3).forEach((b: any, idx: number) => {
+            const serviceName = b.serviceTitle || b.serviceName || t('Vedic Consultation', 'वैदिक परामर्श');
+            const dateStr = b.date || b.scheduledDate || b.appointmentDate || t('Upcoming', 'आगामी');
+            const timeSlot = b.timeSlot || b.scheduledTime || b.slot || '';
+            const isBookingConfirmed = b.status === 'CONFIRMED';
+
+            if (isBookingConfirmed) {
+              items.push({
+                id: `booking-${b.id || idx}`,
+                icon: '🗓️',
+                title: `${serviceName} - ${t('Consultation Confirmed', 'परामर्श पुष्ट')}`,
+                badge: t('Confirmed', 'पुष्ट'),
+                badgeColor: 'text-emerald-700 bg-emerald-100 border-emerald-200',
+                desc: `${dateStr}${timeSlot ? ` • ${timeSlot}` : ''} ${t('with Dr. Pandit Vishal Dubey. Meeting room unlocks 5m before session.', 'डॉ. पंडित विशाल दुबे के साथ। सत्र से 5 मिनट पूर्व लिंक सक्रिय होगा।')}`,
+                time: t('Confirmed', 'पुष्ट'),
+                onClick: () => {
+                  setNotificationOpen(false);
+                  router.push('/dashboard');
+                },
+              });
+            } else if (b.status === 'APPROVED' || b.status === 'PENDING_PAYMENT') {
+              items.push({
+                id: `booking-${b.id || idx}`,
+                icon: '🎉',
+                title: `${serviceName} - ${t('Approved! Pay Dakshina to Confirm', 'स्वीकृत! दक्षिणा भुगतान करें')}`,
+                badge: t('Pay Now', 'भुगतान करें'),
+                badgeColor: 'text-amber-900 bg-amber-100 border-amber-300 animate-pulse',
+                desc: `${dateStr}${timeSlot ? ` • ${timeSlot}` : ''} • ${t('Approved by Dr. Pandit Vishal Dubey. Please proceed to payment to confirm booking and access meeting room.', 'पूज्य गुरुजी द्वारा स्वीकृत। कृपया दक्षिणा का भुगतान कर परामर्श पुष्ट करें।')}`,
+                time: t('Action Needed', 'अनिवार्य'),
+                onClick: () => {
+                  setNotificationOpen(false);
+                  router.push('/dashboard');
+                },
+              });
+            } else if (b.status === 'CANCELLED' || b.status === 'REJECTED') {
+              items.push({
+                id: `booking-${b.id || idx}`,
+                icon: '⚠️',
+                title: `${serviceName} - ${t('Guruji Unavailable (Please Reschedule)', 'गुरुजी अनुपलब्ध (पुनर्निर्धारित करें)')}`,
+                badge: t('Reschedule', 'पुनर्निर्धारित'),
+                badgeColor: 'text-rose-700 bg-rose-100 border-rose-300',
+                desc: `${t('Dr. Pandit Vishal Dubey is unavailable for this slot due to sacred rituals. Please reschedule for another suitable slot.', 'पूज्य गुरुजी धार्मिक अनुष्ठान के कारण अनुपलब्ध हैं। कृपया नया समय चुनें।')}`,
+                time: t('Action Needed', 'अनिवार्य'),
+                onClick: () => {
+                  setNotificationOpen(false);
+                  router.push('/dashboard');
+                },
+              });
+            } else {
+              items.push({
+                id: `booking-${b.id || idx}`,
+                icon: '⏳',
+                title: `${serviceName} - ${t('Waiting for Admin Approval', 'स्वीकृति प्रतीक्षारत')}`,
+                badge: t('Waiting', 'प्रतीक्षारत'),
+                badgeColor: 'text-amber-800 bg-amber-100 border-amber-300',
+                desc: `${dateStr}${timeSlot ? ` • ${timeSlot}` : ''} • ${t('Consultation request awaiting Admin confirmation. You will be notified upon approval.', 'परामर्श अनुरोध व्यवस्थापक स्वीकृति हेतु प्रतीक्षारत है।')}`,
+                time: t('Awaiting Approval', 'प्रतीक्षारत'),
+                onClick: () => {
+                  setNotificationOpen(false);
+                  router.push('/dashboard');
+                },
+              });
+            }
+          });
+        }
+
+        // 3. Real Orders (Recent order updates)
+        if (userOrders && userOrders.length > 0) {
+          userOrders.slice(0, 2).forEach((o: any, idx: number) => {
+            const orderIdShort = o.orderNumber || (o.id ? o.id.slice(-6).toUpperCase() : `${idx + 1}`);
+            const firstItem =
+              o.items?.[0]?.product?.name ||
+              o.items?.[0]?.name ||
+              o.items?.[0]?.title ||
+              t('Vedic item', 'वैदिक उत्पाद');
+            const moreCount = (o.items?.length || 1) - 1;
+            const status = (o.status || 'PROCESSING').toUpperCase();
+            items.push({
+              id: `order-${o.id || idx}`,
+              icon: '📦',
+              title: `${t('Order', 'ऑर्डर')} #${orderIdShort}`,
+              badge: status,
+              badgeColor: 'text-amber-800 bg-amber-100 border-amber-200',
+              desc: `${firstItem}${moreCount > 0 ? ` +${moreCount} more` : ''} • ${status === 'DELIVERED' ? t('Delivered', 'डिलीवर') : t('In Progress', 'प्रगति पर')}`,
+              time: o.createdAt ? new Date(o.createdAt).toLocaleDateString() : t('Recent', 'हाल ही में'),
+              onClick: () => {
+                setNotificationOpen(false);
+                router.push('/dashboard');
+              },
+            });
+          });
+        }
+
+        // 4. Real Wallet Balance Notification
+        if (userWalletBalance !== null && userWalletBalance > 0) {
+          items.push({
+            id: 'wallet-balance',
+            icon: '🪙',
+            title: t('Astro Wallet Active', 'एस्ट्रो वॉलेट सक्रिय'),
+            badge: `₹${userWalletBalance}`,
+            badgeColor: 'text-amber-800 bg-amber-100 border-amber-200',
+            desc: t(
+              `₹${userWalletBalance} balance available for 1-on-1 consultations & energized remedies.`,
+              `परामर्श व सिद्ध उपायों हेतु ₹${userWalletBalance} बैलेंस उपलब्ध है।`
+            ),
+            time: t('Available', 'उपलब्ध'),
+            onClick: () => {
+              setNotificationOpen(false);
+              router.push('/dashboard');
+            },
+          });
+        }
+
+        // 5. If user has no active bookings & orders, provide personalized user actions
+        if (items.length === (isProfileIncomplete ? 1 : 0)) {
+          items.push({
+            id: 'user-welcome-consult',
+            icon: '🗓️',
+            title: t('Book a Consultation', 'परामर्श बुक करें'),
+            badge: t('1-on-1', 'व्यक्तिगत'),
+            badgeColor: 'text-indigo-700 bg-indigo-100 border-indigo-200',
+            desc: t(
+              'Connect directly with Dr. Pandit Vishal Dubey for guidance on career, marriage & life path.',
+              'करियर, विवाह और जीवन मार्गदर्शन हेतु डॉ. पंडित विशाल दुबे से सीधा परामर्श लें।'
+            ),
+            time: t('Recommended', 'अनुशंसित'),
+            onClick: () => {
+              setNotificationOpen(false);
+              router.push('/appointment');
+            },
+          });
+          items.push({
+            id: 'user-welcome-store',
+            icon: '📿',
+            title: t('Explore Consecrated Store', 'सिद्ध वैदिक स्टोर'),
+            badge: t('Certified', 'प्रमाणित'),
+            badgeColor: 'text-amber-800 bg-amber-100 border-amber-200',
+            desc: t(
+              'Explore authentic energized Gemstones, Rudraksha malas, and Yantras consecrated in Varanasi.',
+              'वाराणसी में विधि-विधान से सिद्ध किए गए प्रामाणिक रत्न, रुद्राक्ष एवं यंत्र देखें।'
+            ),
+            time: t('Guide', 'मार्गदर्शन'),
+            onClick: () => {
+              setNotificationOpen(false);
+              router.push('/products');
+            },
+          });
+        }
+      } else {
+        // ADMIN or SUPERADMIN Role: Show pending consultation requests requiring approval
+        if (adminPendingBookings && adminPendingBookings.length > 0) {
+          adminPendingBookings.forEach((b: any, idx: number) => {
+            const customer = b.customerName || b.user?.name || t('Seeker', 'साधक');
+            const serviceName = b.serviceTitle || t('Vedic Consultation', 'वैदिक परामर्श');
+            const dateStr = b.scheduledDate || t('Scheduled Date', 'निर्धारित तिथि');
+            const timeSlot = b.scheduledTime ? ` (${b.scheduledTime})` : '';
+            items.push({
+              id: `admin-pending-${b.id || idx}`,
+              icon: '🗓️',
+              title: `${t('New Consultation Request', 'नया परामर्श अनुरोध')}: ${customer}`,
+              badge: t('Needs Approval', 'स्वीकृति आवश्यक'),
+              badgeColor: 'text-amber-800 bg-amber-100 border-amber-300',
+              desc: `${serviceName} • ${dateStr}${timeSlot}. ${t('Customer is waiting for your approval.', 'ग्राहक आपकी स्वीकृति की प्रतीक्षा कर रहा है।')}`,
+              time: t('Pending Approval', 'प्रतीक्षारत'),
+              onClick: () => {
+                setNotificationOpen(false);
+                router.push('/admin');
+              },
+            });
+          });
+        }
+
+        items.push({
+          id: 'admin-portal',
+          icon: '🛡️',
+          title: t('Admin Control Panel', 'व्यवस्थापक नियंत्रण'),
+          badge: user.role,
+          badgeColor: 'text-purple-700 bg-purple-100 border-purple-200',
+          desc: t(
+            'Manage all seeker consultations, order fulfillments, and content updates.',
+            'परामर्श, ऑर्डर और वेबसाइट सामग्री का प्रबंधन करें।'
+          ),
+          time: t('Active', 'सक्रिय'),
+          onClick: () => {
+            setNotificationOpen(false);
+            router.push('/admin');
+          },
+        });
+      }
+    } else {
+      // Guest (Not Logged In) - Relevant, actionable guidance
+      items.push({
+        id: 'guest-login',
+        icon: '🔐',
+        title: t('Sign In to Your Account', 'अपने खाते में साइन इन करें'),
+        badge: t('Quick Access', 'त्वरित पहुंच'),
+        badgeColor: 'text-amber-800 bg-amber-100 border-amber-200',
+        desc: t(
+          'Access your personalized consultations, order shipments, and Astro Wallet.',
+          'अपने परामर्श, ऑर्डर शिपमेंट और एस्ट्रो वॉलेट देखने के लिए साइन इन करें।'
+        ),
+        time: t('Account', 'खाता'),
+        onClick: () => {
+          setNotificationOpen(false);
+          setAuthMode('login');
+          setAuthModalOpen(true);
+        },
+      });
+      items.push({
+        id: 'guest-consultation',
+        icon: '🗓️',
+        title: t('1-on-1 Astrological Consultation', '1-ऑन-1 ज्योतिषीय परामर्श'),
+        badge: t('Book Now', 'बुक करें'),
+        badgeColor: 'text-indigo-700 bg-indigo-100 border-indigo-200',
+        desc: t(
+          'Direct confidential video or phone session with Dr. Pandit Vishal Dubey.',
+          'डॉ. पंडित विशाल दुबे के साथ व्यक्तिगत और गोपनीय परामर्श सत्र।'
+        ),
+        time: t('Available', 'उपलब्ध'),
+        onClick: () => {
+          setNotificationOpen(false);
+          router.push('/appointment');
+        },
+      });
+      items.push({
+        id: 'guest-store',
+        icon: '📿',
+        title: t('Vedic Consecrated Store', 'सिद्ध वैदिक स्टोर'),
+        badge: t('100% Authentic', 'प्रामाणिक'),
+        badgeColor: 'text-emerald-700 bg-emerald-100 border-emerald-200',
+        desc: t(
+          'Lab-certified gemstones, original Nepal Rudraksha & energised Yantras.',
+          'प्रमाणित रत्न, सिद्ध नेपाल रुद्राक्ष एवं वैदिक यंत्र।'
+        ),
+        time: t('Store', 'स्टोर'),
+        onClick: () => {
+          setNotificationOpen(false);
+          router.push('/products');
+        },
+      });
+    }
+
+    return items;
+  }, [user, isNormalSeeker, isProfileIncomplete, userBookings, userOrders, userWalletBalance, adminPendingBookings, t, router]);
+
   return (
     <>
       <header
@@ -693,7 +1070,8 @@ export const Navbar: React.FC = () => {
             </div>
 
             {/* Center: Clean Navigation Links Matching Reference Design */}
-            <div className="relative z-10 hidden lg:flex items-center gap-7 xl:gap-9 text-[#3B1E22] font-medium text-sm">
+            {!searchOpen && (
+              <div className="relative z-10 hidden lg:flex items-center gap-7 xl:gap-9 text-[#3B1E22] font-medium text-sm animate-fadeIn">
               {topNavLinks.map((link) => {
                 const isActive =
                   pathname === link.href ||
@@ -803,57 +1181,75 @@ export const Navbar: React.FC = () => {
                 )}
               </div>
             </div>
+            )}
 
             {/* Right: Search, Language Pill, Cart Badge & Sign Up Pill */}
-            <div className="relative z-10 flex items-center gap-3 sm:gap-3.5 md:gap-4">
-              {/* Search Icon with Expandable Input & Live Suggestions Dropdown */}
-              <div className="relative" ref={searchRef}>
-                {searchOpen ? (
+            <div className="relative z-10 flex items-center gap-2 sm:gap-3 md:gap-3.5 shrink-0">
+              {/* Search Icon with Non-Breaking Floating Overlay Input & Live Suggestions Dropdown */}
+              <div className="relative shrink-0 flex items-center" ref={searchRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchOpen((prev) => !prev);
+                    setNotificationOpen(false);
+                    setProfileDropdownOpen(false);
+                    setAboutDropdownOpen(false);
+                  }}
+                  className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                    searchOpen
+                      ? 'bg-amber-100/80 text-[#5B0D15]'
+                      : 'text-stone-700 hover:text-[#5B0D15] hover:bg-stone-100'
+                  }`}
+                  aria-label="Search"
+                  title={t('Search', 'खोजें')}
+                >
+                  <Search className="w-5 h-5 stroke-[1.8]" />
+                </button>
+
+                {searchOpen && (
                   <form
                     onSubmit={handleSearchSubmit}
-                    className="flex items-center bg-white/95 backdrop-blur-md border border-amber-300/90 rounded-full px-3 py-1.5 shadow-md animate-fadeIn"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-40 flex items-center bg-white/98 backdrop-blur-xl border border-amber-300 rounded-full px-3.5 py-1.5 shadow-2xl animate-fadeIn w-72 sm:w-80 md:w-96 text-[#3B1E22]"
+                    style={{
+                      boxShadow: '0 12px 36px -4px rgba(91, 13, 21, 0.2), 0 4px 12px -2px rgba(0, 0, 0, 0.08)',
+                    }}
                   >
                     <button
                       type="submit"
                       title={t('Search', 'खोजें')}
-                      className="text-[#4A262B] hover:text-[#5B0D15] mr-1.5 cursor-pointer focus:outline-none"
+                      className="text-[#4A262B] hover:text-[#5B0D15] mr-2 cursor-pointer focus:outline-none shrink-0"
                     >
                       <Search className="w-4 h-4 shrink-0" />
                     </button>
                     <input
                       type="text"
                       autoFocus
-                      placeholder={t('Search crystals, services...', 'क्रिस्टल या सेवाएं खोजें...')}
+                      placeholder={t('Search crystals, services, poojas...', 'क्रिस्टल, सेवाएं या पूजा खोजें...')}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-transparent text-xs text-[#3B1E22] placeholder-stone-400 focus:outline-none w-32 sm:w-44"
+                      className="bg-transparent text-xs sm:text-sm text-[#3B1E22] placeholder-stone-400 focus:outline-none flex-1 min-w-0"
                     />
+                    {searchQuery ? (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery('')}
+                        className="text-stone-400 hover:text-stone-700 p-0.5 ml-1 cursor-pointer shrink-0"
+                        title={t('Clear', 'साफ़ करें')}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => {
                         setSearchOpen(false);
                         setSearchQuery('');
                       }}
-                      className="text-stone-400 hover:text-stone-700 ml-1.5 cursor-pointer"
+                      className="text-xs text-stone-500 hover:text-[#5B0D15] font-medium ml-2 px-2.5 py-1 rounded-full hover:bg-stone-100 cursor-pointer shrink-0"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      {t('Cancel', 'रद्द करें')}
                     </button>
                   </form>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchOpen(true);
-                      setNotificationOpen(false);
-                      setProfileDropdownOpen(false);
-                      setAboutDropdownOpen(false);
-                    }}
-                    className="p-1.5 text-stone-700 hover:text-[#5B0D15] transition-colors cursor-pointer"
-                    aria-label="Search"
-                    title={t('Search', 'खोजें')}
-                  >
-                    <Search className="w-5 h-5 stroke-[1.8]" />
-                  </button>
                 )}
 
                 {/* Instant Live Search Results Popover */}
@@ -972,7 +1368,7 @@ export const Navbar: React.FC = () => {
               {/* Hindi / English Language Pill */}
               <button
                 onClick={toggleLanguage}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-xs border border-stone-200/90 hover:border-amber-300/80 text-stone-600 hover:text-[#5B0D15] shadow-2xs transition-all duration-200 cursor-pointer active:scale-95"
+                className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 hover:bg-white text-xs border border-stone-200/90 hover:border-amber-300/80 text-stone-600 hover:text-[#5B0D15] shadow-2xs transition-all duration-200 cursor-pointer active:scale-95"
                 title={language === 'en' ? 'हिन्दी में पढ़ें' : 'Read in English'}
                 aria-label="Toggle Language"
               >
@@ -987,7 +1383,7 @@ export const Navbar: React.FC = () => {
               </button>
 
               {/* Notification Bell in Top Right Corner */}
-              <div className="relative" ref={notificationRef}>
+              <div className="relative shrink-0" ref={notificationRef}>
                 <button
                   type="button"
                   onClick={() => {
@@ -1000,7 +1396,7 @@ export const Navbar: React.FC = () => {
                   title={t('Notifications', 'सूचनाएं')}
                 >
                   <Bell className="w-5 h-5 stroke-[1.8]" />
-                  {unreadNotificationsCount > 0 && (
+{mounted && unreadNotificationsCount > 0 && (
                     <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-[#E11D48] text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-xs">
                       {unreadNotificationsCount}
                     </span>
@@ -1025,7 +1421,7 @@ export const Navbar: React.FC = () => {
                         <span className="text-xs font-bold text-stone-900">
                           {t('Notifications', 'सूचनाएं')}
                         </span>
-                        {unreadNotificationsCount > 0 && (
+{unreadNotificationsCount > 0 && (
                           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
                             {unreadNotificationsCount} {t('new', 'नई')}
                           </span>
@@ -1036,7 +1432,7 @@ export const Navbar: React.FC = () => {
                       </span>
                     </div>
 
-                    <div className="space-y-1.5 text-xs max-h-72 overflow-y-auto">
+<div className="space-y-1.5 text-xs max-h-72 overflow-y-auto">
                       {/* Actionable Profile Incomplete Notification Card for normal seekers if applicable */}
                       {isProfileIncomplete && (
                         <div
@@ -1086,8 +1482,20 @@ export const Navbar: React.FC = () => {
                         </p>
                       )}
                     </div>
+                    <div className="pt-2 border-t border-stone-200/80 text-center">
+                      <Link
+                        href={user ? (user.role === 'ADMIN' || user.role === 'SUPERADMIN' ? '/admin' : '/dashboard') : '/appointment'}
+                        prefetch={true}
+                        onClick={() => setNotificationOpen(false)}
+                        className="text-[11px] font-bold text-[#5B0D15] hover:text-[#3B1E22] hover:underline"
+                      >
+                        {user
+                          ? t('View All in Dashboard →', 'डैशबोर्ड में सभी देखें →')
+                          : t('Explore Consultations & Store →', 'परामर्श एवं स्टोर देखें →')}
+                      </Link>
                     </div>
-                  </>
+                  </div>
+                </>
                 )}
               </div>
 
@@ -1100,7 +1508,7 @@ export const Navbar: React.FC = () => {
                     router.prefetch('/cart');
                   } catch {}
                 }}
-                className="p-1.5 text-stone-700 hover:text-[#5B0D15] transition-colors relative cursor-pointer"
+                className="shrink-0 p-1.5 text-stone-700 hover:text-[#5B0D15] transition-colors relative cursor-pointer"
                 aria-label="Shopping Cart"
                 title={t('Cart', 'कार्ट')}
               >
@@ -1114,7 +1522,7 @@ export const Navbar: React.FC = () => {
 
               {/* User Avatar Menu OR Dedicated "Sign Up" Pill Button */}
               {mounted && user ? (
-                <div className="relative" ref={profileDropdownRef}>
+                <div className="relative shrink-0" ref={profileDropdownRef}>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1244,7 +1652,7 @@ export const Navbar: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center">
+                <div className="flex items-center shrink-0">
                   <button
                     onClick={() => {
                       setAuthMode('register');
@@ -1260,7 +1668,7 @@ export const Navbar: React.FC = () => {
               {/* Mobile Menu Hamburger */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-1.5 rounded-full text-[#3B1E22] hover:text-[#5B0D15] focus:outline-none cursor-pointer"
+                className="shrink-0 lg:hidden p-1.5 rounded-full text-[#3B1E22] hover:text-[#5B0D15] focus:outline-none cursor-pointer"
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -1454,12 +1862,12 @@ export const Navbar: React.FC = () => {
               </span>
               <span className="hidden sm:inline text-amber-100">
                 {t(
-                  'Your Vedic Kundli profile is incomplete! Add your Date, Time & Place of birth for accurate planetary predictions.',
-                  'आपकी जन्म कुंडली प्रोफाइल अधूरी है! सटीक भविष्यफल हेतु जन्म तिथि, समय व स्थान दर्ज करें।'
+                  'Your Vedic profile is incomplete! Add your Date, Time & Place of birth for personalized astrological consultations and remedies.',
+                  'आपकी वैदिक प्रोफाइल अधूरी है! सटीक फलादेश व उपायों हेतु जन्म समय, तिथि व स्थान दर्ज करें।'
                 )}
               </span>
               <span className="sm:hidden text-amber-100 truncate">
-                {t('Complete your birth profile for Kundli', 'जन्म प्रोफाइल पूर्ण करें')}
+                {t('Complete your birth details', 'जन्म विवरण पूर्ण करें')}
               </span>
             </div>
 

@@ -254,14 +254,14 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
                 {quantityInCart === 0 ? (
                   <button
                     onClick={handleAddToCart}
-                    className="flex-1 py-3 px-6 rounded-full text-xs font-bold shadow-md transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer bg-[#800000] hover:bg-[#5B0D15] text-white hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-98"
+                    className="flex-1 h-[46px] px-6 rounded-full text-xs font-bold shadow-md transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer bg-[#800000] hover:bg-[#5B0D15] text-white hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-98"
                   >
                     <ShoppingCart className="w-4 h-4 text-amber-300" />
                     <span>{t('Add to Cart', 'कार्ट में जोड़ें')}</span>
                   </button>
                 ) : (
                   /* Clean (- 1 +) Stepper matching product card */
-                  <div className="flex-1 flex items-center justify-between bg-[#5B0D15] text-white rounded-full px-3 py-1.5 shadow-md border border-amber-400/40">
+                  <div className="flex-1 h-[46px] flex items-center justify-between bg-[#5B0D15] text-white rounded-full px-3 shadow-md border border-amber-400/40">
                     <button
                       type="button"
                       onClick={() => {

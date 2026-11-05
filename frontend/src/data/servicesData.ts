@@ -493,6 +493,9 @@ export function generateWorkingHourSlots(durationMinutes = 30): string[] {
 export const DEFAULT_GURUJI_MEET_LINK = 'https://meet.google.com/zrg-vfdz-jky';
 
 export function formatGoogleMeetLink(bookingId?: string): string {
+  if (bookingId && bookingId.trim().startsWith('http')) {
+    return bookingId.trim();
+  }
   const configured = typeof process !== 'undefined'
     ? (process.env.NEXT_PUBLIC_GURUJI_MEET_LINK || process.env.GURUJI_MEET_LINK)
     : undefined;

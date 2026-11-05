@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsBoolean, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsArray, IsNumber } from 'class-validator';
 
 export interface BlogPost {
   id: string;
@@ -318,11 +318,92 @@ export interface AdminActivityRecord {
   adminName: string;
   adminEmail: string;
   adminRole: string;
-  contentType: 'BLOG' | 'GALLERY';
+  contentType: 'BLOG' | 'GALLERY' | 'REVIEW';
   itemId: string;
   itemTitle: string;
   action: 'CREATE' | 'UPDATE' | 'PUBLISH' | 'UNPUBLISH' | 'DELETE' | 'UPLOAD_IMAGE';
   timestamp: string;
   summary: string;
   details?: Record<string, any>;
+}
+
+export type ReviewStatus = 'PENDING' | 'PUBLISHED' | 'REJECTED';
+
+export interface ReviewItem {
+  id: string;
+  bookingId?: string;
+  userId?: string;
+  userName: string;
+  userEmail?: string;
+  userPhone?: string;
+  city?: string;
+  cityHi?: string;
+  country?: string;
+  countryHi?: string;
+  rating: number;
+  serviceName: string;
+  serviceNameHi?: string;
+  review: string;
+  reviewHi?: string;
+  status: ReviewStatus;
+  isVerifiedClient: boolean;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt?: string;
+  publishedBy?: { id: string; name: string; email: string };
+}
+
+export class CreateReviewDto {
+  @IsOptional()
+  @IsString()
+  bookingId?: string;
+
+  @IsString()
+  userName: string;
+
+  @IsOptional()
+  @IsString()
+  userEmail?: string;
+
+  @IsOptional()
+  @IsString()
+  userPhone?: string;
+
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  cityHi?: string;
+
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @IsOptional()
+  @IsString()
+  countryHi?: string;
+
+  @IsNumber()
+  rating: number;
+
+  @IsString()
+  serviceName: string;
+
+  @IsOptional()
+  @IsString()
+  serviceNameHi?: string;
+
+  @IsString()
+  review: string;
+
+  @IsOptional()
+  @IsString()
+  reviewHi?: string;
+}
+
+export class UpdateReviewStatusDto {
+  @IsString()
+  status: ReviewStatus;
 }

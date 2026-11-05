@@ -34,7 +34,6 @@ import { formatGoogleMeetLink, getCombinedOrders, getCombinedBookings } from './
 import DashboardOverviewTab from './components/DashboardOverviewTab';
 import DashboardBookingsTab from './components/DashboardBookingsTab';
 import DashboardOrdersTab from './components/DashboardOrdersTab';
-import DashboardKundliTab from './components/DashboardKundliTab';
 import DashboardSettingsTab from './components/DashboardSettingsTab';
 
 export default function DashboardPage() {
@@ -43,30 +42,7 @@ export default function DashboardPage() {
   const pathname = usePathname();
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<DashboardTab>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const search = new URLSearchParams(window.location.search);
-        const tabParam = (search.get('tab') || localStorage.getItem('astrovd_dashboard_active_tab')) as DashboardTab | null;
-        if (tabParam && ['overview', 'consultations', 'orders', 'kundli', 'settings'].includes(tabParam)) {
-          return tabParam;
-        }
-      } catch (e) {}
-    }
-    return 'overview';
-  });
-
-  const switchDashboardTab = (tab: DashboardTab) => {
-    setActiveTab(tab);
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('astrovd_dashboard_active_tab', tab);
-        const url = new URL(window.location.href);
-        url.searchParams.set('tab', tab);
-        window.history.replaceState(null, '', url.toString());
-      } catch (e) {}
-    }
-  };
+  const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
 
   // Core Data States
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -87,72 +63,26 @@ export default function DashboardPage() {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
-  const [editKundliModalOpen, setEditKundliModalOpen] = useState(false);
 
   // Lock body scroll and prevent background scroll chaining for dashboard overlays
-  useScrollLock(mobileSidebarOpen || editKundliModalOpen);
+  useScrollLock(mobileSidebarOpen);
 
   useEffect(() => {
-    if (!mobileSidebarOpen && !editKundliModalOpen) return;
+    if (!mobileSidebarOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (mobileSidebarOpen) setMobileSidebarOpen(false);
-        if (editKundliModalOpen) setEditKundliModalOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mobileSidebarOpen, editKundliModalOpen]);
+  }, [mobileSidebarOpen]);
 
-  const notificationsRef = useRef<HTMLDivElement>(null);
-  const profileDropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      const target = e.target as Node;
-      if (notificationsRef.current && !notificationsRef.current.contains(target)) {
-        setNotificationsOpen(false);
-      }
-      if (profileDropdownRef.current && !profileDropdownRef.current.contains(target)) {
-        setProfileDropdownOpen(false);
-      }
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setNotificationsOpen(false);
-        setProfileDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-
-  // Edit Kundli Form Fields
-  const [editName, setEditName] = useState('');
-  const [editDob, setEditDob] = useState('');
-  const [editTob, setEditTob] = useState('');
-  const [editPob, setEditPob] = useState('');
-  const [editZodiac, setEditZodiac] = useState('');
-  const [savingKundli, setSavingKundli] = useState(false);
-  const [kundliMsg, setKundliMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const clearDashboardData = () => {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem('astrovd_dashboard_active_tab');
-      } catch (e) {}
-    }
     setProfile(null);
     setWallet(null);
     setTransactions([]);
@@ -160,7 +90,7 @@ export default function DashboardPage() {
     setOrders([]);
   };
 
-  const loadDashboardData = useCallback(async () => {
+  const loadDashboardData = useCallback(async (isSilent = false) => {
     const token = getAuthToken();
     const stored = getStoredUser();
 
@@ -196,92 +126,104 @@ export default function DashboardPage() {
       return;
     }
 
-    setLoading(true);
-    setBookingsLoading(true);
-    setOrdersLoading(true);
-    setTxLoading(true);
+    if (!isSilent) {
+      setLoading(true);
+      setBookingsLoading(true);
+      setOrdersLoading(true);
+      setTxLoading(true);
+    }
 
     try {
-      // 1. Fetch User Profile
-      const userRes = await fetch(`${backendUrl}/api/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (userRes.ok) {
-        const uData = await userRes.json();
-        const u = uData.user || uData;
-        setProfile(u);
-        setEditName(u.name || '');
-        setEditDob(u.dateOfBirth || '');
-        setEditTob(u.timeOfBirth || '');
-        setEditPob(u.placeOfBirth || '');
-        setEditZodiac(u.zodiacSign || '');
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Parallel data fetching for instant response across all widgets
+      const [userSettled, walletSettled, txSettled, bookingsSettled, ordersSettled] = await Promise.allSettled([
+        fetch(`${backendUrl}/api/users/me`, { headers }),
+        fetch(`${backendUrl}/api/users/me/wallet`, { headers }),
+        fetch(`${backendUrl}/api/users/me/wallet/transactions?page=1&limit=20`, { headers }),
+        fetch(`${backendUrl}/api/appointments/my-bookings`, { headers }),
+        fetch(`${backendUrl}/api/orders/my-orders`, { headers }),
+      ]);
+
+      // 1. User Profile
+      if (userSettled.status === 'fulfilled' && userSettled.value.ok) {
+        try {
+          const uData = await userSettled.value.json();
+          const u = uData.user || uData;
+          setProfile(u);
+        } catch (e) {
+          if (stored) setProfile(stored);
+        }
       } else if (stored) {
         setProfile(stored);
       }
 
-      // 2. Fetch Wallet Balance (Canonical: /api/users/me/wallet)
-      try {
-        const wRes = await fetch(`${backendUrl}/api/users/me/wallet`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (wRes.ok) {
-          const wData = await wRes.json();
+      // 2. Wallet Balance
+      if (walletSettled.status === 'fulfilled' && walletSettled.value.ok) {
+        try {
+          const wData = await walletSettled.value.json();
           setWallet(wData);
-        }
-      } catch (e) {}
+        } catch (e) {}
+      }
 
-      // 3. Fetch Transactions (Canonical: /api/users/me/wallet/transactions)
-      try {
-        const txRes = await fetch(`${backendUrl}/api/users/me/wallet/transactions?page=1&limit=20`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (txRes.ok) {
-          const txData = await txRes.json();
+      // 3. Transactions
+      if (txSettled.status === 'fulfilled' && txSettled.value.ok) {
+        try {
+          const txData = await txSettled.value.json();
           setTransactions(txData.transactions || []);
-        }
-      } catch (e) {}
+        } catch (e) {}
+      }
+      setTxLoading(false);
 
-      // 4. Fetch Consultation Bookings (Primary: /api/appointments/my-bookings)
-      try {
-        let bRes = await fetch(`${backendUrl}/api/appointments/my-bookings`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!bRes.ok) {
-          bRes = await fetch(`${backendUrl}/api/bookings/my`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-        }
-        if (bRes.ok) {
-          const bData = await bRes.json();
+      // 4. Consultation Bookings
+      if (bookingsSettled.status === 'fulfilled' && bookingsSettled.value.ok) {
+        try {
+          const bData = await bookingsSettled.value.json();
           const list = Array.isArray(bData) ? bData : (bData.bookings || []);
           setBookings(getCombinedBookings(list));
-        } else {
+        } catch (e) {
           setBookings(getCombinedBookings([]));
         }
-      } catch (e) {
-        setBookings(getCombinedBookings([]));
-      }
-
-      // 5. Fetch Orders (Primary: /api/orders/my-orders)
-      try {
-        let oRes = await fetch(`${backendUrl}/api/orders/my-orders`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!oRes.ok) {
-          oRes = await fetch(`${backendUrl}/api/orders/my`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+      } else {
+        try {
+          const altRes = await fetch(`${backendUrl}/api/bookings/my`, { headers });
+          if (altRes.ok) {
+            const bData = await altRes.json();
+            const list = Array.isArray(bData) ? bData : (bData.bookings || []);
+            setBookings(getCombinedBookings(list));
+          } else {
+            setBookings(getCombinedBookings([]));
+          }
+        } catch (e) {
+          setBookings(getCombinedBookings([]));
         }
-        if (oRes.ok) {
-          const oData = await oRes.json();
+      }
+      setBookingsLoading(false);
+
+      // 5. Orders
+      if (ordersSettled.status === 'fulfilled' && ordersSettled.value.ok) {
+        try {
+          const oData = await ordersSettled.value.json();
           const backendOrders = Array.isArray(oData) ? oData : (oData.orders || []);
           setOrders(getCombinedOrders(backendOrders));
-        } else {
+        } catch (e) {
           setOrders(getCombinedOrders([]));
         }
-      } catch (e) {
-        setOrders(getCombinedOrders([]));
+      } else {
+        try {
+          const altRes = await fetch(`${backendUrl}/api/orders/my`, { headers });
+          if (altRes.ok) {
+            const oData = await altRes.json();
+            const backendOrders = Array.isArray(oData) ? oData : (oData.orders || []);
+            setOrders(getCombinedOrders(backendOrders));
+          } else {
+            setOrders(getCombinedOrders([]));
+          }
+        } catch (e) {
+          setOrders(getCombinedOrders([]));
+        }
       }
+      setOrdersLoading(false);
     } catch (err) {
       console.error('Error loading dashboard data:', err);
     } finally {
@@ -295,11 +237,11 @@ export default function DashboardPage() {
   useEffect(() => {
     loadDashboardData();
 
-    // Query string and localStorage tab sync on mount
+    // Query string tab sync
     if (typeof window !== 'undefined') {
       const search = new URLSearchParams(window.location.search);
-      const tabParam = (search.get('tab') || localStorage.getItem('astrovd_dashboard_active_tab')) as DashboardTab | null;
-      if (tabParam && ['overview', 'consultations', 'orders', 'kundli', 'settings'].includes(tabParam)) {
+      const tabParam = search.get('tab') as DashboardTab | null;
+      if (tabParam && ['overview', 'consultations', 'orders', 'settings'].includes(tabParam)) {
         setActiveTab(tabParam);
       }
     }
@@ -321,7 +263,7 @@ export default function DashboardPage() {
     const pollInterval = setInterval(() => {
       const token = getAuthToken();
       if (token) {
-        loadDashboardData();
+        loadDashboardData(true);
       }
     }, 10000);
 
@@ -363,30 +305,6 @@ export default function DashboardPage() {
     return false;
   };
 
-  const handleSaveKundli = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSavingKundli(true);
-    setKundliMsg(null);
-
-    const success = await handleUpdateProfile({
-      name: editName,
-      dateOfBirth: editDob,
-      timeOfBirth: editTob,
-      placeOfBirth: editPob,
-      zodiacSign: editZodiac,
-    });
-
-    setSavingKundli(false);
-    if (success) {
-      setKundliMsg({ type: 'success', text: t('Birth coordinates updated successfully!', 'जन्म विवरण सफलतापूर्वक सहेजा गया!') });
-      setTimeout(() => {
-        setEditKundliModalOpen(false);
-        setKundliMsg(null);
-      }, 1200);
-    } else {
-      setKundliMsg({ type: 'error', text: t('Failed to update coordinates.', 'विवरण सहेजने में त्रुटि हुई।') });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] flex flex-col text-[#3B1E22] selection:bg-amber-400">
@@ -402,7 +320,7 @@ export default function DashboardPage() {
             </h2>
             <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-md mx-auto">
               {t(
-                'Please sign in to view your verified Janam Kundli, access video consultation passes, and track orders.',
+                'Please sign in to manage your consultation bookings, access video consultation passes, and track orders.',
                 'अपनी जन्म कुंडली देखने एवं परामर्श सत्रों में सम्मिलित होने हेतु लॉगिन करें।'
               )}
             </p>
@@ -462,7 +380,7 @@ export default function DashboardPage() {
               <div>
                 <button
                   type="button"
-                  onClick={() => switchDashboardTab('overview')}
+                  onClick={() => setActiveTab('overview')}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                     activeTab === 'overview'
                       ? 'bg-[#FDF2F4] text-[#8B1D2C]'
@@ -482,7 +400,7 @@ export default function DashboardPage() {
                 <div className="space-y-0.5">
                   <button
                     type="button"
-                    onClick={() => switchDashboardTab('consultations')}
+                    onClick={() => setActiveTab('consultations')}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                       activeTab === 'consultations'
                         ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
@@ -506,7 +424,7 @@ export default function DashboardPage() {
 
                   <button
                     type="button"
-                    onClick={() => switchDashboardTab('orders')}
+                    onClick={() => setActiveTab('orders')}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                       activeTab === 'orders'
                         ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
@@ -530,26 +448,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Group 3: VEDIC ASTROLOGY */}
-              <div>
-                <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
-                  {t('Vedic Astrology', 'वैदिक ज्योतिष')}
-                </div>
-                <div className="space-y-0.5">
-                  <button
-                    type="button"
-                    onClick={() => switchDashboardTab('kundli')}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                      activeTab === 'kundli'
-                        ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
-                        : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
-                    }`}
-                  >
-                    <Compass className={`w-4 h-4 shrink-0 transition-colors ${activeTab === 'kundli' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
-                    <span>{t('Janam Kundli', 'जन्म कुंडली')}</span>
-                  </button>
-                </div>
-              </div>
+
 
 
               {/* Group 5: SETTINGS */}
@@ -560,7 +459,7 @@ export default function DashboardPage() {
                 <div className="space-y-0.5">
                   <button
                     type="button"
-                    onClick={() => switchDashboardTab('settings')}
+                    onClick={() => setActiveTab('settings')}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                       activeTab === 'settings'
                         ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
@@ -628,7 +527,7 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      switchDashboardTab('overview');
+                      setActiveTab('overview');
                       setMobileSidebarOpen(false);
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
@@ -649,7 +548,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          switchDashboardTab('consultations');
+                          setActiveTab('consultations');
                           setMobileSidebarOpen(false);
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
@@ -676,7 +575,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          switchDashboardTab('orders');
+                          setActiveTab('orders');
                           setMobileSidebarOpen(false);
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
@@ -702,28 +601,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <div className="px-3 mb-1.5 text-[10px] font-bold tracking-wider text-stone-400 uppercase">
-                      {t('Vedic Astrology', 'वैदिक ज्योतिष')}
-                    </div>
-                    <div className="space-y-0.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          switchDashboardTab('kundli');
-                          setMobileSidebarOpen(false);
-                        }}
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                          activeTab === 'kundli'
-                            ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
-                            : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
-                        }`}
-                      >
-                        <Compass className={`w-4 h-4 shrink-0 transition-colors ${activeTab === 'kundli' ? 'text-[#8B1D2C]' : 'text-stone-400'}`} />
-                        <span>{t('Janam Kundli', 'जन्म कुंडली')}</span>
-                      </button>
-                    </div>
-                  </div>
+
 
 
                   <div>
@@ -734,7 +612,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          switchDashboardTab('settings');
+                          setActiveTab('settings');
                           setMobileSidebarOpen(false);
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
@@ -786,7 +664,6 @@ export default function DashboardPage() {
                     {activeTab === 'overview' && t('Dashboard Overview', 'डैशबोर्ड अवलोकन')}
                     {activeTab === 'consultations' && t('My Consultations', 'परामर्श सत्र')}
                     {activeTab === 'orders' && t('Sacred Orders', 'पावन ऑर्डर्स')}
-                    {activeTab === 'kundli' && t('Janam Kundli', 'जन्म कुंडली')}
                     {activeTab === 'settings' && t('Account Settings', 'खाता सेटिंग्स')}
                   </span>
                 </div>
@@ -807,13 +684,10 @@ export default function DashboardPage() {
               {/* Right Header Items: Notifications & User Profile */}
               <div className="flex items-center gap-4">
                 {/* Notification Bell */}
-                <div className="relative" ref={notificationsRef}>
+                <div className="relative">
                   <button
                     type="button"
-                    onClick={() => {
-                      setNotificationsOpen((prev) => !prev);
-                      setProfileDropdownOpen(false);
-                    }}
+                    onClick={() => setNotificationsOpen(!notificationsOpen)}
                     className="w-10 h-10 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-600 relative cursor-pointer transition-colors"
                     title={t('Notifications', 'सूचनाएं')}
                     aria-label="Notifications"
@@ -827,60 +701,49 @@ export default function DashboardPage() {
                   </button>
 
                   {notificationsOpen && (
-                    <>
-                      {/* Backdrop overlay for closing on click outside / blank space */}
-                      <div
-                        className="fixed inset-0 z-20 cursor-default"
-                        onClick={() => setNotificationsOpen(false)}
-                        aria-hidden="true"
-                      />
-                      <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-30 space-y-3 animate-fadeIn">
-                        <div className="flex items-center justify-between pb-2 border-b border-stone-100">
-                          <span className="text-xs font-bold text-stone-900">{t('Notifications', 'सूचनाएं')}</span>
-                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                            {t('Live Updates', 'सक्रिय')}
-                          </span>
-                        </div>
-                        <div className="space-y-1.5 text-xs max-h-72 overflow-y-auto">
-                          {bookings.slice(0, 3).map((b, idx) => (
-                            <div
-                              key={b.id || idx}
-                              onClick={() => {
-                                switchDashboardTab('consultations');
-                                setNotificationsOpen(false);
-                              }}
-                              className="p-2.5 rounded-xl cursor-pointer border border-transparent hover:bg-stone-50 transition-all flex items-start gap-2.5"
-                            >
-                              <span className="w-2 h-2 rounded-full mt-1.5 shrink-0 bg-[#E11D48]" />
-                              <div className="flex-1 min-w-0">
-                                <div className="font-bold text-stone-900 truncate">
-                                  {b.serviceType || t('Consultation Scheduled', 'परामर्श सत्र')}
-                                </div>
-                                <div className="text-[11px] text-stone-500 truncate">
-                                  {b.bookingDate} {b.bookingTime ? `• ${b.bookingTime}` : ''}
-                                </div>
+                    <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl shadow-xl border border-stone-200 p-4 z-30 space-y-3 animate-fadeIn">
+                      <div className="flex items-center justify-between pb-2 border-b border-stone-100">
+                        <span className="text-xs font-bold text-stone-900">{t('Notifications', 'सूचनाएं')}</span>
+                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                          {t('Live Updates', 'सक्रिय')}
+                        </span>
+                      </div>
+                      <div className="space-y-1.5 text-xs max-h-72 overflow-y-auto">
+                        {bookings.slice(0, 3).map((b, idx) => (
+                          <div
+                            key={b.id || idx}
+                            onClick={() => {
+                              setActiveTab('consultations');
+                              setNotificationsOpen(false);
+                            }}
+                            className="p-2.5 rounded-xl cursor-pointer border border-transparent hover:bg-stone-50 transition-all flex items-start gap-2.5"
+                          >
+                            <span className="w-2 h-2 rounded-full mt-1.5 shrink-0 bg-[#E11D48]" />
+                            <div className="flex-1 min-w-0">
+                              <div className="font-bold text-stone-900 truncate">
+                                {b.serviceType || t('Consultation Scheduled', 'परामर्श सत्र')}
+                              </div>
+                              <div className="text-[11px] text-stone-500 truncate">
+                                {b.bookingDate} {b.bookingTime ? `• ${b.bookingTime}` : ''}
                               </div>
                             </div>
-                          ))}
-                          {bookings.length === 0 && (
-                            <p className="text-stone-400 text-center py-4 text-xs">
-                              {t('No new notifications', 'कोई नई सूचना नहीं है')}
-                            </p>
-                          )}
-                        </div>
+                          </div>
+                        ))}
+                        {bookings.length === 0 && (
+                          <p className="text-stone-400 text-center py-4 text-xs">
+                            {t('No new notifications', 'कोई नई सूचना नहीं है')}
+                          </p>
+                        )}
                       </div>
-                    </>
+                    </div>
                   )}
                 </div>
 
                 {/* Profile Badge (Initials in dark maroon circle, Name, Role 'Seeker / Devotee', ChevronDown) */}
-                <div className="relative" ref={profileDropdownRef}>
+                <div className="relative">
                   <button
                     type="button"
-                    onClick={() => {
-                      setProfileDropdownOpen((prev) => !prev);
-                      setNotificationsOpen(false);
-                    }}
+                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                     className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-full hover:bg-stone-50 transition-all cursor-pointer"
                   >
                     <div className="w-9 h-9 rounded-full bg-[#5B0D15] text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
@@ -898,58 +761,40 @@ export default function DashboardPage() {
                   </button>
 
                   {profileDropdownOpen && (
-                    <>
-                      {/* Backdrop overlay for closing on click outside / blank space */}
-                      <div
-                        className="fixed inset-0 z-20 cursor-default"
-                        onClick={() => setProfileDropdownOpen(false)}
-                        aria-hidden="true"
-                      />
-                      <div className="absolute right-0 top-12 w-52 bg-white rounded-2xl shadow-xl border border-stone-200 py-1.5 z-30 text-xs text-stone-700 animate-fadeIn">
-                        <div className="px-4 py-2 border-b border-stone-100">
-                          <div className="font-bold text-stone-900 truncate">{profile.name}</div>
-                          <div className="text-[10px] text-stone-400 truncate">{profile.email || 'seeker@astrovd.com'}</div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            switchDashboardTab('kundli');
-                            setProfileDropdownOpen(false);
-                          }}
-                          className="w-full px-4 py-2 hover:bg-stone-50 flex items-center gap-2 text-left cursor-pointer"
-                        >
-                          <Compass className="w-3.5 h-3.5 text-amber-700" />
-                          <span>{t('Janam Kundli', 'जन्म कुंडली')}</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            switchDashboardTab('settings');
-                            setProfileDropdownOpen(false);
-                          }}
-                          className="w-full px-4 py-2 hover:bg-stone-50 flex items-center gap-2 text-left cursor-pointer"
-                        >
-                          <Settings className="w-3.5 h-3.5 text-stone-500" />
-                          <span>{t('Account Settings', 'खाता सेटिंग्स')}</span>
-                        </button>
-
-                        <div className="my-1 border-t border-stone-100" />
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setProfileDropdownOpen(false);
-                            handleLogout();
-                          }}
-                          className="w-full px-4 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2 text-left font-medium cursor-pointer"
-                        >
-                          <LogOut className="w-3.5 h-3.5" />
-                          <span>{t('Sign Out', 'लॉगआउट')}</span>
-                        </button>
+                    <div className="absolute right-0 top-12 w-52 bg-white rounded-2xl shadow-xl border border-stone-200 py-1.5 z-30 text-xs text-stone-700 animate-fadeIn">
+                      <div className="px-4 py-2 border-b border-stone-100">
+                        <div className="font-bold text-stone-900 truncate">{profile.name}</div>
+                        <div className="text-[10px] text-stone-400 truncate">{profile.email || 'seeker@astrovd.com'}</div>
                       </div>
-                    </>
+
+
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('settings');
+                          setProfileDropdownOpen(false);
+                        }}
+                        className="w-full px-4 py-2 hover:bg-stone-50 flex items-center gap-2 text-left cursor-pointer"
+                      >
+                        <Settings className="w-3.5 h-3.5 text-stone-500" />
+                        <span>{t('Account Settings', 'खाता सेटिंग्स')}</span>
+                      </button>
+
+                      <div className="my-1 border-t border-stone-100" />
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          handleLogout();
+                        }}
+                        className="w-full px-4 py-2 hover:bg-rose-50 text-rose-600 flex items-center gap-2 text-left font-medium cursor-pointer"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>{t('Sign Out', 'लॉगआउट')}</span>
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -962,8 +807,7 @@ export default function DashboardPage() {
                   profile={profile}
                   bookings={bookings}
                   orders={orders}
-                  onTabChange={(tab) => switchDashboardTab(tab)}
-                  onEditKundli={() => setEditKundliModalOpen(true)}
+                  onTabChange={(tab) => setActiveTab(tab)}
                   formatGoogleMeetLink={formatGoogleMeetLink}
                   t={t}
                 />
@@ -974,7 +818,7 @@ export default function DashboardPage() {
                   bookings={bookings}
                   bookingsLoading={bookingsLoading}
                   profile={profile}
-                  onOpenEditProfile={() => setEditKundliModalOpen(true)}
+                  onOpenEditProfile={() => setActiveTab('settings')}
                   t={t}
                 />
               )}
@@ -987,13 +831,7 @@ export default function DashboardPage() {
                 />
               )}
 
-              {activeTab === 'kundli' && (
-                <DashboardKundliTab
-                  profile={profile}
-                  onEditKundli={() => setEditKundliModalOpen(true)}
-                  t={t}
-                />
-              )}
+
 
               {activeTab === 'settings' && (
                 <DashboardSettingsTab
@@ -1003,149 +841,6 @@ export default function DashboardPage() {
                 />
               )}
             </main>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Kundli Coordinates Modal */}
-      {editKundliModalOpen && (
-        <div
-          data-lenis-prevent="true"
-          onWheel={(e) => e.stopPropagation()}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/60 backdrop-blur-xs animate-fadeIn modal-backdrop-contain overscroll-contain"
-        >
-          <div
-            data-lenis-prevent="true"
-            className="relative w-full max-w-lg bg-white rounded-3xl border border-stone-200 shadow-2xl p-6 sm:p-7 space-y-5 max-h-[90vh] overflow-y-auto modal-scroll-container overscroll-contain"
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-stone-100">
-              <div className="flex items-center gap-2">
-                <Compass className="w-5 h-5 text-amber-700" />
-                <h3 className="font-serif text-lg font-bold text-[#3B1E22]">
-                  {t('Edit Janam Kundli Coordinates', 'जन्म कुंडली विवरण संशोधित करें')}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditKundliModalOpen(false)}
-                className="p-1 rounded-lg text-stone-400 hover:text-stone-700"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {kundliMsg && (
-              <div
-                className={`p-3 rounded-xl text-xs font-semibold ${
-                  kundliMsg.type === 'success'
-                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                    : 'bg-rose-50 text-rose-800 border border-rose-200'
-                }`}
-              >
-                {kundliMsg.text}
-              </div>
-            )}
-
-            <form onSubmit={handleSaveKundli} className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-stone-600 block mb-1">
-                  {t('Full Name (as per Janam Kundli)', 'पूरा नाम')}
-                </label>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  required
-                  className="w-full px-3.5 py-2 text-xs rounded-xl bg-stone-50 border border-stone-200 focus:border-amber-400 focus:bg-white outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="text-xs font-bold text-stone-600 block mb-1">
-                    {t('Date of Birth', 'जन्म तिथि')}
-                  </label>
-                  <input
-                    type="date"
-                    value={editDob}
-                    onChange={(e) => setEditDob(e.target.value)}
-                    required
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-stone-50 border border-stone-200 focus:border-amber-400 focus:bg-white outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-stone-600 block mb-1">
-                    {t('Time of Birth (IST)', 'जन्म समय')}
-                  </label>
-                  <input
-                    type="time"
-                    value={editTob}
-                    onChange={(e) => setEditTob(e.target.value)}
-                    required
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-stone-50 border border-stone-200 focus:border-amber-400 focus:bg-white outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="text-xs font-bold text-stone-600 block mb-1">
-                    {t('Place of Birth (City / Town)', 'जन्म स्थान (शहर)')}
-                  </label>
-                  <input
-                    type="text"
-                    value={editPob}
-                    onChange={(e) => setEditPob(e.target.value)}
-                    placeholder="e.g. Varanasi, UP"
-                    required
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-stone-50 border border-stone-200 focus:border-amber-400 focus:bg-white outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-stone-600 block mb-1">
-                    {t('Zodiac Sign / Rashi', 'राशि')}
-                  </label>
-                  <select
-                    value={editZodiac}
-                    onChange={(e) => setEditZodiac(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-stone-50 border border-stone-200 focus:border-amber-400 focus:bg-white outline-none cursor-pointer"
-                  >
-                    <option value="">{t('Select Rashi...', 'राशि चुनें...')}</option>
-                    <option value="Aries">Aries (मेष)</option>
-                    <option value="Taurus">Taurus (वृषभ)</option>
-                    <option value="Gemini">Gemini (मिथुन)</option>
-                    <option value="Cancer">Cancer (कर्क)</option>
-                    <option value="Leo">Leo (सिंह)</option>
-                    <option value="Virgo">Virgo (कन्या)</option>
-                    <option value="Libra">Libra (तुला)</option>
-                    <option value="Scorpio">Scorpio (वृश्चिक)</option>
-                    <option value="Sagittarius">Sagittarius (धनु)</option>
-                    <option value="Capricorn">Capricorn (मकर)</option>
-                    <option value="Aquarius">Aquarius (कुंभ)</option>
-                    <option value="Pisces">Pisces (मीन)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setEditKundliModalOpen(false)}
-                  className="px-4 py-2 rounded-full bg-stone-100 text-stone-600 text-xs font-semibold"
-                >
-                  {t('Cancel', 'रद्द करें')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingKundli}
-                  className="px-6 py-2 rounded-full bg-[#5B0D15] hover:bg-[#72111c] text-white text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-60"
-                >
-                  {savingKundli ? t('Updating...', 'अपडेट हो रहा है...') : t('Save Coordinates', 'सहेजें')}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

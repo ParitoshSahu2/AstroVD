@@ -31,7 +31,7 @@ export interface Transaction {
   createdAt: string;
 }
 
-export type DashboardTab = 'overview' | 'consultations' | 'orders' | 'kundli' | 'settings';
+export type DashboardTab = 'overview' | 'consultations' | 'orders' | 'settings';
 
 export const ZODIAC_HINDI_MAP: Record<string, string> = {
   Aries: 'मेष',

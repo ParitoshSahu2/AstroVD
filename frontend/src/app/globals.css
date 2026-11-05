@@ -232,3 +232,30 @@ body.scroll-locked {
 }
 
 
+
+
+/* Custom Admin Notification Scrollbar */
+.admin-notif-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+  overflow-y: scroll !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-notif-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-notif-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-notif-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.admin-notif-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

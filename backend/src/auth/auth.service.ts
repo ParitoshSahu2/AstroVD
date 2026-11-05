@@ -81,6 +81,7 @@ export class AuthService {
       id: 'usr-paritosh-1',
       name: 'Paritosh Sahu',
       email: 'paritoshsahu9826@gmail.com',
+      phone: '+917089390239',
       passwordHash: commonPasswordHash,
       role: 'USER',
       status: 'ACTIVE',
@@ -101,6 +102,7 @@ export class AuthService {
       id: 'usr-superadmin',
       name: process.env.SUPERADMIN_NAME || 'Yash Patidar',
       email: superadminEmail,
+      phone: '+919876543210',
       passwordHash: bcrypt.hashSync(superadminPass, 10),
       role: 'SUPERADMIN',
       status: 'ACTIVE',
@@ -130,6 +132,7 @@ export class AuthService {
       id: 'usr-admin-vishal',
       name: process.env.ADMIN_NAME || 'Dr. Pandit Vishal Dubey',
       email: adminEmail,
+      phone: '+919826012345',
       passwordHash: bcrypt.hashSync(adminPass, 10),
       role: 'ADMIN',
       status: 'ACTIVE',
@@ -421,6 +424,7 @@ export class AuthService {
     userId: string,
     updateData: {
       name?: string;
+      phone?: string;
       dateOfBirth?: string;
       timeOfBirth?: string;
       placeOfBirth?: string;
@@ -433,6 +437,7 @@ export class AuthService {
         where: { id: userId },
         data: {
           ...(updateData.name ? { name: updateData.name.trim() } : {}),
+          ...(updateData.phone !== undefined ? { phone: updateData.phone ? updateData.phone.trim() : undefined } : {}),
           ...(updateData.dateOfBirth ? { dateOfBirth: updateData.dateOfBirth.trim() } : {}),
           ...(updateData.timeOfBirth ? { timeOfBirth: updateData.timeOfBirth.trim() } : {}),
           ...(updateData.placeOfBirth ? { placeOfBirth: updateData.placeOfBirth.trim() } : {}),
@@ -448,6 +453,7 @@ export class AuthService {
         this.users.set(key, {
           ...u,
           ...(updateData.name ? { name: updateData.name.trim() } : {}),
+          ...(updateData.phone !== undefined ? { phone: updateData.phone ? updateData.phone.trim() : undefined } : {}),
           ...(updateData.dateOfBirth ? { dateOfBirth: updateData.dateOfBirth.trim() } : {}),
           ...(updateData.timeOfBirth ? { timeOfBirth: updateData.timeOfBirth.trim() } : {}),
           ...(updateData.placeOfBirth ? { placeOfBirth: updateData.placeOfBirth.trim() } : {}),

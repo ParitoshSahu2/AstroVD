@@ -110,7 +110,7 @@ model Booking {
   scheduledTime           String
   durationMinutes         Int      @default(15)
   totalCost               Float
-  status                  String   @default("CONFIRMED") // "PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"
+  status                  String   @default("PENDING") // "PENDING", "APPROVED", "PENDING_PAYMENT", "CONFIRMED", "COMPLETED", "CANCELLED", "REJECTED"
   notes                   String?
   customerName            String?
   customerPhone           String?

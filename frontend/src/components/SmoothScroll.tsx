@@ -1,11 +1,25 @@
 'use client';
 
 import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import Lenis from 'lenis';
 
 export function SmoothScroll() {
+  const pathname = usePathname();
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    // Do not run Lenis on backoffice dashboard or admin routes where native scrolling and controls are required
+    if (pathname && (pathname.startsWith('/admin') || pathname.startsWith('/dashboard'))) {
+      if ((window as any).__lenis) {
+        try {
+          (window as any).__lenis.destroy();
+          delete (window as any).__lenis;
+        } catch {}
+      }
+      return;
+    }
 
     // Respect reduced-motion preferences
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -84,8 +98,7 @@ export function SmoothScroll() {
       lenis.destroy();
       delete (window as any).__lenis;
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }
-

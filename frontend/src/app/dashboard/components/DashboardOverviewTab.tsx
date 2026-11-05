@@ -19,16 +19,19 @@ import {
   RefreshCw,
   ExternalLink,
   Truck,
+  Lock,
+  CreditCard,
 } from 'lucide-react';
 import { UserProfile, DashboardTab, formatZodiacName, getUserInitials } from '../types';
 import { resolveProductImage } from '../utils';
+import { getMeetingTimeStatus } from '../../../data/servicesData';
 
 interface DashboardOverviewTabProps {
   profile: UserProfile;
   bookings: any[];
   orders: any[];
   onTabChange: (tab: DashboardTab) => void;
-  onEditKundli: () => void;
+  onEditKundli?: () => void;
   formatGoogleMeetLink: (bookingId: string) => string;
   t: (en: string, hi: string) => string;
 }
@@ -181,7 +184,7 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
             </h1>
             <p className="text-stone-300 text-xs sm:text-sm leading-relaxed">
               {t(
-                'Welcome to your personal astrological portal. Access verified birth Kundli coordinates, consecrated live consultations, and energized Vedic store artifacts.',
+                'Welcome to your personal astrological portal. Access sacred appointments, consecrated live consultations, and energized Vedic store artifacts.',
                 'आपके पावन वैदिक कक्ष में आपका स्वागत है। अपनी जन्म कुंडली, पूज्य गुरुजी के साथ लाइव परामर्श एवं सिद्ध उत्पादों का विवरण यहां देखें।'
               )}
             </p>
@@ -208,9 +211,9 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
 
       {/* 2. Top 3 Metric KPI Cards (Admin Style) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Metric 1: Zodiac Sign / Kundli */}
+        {/* Metric 1: Zodiac Sign / Rashi */}
         <div
-          onClick={() => onTabChange('kundli')}
+          onClick={() => onTabChange('settings')}
           className="p-5 rounded-2xl bg-white border border-stone-200/80 shadow-xs hover:border-amber-300 hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
         >
           <div className="flex items-center justify-between mb-3">
@@ -304,9 +307,16 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                   <Sparkles className="w-3 h-3 text-[#5B0D15]" />
                   <span>{t('Next Scheduled Session', 'अगला निर्धारित परामर्श')}</span>
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase">
-                  {nextBooking.status || 'CONFIRMED'}
-                </span>
+                {nextBooking.status === 'CONFIRMED' ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase">
+                    {t('Confirmed', 'पुष्टीकृत')}
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold bg-amber-100 text-amber-900 border border-amber-300 uppercase flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-amber-700" />
+                    {t('Awaiting Approval', 'स्वीकृति प्रतीक्षारत')}
+                  </span>
+                )}
                 <span className="text-xs font-bold text-[#5B0D15] bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
                   Dakshina: ₹{Number(nextBooking.totalCost || nextBooking.fee || 2100).toLocaleString('en-IN')}
                 </span>
@@ -334,19 +344,83 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
             </div>
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-              <a
-                href={formatGoogleMeetLink(nextBooking.id || nextBooking._id)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 py-3 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
-              >
-                <Video className="w-4 h-4" />
-                <span>{t('Join Google Meet Room', 'गूगल मीट कक्ष में जुड़ें')}</span>
-                <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-              </a>
+              {nextBooking.status === 'COMPLETED' ? (
+                <button
+                  type="button"
+                  onClick={() => onTabChange('consultations')}
+                  className="px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                >
+                  <Star className="w-3.5 h-3.5 fill-white" />
+                  <span>{t('Rate & Review Consultation', 'रेटिंग व समीक्षा')}</span>
+                </button>
+              ) : nextBooking.status === 'CONFIRMED' ? (() => {
+                const meetStatus = getMeetingTimeStatus(
+                  nextBooking.bookingDate || nextBooking.scheduledDate || nextBooking.date,
+                  nextBooking.slot || nextBooking.scheduledTime || nextBooking.time,
+                  30
+                );
+                const meetUrl = (nextBooking.meetLink && nextBooking.meetLink.startsWith('http')) ? nextBooking.meetLink : formatGoogleMeetLink(nextBooking.id || nextBooking._id);
+
+                if (meetStatus.isJoinable) {
+                  return (
+                    <a
+                      href={meetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-6 py-3 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
+                    >
+                      <Video className="w-4 h-4" />
+                      <span>{t('Join Meeting', 'मीटिंग में जुड़ें')}</span>
+                    </a>
+                  );
+                }
+
+                if (meetStatus.hasEnded) {
+                  return (
+                    <span className="px-5 py-2.5 rounded-full bg-stone-100 text-stone-500 font-medium text-xs border border-stone-200 text-center">
+                      {t('Session Concluded', 'सत्र समाप्त')}
+                    </span>
+                  );
+                }
+
+                return (
+                  <button
+                    type="button"
+                    disabled
+                    className="px-5 py-2.5 rounded-full bg-stone-100 text-stone-400 font-semibold text-xs border border-stone-200 cursor-not-allowed flex items-center justify-center gap-2"
+                    title={t('Unlocks 5 minutes prior to appointment', 'परामर्श समय से 5 मिनट पहले सक्रिय होगा')}
+                  >
+                    <Lock className="w-3.5 h-3.5 text-stone-400" />
+                    <span>{t('Join Meeting (Opens 5 Min Before)', 'मीटिंग से जुड़ें (5 मिनट पूर्व)')}</span>
+                  </button>
+                );
+              })() : (nextBooking.status === 'APPROVED' || nextBooking.status === 'PENDING_PAYMENT') ? (
+                <button
+                  type="button"
+                  onClick={() => onTabChange('consultations')}
+                  className="px-6 py-3 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#851622] to-[#5B0D15] text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 animate-pulse"
+                >
+                  <CreditCard className="w-4 h-4 text-amber-300" />
+                  <span>{t('Proceed to Pay & Confirm', 'दक्षिणा भुगतान कर पुष्ट करें')}</span>
+                </button>
+              ) : (nextBooking.status === 'CANCELLED' || nextBooking.status === 'REJECTED') ? (
+                <button
+                  type="button"
+                  onClick={() => onTabChange('consultations')}
+                  className="px-5 py-2.5 rounded-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>{t('Reschedule (Guruji Unavailable)', 'पुनर्निर्धारित करें (गुरुजी अनुपलब्ध)')}</span>
+                </button>
+              ) : (nextBooking.status === 'PENDING' || nextBooking.status === 'REVIEWING') ? (
+                <div className="px-5 py-2.5 rounded-full bg-amber-50 text-amber-800 text-xs font-semibold border border-amber-300 flex items-center justify-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-amber-600" />
+                  <span>{t('Waiting for Admin Approval', 'व्यवस्थापक स्वीकृति की प्रतीक्षा')}</span>
+                </div>
+              ) : null}
               <button
                 onClick={() => onTabChange('consultations')}
-                className="px-5 py-3 rounded-full border border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700 font-semibold text-xs transition-all text-center"
+                className="px-5 py-3 rounded-full border border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700 font-semibold text-xs transition-all text-center cursor-pointer"
               >
                 {t('View All Bookings', 'सभी परामर्श देखें')}
               </button>
@@ -355,10 +429,8 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
         </div>
       )}
 
-      {/* 4. Split Grid: Recent Orders & Kundli Snapshot */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Recent Orders Tracker */}
-        <div className="lg:col-span-7 bg-white rounded-3xl border border-stone-200/80 p-5 sm:p-6 shadow-xs space-y-4">
+      {/* 4. Recent Sacred Orders Tracker */}
+      <div className="w-full bg-white rounded-3xl border border-stone-200/80 p-5 sm:p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-stone-100">
             <div className="flex items-center gap-2">
               <Package className="w-5 h-5 text-amber-700" />
@@ -498,57 +570,7 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
           )}
         </div>
 
-        {/* Right Column: Janam Kundli Quick Snapshot */}
-        <div className="lg:col-span-5 bg-white rounded-3xl border border-stone-200/80 p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-stone-100">
-            <div className="flex items-center gap-2">
-              <Compass className="w-5 h-5 text-amber-700" />
-              <h3 className="font-serif text-lg font-bold text-[#3B1E22]">
-                {t('Janam Kundli Coordinates', 'जन्म कुंडली विवरण')}
-              </h3>
-            </div>
-            <button
-              onClick={onEditKundli}
-              className="text-xs font-semibold text-[#5B0D15] hover:underline"
-            >
-              {t('Edit', 'संशोधन')}
-            </button>
-          </div>
 
-          <div className="space-y-3 text-xs">
-            <div className="flex items-center justify-between py-1 border-b border-stone-100">
-              <span className="text-stone-500">{t('Full Name', 'नाम')}</span>
-              <span className="font-semibold text-stone-900">{profile.name}</span>
-            </div>
-            <div className="flex items-center justify-between py-1 border-b border-stone-100">
-              <span className="text-stone-500">{t('Date of Birth', 'जन्म तिथि')}</span>
-              <span className="font-semibold text-stone-900">{profile.dateOfBirth || t('Not added', 'अप्राप्त')}</span>
-            </div>
-            <div className="flex items-center justify-between py-1 border-b border-stone-100">
-              <span className="text-stone-500">{t('Time of Birth', 'जन्म समय')}</span>
-              <span className="font-semibold text-stone-900">{profile.timeOfBirth || t('Not added', 'अप्राप्त')}</span>
-            </div>
-            <div className="flex items-center justify-between py-1 border-b border-stone-100">
-              <span className="text-stone-500">{t('Place of Birth', 'जन्म स्थान')}</span>
-              <span className="font-semibold text-stone-900">{profile.placeOfBirth || t('Not added', 'अप्राप्त')}</span>
-            </div>
-            <div className="flex items-center justify-between py-1">
-              <span className="text-stone-500">{t('Zodiac / Rashi', 'राशि')}</span>
-              <span className="font-semibold text-amber-900">{formatZodiacName(profile.zodiacSign)}</span>
-            </div>
-          </div>
-
-          <div className="pt-2">
-            <button
-              onClick={() => onTabChange('kundli')}
-              className="w-full py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-200/80 font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <Compass className="w-4 h-4 text-amber-800" />
-              <span>{t('View Detailed Horoscope Parameters', 'संपूर्ण कुंडली चक्र देखें')}</span>
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

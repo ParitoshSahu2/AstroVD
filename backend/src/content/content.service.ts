@@ -9,6 +9,10 @@ import {
   CreateGalleryItemDto,
   UpdateGalleryItemDto,
   AdminActivityRecord,
+  ReviewItem,
+  ReviewStatus,
+  CreateReviewDto,
+  UpdateReviewStatusDto,
 } from './content.types.js';
 import { JwtPayload } from '../auth/decorators/current-user.decorator.js';
 
@@ -19,10 +23,12 @@ export class ContentService {
   private readonly blogFilePath = path.join(this.dataDir, 'blog.json');
   private readonly galleryFilePath = path.join(this.dataDir, 'gallery.json');
   private readonly activityFilePath = path.join(this.dataDir, 'activity.json');
+  private readonly reviewsFilePath = path.join(this.dataDir, 'reviews.json');
 
   private blogPosts: BlogPost[] = [];
   private galleryItems: GalleryItem[] = [];
   private activityRecords: AdminActivityRecord[] = [];
+  private reviews: ReviewItem[] = [];
 
   constructor() {
     this.ensureDataDirectory();
@@ -78,6 +84,20 @@ export class ContentService {
     } else {
       this.activityRecords = [];
     }
+      // 4. Customer Reviews
+    if (fs.existsSync(this.reviewsFilePath)) {
+      try {
+        const raw = fs.readFileSync(this.reviewsFilePath, 'utf-8');
+        this.reviews = JSON.parse(raw);
+      } catch (err) {
+        this.logger.error('Failed to parse reviews.json, initializing seeds', err);
+        this.reviews = this.getInitialReviewSeeds();
+        this.saveReviews();
+      }
+    } else {
+      this.reviews = this.getInitialReviewSeeds();
+      this.saveReviews();
+    }
   }
 
   private saveBlogPosts() {
@@ -107,7 +127,7 @@ export class ContentService {
   // Activity Logger
   public logActivity(
     user: JwtPayload,
-    contentType: 'BLOG' | 'GALLERY',
+    contentType: 'BLOG' | 'GALLERY' | 'REVIEW',
     itemId: string,
     itemTitle: string,
     action: 'CREATE' | 'UPDATE' | 'PUBLISH' | 'UNPUBLISH' | 'DELETE' | 'UPLOAD_IMAGE',
@@ -683,4 +703,208 @@ export class ContentService {
       },
     ];
   }
+
+  private saveReviews() {
+    try {
+      fs.writeFileSync(this.reviewsFilePath, JSON.stringify(this.reviews, null, 2), 'utf-8');
+    } catch (err) {
+      this.logger.error('Error writing reviews.json', err);
+    }
+  }
+
+  // Customer & Admin Review Operations
+  public getPublicReviews(): ReviewItem[] {
+    return this.reviews.filter((r) => r.status === 'PUBLISHED');
+  }
+
+  public getAllReviews(user?: JwtPayload): ReviewItem[] {
+    return [...this.reviews];
+  }
+
+  public createReview(dto: CreateReviewDto, user?: JwtPayload): ReviewItem {
+    const now = new Date().toISOString();
+    const newReview: ReviewItem = {
+      id: `rev-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      bookingId: dto.bookingId,
+      userId: user?.sub,
+      userName: dto.userName || user?.name || 'Devotee',
+      userEmail: dto.userEmail || user?.email,
+      userPhone: dto.userPhone,
+      city: dto.city || 'India',
+      cityHi: dto.cityHi,
+      country: dto.country || 'India',
+      countryHi: dto.countryHi,
+      rating: Math.max(1, Math.min(5, Number(dto.rating) || 5)),
+      serviceName: dto.serviceName || 'Vedic Consultation',
+      serviceNameHi: dto.serviceNameHi,
+      review: dto.review,
+      reviewHi: dto.reviewHi || dto.review,
+      status: 'PENDING',
+      isVerifiedClient: true,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    this.reviews.unshift(newReview);
+    this.saveReviews();
+
+    if (user) {
+      this.logActivity(
+        user,
+        'REVIEW',
+        newReview.id,
+        newReview.serviceName,
+        'CREATE',
+        `New consultation review submitted by ${newReview.userName} for ${newReview.serviceName}`
+      );
+    }
+    return newReview;
+  }
+
+  public updateReviewStatus(id: string, status: ReviewStatus, user: JwtPayload): ReviewItem {
+    const rev = this.reviews.find((r) => r.id === id);
+    if (!rev) {
+      throw new NotFoundException(`Review with ID ${id} not found`);
+    }
+
+    rev.status = status;
+    rev.updatedAt = new Date().toISOString();
+
+    if (status === 'PUBLISHED') {
+      rev.publishedAt = new Date().toISOString();
+      rev.publishedBy = {
+        id: user.sub,
+        name: user.name,
+        email: user.email,
+      };
+      this.logActivity(
+        user,
+        'REVIEW',
+        rev.id,
+        rev.serviceName,
+        'PUBLISH',
+        `Published review from ${rev.userName} on website for ${rev.serviceName}`
+      );
+    } else {
+      this.logActivity(
+        user,
+        'REVIEW',
+        rev.id,
+        rev.serviceName,
+        'UNPUBLISH',
+        `Updated review status to ${status} for ${rev.userName}`
+      );
+    }
+
+    this.saveReviews();
+    return rev;
+  }
+
+  public deleteReview(id: string, user: JwtPayload): { success: boolean; id: string } {
+    const idx = this.reviews.findIndex((r) => r.id === id);
+    if (idx === -1) {
+      throw new NotFoundException(`Review with ID ${id} not found`);
+    }
+
+    const [deleted] = this.reviews.splice(idx, 1);
+    this.saveReviews();
+
+    this.logActivity(
+      user,
+      'REVIEW',
+      deleted.id,
+      deleted.serviceName,
+      'DELETE',
+      `Deleted review submitted by ${deleted.userName}`
+    );
+
+    return { success: true, id };
+  }
+
+  private getInitialReviewSeeds(): ReviewItem[] {
+    const now = new Date().toISOString();
+    return [
+      {
+        id: 'rev-seed-1',
+        userName: 'Rajesh & Meenakshi Iyer',
+        city: 'Dubai',
+        cityHi: 'दुबई',
+        country: 'UAE',
+        countryHi: 'यूएई',
+        rating: 5,
+        review:
+          'Dr. Pandit Vishal Dubey’s Kundli Milan analysis for our daughter was extraordinarily deep. He accurately pinpointed planetary dasha periods and guided us with simple, auspicious remedies. Highly recommended worldwide!',
+        reviewHi:
+          'हमारी सुपुत्री के लिए डॉ. पंडित विशाल दुबे जी का कुंडली मिलान एवं ग्रह गोचर विश्लेषण अत्यंत सटीक और गहरा रहा। उन्होंने दशा काल का अचूक विश्लेषण कर अत्यंत सरल व शास्त्रोक्त उपाय सुझाए। हम हृदय से आभारी हैं!',
+        serviceName: 'Kundli Milan & Marriage Guidance',
+        serviceNameHi: 'कुंडली मिलान व विवाह मार्गदर्शन',
+        status: 'PUBLISHED',
+        isVerifiedClient: true,
+        createdAt: now,
+        updatedAt: now,
+        publishedAt: now,
+      },
+      {
+        id: 'rev-seed-2',
+        userName: 'Siddharth Varma',
+        city: 'Sydney',
+        cityHi: 'सिडनी',
+        country: 'Australia',
+        countryHi: 'ऑस्ट्रेलिया',
+        rating: 5,
+        review:
+          'Madhuri Ji’s intuitive tarot session provided unprecedented clarity during a pivotal career crossroads. Her predictions and spiritual counsel were precise and profoundly reassuring.',
+        reviewHi:
+          'करियर के असमंजस भरे मोड़ पर माधुरी जी का इंट्यूटिव टैरो परामर्श अप्रत्याशित स्पष्टता लेकर आया। उनके द्वारा बताए गए संकेत और आध्यात्मिक मार्गदर्शन अत्यंत सटीक और आत्मबल बढ़ाने वाले रहे।',
+        serviceName: 'Tarot Consultation with Madhuri Ji',
+        serviceNameHi: 'माधुरी जी संग टैरो परामर्श',
+        status: 'PUBLISHED',
+        isVerifiedClient: true,
+        createdAt: now,
+        updatedAt: now,
+        publishedAt: now,
+      },
+      {
+        id: 'rev-seed-3',
+        userName: 'Pooja Agarwal',
+        city: 'Mumbai',
+        cityHi: 'मुंबई',
+        country: 'India',
+        countryHi: 'भारत',
+        rating: 5,
+        review:
+          'We had the Maha Mrityunjaya and Navgrah Shanti Havan conducted through AstroVD. The pandits followed complete Vedic protocols with pure devotion. The peace we felt was immediate.',
+        reviewHi:
+          'हमने AstroVD के माध्यम से महामृत्युंजय एवं नवग्रह शांति हवन संपन्न कराया। काशी के विद्वान आचार्यों ने संपूर्ण वैदिक विधि-विधान और शुद्ध भाव से पूजन किया। घर में अपार शांति का अनुभव हुआ।',
+        serviceName: 'Vedic Yagya & Pooja Rituals',
+        serviceNameHi: 'वैदिक यज्ञ एवं पूजा अनुष्ठान',
+        status: 'PUBLISHED',
+        isVerifiedClient: true,
+        createdAt: now,
+        updatedAt: now,
+        publishedAt: now,
+      },
+      {
+        id: 'rev-seed-4',
+        userName: 'Vikram Malhotra',
+        city: 'London',
+        cityHi: 'लंदन',
+        country: 'UK',
+        countryHi: 'यूके',
+        rating: 5,
+        review:
+          'The Tiger Eye Bracelet and Yellow Sapphire recommended according to my Janam Kundli arrived with lab certification. The vibrational shift and focus in my business have been incredible.',
+        reviewHi:
+          'मेरी जन्म कुंडली के अनुसार सुझाया गया टाइगर आई ब्रेसलेट एवं पीला पुखराज सरकारी लैब प्रमाण-पत्र सहित प्राप्त हुआ। धारण करने के उपरांत व्यापार में एकाग्रता और सकारात्मक ऊर्जा का अद्भुत संचार हुआ।',
+        serviceName: 'Energized Gemstones & Astro Store',
+        serviceNameHi: 'प्राण-प्रतिष्ठित रत्न व आध्यात्मिक स्टोर',
+        status: 'PUBLISHED',
+        isVerifiedClient: true,
+        createdAt: now,
+        updatedAt: now,
+        publishedAt: now,
+      },
+    ];
+  }
+
 }

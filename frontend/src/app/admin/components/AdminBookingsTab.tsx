@@ -75,7 +75,7 @@ export default function AdminBookingsTab({
   const handleQuickStatus = async (b: any, targetStatus: string) => {
     setActiveMenuId(null);
     if (targetStatus === 'CANCELLED') {
-      const ok = window.confirm(`Are you sure you want to cancel booking ${b.id}?`);
+      const ok = window.confirm(`Mark Guruji unavailable for consultation ${b.id}? The devotee will be notified to choose another date or time.`);
       if (!ok) return;
     }
 
@@ -200,8 +200,10 @@ export default function AdminBookingsTab({
               className="px-3 py-2 rounded-xl border border-stone-300 bg-white text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-amber-500/40"
             >
               <option value="ALL">All Statuses</option>
-              <option value="CONFIRMED">CONFIRMED</option>
               <option value="PENDING">PENDING</option>
+              <option value="APPROVED">APPROVED</option>
+              <option value="PENDING_PAYMENT">PENDING PAYMENT</option>
+              <option value="CONFIRMED">CONFIRMED</option>
               <option value="COMPLETED">COMPLETED</option>
               <option value="CANCELLED">CANCELLED</option>
               <option value="REJECTED">REJECTED</option>
@@ -487,25 +489,26 @@ export default function AdminBookingsTab({
 
                         {/* 6. Actions (Single Compact Three-Dot Menu '⋮') */}
                         <td className="py-3 px-3.5 text-right align-middle">
-                          <div className="relative inline-block text-left">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveMenuId((prev) => (prev === b.id ? null : b.id));
-                              }}
-                              className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
-                                activeMenuId === b.id
-                                  ? 'bg-stone-100 text-stone-900 border-stone-300'
-                                  : 'border-transparent text-stone-400 hover:text-stone-700 hover:bg-stone-100 hover:border-stone-200'
-                              }`}
-                              title="Booking actions"
-                              aria-label={`Actions for booking ${shortId}`}
-                              aria-haspopup="true"
-                              aria-expanded={activeMenuId === b.id}
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <div className="relative inline-block text-left">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveMenuId((prev) => (prev === b.id ? null : b.id));
+                                }}
+                                className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                  activeMenuId === b.id
+                                    ? 'bg-stone-100 text-stone-900 border-stone-300'
+                                    : 'border-transparent text-stone-400 hover:text-stone-700 hover:bg-stone-100 hover:border-stone-200'
+                                }`}
+                                title="Booking actions"
+                                aria-label={`Actions for booking ${shortId}`}
+                                aria-haspopup="true"
+                                aria-expanded={activeMenuId === b.id}
+                              >
+                                <MoreVertical className="w-4 h-4" />
+                              </button>
 
                             {activeMenuId === b.id && (
                               <>
@@ -536,7 +539,7 @@ export default function AdminBookingsTab({
 
                                   {canMeet && (
                                     <a
-                                      href={b.meetLink && b.meetLink.includes('meet.google.com') ? b.meetLink : formatGoogleMeetLink(b.id)}
+                                      href={b.meetLink && b.meetLink.startsWith('http') ? b.meetLink : formatGoogleMeetLink(b.meetLink || b.id)}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       onClick={() => setActiveMenuId(null)}
@@ -547,6 +550,16 @@ export default function AdminBookingsTab({
                                     </a>
                                   )}
 
+                                  {b.status === 'PENDING' && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleQuickStatus(b, 'APPROVED')}
+                                      className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-emerald-50 hover:text-emerald-900 text-emerald-800 transition-colors cursor-pointer font-bold"
+                                    >
+                                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                      <span>Approve Consultation</span>
+                                    </button>
+                                  )}
                                   {canConfirm && (
                                     <button
                                       type="button"
@@ -558,6 +571,17 @@ export default function AdminBookingsTab({
                                     </button>
                                   )}
 
+                                  {(b.status === 'APPROVED' || b.status === 'CONFIRMED') && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleQuickStatus(b, 'COMPLETED')}
+                                      className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-blue-50 hover:text-blue-900 text-blue-700 transition-colors cursor-pointer font-bold"
+                                    >
+                                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                                      <span>Mark as Completed</span>
+                                    </button>
+                                  )}
+
                                   {canCancel && (
                                     <button
                                       type="button"
@@ -565,7 +589,7 @@ export default function AdminBookingsTab({
                                       className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-rose-50 text-rose-700 transition-colors cursor-pointer border-t border-stone-100"
                                     >
                                       <XCircle className="w-3.5 h-3.5 text-rose-500" />
-                                      <span>Cancel Booking</span>
+                                      <span>Guruji Unavailable</span>
                                     </button>
                                   )}
 
@@ -585,6 +609,7 @@ export default function AdminBookingsTab({
                                 </div>
                               </>
                             )}
+                          </div>
                           </div>
                         </td>
                       </tr>
@@ -688,19 +713,18 @@ export default function AdminBookingsTab({
                           </span>
                         </span>
 
-                        {/* Three-Dot Menu Button */}
-                        <div className="relative inline-block text-left">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveMenuId((prev) => (prev === b.id ? null : b.id));
-                            }}
-                            className="p-1 rounded-md text-stone-400 hover:text-stone-700 hover:bg-stone-100"
-                            title="Actions"
-                          >
-                            <MoreVertical className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="relative inline-block text-left">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveMenuId((prev) => (prev === b.id ? null : b.id));
+                              }}
+                              className="p-1 rounded-md text-stone-400 hover:text-stone-700 hover:bg-stone-100"
+                              title="Actions"
+                            >
+                              <MoreVertical className="w-3.5 h-3.5" />
+                            </button>
 
                           {activeMenuId === b.id && (
                             <>
@@ -731,7 +755,7 @@ export default function AdminBookingsTab({
 
                                 {canMeet && (
                                   <a
-                                    href={b.meetLink && b.meetLink.includes('meet.google.com') ? b.meetLink : formatGoogleMeetLink(b.id)}
+                                    href={b.meetLink && b.meetLink.startsWith('http') ? b.meetLink : formatGoogleMeetLink(b.meetLink || b.id)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={() => setActiveMenuId(null)}
@@ -740,6 +764,17 @@ export default function AdminBookingsTab({
                                     <Video className="w-3.5 h-3.5 text-emerald-600" />
                                     <span>Join Meeting</span>
                                   </a>
+                                )}
+
+                                {b.status === 'PENDING' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleQuickStatus(b, 'APPROVED')}
+                                    className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-emerald-50 text-emerald-800 font-bold"
+                                  >
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>Approve</span>
+                                  </button>
                                 )}
 
                                 {canConfirm && (
@@ -753,6 +788,17 @@ export default function AdminBookingsTab({
                                   </button>
                                 )}
 
+                                {(b.status === 'APPROVED' || b.status === 'CONFIRMED') && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleQuickStatus(b, 'COMPLETED')}
+                                    className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-blue-50 text-blue-700 font-bold"
+                                  >
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                                    <span>Mark Completed</span>
+                                  </button>
+                                )}
+
                                 {canCancel && (
                                   <button
                                     type="button"
@@ -760,7 +806,7 @@ export default function AdminBookingsTab({
                                     className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-rose-50 text-rose-700 border-t border-stone-100"
                                   >
                                     <XCircle className="w-3.5 h-3.5 text-rose-500" />
-                                    <span>Cancel</span>
+                                    <span>Guruji Unavailable</span>
                                   </button>
                                 )}
 

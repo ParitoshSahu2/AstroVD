@@ -104,7 +104,7 @@ export class UsersService {
         id: userId,
         name: 'Paritosh Sahu',
         email: currentUser?.email || 'paritoshsahu9826@gmail.com',
-        phone: (currentUser as any)?.phone || null,
+        phone: (currentUser as any)?.phone || '+917089390239',
         emailVerified: true,
         phoneVerified: true,
         role: currentUser?.role || 'USER',
@@ -159,6 +159,9 @@ export class UsersService {
 
     if (dto.name !== undefined) {
       data.name = dto.name.trim();
+    }
+    if (dto.phone !== undefined) {
+      data.phone = dto.phone?.trim() || null;
     }
     if (dto.dateOfBirth !== undefined) {
       data.dateOfBirth = dto.dateOfBirth?.trim() || null;
@@ -219,6 +222,7 @@ export class UsersService {
 
     const resolvedName = data.name || updatedUser?.name || authUpdated?.name || currentUser?.name || 'Paritosh Sahu';
     const resolvedEmail = updatedUser?.email || authUpdated?.email || currentUser?.email || 'paritoshsahu9826@gmail.com';
+    const resolvedPhone = data.phone !== undefined ? data.phone : (updatedUser?.phone || authUpdated?.phone || (currentUser as any)?.phone || '+917089390239');
 
     return {
       message: 'Profile updated successfully.',
@@ -226,7 +230,7 @@ export class UsersService {
         id: userId,
         name: resolvedName,
         email: resolvedEmail,
-        phone: updatedUser?.phone || authUpdated?.phone || '+917089390239',
+        phone: resolvedPhone,
         emailVerified: true,
         phoneVerified: true,
         role: currentUser?.role || 'USER',

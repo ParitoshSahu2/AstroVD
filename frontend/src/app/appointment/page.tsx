@@ -40,16 +40,21 @@ import {
   getServiceById,
   ServiceItem,
   PUBLISHED_TIME_SLOTS,
-  generateWorkingHourSlots,
   GURUJI_WORKING_HOURS,
   formatGoogleMeetLink,
   getMeetingTimeStatus,
+  parseTimeToMinutes,
 } from '../../data/servicesData';
 import { SERVICES_TRANSLATIONS } from '../../data/servicesTranslations';
 
 function AppointmentContent() {
   const { t, language } = useLanguage();
   const [, setTick] = useState(0);
+
+  const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(
+    /\/api\/?$/,
+    '',
+  );
 
   useEffect(() => {
     const timer = setInterval(() => setTick((v) => v + 1), 30000);
@@ -73,20 +78,31 @@ function AppointmentContent() {
 
   const durationMinutes = 30;
 
-  const DEFAULT_FALLBACK_SLOTS = generateWorkingHourSlots(30).map((time: string) => ({
+  const DEFAULT_FALLBACK_SLOTS = PUBLISHED_TIME_SLOTS.map((time: string) => ({
     time,
     isAvailable: true,
+    isPublished: true,
+    status: 'AVAILABLE' as const,
+    reason: 'Available',
   }));
   const [date, setDate] = useState<string>(tomorrowStr);
   const [timeSlot, setTimeSlot] = useState<string>('');
   const selectedTimeSlotRef = useRef<string>('');
 
   // Keep ref synchronized with state to prevent stale closure during live polling
+
   useEffect(() => {
     selectedTimeSlotRef.current = timeSlot;
   }, [timeSlot]);
   const [availableSlots, setAvailableSlots] = useState<
-    Array<{ time: string; isAvailable: boolean; reason?: string }>
+    Array<{
+      time: string;
+      isAvailable: boolean;
+      reason?: string;
+      isPublished?: boolean;
+      status?: string;
+      isBooked?: boolean;
+    }>
   >([]);
   const [loadingSlots, setLoadingSlots] = useState<boolean>(true);
   const [isDateBlocked, setIsDateBlocked] = useState<boolean>(false);
@@ -123,19 +139,68 @@ function AppointmentContent() {
   }, [confirmationModalOpen]);
 
   useEffect(() => {
-    const checkAuth = () => {
+    let isCancelled = false;
+    const checkAuth = async () => {
       const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
       setIsLoggedIn(!!token);
       if (typeof window !== 'undefined') {
         const storedUser = localStorage.getItem('astro_user');
         if (storedUser) {
           try {
-            setAccountUser(JSON.parse(storedUser));
+            const parsed = JSON.parse(storedUser);
+            if (!isCancelled) {
+              setAccountUser(parsed);
+              if (!isBookingForSomeoneElse) {
+                if (parsed.name) setName(parsed.name);
+                if (parsed.phone) setPhone(parsed.phone);
+                const u = parsed as any;
+                const parts: string[] = [];
+                if (u.dateOfBirth) parts.push(`DOB: ${u.dateOfBirth}`);
+                if (u.timeOfBirth) parts.push(`TOB: ${u.timeOfBirth}`);
+                if (u.placeOfBirth) parts.push(`POB: ${u.placeOfBirth}`);
+                if (u.zodiacSign) parts.push(`Rashi: ${u.zodiacSign}`);
+                if (parts.length > 0) {
+                  setBirthDetails((prev) => prev ? prev : parts.join(', '));
+                }
+              }
+            }
           } catch (e) {
-            setAccountUser(null);
+            if (!isCancelled) setAccountUser(null);
           }
         } else {
-          setAccountUser(null);
+          if (!isCancelled) setAccountUser(null);
+        }
+      }
+
+      // Synchronize latest profile updates directly from backend
+      if (token) {
+        try {
+          const res = await fetch(`${backendUrl}/api/users/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok && !isCancelled) {
+            const data = await res.json();
+            const freshUser = data.user || data;
+            if (freshUser) {
+              setAccountUser(freshUser);
+              localStorage.setItem('astro_user', JSON.stringify(freshUser));
+              if (!isBookingForSomeoneElse) {
+                if (freshUser.name) setName(freshUser.name);
+                if (freshUser.phone) setPhone(freshUser.phone);
+                const u = freshUser as any;
+                const parts: string[] = [];
+                if (u.dateOfBirth) parts.push(`DOB: ${u.dateOfBirth}`);
+                if (u.timeOfBirth) parts.push(`TOB: ${u.timeOfBirth}`);
+                if (u.placeOfBirth) parts.push(`POB: ${u.placeOfBirth}`);
+                if (u.zodiacSign) parts.push(`Rashi: ${u.zodiacSign}`);
+                if (parts.length > 0) {
+                  setBirthDetails((prev) => prev ? prev : parts.join(', '));
+                }
+              }
+            }
+          }
+        } catch (err) {
+          // Keep cached accountUser
         }
       }
     };
@@ -143,27 +208,43 @@ function AppointmentContent() {
     window.addEventListener('astro-auth-change', checkAuth);
     window.addEventListener('storage', checkAuth);
     return () => {
+      isCancelled = true;
       window.removeEventListener('astro-auth-change', checkAuth);
       window.removeEventListener('storage', checkAuth);
     };
-  }, []);
+  }, [backendUrl, isBookingForSomeoneElse]);
 
-  const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(
-    /\/api\/?$/,
-    '',
-  );
+  // Auto-fill account info whenever "I'm booking for someone else" is unchecked
+
+  useEffect(() => {
+    if (!isBookingForSomeoneElse && accountUser) {
+      if (accountUser.name) setName(accountUser.name);
+      if (accountUser.phone) setPhone(accountUser.phone);
+      const u = accountUser as any;
+      const parts: string[] = [];
+      if (u.dateOfBirth) parts.push(`DOB: ${u.dateOfBirth}`);
+      if (u.timeOfBirth) parts.push(`TOB: ${u.timeOfBirth}`);
+      if (u.placeOfBirth) parts.push(`POB: ${u.placeOfBirth}`);
+      if (u.zodiacSign) parts.push(`Rashi: ${u.zodiacSign}`);
+      if (parts.length > 0) {
+        setBirthDetails((prev) => prev ? prev : parts.join(', '));
+      }
+    }
+  }, [accountUser, isBookingForSomeoneElse]);
 
   // Keep selectedService in sync if URL query parameter changes
+
   useEffect(() => {
     if (queryServiceId && getServiceById(queryServiceId)) {
       setSelectedServiceId(queryServiceId);
     }
   }, [queryServiceId]);
 
-  // NOTE: Requirement 1: Do NOT automatically fill booking form with logged-in user's name & phone.
-  // The user explicitly enters or confirms the attendee customer details.
+  // Auto-fill active for self bookings: When "I'm booking for someone else" is unchecked,
+  // the logged-in user's account details automatically populate. Checking the box enables manual entry.
 
   // Fetch real available slots whenever selectedServiceId or date changes, with live polling & cache-busting
+
   useEffect(() => {
     let isCancelled = false;
     const fetchSlots = async () => {
@@ -174,10 +255,6 @@ function AppointmentContent() {
           )}&date=${encodeURIComponent(date)}&_t=${Date.now()}`,
           {
             cache: 'no-store',
-            headers: {
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              Pragma: 'no-cache',
-            },
           },
         );
         if (res.ok) {
@@ -186,23 +263,51 @@ function AppointmentContent() {
             if (data.isBlocked) {
               setIsDateBlocked(true);
               setBlockedReason(data.blockedReason || null);
-              setAvailableSlots([]);
+              const blockedSlots = PUBLISHED_TIME_SLOTS.map((t: string) => ({
+                time: t,
+                isAvailable: false,
+                isPublished: false,
+                status: 'UNAVAILABLE',
+                reason: 'Unavailable',
+              }));
+              setAvailableSlots(blockedSlots);
               selectedTimeSlotRef.current = '';
               setTimeSlot('');
             } else if (data.slots && Array.isArray(data.slots) && data.slots.length > 0) {
               setIsDateBlocked(false);
               setBlockedReason(null);
-              // Only display published slots returned by backend
-              setAvailableSlots(data.slots);
+              // Ensure strictly the canonical published consultation slots are displayed
+              const canonicalSlots = PUBLISHED_TIME_SLOTS.map((canonicalTime) => {
+                const match = data.slots.find((s: any) => {
+                  if (s.time === canonicalTime) return true;
+                  const sMin = parseTimeToMinutes(s.time);
+                  const cMin = parseTimeToMinutes(canonicalTime);
+                  return sMin >= 0 && sMin === cMin;
+                });
+                if (match) {
+                  return {
+                    ...match,
+                    time: canonicalTime,
+                  };
+                }
+                return {
+                  time: canonicalTime,
+                  isAvailable: true,
+                  isPublished: true,
+                  status: 'AVAILABLE',
+                  reason: 'Available',
+                };
+              });
+              setAvailableSlots(canonicalSlots);
 
               // If current selected timeSlot is still available among published slots, keep it!
               // Only fall back to first available if current slot is empty or became unavailable/reserved.
               const currentSlot = selectedTimeSlotRef.current;
-              const isCurrentAvailable = data.slots.some(
+              const isCurrentAvailable = canonicalSlots.some(
                 (s: any) => s.time === currentSlot && s.isAvailable,
               );
               if (!isCurrentAvailable) {
-                const firstAvailable = data.slots.find((s: any) => s.isAvailable);
+                const firstAvailable = canonicalSlots.find((s: any) => s.isAvailable);
                 const nextSlot = firstAvailable ? firstAvailable.time : '';
                 selectedTimeSlotRef.current = nextSlot;
                 setTimeSlot(nextSlot);
@@ -210,7 +315,13 @@ function AppointmentContent() {
             } else {
               setIsDateBlocked(false);
               setBlockedReason(null);
-              const dynFallback = generateWorkingHourSlots(durationMinutes).map((time: string) => ({ time, isAvailable: true }));
+              const dynFallback = PUBLISHED_TIME_SLOTS.map((time: string) => ({
+                time,
+                isAvailable: true,
+                isPublished: true,
+                status: 'AVAILABLE',
+                reason: 'Available',
+              }));
               setAvailableSlots(dynFallback);
               const currentSlot = selectedTimeSlotRef.current;
               if (!currentSlot || !dynFallback.some((s: any) => s.time === currentSlot)) {
@@ -223,7 +334,13 @@ function AppointmentContent() {
         } else {
           if (!isCancelled) {
             setIsDateBlocked(false);
-            const dynFallback = generateWorkingHourSlots(durationMinutes).map((time: string) => ({ time, isAvailable: true }));
+            const dynFallback = PUBLISHED_TIME_SLOTS.map((time: string) => ({
+              time,
+              isAvailable: true,
+              isPublished: true,
+              status: 'AVAILABLE',
+              reason: 'Available',
+            }));
             setAvailableSlots(dynFallback);
             const currentSlot = selectedTimeSlotRef.current;
             if (!currentSlot || !dynFallback.some((s: any) => s.time === currentSlot)) {
@@ -237,7 +354,13 @@ function AppointmentContent() {
         console.warn('Failed to load slots from backend', err);
         if (!isCancelled) {
           setIsDateBlocked(false);
-          const dynFallback = generateWorkingHourSlots(durationMinutes).map((time: string) => ({ time, isAvailable: true }));
+          const dynFallback = PUBLISHED_TIME_SLOTS.map((time: string) => ({
+            time,
+            isAvailable: true,
+            isPublished: true,
+            status: 'AVAILABLE',
+            reason: 'Available',
+          }));
           setAvailableSlots(dynFallback);
           const currentSlot = selectedTimeSlotRef.current;
           if (!currentSlot || !dynFallback.some((s: any) => s.time === currentSlot)) {
@@ -383,6 +506,26 @@ function AppointmentContent() {
       return;
     }
 
+    const chosenSlotObj = availableSlots.find((s) => s.time === timeSlot);
+    if (chosenSlotObj && !chosenSlotObj.isAvailable) {
+      const isUnavailable =
+        chosenSlotObj.reason === 'Unavailable' ||
+        chosenSlotObj.status === 'UNAVAILABLE' ||
+        chosenSlotObj.isPublished === false;
+      setErrorMsg(
+        isUnavailable
+          ? t(
+              `The time slot at ${timeSlot} on ${date} is currently unavailable. Please select another available slot.`,
+              `${date} को ${timeSlot} का समय स्लॉट वर्तमान में अनुपलब्ध है। कृपया कोई अन्य उपलब्ध स्लॉट चुनें।`,
+            )
+          : t(
+              `The time slot at ${timeSlot} on ${date} is already reserved. Please select another available slot.`,
+              `${date} को ${timeSlot} का समय स्लॉट पहले ही आरक्षित है। कृपया कोई अन्य उपलब्ध स्लॉट चुनें।`,
+            ),
+      );
+      return;
+    }
+
     const token = typeof window !== 'undefined' ? localStorage.getItem('astro_token') : null;
     if (!token) {
       setAuthModalOpen(true);
@@ -414,6 +557,18 @@ function AppointmentContent() {
       return;
     }
 
+    if (isDateBlocked) {
+      setConfirmationModalOpen(false);
+      setErrorMsg(
+        blockedReason ||
+          t(
+            'Panditji is not accepting consultations on this date. Please select another date.',
+            'पंडित जी इस तारीख को परामर्श स्वीकार नहीं कर रहे हैं। कृपया अन्य तारीख चुनें।',
+          ),
+      );
+      return;
+    }
+
     setLoading(true);
     setErrorMsg(null);
 
@@ -440,7 +595,33 @@ function AppointmentContent() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || 'Failed to complete appointment reservation.');
+        setErrorMsg(
+          data.message ||
+            t(
+              'The selected time slot is no longer available. Please select another slot.',
+              'चयनित समय स्लॉट अब उपलब्ध नहीं है। कृपया दूसरा स्लॉट चुनें।',
+            ),
+        );
+        setConfirmationModalOpen(false);
+        try {
+          const slotsRes = await fetch(
+            `${backendUrl}/api/appointments/slots?serviceId=${encodeURIComponent(
+              selectedServiceId,
+            )}&date=${encodeURIComponent(date)}&_t=${Date.now()}`,
+          );
+          if (slotsRes.ok) {
+            const slotsData = await slotsRes.json();
+            if (slotsData.slots) {
+              setAvailableSlots(slotsData.slots);
+              const firstAvail = slotsData.slots.find((s: any) => s.isAvailable);
+              if (firstAvail) {
+                selectedTimeSlotRef.current = firstAvail.time;
+                setTimeSlot(firstAvail.time);
+              }
+            }
+          }
+        } catch (e) {}
+        return;
       }
 
       const bookingPayload = data.booking || {};
@@ -485,7 +666,7 @@ function AppointmentContent() {
         } catch (e) {}
       }
     } catch (err: any) {
-      console.error('Appointment reservation failed:', err);
+      console.warn('Appointment reservation error:', err);
       setErrorMsg(err.message || 'Failed to complete appointment reservation. Please try again.');
       setConfirmationModalOpen(false);
       // Refresh slots in case of collision
@@ -609,12 +790,24 @@ function AppointmentContent() {
             </div>
 
             <div className="p-5 sm:p-7 space-y-5 relative z-10">
-              {/* SECTION 1: Success Header & Reference */}
+              {/* SECTION 1: Header & Reference (Pending Admin Approval Flow) */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-stone-100">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center shrink-0 shadow-xs">
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center shadow-md shadow-emerald-700/20">
-                      <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-xs ${
+                    confirmedBooking.status === 'CONFIRMED'
+                      ? 'bg-emerald-50 border border-emerald-200/80'
+                      : 'bg-amber-50 border border-amber-300/80'
+                  }`}>
+                    <div className={`w-7 h-7 rounded-xl text-white flex items-center justify-center shadow-md ${
+                      confirmedBooking.status === 'CONFIRMED'
+                        ? 'bg-gradient-to-br from-emerald-500 to-teal-700 shadow-emerald-700/20'
+                        : 'bg-gradient-to-br from-amber-500 to-amber-700 shadow-amber-700/20'
+                    }`}>
+                      {confirmedBooking.status === 'CONFIRMED' ? (
+                        <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                      ) : (
+                        <Clock className="w-4 h-4 stroke-[2.5]" />
+                      )}
                     </div>
                   </div>
                   <div>
@@ -626,16 +819,30 @@ function AppointmentContent() {
                         {confirmedBooking.id.slice(0, 10).toUpperCase()}
                       </span>
                     </div>
-                    <div className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 mt-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>{t('Reservation Verified', 'सत्यापित आरक्षण')}</span>
+                    <div className={`text-[11px] font-semibold flex items-center gap-1 mt-0.5 ${
+                      confirmedBooking.status === 'CONFIRMED' ? 'text-emerald-700' : 'text-amber-800'
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                        confirmedBooking.status === 'CONFIRMED' ? 'bg-emerald-500' : 'bg-amber-500'
+                      }`} />
+                      <span>
+                        {confirmedBooking.status === 'CONFIRMED'
+                          ? t('Reservation Confirmed', 'पुष्टीकृत आरक्षण')
+                          : t('Request Sent to Admin', 'अनुरोध व्यवस्थापक को प्रेषित')}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 tracking-wider uppercase">
-                    {confirmedBooking.status || 'CONFIRMED'}
+                  <span className={`px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase border ${
+                    confirmedBooking.status === 'CONFIRMED'
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                      : 'bg-amber-100 text-amber-900 border-amber-300'
+                  }`}>
+                    {confirmedBooking.status === 'CONFIRMED'
+                      ? t('CONFIRMED', 'पुष्टीकृत')
+                      : t('WAITING FOR APPROVAL', 'स्वीकृति प्रतीक्षारत')}
                   </span>
                 </div>
               </div>
@@ -643,29 +850,50 @@ function AppointmentContent() {
               {/* Title & Attendee Narrative */}
               <div className="space-y-1.5">
                 <h2 className="font-serif font-bold text-xl sm:text-2xl text-[#2A1810] tracking-tight leading-snug">
-                  {t('Appointment Reserved Successfully!', 'परामर्श सत्र सफलतापूर्वक आरक्षित हुआ!')}
+                  {confirmedBooking.status === 'CONFIRMED'
+                    ? t('Appointment Reserved Successfully!', 'परामर्श सत्र सफलतापूर्वक आरक्षित हुआ!')
+                    : t('Consultation Request Submitted!', 'परामर्श अनुरोध सफलतापूर्वक भेजा गया!')}
                 </h2>
                 <p className="text-xs sm:text-[13px] text-stone-600 leading-relaxed">
-                  {language === 'hi' ? (
-                    <>
-                      {confirmedBooking.isBookingForSomeoneElse && (
-                        <span><strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> जी हेतु • </span>
-                      )}
-                      <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> सत्र दिनांक{' '}
-                      <strong>{confirmedBooking.scheduledDate}</strong> को{' '}
-                      <strong>{confirmedBooking.scheduledTime} IST</strong> पर आरक्षित हो गया है। टीम विवरण{' '}
-                      <strong>{confirmedBooking.customerPhone || confirmedBooking.contactPhone}</strong> पर प्रेषित करेगी।
-                    </>
+                  {confirmedBooking.status === 'CONFIRMED' ? (
+                    language === 'hi' ? (
+                      <>
+                        {confirmedBooking.isBookingForSomeoneElse && (
+                          <span><strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> जी हेतु • </span>
+                        )}
+                        <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> सत्र दिनांक{' '}
+                        <strong>{confirmedBooking.scheduledDate}</strong> को{' '}
+                        <strong>{confirmedBooking.scheduledTime} IST</strong> पर पुष्ट हो गया है।
+                      </>
+                    ) : (
+                      <>
+                        {confirmedBooking.isBookingForSomeoneElse && (
+                          <span>For <strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> • </span>
+                        )}
+                        Your <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> session is confirmed for{' '}
+                        <strong>{confirmedBooking.scheduledDate}</strong> at{' '}
+                        <strong>{confirmedBooking.scheduledTime} IST</strong>.
+                      </>
+                    )
                   ) : (
-                    <>
-                      {confirmedBooking.isBookingForSomeoneElse && (
-                        <span>For <strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> • </span>
-                      )}
-                      Your <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> session is confirmed for{' '}
-                      <strong>{confirmedBooking.scheduledDate}</strong> at{' '}
-                      <strong>{confirmedBooking.scheduledTime} IST</strong>. Details sent to{' '}
-                      <strong>{confirmedBooking.customerPhone || confirmedBooking.contactPhone}</strong>.
-                    </>
+                    language === 'hi' ? (
+                      <>
+                        {confirmedBooking.isBookingForSomeoneElse && (
+                          <span><strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> जी हेतु • </span>
+                        )}
+                        आपका <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> अनुरोध दिनांक{' '}
+                        <strong>{confirmedBooking.scheduledDate}</strong> ({confirmedBooking.scheduledTime} IST) पूज्य डॉ. पंडित विशाल दुबे जी की टीम को प्रेषित कर दिया गया है। व्यवस्थापक द्वारा स्वीकृति मिलने पर आपको भुगतान करने एवं परामर्श में जुड़ने की सूचना प्राप्त होगी।
+                      </>
+                    ) : (
+                      <>
+                        {confirmedBooking.isBookingForSomeoneElse && (
+                          <span>For <strong className="text-[#5B0D15]">{confirmedBooking.customerName || name}</strong> • </span>
+                        )}
+                        Your consultation request for <strong className="text-[#5B0D15]">{confirmedBooking.serviceTitle}</strong> on{' '}
+                        <strong>{confirmedBooking.scheduledDate}</strong> at{' '}
+                        <strong>{confirmedBooking.scheduledTime} IST</strong> has been sent to Dr. Pandit Vishal Dubey's admin team. Once approved by Admin, you will receive an approval notification to proceed with payment and access your consultation.
+                      </>
+                    )
                   )}
                 </p>
               </div>
@@ -742,82 +970,110 @@ function AppointmentContent() {
                     <span className="font-bold text-stone-900">
                       {confirmedBooking.servicePrice || `₹${confirmedBooking.totalCost}`}
                     </span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 tracking-wider uppercase">
-                      {confirmedBooking.status || 'CONFIRMED'}
-                    </span>
+                    {confirmedBooking.status === 'CONFIRMED' ? (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 tracking-wider uppercase flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                        {t('Confirmed', 'पुष्टीकृत')}
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 tracking-wider uppercase flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-amber-700" />
+                        {t('Awaiting Admin Approval', 'स्वीकृति प्रतीक्षारत')}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* SECTION 3: Google Meet Shared Room Pass */}
-              {confirmedBooking.meetLink && (() => {
-                const meetStatus = getMeetingTimeStatus(
-                  confirmedBooking.scheduledDate,
-                  confirmedBooking.scheduledTime,
-                  confirmedBooking.durationMinutes || 30
-                );
-                const meetUrl = formatGoogleMeetLink(confirmedBooking.meetLink);
-
-                return (
-                  <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-50/90 border border-emerald-300 text-left space-y-2 shadow-2xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
-                        <Video className="w-4 h-4 text-emerald-700" />
-                        <span>{t('Google Meet Room (Shared)', 'गूगल मीट कक्ष (साझा लिंक)')}</span>
-                      </span>
-                      {meetStatus.isJoinable ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200 text-emerald-900 animate-pulse flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                          {t('Live Now', 'अभी सक्रिय')}
-                        </span>
-                      ) : meetStatus.hasEnded ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-stone-200 text-stone-700">
-                          {t('Session Concluded', 'सत्र समाप्त')}
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
-                          <Lock className="w-3 h-3 text-amber-700" />
-                          {t('Unlocks 5m Before Session', 'सत्र से 5 मिनट पूर्व सक्रिय')}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      {meetStatus.isJoinable ? (
-                        <a
-                          href={meetUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-md transition-all hover:scale-102 active:scale-98 animate-pulse shrink-0"
-                        >
-                          <Video className="w-3.5 h-3.5" />
-                          <span>{t('Join Google Meet Now', 'गूगल मीट से अभी जुड़ें')}</span>
-                        </a>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled
-                          className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl bg-stone-200 text-stone-500 font-bold text-xs cursor-not-allowed border border-stone-300 shrink-0"
-                          title={
-                            meetStatus.hasEnded
-                              ? t('Session has ended', 'सत्र समाप्त हो चुका है')
-                              : t('Opens 5 minutes prior to appointment', 'परामर्श समय से 5 मिनट पहले सक्रिय होगा')
-                          }
-                        >
-                          <Lock className="w-3.5 h-3.5 text-stone-400" />
-                          <span>
-                            {meetStatus.hasEnded
-                              ? t('Session Concluded', 'सत्र समाप्त')
-                              : t('Join Room (Opens 5 Min Before Session)', 'मीट कक्ष (5 मिनट पूर्व खुलेगा)')}
-                          </span>
-                        </button>
-                      )}
-                      <span className="text-[11px] font-mono text-emerald-900 truncate select-all bg-white/90 px-2.5 py-1 rounded-lg border border-emerald-200 block text-center sm:text-left min-w-0 flex-1">
-                        {meetUrl}
-                      </span>
-                    </div>
+              {/* SECTION 3: Consultation Access / Awaiting Admin Approval */}
+              {confirmedBooking.status !== 'CONFIRMED' ? (
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-50/90 border border-amber-300 text-left space-y-2 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-amber-700" />
+                      <span>{t('Consultation Status', 'परामर्श स्थिति')}</span>
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900 border border-amber-300 flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-amber-800" />
+                      {t('Awaiting Admin Approval', 'स्वीकृति प्रतीक्षारत')}
+                    </span>
                   </div>
-                );
-              })()}
+                  <p className="text-xs text-amber-900/90 leading-relaxed">
+                    {t(
+                      'Your consultation reservation request has been submitted to Dr. Pandit Vishal Dubey. Meeting room access will unlock here once approved by Admin.',
+                      'आपका परामर्श आरक्षण अनुरोध पूज्य डॉ. पंडित विशाल दुबे जी को प्रेषित कर दिया गया है। व्यवस्थापक द्वारा स्वीकृति के पश्चात मीटिंग कक्ष यहाँ उपलब्ध होगा।'
+                    )}
+                  </p>
+                </div>
+              ) : (
+                confirmedBooking.meetLink && (() => {
+                  const meetStatus = getMeetingTimeStatus(
+                    confirmedBooking.scheduledDate,
+                    confirmedBooking.scheduledTime,
+                    confirmedBooking.durationMinutes || 30
+                  );
+                  const meetUrl = formatGoogleMeetLink(confirmedBooking.meetLink);
+
+                  return (
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-emerald-50/90 border border-emerald-300 text-left space-y-2.5 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                          <Video className="w-4 h-4 text-emerald-700" />
+                          <span>{t('Video Consultation Room', 'वीडियो परामर्श कक्ष')}</span>
+                        </span>
+                        {meetStatus.isJoinable ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200 text-emerald-900 animate-pulse flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                            {t('Live Now', 'अभी सक्रिय')}
+                          </span>
+                        ) : meetStatus.hasEnded ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-stone-200 text-stone-700">
+                            {t('Session Concluded', 'सत्र समाप्त')}
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                            <Lock className="w-3 h-3 text-amber-700" />
+                            {t('Unlocks 5m Before Session', 'सत्र से 5 मिनट पूर्व सक्रिय')}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Single Join Meeting Button - No raw URL is displayed */}
+                      <div className="w-full">
+                        {meetStatus.isJoinable ? (
+                          <a
+                            href={meetUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm shadow-md transition-all hover:scale-[1.01] active:scale-[0.98]"
+                          >
+                            <Video className="w-4 h-4" />
+                            <span>{t('Join Meeting', 'मीटिंग में जुड़ें')}</span>
+                          </a>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled
+                            className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-stone-200 text-stone-500 font-bold text-xs sm:text-sm cursor-not-allowed border border-stone-300"
+                            title={
+                              meetStatus.hasEnded
+                                ? t('Session has ended', 'सत्र समाप्त हो चुका है')
+                                : t('Opens 5 minutes prior to appointment', 'परामर्श समय से 5 मिनट पहले सक्रिय होगा')
+                            }
+                          >
+                            <Lock className="w-4 h-4 text-stone-400" />
+                            <span>
+                              {meetStatus.hasEnded
+                                ? t('Session Concluded', 'सत्र समाप्त')
+                                : t('Join Meeting (Opens 5 Min Before)', 'मीटिंग से जुड़ें (5 मिनट पूर्व सक्रिय होगा)')}
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
 
               {/* SECTION 4: Action Buttons (Side by Side on sm+, Stacked on mobile) */}
               <div className="pt-2 flex flex-col sm:flex-row gap-3 w-full">
@@ -1023,21 +1279,26 @@ function AppointmentContent() {
                     </p>
                   </div>
 
-                  {/* Optional voluntary helper for self bookings (Never auto-filled by default) */}
-                  {!isBookingForSomeoneElse && accountUser?.name && (
+                  {/* Account Auto-fill Indicator & Re-fill Helper */}
+                  {!isBookingForSomeoneElse && accountUser?.name ? (
                     <button
                       type="button"
                       onClick={() => {
                         if (accountUser.name) setName(accountUser.name);
                         if (accountUser.phone) setPhone(accountUser.phone);
                       }}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-amber-300 text-[11px] font-semibold text-amber-900 hover:bg-amber-100/70 transition-colors cursor-pointer w-fit"
-                      title={t('Click to fill with your logged-in account details', 'अपने खाते के विवरण भरने के लिए क्लिक करें')}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-[11px] font-semibold text-emerald-900 hover:bg-emerald-100 transition-colors cursor-pointer w-fit shadow-2xs"
+                      title={t('Auto-filled from account. Click to re-fill if edited.', 'खाते से स्वतः भरा गया। पुनः भरने के लिए क्लिक करें।')}
                     >
-                      <Sparkles className="w-3 h-3 text-amber-600" />
-                      <span>{t('Fill my account details', 'मेरे खाते के विवरण भरें')}</span>
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{t('Auto-filled from your account', 'आपके खाते से स्वतः भरा गया')}</span>
                     </button>
-                  )}
+                  ) : isBookingForSomeoneElse ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100/70 border border-amber-300 text-[11px] font-medium text-amber-900 w-fit">
+                      <HeartHandshake className="w-3.5 h-3.5 text-amber-700" />
+                      <span>{t('Manual attendee entry', 'मैन्युअल विवरण भरें')}</span>
+                    </span>
+                  ) : null}
                 </div>
 
                 {/* Checkbox: "I'm booking for someone else" */}
@@ -1048,10 +1309,14 @@ function AppointmentContent() {
                     onChange={(e) => {
                       const checked = e.target.checked;
                       setIsBookingForSomeoneElse(checked);
-                      // If toggling to booking for someone else, clear fields so user can input fresh details
                       if (checked) {
+                        // When checked: clear info so user can enter manually for someone else
                         setName('');
                         setPhone('');
+                      } else {
+                        // When unchecked: auto-fill the account owner's details
+                        if (accountUser?.name) setName(accountUser.name);
+                        if (accountUser?.phone) setPhone(accountUser.phone);
                       }
                     }}
                     className="mt-0.5 h-4 w-4 rounded border-amber-300 text-[#5B0D15] focus:ring-[#5B0D15] cursor-pointer"
@@ -1236,33 +1501,62 @@ function AppointmentContent() {
                     <div className="relative">
                       <select
                         value={timeSlot}
-                        disabled={loadingSlots || isDateBlocked || availableSlots.length === 0}
+                        disabled={loadingSlots}
                         onChange={(e) => {
                           const chosen = e.target.value;
                           selectedTimeSlotRef.current = chosen;
                           setTimeSlot(chosen);
+                          setErrorMsg(null);
                         }}
                         className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-xs font-semibold text-stone-800 bg-white focus:outline-none focus:border-amber-500 transition-all cursor-pointer shadow-xs appearance-none pr-10 disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed"
                       >
+                        <option value="" disabled>
+                          -- {isDateBlocked ? t('Date Blocked - No Slots Available', 'दिनांक अवरुद्ध - कोई स्लॉट उपलब्ध नहीं') : t('Select an Available Slot', 'उपलब्ध स्लॉट चुनें')} --
+                        </option>
                         {availableSlots.length > 0 ? (
-                          availableSlots.map((slot) => (
-                            <option
-                              key={slot.time}
-                              value={slot.time}
-                              disabled={!slot.isAvailable}
-                              className={!slot.isAvailable ? 'text-stone-400 bg-stone-50' : 'text-stone-800 font-medium'}
-                            >
-                              {slot.time} — {slot.isAvailable ? t('Available', 'उपलब्ध') : slot.reason || t('Reserved', 'आरक्षित')}
-                            </option>
-                          ))
+                          availableSlots.map((slot) => {
+                            const isUnavailable =
+                              isDateBlocked ||
+                              !slot.isAvailable &&
+                              (slot.reason === 'Unavailable' ||
+                                slot.status === 'UNAVAILABLE' ||
+                                slot.isPublished === false);
+                            const label = isDateBlocked
+                              ? t('Unavailable', 'अनुपलब्ध')
+                              : slot.isAvailable
+                              ? t('Available', 'उपलब्ध')
+                              : isUnavailable
+                              ? t('Unavailable', 'अनुपलब्ध')
+                              : t('Already Reserved', 'पहले से आरक्षित');
+
+                            return (
+                              <option
+                                key={slot.time}
+                                value={slot.time}
+                                disabled={!slot.isAvailable || isDateBlocked}
+                                className={
+                                  !slot.isAvailable || isDateBlocked
+                                    ? 'text-stone-400 bg-stone-50 font-normal'
+                                    : 'text-stone-800 font-medium'
+                                }
+                              >
+                                {slot.time} — {label}
+                              </option>
+                            );
+                          })
                         ) : (
                           <option value="">
-                            {loadingSlots ? t('Loading time slots...', 'समय स्लॉट लोड हो रहे हैं...') : t('No time slots available', 'कोई समय स्लॉट उपलब्ध नहीं')}
+                            {loadingSlots
+                              ? t('Loading time slots...', 'समय स्लॉट लोड हो रहे हैं...')
+                              : isDateBlocked
+                              ? t('No slots available (Date Blocked)', 'कोई स्लॉट उपलब्ध नहीं (दिनांक अवरुद्ध)')
+                              : t('No time slots available', 'कोई समय स्लॉट उपलब्ध नहीं')}
                           </option>
                         )}
                       </select>
                       <ChevronDown className="w-4 h-4 text-stone-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
+
 
                     <span className="text-[10px] text-stone-500 block">
                       {timeSlot ? (
@@ -1322,8 +1616,8 @@ function AppointmentContent() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#B8873E] via-[#A67530] to-[#8C5D1F] hover:from-[#c59348] hover:to-[#9a6925] disabled:opacity-50 text-white font-bold text-sm shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+                  disabled={loading || isDateBlocked || !timeSlot || loadingSlots}
+                  className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#B8873E] via-[#A67530] to-[#8C5D1F] hover:from-[#c59348] hover:to-[#9a6925] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>

@@ -228,4 +228,27 @@ describe('Admin-Only Content Management & Security Suite', () => {
     assert.match(blogModalSource, /image\/webp/, 'Must support modern WebP format');
     assert.match(galleryModalSource, /image\/webp/, 'Must support modern WebP format');
   });
+
+  test('TEST-07: Admin Reviews tab and customer review flow use getAuthToken and valid auth credentials', () => {
+    const reviewsTabPath = path.resolve(__dirname, '../app/admin/components/AdminReviewsTab.tsx');
+    const reviewsTabSource = fs.readFileSync(reviewsTabPath, 'utf-8');
+
+    assert.match(
+      reviewsTabSource,
+      /import\s*\{\s*getAuthToken\s*\}\s*from\s*['"]\.\.\/\.\.\/\.\.\/lib\/auth['"]/,
+      'AdminReviewsTab must import getAuthToken from lib/auth'
+    );
+
+    assert.match(
+      reviewsTabSource,
+      /getAdminToken/,
+      'AdminReviewsTab must provide getAdminToken helper'
+    );
+
+    assert.match(
+      reviewsTabSource,
+      /headers\['Authorization'\]\s*=\s*`Bearer \$\{token\}`/,
+      'AdminReviewsTab must include Bearer token in request headers'
+    );
+  });
 });

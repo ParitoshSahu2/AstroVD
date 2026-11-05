@@ -1,9 +1,12 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import {
   Injectable,
   Logger,
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -11,6 +14,7 @@ import { CreateOrderDto } from './dto/create-order.dto.js';
 import { GetAdminOrdersQueryDto } from './dto/get-admin-orders-query.dto.js';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto.js';
 import type { JwtPayload } from '../auth/decorators/current-user.decorator.js';
+import { CANONICAL_PRODUCTS } from '../products/products.service.js';
 
 export enum OrderStatus {
   PENDING_PAYMENT = 'PENDING_PAYMENT',
@@ -29,7 +33,303 @@ export enum OrderStatus {
 export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly ordersFilePath = path.resolve(process.cwd(), 'data', 'orders.json');
+  private fallbackOrders: any[] = [];
+  private fallbackOrdersLoaded = false;
+
+  constructor(private readonly prisma: PrismaService) {
+    this.initFallbackOrders();
+  }
+
+  private initFallbackOrders() {
+    if (this.fallbackOrdersLoaded) return;
+    try {
+      if (fs.existsSync(this.ordersFilePath)) {
+        const raw = fs.readFileSync(this.ordersFilePath, 'utf-8');
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          this.fallbackOrders = parsed;
+        }
+      }
+    } catch {
+      this.fallbackOrders = [];
+    }
+    this.fallbackOrdersLoaded = true;
+  }
+
+  private saveFallbackOrders() {
+    try {
+      const dir = path.dirname(this.ordersFilePath);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(this.ordersFilePath, JSON.stringify(this.fallbackOrders, null, 2), 'utf-8');
+    } catch (e) {
+      this.logger.error('Failed to persist orders.json fallback', e);
+    }
+  }
+
+  private getFallbackProducts(): any[] {
+    const productsFilePath = path.resolve(process.cwd(), 'data', 'products.json');
+    try {
+      if (fs.existsSync(productsFilePath)) {
+        const raw = fs.readFileSync(productsFilePath, 'utf-8');
+        const list = JSON.parse(raw);
+        if (Array.isArray(list) && list.length > 0) return list;
+      }
+    } catch {
+      // ignore
+    }
+    return CANONICAL_PRODUCTS;
+  }
+
+  private formatAdminOrder(o: any) {
+    const address = (o.shippingAddress as Record<string, any>) || {};
+    const isWalletPaid = address.paymentMethod === 'WALLET';
+    const isCod = address.paymentMethod === 'COD' || address.paymentMethod === 'cod';
+    const isDemo =
+      address.isDemoOrder === true ||
+      address.paymentMethod === 'DEMO_SIMULATED' ||
+      address.paymentMethod === 'DEMO_ONLINE' ||
+      address.paymentStatus === 'UNPAID' ||
+      (Boolean(address.paymentMethod) && !isWalletPaid && !isCod);
+
+    let paymentStatus = 'UNPAID';
+    if (o.status === 'CANCELLED') {
+      paymentStatus = 'CANCELLED';
+    } else if (isWalletPaid) {
+      paymentStatus = 'PAID';
+    } else if (isCod) {
+      paymentStatus = 'COD_PENDING';
+    } else if (isDemo) {
+      paymentStatus = 'UNPAID';
+    } else if (address.isDemoOrder === false) {
+      paymentStatus = 'PAID';
+    } else {
+      paymentStatus = 'PAID';
+    }
+
+    const items = Array.isArray(o.items) ? o.items : [];
+
+    return {
+      id: o.id,
+      orderReference: `#ORD-${o.id.slice(0, 8).toUpperCase()}`,
+      totalAmount: o.totalAmount,
+      status: o.status,
+      paymentStatus,
+      paymentMethod: address.paymentMethod || 'DEMO_SIMULATED',
+      isDemoOrder: Boolean(address.isDemoOrder ?? !isWalletPaid),
+      courierName: address.courierName || address.courier || null,
+      trackingNumber: address.trackingNumber || address.awbNumber || null,
+      createdAt: o.createdAt,
+      customer: {
+        id: o.user?.id || o.userId,
+        name: o.user?.name || address.recipient || 'Vedic Seeker',
+        email: o.user?.email || null,
+        phone: o.user?.phone || address.phone || null,
+      },
+      shippingAddress: {
+        recipient: address.recipient || '',
+        addressLine: address.addressLine || '',
+        city: address.city || '',
+        state: address.state || '',
+        pincode: address.pincode || '',
+        phone: address.phone || '',
+        sankalpName: address.sankalpName || null,
+        sankalpGotra: address.sankalpGotra || null,
+        notes: address.notes || null,
+        adminFulfillmentNotes: address.adminFulfillmentNotes || null,
+        courierName: address.courierName || address.courier || null,
+        trackingNumber: address.trackingNumber || address.awbNumber || null,
+      },
+      items: items.map((item: any) => ({
+        id: item.id || `item-${item.productId}`,
+        productId: item.productId,
+        productName: item.product?.name || item.productId,
+        productCategory: item.product?.category || 'Spiritual',
+        productImage: item.product?.image || item.product?.imageUrl || '/products/tiger_eye.jpg',
+        energizedBy: item.product?.energizedBy || 'Kashi Vishwanath Acharyas',
+        labCertified: item.product?.labCertified ?? true,
+        quantity: item.quantity,
+        purchasePrice: item.price,
+        lineTotal: item.price * item.quantity,
+      })),
+      itemCount: items.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0),
+    };
+  }
+
+  private createOrderFallback(
+    userId: string,
+    dto: CreateOrderDto,
+    quantityByProduct: Map<string, number>,
+    uniqueProductIds: string[],
+  ) {
+    this.initFallbackOrders();
+
+    const idempotencyKey = dto.idempotencyKey || dto.shippingAddress?.idempotencyKey;
+    if (idempotencyKey) {
+      const existing = this.fallbackOrders.find(
+        (o) =>
+          o.userId === userId &&
+          (o.shippingAddress as any)?.idempotencyKey === idempotencyKey &&
+          new Date(o.createdAt).getTime() > Date.now() - 15 * 60 * 1000,
+      );
+      if (existing) {
+        this.logger.log(
+          `[Idempotency] Returning existing order #${existing.id} for idempotency key "${idempotencyKey}".`,
+        );
+        return existing;
+      }
+    }
+
+    const fallbackProducts = this.getFallbackProducts();
+    const productMap = new Map<string, any>(fallbackProducts.map((p) => [p.id, p]));
+
+    for (const item of dto.items) {
+      const product = productMap.get(item.productId);
+      if (!product) {
+        throw new NotFoundException(`Product '${item.productId}' does not exist.`);
+      }
+    }
+
+    for (const [productId, requiredQty] of quantityByProduct.entries()) {
+      const product = productMap.get(productId)!;
+      if (!product.inStock || (product.stockCount !== undefined && product.stockCount < requiredQty)) {
+        throw new BadRequestException(
+          `Product '${product.name}' is out of stock or requested quantity (${requiredQty}) exceeds available stock (${product.stockCount ?? 0}).`,
+        );
+      }
+    }
+
+    let calculatedSubtotal = 0;
+    const lineItemsToCreate: Array<any> = [];
+
+    for (const item of dto.items) {
+      const product = productMap.get(item.productId)!;
+      const linePrice = product.price;
+      const lineTotal = linePrice * item.quantity;
+      calculatedSubtotal += lineTotal;
+
+      lineItemsToCreate.push({
+        id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        productId: product.id,
+        quantity: item.quantity,
+        price: linePrice,
+        product: {
+          id: product.id,
+          name: product.name,
+          category: product.category || 'Spiritual',
+          price: product.price,
+          image: product.image || product.imageUrl || '/products/tiger_eye.jpg',
+          imageUrl: product.imageUrl || product.image || '/products/tiger_eye.jpg',
+          energizedBy: product.energizedBy || 'Kashi Vishwanath Acharyas',
+          labCertified: product.labCertified ?? true,
+        },
+      });
+    }
+
+    let discountAmount = 0;
+    if (dto.couponCode) {
+      const normalizedCode = dto.couponCode.trim().toUpperCase();
+      if (normalizedCode === 'VEDIC10' || normalizedCode === 'EMOX10' || normalizedCode === 'SAVE10') {
+        discountAmount = Math.round(calculatedSubtotal * 0.1);
+      } else {
+        throw new BadRequestException(`Invalid coupon code '${dto.couponCode}'.`);
+      }
+    }
+
+    let shippingFee = 0;
+    if (dto.shippingFee !== undefined && dto.shippingFee !== null) {
+      const expectedShipping = calculatedSubtotal >= 1500 ? 0 : 99;
+      shippingFee = dto.shippingFee === expectedShipping ? expectedShipping : (dto.shippingFee > 0 ? 99 : 0);
+    }
+
+    let energizationFee = 0;
+    if (dto.energizationFee !== undefined && dto.energizationFee !== null) {
+      energizationFee = dto.energizationFee > 0 ? 251 : 0;
+    }
+
+    const finalTotal = Math.max(0, calculatedSubtotal - discountAmount + shippingFee + energizationFee);
+    const calculatedTotal = Math.round(finalTotal * 100) / 100;
+
+    const isWalletPayment = dto.paymentMethod === 'WALLET';
+    const finalStatus: string = isWalletPayment ? OrderStatus.PROCESSING : OrderStatus.PENDING_PAYMENT;
+
+    try {
+      const productsFilePath = path.resolve(process.cwd(), 'data', 'products.json');
+      if (fs.existsSync(productsFilePath)) {
+        for (const [productId, requiredQty] of quantityByProduct.entries()) {
+          const product = productMap.get(productId)!;
+          if (product.stockCount !== undefined) {
+            product.stockCount = Math.max(0, product.stockCount - requiredQty);
+            product.inStock = product.stockCount > 0;
+          }
+        }
+        fs.writeFileSync(productsFilePath, JSON.stringify(fallbackProducts, null, 2), 'utf-8');
+      }
+    } catch {
+      // non-fatal
+    }
+
+    const orderId = `ORD-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    const now = new Date().toISOString();
+
+    const order = {
+      id: orderId,
+      userId,
+      totalAmount: calculatedTotal,
+      status: finalStatus,
+      createdAt: now,
+      updatedAt: now,
+      shippingAddress: {
+        recipient: dto.shippingAddress.recipient.trim(),
+        addressLine: dto.shippingAddress.addressLine.trim(),
+        city: dto.shippingAddress.city.trim(),
+        state: dto.shippingAddress.state.trim(),
+        pincode: dto.shippingAddress.pincode.trim(),
+        phone: dto.shippingAddress.phone.trim(),
+        sankalpName: dto.shippingAddress.sankalpName?.trim() || undefined,
+        sankalpGotra: dto.shippingAddress.sankalpGotra?.trim() || undefined,
+        notes: dto.shippingAddress.notes?.trim() || undefined,
+        idempotencyKey: idempotencyKey || undefined,
+        isDemoOrder: !isWalletPayment,
+        paymentMethod: isWalletPayment ? 'WALLET' : (dto.paymentMethod || 'DEMO_ONLINE'),
+        paymentStatus: isWalletPayment ? 'PAID' : (dto.paymentMethod === 'cod' ? 'COD_PENDING' : 'UNPAID'),
+        subtotal: calculatedSubtotal,
+        discountAmount: discountAmount > 0 ? discountAmount : undefined,
+        couponCode: dto.couponCode ? dto.couponCode.trim().toUpperCase() : undefined,
+        shippingFee: shippingFee > 0 ? shippingFee : 0,
+        energizationFee: energizationFee > 0 ? energizationFee : undefined,
+        statusTimestamps: {
+          ORDER_PLACED: now,
+        },
+        timeline: [
+          {
+            status: 'ORDER_PLACED',
+            timestamp: now,
+            title: 'Order Placed',
+            desc: 'Order received and logged in AstroVD system for admin review.',
+          },
+        ],
+      },
+      items: lineItemsToCreate,
+      user: {
+        id: userId,
+        name: dto.shippingAddress.recipient.trim(),
+        email: null,
+        phone: dto.shippingAddress.phone.trim(),
+      },
+    };
+
+    this.fallbackOrders.unshift(order);
+    this.saveFallbackOrders();
+
+    this.logger.log(
+      `[WhatsAppService] Order #${order.id} persisted successfully in fallback storage. ` +
+      `Notification payload ready for recipient ${dto.shippingAddress.recipient} (${dto.shippingAddress.phone}) ` +
+      `for ₹${calculatedTotal}. (Pending Meta Business Cloud API gateway dispatch).`,
+    );
+
+    return order;
+  }
 
   /**
    * Persists a customer order and order items inside an atomic Serializable transaction.
@@ -56,7 +356,9 @@ export class OrdersService {
 
     const uniqueProductIds = Array.from(quantityByProduct.keys());
 
-    return this.prisma.$transaction(
+    if (this.prisma.isDatabaseConnected !== false && typeof this.prisma.$transaction === 'function') {
+      try {
+        return await this.prisma.$transaction(
       async (tx) => {
         // Step 1b: Idempotency guard - prevent duplicate orders on retry or rapid double-clicks
         const idempotencyKey = dto.idempotencyKey || dto.shippingAddress?.idempotencyKey;
@@ -339,61 +641,92 @@ export class OrdersService {
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
+      } catch (err: any) {
+        if (
+          err instanceof BadRequestException ||
+          err instanceof NotFoundException ||
+          err instanceof ForbiddenException ||
+          err instanceof ConflictException
+        ) {
+          throw err;
+        }
+        this.logger.warn(`Prisma transaction failed in createOrder (${err.message}). Using file fallback.`);
+      }
+    }
+
+    return this.createOrderFallback(userId, dto, quantityByProduct, uniqueProductIds);
   }
 
   /**
    * Returns orders placed by the authenticated customer.
    */
   async getUserOrders(userId: string) {
-    try {
-      return await this.prisma.order.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        include: {
-          items: {
-            include: {
-              product: true,
+    if (this.prisma.isDatabaseConnected !== false && typeof this.prisma.order?.findMany === 'function') {
+      try {
+        return await this.prisma.order.findMany({
+          where: { userId },
+          orderBy: { createdAt: 'desc' },
+          include: {
+            items: {
+              include: {
+                product: true,
+              },
             },
           },
-        },
-      });
-    } catch (err: any) {
-      this.logger.warn(`Database unreachable in getUserOrders (${err.message}). Returning empty orders.`);
-      return [];
+        });
+      } catch (err: any) {
+        this.logger.warn(`Database unreachable in getUserOrders (${err.message}). Using fallback orders.`);
+      }
     }
+    this.initFallbackOrders();
+    return this.fallbackOrders.filter((o) => o.userId === userId);
   }
 
   /**
    * Returns a single order by ID with ownership isolation.
    */
   async getOrderById(orderId: string, userId: string, userRole: string) {
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
-      include: {
-        items: {
+    if (this.prisma.isDatabaseConnected !== false && typeof this.prisma.order?.findUnique === 'function') {
+      try {
+        const order = await this.prisma.order.findUnique({
+          where: { id: orderId },
           include: {
-            product: true,
+            items: {
+              include: {
+                product: true,
+              },
+            },
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+              },
+            },
           },
-        },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
-      },
-    });
+        });
 
+        if (order) {
+          if (order.userId !== userId && userRole !== 'ADMIN' && userRole !== 'SUPERADMIN') {
+            throw new ForbiddenException('You do not have permission to view this order.');
+          }
+          return order;
+        }
+      } catch (err: any) {
+        if (err instanceof ForbiddenException || err instanceof NotFoundException) throw err;
+        this.logger.warn(`Database query failed in getOrderById (${err.message}). Using fallback orders.`);
+      }
+    }
+
+    this.initFallbackOrders();
+    const order = this.fallbackOrders.find((o) => o.id === orderId);
     if (!order) {
       throw new NotFoundException(`Order with ID '${orderId}' was not found.`);
     }
-
     if (order.userId !== userId && userRole !== 'ADMIN' && userRole !== 'SUPERADMIN') {
       throw new ForbiddenException('You do not have permission to view this order.');
     }
-
     return order;
   }
 
@@ -439,40 +772,74 @@ export class OrdersService {
       ];
     }
 
-    const [total, orders] = await Promise.all([
-      this.prisma.order.count({ where }),
-      this.prisma.order.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              phone: true,
-            },
-          },
-          items: {
+    let total = 0;
+    let orders: any[] = [];
+
+    if (this.prisma.isDatabaseConnected !== false && typeof this.prisma.order?.count === 'function') {
+      try {
+        const [dbTotal, dbOrders] = await Promise.all([
+          this.prisma.order.count({ where }),
+          this.prisma.order.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: limit,
             include: {
-              product: {
+              user: {
                 select: {
                   id: true,
                   name: true,
-                  category: true,
-                  price: true,
-                  image: true,
-                  energizedBy: true,
-                  labCertified: true,
+                  email: true,
+                  phone: true,
+                },
+              },
+              items: {
+                include: {
+                  product: {
+                    select: {
+                      id: true,
+                      name: true,
+                      category: true,
+                      price: true,
+                      image: true,
+                      energizedBy: true,
+                      labCertified: true,
+                    },
+                  },
                 },
               },
             },
-          },
-        },
-      }),
-    ]);
+          }),
+        ]);
+        total = dbTotal;
+        orders = dbOrders;
+      } catch (err: any) {
+        this.logger.warn(`Database query failed in getAdminOrders (${err.message}). Using fallback orders.`);
+      }
+    }
+
+    if (orders.length === 0 && (!this.prisma.isDatabaseConnected || total === 0)) {
+      this.initFallbackOrders();
+      let filtered = [...this.fallbackOrders];
+      if (query.status && query.status !== 'ALL') {
+        filtered = filtered.filter((o) => (o.status || '').toUpperCase() === query.status!.toUpperCase());
+      }
+      if (query.search && query.search.trim()) {
+        const s = query.search.trim().toLowerCase();
+        filtered = filtered.filter((o) => {
+          const addr = (o.shippingAddress as any) || {};
+          return (
+            (o.id || '').toLowerCase().includes(s) ||
+            (addr.recipient || '').toLowerCase().includes(s) ||
+            (addr.phone || '').toLowerCase().includes(s) ||
+            (o.user?.name || '').toLowerCase().includes(s) ||
+            (o.user?.email || '').toLowerCase().includes(s)
+          );
+        });
+      }
+      total = filtered.length;
+      orders = filtered.slice(skip, skip + limit);
+    }
 
     const formattedOrders = orders.map((o) => {
       const address = (o.shippingAddress as Record<string, any>) || {};
@@ -532,7 +899,7 @@ export class OrdersService {
           courierName: address.courierName || address.courier || null,
           trackingNumber: address.trackingNumber || address.awbNumber || null,
         },
-        items: o.items.map((item) => ({
+        items: (o.items || []).map((item: any) => ({
           id: item.id,
           productId: item.productId,
           productName: item.product?.name || item.productId,
@@ -544,7 +911,7 @@ export class OrdersService {
           purchasePrice: item.price,
           lineTotal: item.price * item.quantity,
         })),
-        itemCount: o.items.reduce((sum, item) => sum + item.quantity, 0),
+        itemCount: (o.items || []).reduce((sum: number, item: any) => sum + item.quantity, 0),
       };
     });
 
@@ -561,17 +928,29 @@ export class OrdersService {
    * Global Admin: Get detailed order information including line items, prices, customer and delivery details.
    */
   async getAdminOrderById(orderId: string) {
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
-      include: {
-        user: { select: { id: true, name: true, email: true, phone: true } },
-        items: {
+    let order: any = null;
+    if (this.prisma.isDatabaseConnected !== false && typeof this.prisma.order?.findUnique === 'function') {
+      try {
+        order = await this.prisma.order.findUnique({
+          where: { id: orderId },
           include: {
-            product: true,
+            user: { select: { id: true, name: true, email: true, phone: true } },
+            items: {
+              include: {
+                product: true,
+              },
+            },
           },
-        },
-      },
-    });
+        });
+      } catch (err: any) {
+        this.logger.warn(`Database query failed in getAdminOrderById (${err.message}). Using fallback orders.`);
+      }
+    }
+
+    if (!order) {
+      this.initFallbackOrders();
+      order = this.fallbackOrders.find((o) => o.id === orderId);
+    }
 
     if (!order) {
       throw new NotFoundException(`Order with ID '${orderId}' was not found.`);
@@ -634,7 +1013,7 @@ export class OrdersService {
         courierName: address.courierName || address.courier || null,
         trackingNumber: address.trackingNumber || address.awbNumber || null,
       },
-      items: order.items.map((item) => ({
+      items: (order.items || []).map((item: any) => ({
         id: item.id,
         productId: item.productId,
         productName: item.product?.name || item.productId,
@@ -646,7 +1025,7 @@ export class OrdersService {
         purchasePrice: item.price,
         lineTotal: item.price * item.quantity,
       })),
-      itemCount: order.items.reduce((sum, item) => sum + item.quantity, 0),
+      itemCount: (order.items || []).reduce((sum: number, item: any) => sum + item.quantity, 0),
     };
   }
 
@@ -667,13 +1046,25 @@ export class OrdersService {
     dto: UpdateOrderStatusDto,
     ipAddress?: string,
   ) {
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
-      include: {
-        user: { select: { id: true, name: true, email: true, phone: true } },
-        items: { include: { product: true } },
-      },
-    });
+    let order: any = null;
+    if (this.prisma.isDatabaseConnected !== false && typeof this.prisma.order?.findUnique === 'function') {
+      try {
+        order = await this.prisma.order.findUnique({
+          where: { id: orderId },
+          include: {
+            user: { select: { id: true, name: true, email: true, phone: true } },
+            items: { include: { product: true } },
+          },
+        });
+      } catch (err: any) {
+        this.logger.warn(`Database lookup failed in updateOrderStatus (${err.message}). Falling back to orders.json.`);
+      }
+    }
+
+    if (!order) {
+      this.initFallbackOrders();
+      order = this.fallbackOrders.find((o) => o.id === orderId);
+    }
 
     if (!order) {
       throw new NotFoundException(`Order with ID '${orderId}' was not found.`);
@@ -788,8 +1179,11 @@ export class OrdersService {
       ...(trackingNumber ? { trackingNumber, awbNumber: trackingNumber } : {}),
     };
 
-    // Execute atomic update
-    const updatedOrder = await this.prisma.$transaction(async (tx) => {
+    // Execute update with database & file fallback
+    let updatedOrder: any = null;
+    if (this.prisma.isDatabaseConnected !== false && typeof this.prisma.$transaction === 'function') {
+      try {
+        updatedOrder = await this.prisma.$transaction(async (tx) => {
       // If order is cancelled, restore stock counts
       if (targetStatus === 'CANCELLED') {
         for (const item of order.items) {
@@ -844,6 +1238,27 @@ export class OrdersService {
         },
       });
     });
+      } catch (err: any) {
+        this.logger.warn(`Prisma transaction failed in updateOrderStatus (${err.message}). Falling back to orders.json.`);
+      }
+    }
+
+    if (!updatedOrder) {
+      this.initFallbackOrders();
+      const fbIdx = this.fallbackOrders.findIndex((o) => o.id === orderId);
+      if (fbIdx !== -1) {
+        this.fallbackOrders[fbIdx].status = targetStatus;
+        this.fallbackOrders[fbIdx].shippingAddress = updatedAddress;
+        this.fallbackOrders[fbIdx].updatedAt = new Date().toISOString();
+        updatedOrder = this.fallbackOrders[fbIdx];
+        this.saveFallbackOrders();
+      } else {
+        order.status = targetStatus;
+        order.shippingAddress = updatedAddress;
+        order.updatedAt = new Date().toISOString();
+        updatedOrder = order;
+      }
+    }
 
     // Record immutable security audit log
     try {
@@ -881,22 +1296,45 @@ export class OrdersService {
    * Records immutable audit log.
    */
   async deleteAdminOrder(actor: JwtPayload, orderId: string, ipAddress?: string) {
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
-      include: {
-        user: { select: { id: true, name: true, email: true, phone: true } },
-        items: true,
-      },
-    });
+    let order: any = null;
+    if (this.prisma.isDatabaseConnected !== false && typeof this.prisma.order?.findUnique === 'function') {
+      try {
+        order = await this.prisma.order.findUnique({
+          where: { id: orderId },
+          include: {
+            user: { select: { id: true, name: true, email: true, phone: true } },
+            items: true,
+          },
+        });
+      } catch (err: any) {
+        this.logger.warn(`Database lookup failed in deleteAdminOrder (${err.message}). Using fallback.`);
+      }
+    }
+
+    if (!order) {
+      this.initFallbackOrders();
+      order = this.fallbackOrders.find((o) => o.id === orderId);
+    }
 
     if (!order) {
       throw new NotFoundException(`Order with ID '${orderId}' was not found.`);
     }
 
-    // Cascade delete order (OrderItem records cascade automatically via Prisma relation onDelete: Cascade)
-    await this.prisma.order.delete({
-      where: { id: order.id },
-    });
+    if (this.prisma.isDatabaseConnected !== false && typeof this.prisma.order?.delete === 'function') {
+      try {
+        await this.prisma.order.delete({
+          where: { id: order.id },
+        });
+      } catch (err: any) {
+        this.logger.warn(`Prisma delete failed in deleteAdminOrder (${err.message}). Using fallback.`);
+      }
+    }
+    this.initFallbackOrders();
+    const fbIdx = this.fallbackOrders.findIndex((o) => o.id === orderId);
+    if (fbIdx !== -1) {
+      this.fallbackOrders.splice(fbIdx, 1);
+      this.saveFallbackOrders();
+    }
 
     // Record immutable audit log
     try {

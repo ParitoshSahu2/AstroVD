@@ -369,31 +369,50 @@ describe('Admin Availability Management (Stage 7B)', () => {
     });
   });
 
-  describe('Customer Visibility: Unpublished Slots', () => {
-    it('should only return published slots to customers', async () => {
+  describe('Customer Visibility: Unpublished and Reserved Slots', () => {
+    it('should return unpublished slots as unavailable and booked slots as reserved to customers', async () => {
       const date = '2099-10-25';
-      prisma.appointmentSlot.findMany.mockImplementation((args: any) => {
-        if (args.where?.isPublished === true) {
-          return Promise.resolve([
-            {
-              id: 's-1',
-              date,
-              startTime: '10:00 AM',
-              durationMinutes: 45,
-              isPublished: true,
-            },
-          ]);
-        }
-        return Promise.resolve([]);
-      });
+      prisma.appointmentSlot.findMany.mockResolvedValue([
+        {
+          id: 's-1',
+          date,
+          startTime: '10:00 AM',
+          durationMinutes: 45,
+          isPublished: true,
+        },
+        {
+          id: 's-2',
+          date,
+          startTime: '11:00 AM',
+          durationMinutes: 45,
+          isPublished: false,
+        },
+      ]);
+      prisma.booking.findMany.mockResolvedValue([
+        {
+          id: 'b-1',
+          scheduledDate: date,
+          scheduledTime: '10:00 AM',
+          durationMinutes: 45,
+          serviceType: 'astrological_consultation',
+          astrologerId: 'ast-1',
+        },
+      ]);
 
       const customerRes = await service.getAvailableSlots(
         'astrological_consultation',
         date,
       );
 
-      expect(customerRes.slots.length).toBe(1);
-      expect(customerRes.slots[0].time).toBe('10:00 AM');
+      expect(customerRes.slots.length).toBe(2);
+      const bookedSlot = customerRes.slots.find((s) => s.time === '10:00 AM');
+      const unpubSlot = customerRes.slots.find((s) => s.time === '11:00 AM');
+      expect(bookedSlot?.isAvailable).toBe(false);
+      expect(bookedSlot?.reason).toBe('Already Reserved');
+      expect(bookedSlot?.status).toBe('RESERVED');
+      expect(unpubSlot?.isAvailable).toBe(false);
+      expect(unpubSlot?.reason).toBe('Unavailable');
+      expect(unpubSlot?.status).toBe('UNAVAILABLE');
     });
   });
 });

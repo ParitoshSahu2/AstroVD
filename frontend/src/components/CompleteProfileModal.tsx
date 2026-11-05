@@ -262,8 +262,8 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
 
       setSuccessMsg(
         t(
-          'Vedic Kundli profile completed successfully! Your planetary chart is consecrated.',
-          'वैदिक कुंडली प्रोफाइल सफलतापूर्वक पूर्ण हुई! आपकी जन्म पत्रिका तैयार है।'
+          'Vedic profile completed successfully! Your birth details are saved.',
+          'वैदिक प्रोफाइल सफलतापूर्वक पूर्ण हुई! आपका जन्म विवरण सुरक्षित है।'
         )
       );
 
@@ -310,7 +310,7 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-200 text-[11px] font-bold tracking-wider uppercase mb-2">
                 <Compass className="w-3.5 h-3.5 text-amber-300" />
-                <span>{t('Vedic Janam Kundli Setup', 'वैदिक जन्म कुंडली सेटअप')}</span>
+                <span>{t('Vedic Birth Profile Setup', 'वैदिक जन्म विवरण सेटअप')}</span>
               </div>
               <h2 className="font-serif text-xl sm:text-2xl font-bold tracking-wide">
                 {t('Complete Your Sacred Profile', 'अपनी जन्म प्रोफाइल पूर्ण करें')}
@@ -605,7 +605,7 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
                 {t('Family Peace & Children (संतान व गृह शांति)', 'Family Peace & Children (संतान व गृह शांति)')}
               </option>
               <option value="Spiritual & Moksha">
-                {t('Spiritual Growth & Kundli Dosh (आध्यात्मिक व दोष निवारण)', 'Spiritual Growth & Kundli Dosh (आध्यात्मिक व दोष निवारण)')}
+                {t('Spiritual Growth & Graha Dosh (आध्यात्मिक व दोष निवारण)', 'Spiritual Growth & Graha Dosh (आध्यात्मिक व दोष निवारण)')}
               </option>
             </select>
           </div>
@@ -616,7 +616,7 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
             <span>
               {t(
                 '100% Confidential & Sacred. Your birth details are strictly protected and only accessed by verified Vedic Acharyas for consultation purposes.',
-                '100% गोपनीय व सुरक्षित। आपकी जन्म कुंडली का विवरण केवल अधिकृत वैदिक आचार्यों द्वारा परामर्श के लिए ही उपयोग किया जाता है।'
+                '100% गोपनीय व सुरक्षित। आपका जन्म विवरण केवल अधिकृत वैदिक आचार्यों द्वारा परामर्श के लिए ही उपयोग किया जाता है।'
               )}
             </span>
           </div>
@@ -644,7 +644,7 @@ export const CompleteProfileModal: React.FC<CompleteProfileModalProps> = ({
               ) : (
                 <>
                   
-                  <span>{t('Save & Unlock Janam Kundli', 'सहेजें व कुंडली अनलॉक करें')}</span>
+                  <span>{t('Save & Update Profile', 'सहेजें व प्रोफ़ाइल अपडेट करें')}</span>
                 </>
               )}
             </button>

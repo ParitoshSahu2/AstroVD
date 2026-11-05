@@ -1,0 +1,257 @@
+[
+  {
+    "id": "ORD-601957-NU3W",
+    "userId": "usr-paritosh-1",
+    "totalAmount": 3098,
+    "status": "PACKED",
+    "createdAt": "2026-11-04T12:16:41.957Z",
+    "updatedAt": "2026-11-04T12:18:13.546Z",
+    "shippingAddress": {
+      "recipient": "Paritosh",
+      "addressLine": "B-14, Shivalik Enclave, Lanka",
+      "city": "Varanasi",
+      "state": "Uttar Pradesh",
+      "pincode": "221005",
+      "phone": "+91 98765 43219",
+      "notes": "Home",
+      "idempotencyKey": "demo-ord-1793794580103-79j1k07",
+      "isDemoOrder": true,
+      "paymentMethod": "upi",
+      "paymentStatus": "UNPAID",
+      "subtotal": 3098,
+      "shippingFee": 0,
+      "statusTimestamps": {
+        "ORDER_PLACED": "2026-11-04T12:16:41.957Z",
+        "CONFIRMED": "2026-11-04T12:18:04.777Z",
+        "PROCESSING": "2026-11-04T12:18:12.212Z",
+        "PACKED": "2026-11-04T12:18:13.546Z"
+      },
+      "timeline": [
+        {
+          "status": "ORDER_PLACED",
+          "timestamp": "2026-11-04T12:16:41.957Z",
+          "title": "Order Placed",
+          "desc": "Order received and logged in AstroVD system for admin review."
+        },
+        {
+          "status": "CONFIRMED",
+          "stage": "CONFIRMED",
+          "timestamp": "2026-11-04T12:18:04.777Z"
+        },
+        {
+          "status": "PROCESSING",
+          "stage": "PROCESSING",
+          "timestamp": "2026-11-04T12:18:12.212Z"
+        },
+        {
+          "status": "PACKED",
+          "stage": "PACKED",
+          "timestamp": "2026-11-04T12:18:13.546Z"
+        }
+      ]
+    },
+    "items": [
+      {
+        "id": "item-1793794601956-gc9dq",
+        "productId": "black_tourmaline",
+        "quantity": 1,
+        "price": 1499,
+        "product": {
+          "id": "black_tourmaline",
+          "name": "BLACK TOURMALINE BRACELET",
+          "category": "protection",
+          "price": 1499,
+          "image": "/products/prod-black-tourmaline.png",
+          "imageUrl": "/products/prod-black-tourmaline.png",
+          "energizedBy": "Kashi Vishwanath Acharyas",
+          "labCertified": true
+        }
+      },
+      {
+        "id": "item-1793794601956-h67j4",
+        "productId": "golden_pyrite",
+        "quantity": 1,
+        "price": 1599,
+        "product": {
+          "id": "golden_pyrite",
+          "name": "GOLDEN PYRITE BRACELET",
+          "category": "wealth",
+          "price": 1599,
+          "image": "/products/prod-pyrite.png",
+          "imageUrl": "/products/prod-pyrite.png",
+          "energizedBy": "Kashi Vishwanath Acharyas",
+          "labCertified": true
+        }
+      }
+    ],
+    "user": {
+      "id": "usr-paritosh-1",
+      "name": "Paritosh",
+      "email": null,
+      "phone": "+91 98765 43219"
+    }
+  },
+  {
+    "id": "ORD-425202-F5K5",
+    "userId": "usr-paritosh-1",
+    "totalAmount": 1499,
+    "status": "DELIVERED",
+    "createdAt": "2026-11-04T12:13:45.202Z",
+    "updatedAt": "2026-11-04T12:14:31.957Z",
+    "shippingAddress": {
+      "recipient": "Paritosh Sahu",
+      "addressLine": "B-14, Shivalik Enclave, Lanka",
+      "city": "Varanasi",
+      "state": "Uttar Pradesh",
+      "pincode": "221005",
+      "phone": "+91 98765 43210",
+      "notes": "Home",
+      "idempotencyKey": "demo-ord-1793793231867-72wn03t",
+      "isDemoOrder": true,
+      "paymentMethod": "netbanking",
+      "paymentStatus": "UNPAID",
+      "subtotal": 1499,
+      "shippingFee": 0,
+      "statusTimestamps": {
+        "ORDER_PLACED": "2026-11-04T12:13:45.202Z",
+        "CONFIRMED": "2026-11-04T12:14:16.058Z",
+        "PROCESSING": "2026-11-04T12:14:18.387Z",
+        "PACKED": "2026-11-04T12:14:19.871Z",
+        "SHIPPED": "2026-11-04T12:14:28.504Z",
+        "OUT_FOR_DELIVERY": "2026-11-04T12:14:30.355Z",
+        "DELIVERED": "2026-11-04T12:14:31.957Z"
+      },
+      "timeline": [
+        {
+          "status": "ORDER_PLACED",
+          "timestamp": "2026-11-04T12:13:45.202Z",
+          "title": "Order Placed",
+          "desc": "Order received and logged in AstroVD system for admin review."
+        },
+        {
+          "status": "CONFIRMED",
+          "stage": "CONFIRMED",
+          "timestamp": "2026-11-04T12:14:16.058Z"
+        },
+        {
+          "status": "PROCESSING",
+          "stage": "PROCESSING",
+          "timestamp": "2026-11-04T12:14:18.387Z"
+        },
+        {
+          "status": "PACKED",
+          "stage": "PACKED",
+          "timestamp": "2026-11-04T12:14:19.871Z"
+        },
+        {
+          "status": "SHIPPED",
+          "stage": "SHIPPED",
+          "timestamp": "2026-11-04T12:14:28.504Z"
+        },
+        {
+          "status": "OUT_FOR_DELIVERY",
+          "stage": "OUT_FOR_DELIVERY",
+          "timestamp": "2026-11-04T12:14:30.355Z"
+        },
+        {
+          "status": "DELIVERED",
+          "stage": "DELIVERED",
+          "timestamp": "2026-11-04T12:14:31.957Z"
+        }
+      ],
+      "courierName": "asdfg",
+      "courier": "asdfg",
+      "trackingNumber": "asdf",
+      "awbNumber": "asdf"
+    },
+    "items": [
+      {
+        "id": "item-1793794425200-dajbe",
+        "productId": "black_tourmaline",
+        "quantity": 1,
+        "price": 1499,
+        "product": {
+          "id": "black_tourmaline",
+          "name": "BLACK TOURMALINE BRACELET",
+          "category": "protection",
+          "price": 1499,
+          "image": "/products/prod-black-tourmaline.png",
+          "imageUrl": "/products/prod-black-tourmaline.png",
+          "energizedBy": "Kashi Vishwanath Acharyas",
+          "labCertified": true
+        }
+      }
+    ],
+    "user": {
+      "id": "usr-paritosh-1",
+      "name": "Paritosh Sahu",
+      "email": null,
+      "phone": "+91 98765 43210"
+    }
+  },
+  {
+    "id": "ORD-927373-DP31",
+    "userId": "usr-superadmin",
+    "totalAmount": 1299,
+    "status": "PROCESSING",
+    "createdAt": "2026-11-04T12:05:27.373Z",
+    "updatedAt": "2026-11-04T12:05:37.257Z",
+    "shippingAddress": {
+      "recipient": "Paritosh Sahu",
+      "addressLine": "B-14, Shivalik Enclave, Lanka",
+      "city": "Varanasi",
+      "state": "Uttar Pradesh",
+      "pincode": "221005",
+      "phone": "+919876543210",
+      "notes": "Home",
+      "isDemoOrder": true,
+      "paymentMethod": "netbanking",
+      "paymentStatus": "UNPAID",
+      "subtotal": 1299,
+      "shippingFee": 0,
+      "statusTimestamps": {
+        "ORDER_PLACED": "2026-11-04T12:05:27.373Z",
+        "PROCESSING": "2026-11-04T12:05:37.257Z"
+      },
+      "timeline": [
+        {
+          "status": "ORDER_PLACED",
+          "timestamp": "2026-11-04T12:05:27.373Z",
+          "title": "Order Placed",
+          "desc": "Order received and logged in AstroVD system for admin review."
+        },
+        {
+          "status": "PROCESSING",
+          "stage": "PROCESSING",
+          "timestamp": "2026-11-04T12:05:37.257Z",
+          "notes": "Packed and ready"
+        }
+      ],
+      "adminFulfillmentNotes": "Packed and ready"
+    },
+    "items": [
+      {
+        "id": "item-1793793927371-936oo",
+        "productId": "tiger_eye",
+        "quantity": 1,
+        "price": 1299,
+        "product": {
+          "id": "tiger_eye",
+          "name": "TIGER EYE BRACELET",
+          "category": "wealth",
+          "price": 1299,
+          "image": "/products/prod-tiger-eye-macro.jpg",
+          "imageUrl": "/products/prod-tiger-eye-macro.jpg",
+          "energizedBy": "Kashi Vishwanath Acharyas",
+          "labCertified": true
+        }
+      }
+    ],
+    "user": {
+      "id": "usr-superadmin",
+      "name": "Paritosh Sahu",
+      "email": null,
+      "phone": "+919876543210"
+    }
+  }
+]

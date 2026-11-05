@@ -603,7 +603,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                             e.stopPropagation();
                             handleAddToCart(item, 1);
                           }}
-                          className="px-4 py-1.5 rounded-full bg-[#800000] hover:bg-[#5B0D15] text-white text-xs font-semibold shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 cursor-pointer text-center"
+                          className="w-[108px] h-[34px] rounded-full bg-[#800000] hover:bg-[#5B0D15] text-white text-xs font-semibold shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 transition-all duration-200 cursor-pointer flex items-center justify-center text-center whitespace-nowrap"
                           aria-label={t(`Add ${item.name} to cart`, `${item.name} कार्ट में जोड़ें`)}
                         >
                           {t('Add to Cart', 'कार्ट में जोड़ें')}
@@ -612,7 +612,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                         /* Original - 1 + Stepper */
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="flex items-center bg-[#5B0D15] text-white rounded-full px-1.5 py-1 shadow-xs border border-amber-400/30"
+                          className="w-[108px] h-[34px] flex items-center justify-between bg-[#5B0D15] text-white rounded-full px-2 shadow-xs border border-amber-400/30"
                         >
                           <button
                             type="button"
@@ -630,7 +630,7 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                             <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
                           </button>
 
-                          <span className="min-w-[28px] px-1 text-center font-extrabold text-xs text-amber-200 select-none">
+                          <span className="flex-1 text-center font-extrabold text-xs text-amber-200 select-none">
                             {quantityInCart}
                           </span>
 
@@ -967,14 +967,14 @@ export const ProductsSection: React.FC<ProductsSectionProps> = ({
                         onClick={() => {
                           handleAddToCart(selectedProduct, 1);
                         }}
-                        className="flex-1 py-2.5 sm:py-3 px-5 rounded-full bg-[#800000] hover:bg-[#5B0D15] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:shadow-lg active:scale-98"
+                        className="flex-1 h-[44px] px-5 rounded-full bg-[#800000] hover:bg-[#5B0D15] text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:shadow-lg active:scale-98"
                       >
                         <ShoppingCart className="w-4 h-4 text-amber-300" />
                         <span>{t('Add to Cart', 'कार्ट में जोड़ें')}</span>
                       </button>
                     ) : (
                       /* Clean (- 1 +) Stepper matching product card */
-                      <div className="flex-1 flex items-center justify-between bg-[#5B0D15] text-white rounded-full px-3 py-1.5 shadow-md border border-amber-400/40">
+                      <div className="flex-1 h-[44px] flex items-center justify-between bg-[#5B0D15] text-white rounded-full px-3 shadow-md border border-amber-400/40">
                         <button
                           type="button"
                           onClick={() => {
