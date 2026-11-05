@@ -7,7 +7,7 @@
         "date": "2026-11-05",
         "startTime": "10:00 AM",
         "durationMinutes": 45,
-        "isPublished": false,
+        "isPublished": true,
         "notes": null
       },
       {
@@ -107,7 +107,7 @@
         "date": "2026-11-06",
         "startTime": "10:00 AM",
         "durationMinutes": 45,
-        "isPublished": false,
+        "isPublished": true,
         "notes": null
       },
       {
@@ -115,7 +115,7 @@
         "date": "2026-11-06",
         "startTime": "11:00 AM",
         "durationMinutes": 45,
-        "isPublished": false,
+        "isPublished": true,
         "notes": null
       },
       {
@@ -123,7 +123,7 @@
         "date": "2026-11-06",
         "startTime": "12:00 PM",
         "durationMinutes": 45,
-        "isPublished": false,
+        "isPublished": true,
         "notes": null
       },
       {
@@ -131,7 +131,7 @@
         "date": "2026-11-06",
         "startTime": "02:00 PM",
         "durationMinutes": 45,
-        "isPublished": false,
+        "isPublished": true,
         "notes": null
       },
       {
@@ -139,7 +139,7 @@
         "date": "2026-11-06",
         "startTime": "04:00 PM",
         "durationMinutes": 45,
-        "isPublished": false,
+        "isPublished": true,
         "notes": null
       },
       {
@@ -147,7 +147,7 @@
         "date": "2026-11-06",
         "startTime": "06:00 PM",
         "durationMinutes": 45,
-        "isPublished": false,
+        "isPublished": true,
         "notes": null
       }
     ],
