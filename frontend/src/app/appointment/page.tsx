@@ -1511,7 +1511,7 @@ function AppointmentContent() {
                         className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 text-xs font-semibold text-stone-800 bg-white focus:outline-none focus:border-amber-500 transition-all cursor-pointer shadow-xs appearance-none pr-10 disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed"
                       >
                         <option value="" disabled>
-                          -- {isDateBlocked ? t('Date Blocked - No Slots Available', 'दिनांक अवरुद्ध - कोई स्लॉट उपलब्ध नहीं') : t('Select an Available Slot', 'उपलब्ध स्लॉट चुनें')} --
+                          -- {isDateBlocked ? t('No Slots Available', 'कोई स्लॉट उपलब्ध नहीं') : t('Select an Available Slot', 'उपलब्ध स्लॉट चुनें')} --
                         </option>
                         {availableSlots.length > 0 ? (
                           availableSlots.map((slot) => {
@@ -1548,9 +1548,7 @@ function AppointmentContent() {
                           <option value="">
                             {loadingSlots
                               ? t('Loading time slots...', 'समय स्लॉट लोड हो रहे हैं...')
-                              : isDateBlocked
-                              ? t('No slots available (Date Blocked)', 'कोई स्लॉट उपलब्ध नहीं (दिनांक अवरुद्ध)')
-                              : t('No time slots available', 'कोई समय स्लॉट उपलब्ध नहीं')}
+                              : t('No slots available', 'कोई स्लॉट उपलब्ध नहीं')}
                           </option>
                         )}
                       </select>
@@ -1571,24 +1569,7 @@ function AppointmentContent() {
 
                 </div>
 
-                {/* Date Blocked Notice */}
-                {isDateBlocked && (
-                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 flex items-start gap-2 shadow-xs">
-                    <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-                    <div className="space-y-0.5 text-xs">
-                      <h4 className="font-serif font-bold text-[#5B0D15]">
-                        {t('Date Not Available', 'दिनांक उपलब्ध नहीं')}
-                      </h4>
-                      <p className="text-[11px] text-stone-700 leading-snug">
-                        {blockedReason ||
-                          t(
-                            'Panditji is observing sacred rituals on this day. Please select another date.',
-                            'पंडित जी इस पावन तिथि को विशेष अनुष्ठान में लीन हैं। कृपया अन्य दिनांक का चयन करें।'
-                          )}
-                      </p>
-                    </div>
-                  </div>
-                )}
+                
               </div>
 
               {/* Auth Prompt if unauthenticated */}
