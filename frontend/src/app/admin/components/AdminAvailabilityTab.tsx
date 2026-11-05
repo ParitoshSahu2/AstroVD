@@ -142,8 +142,8 @@ export default function AdminAvailabilityTab({
 
   return (
     <div className="space-y-6">
-      {/* Control Bar: Date Selector, Quick Jumps & Sanctuary Status */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white border border-stone-200/90 shadow-sm space-y-4">
+      {/* Control Bar: Date Selector, Quick Jumps & Sanctuary Status (Sticky on Scroll) */}
+      <div className="sticky top-16 sm:top-20 z-10 p-4 sm:p-6 rounded-3xl bg-white/95 backdrop-blur-md border border-stone-200/90 shadow-md space-y-4">
         {/* Top Row: Date Selector & Quick Filters */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-stone-100">
           <div className="flex items-center gap-3 flex-wrap">

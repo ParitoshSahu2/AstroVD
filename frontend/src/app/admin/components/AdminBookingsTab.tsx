@@ -167,8 +167,8 @@ export default function AdminBookingsTab({
 
   return (
     <div className="space-y-6">
-      {/* Filter & Search Bar for Bookings */}
-      <div className="p-4 sm:p-6 rounded-3xl bg-white/90 backdrop-blur-xl border border-stone-200/80 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+      {/* Filter & Search Bar for Bookings (Sticky on Scroll) */}
+      <div className="sticky top-16 sm:top-20 z-10 p-4 sm:p-6 rounded-3xl bg-white/95 backdrop-blur-md border border-stone-200/80 shadow-md flex flex-col md:flex-row gap-4 items-center justify-between">
         {/* Booking Search Form */}
         <form onSubmit={handleBookingSearchSubmit} className="flex-1 w-full flex items-center gap-2">
           <div className="relative flex-1">
