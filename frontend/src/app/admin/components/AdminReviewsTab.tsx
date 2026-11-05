@@ -100,8 +100,8 @@ export default function AdminReviewsTab() {
       });
 
       if (!res.ok) {
-        // If 401/403 (e.g. unauthenticated demo admin session), fallback to public reviews
-        if (res.status === 401 || res.status === 403) {
+        // If 401/403 (unauthenticated demo admin) or 404 (endpoint resolving), fallback to public reviews
+        if (res.status === 401 || res.status === 403 || res.status === 404) {
           try {
             const pubRes = await fetch(`${backendUrl}/api/content/reviews/public`);
             if (pubRes.ok) {
@@ -112,6 +112,8 @@ export default function AdminReviewsTab() {
           } catch {
             // ignore fallback error
           }
+          setReviews([]);
+          return;
         }
         throw new Error(`Failed to load reviews (${res.status})`);
       }
@@ -119,8 +121,8 @@ export default function AdminReviewsTab() {
       const data = await res.json();
       setReviews(Array.isArray(data) ? data : []);
     } catch (err: any) {
-      console.error('Error fetching admin reviews:', err);
-      showNotification('error', err.message || 'Could not load devotee reviews.');
+      console.warn('Could not load admin reviews:', err?.message || err);
+      setReviews([]);
     } finally {
       setLoading(false);
     }
