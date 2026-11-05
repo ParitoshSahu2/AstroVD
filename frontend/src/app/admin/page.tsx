@@ -2686,18 +2686,8 @@ export default function AdminPage() {
                                   }`}
                                 />
                                   <div className="flex-1 min-w-0">
-                                    <div className="font-bold text-stone-900 truncate flex items-center justify-between gap-1.5">
-                                      <span className="truncate">{item.title}</span>
-                                      {item.type === 'order' && (
-                                        <span className="text-[9px] font-bold text-amber-800 bg-amber-50 border border-amber-300 px-1.5 py-0.5 rounded-full shrink-0">
-                                          Open Fulfillment
-                                        </span>
-                                      )}
-                                      {item.type === 'booking' && (
-                                        <span className="text-[9px] font-bold text-[#5B0D15] bg-rose-50 border border-rose-300 px-1.5 py-0.5 rounded-full shrink-0">
-                                          Open Booking
-                                        </span>
-                                      )}
+                                    <div className="font-bold text-stone-900 truncate">
+                                      {item.title}
                                     </div>
                                     <div className="text-[11px] text-stone-500 truncate">
                                       {item.description} {item.time ? `• ${item.time}` : ''}
