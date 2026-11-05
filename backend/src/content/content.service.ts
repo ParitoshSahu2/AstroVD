@@ -723,6 +723,31 @@ export class ContentService {
 
   public createReview(dto: CreateReviewDto, user?: JwtPayload): ReviewItem {
     const now = new Date().toISOString();
+
+    // Check if duplicate review already exists to prevent duplication
+    const existingIndex = this.reviews.findIndex((r) => {
+      if (dto.bookingId && r.bookingId && r.bookingId === dto.bookingId) return true;
+      if (dto.orderId && r.orderId && r.orderId === dto.orderId) return true;
+      if (
+        r.userName?.trim().toLowerCase() === (dto.userName || user?.name || '').trim().toLowerCase() &&
+        r.review?.trim().toLowerCase() === dto.review?.trim().toLowerCase()
+      ) {
+        return true;
+      }
+      return false;
+    });
+
+    if (existingIndex !== -1) {
+      const existing = this.reviews[existingIndex];
+      existing.rating = Math.max(1, Math.min(5, Number(dto.rating) || 5));
+      existing.review = dto.review;
+      existing.reviewHi = dto.reviewHi || dto.review;
+      existing.status = 'PUBLISHED';
+      existing.updatedAt = now;
+      this.saveReviews();
+      return existing;
+    }
+
     const newReview: ReviewItem = {
       id: `rev-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       bookingId: dto.bookingId,

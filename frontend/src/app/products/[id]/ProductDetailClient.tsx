@@ -138,19 +138,16 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
             return false;
           });
 
-          const currentIds = new Set(loadedReviews.map((lr) => lr.id));
           for (const lr of localMatched) {
-            if (!currentIds.has(lr.id)) {
-              loadedReviews.unshift({
-                id: lr.id,
-                userName: lr.name || lr.userName || 'Verified Devotee',
-                city: lr.city || 'India',
-                rating: Number(lr.rating) || 5,
-                review: lr.review || '',
-                createdAt: lr.date || new Date().toISOString(),
-                isVerifiedClient: true,
-              });
-            }
+            loadedReviews.unshift({
+              id: lr.id,
+              userName: lr.name || lr.userName || 'Verified Devotee',
+              city: lr.city || 'India',
+              rating: Number(lr.rating) || 5,
+              review: lr.review || '',
+              createdAt: lr.date || new Date().toISOString(),
+              isVerifiedClient: true,
+            });
           }
         }
       }
@@ -182,12 +179,36 @@ export function ProductDetailClient({ productId }: ProductDetailClientProps) {
       ];
     }
 
-    // Compute updated reviews count & average rating
-    const totalCount = baseCount + (loadedReviews.length > 2 ? loadedReviews.length - 2 : 0);
-    const sumRatings = loadedReviews.reduce((acc, curr) => acc + curr.rating, 0);
-    const avgRating = loadedReviews.length > 0 ? (sumRatings / loadedReviews.length) : baseRating;
+    // Strict content-based deduplication
+    const seenIds = new Set<string>();
+    const seenKeys = new Set<string>();
+    const uniqueReviews: ProductReview[] = [];
 
-    setReviews(loadedReviews);
+    for (const item of loadedReviews) {
+      if (!item) continue;
+      const author = (item.userName || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      const snippet = (item.review || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^\w\s\u0900-\u097F]/g, '')
+        .replace(/\s+/g, ' ')
+        .slice(0, 40);
+      const key = `${author}:::${snippet}`;
+
+      if (item.id && seenIds.has(item.id)) continue;
+      if (key !== ':::' && seenKeys.has(key)) continue;
+
+      if (item.id) seenIds.add(item.id);
+      if (key !== ':::') seenKeys.add(key);
+      uniqueReviews.push(item);
+    }
+
+    // Compute updated reviews count & average rating
+    const totalCount = baseCount + (uniqueReviews.length > 2 ? uniqueReviews.length - 2 : 0);
+    const sumRatings = uniqueReviews.reduce((acc, curr) => acc + curr.rating, 0);
+    const avgRating = uniqueReviews.length > 0 ? (sumRatings / uniqueReviews.length) : baseRating;
+
+    setReviews(uniqueReviews);
     setDisplayReviewsCount(totalCount);
     setDisplayRating(Math.round(avgRating * 10) / 10);
   }, [product]);

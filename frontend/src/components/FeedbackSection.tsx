@@ -38,7 +38,7 @@ interface FeedbackItem {
 
 const DEFAULT_FEEDBACKS: FeedbackItem[] = [
   {
-    id: '1',
+    id: 'rev-seed-1',
     name: 'Rajesh & Meenakshi Iyer',
     city: 'Dubai',
     cityHi: 'दुबई',
@@ -56,7 +56,7 @@ const DEFAULT_FEEDBACKS: FeedbackItem[] = [
     isVerifiedClient: true,
   },
   {
-    id: '2',
+    id: 'rev-seed-2',
     name: 'Siddharth Varma',
     city: 'Sydney',
     cityHi: 'सिडनी',
@@ -74,7 +74,7 @@ const DEFAULT_FEEDBACKS: FeedbackItem[] = [
     isVerifiedClient: true,
   },
   {
-    id: '3',
+    id: 'rev-seed-3',
     name: 'Pooja Agarwal',
     city: 'Mumbai',
     cityHi: 'मुंबई',
@@ -92,7 +92,7 @@ const DEFAULT_FEEDBACKS: FeedbackItem[] = [
     isVerifiedClient: true,
   },
   {
-    id: '4',
+    id: 'rev-seed-4',
     name: 'Vikram Malhotra',
     city: 'London',
     cityHi: 'लंदन',
@@ -112,6 +112,42 @@ const DEFAULT_FEEDBACKS: FeedbackItem[] = [
 ];
 
 const BACKEND_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
+
+function normalizeReviewKey(item: { id?: string; name?: string; userName?: string; review?: string }): string {
+  const author = (item.name || item.userName || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const snippet = (item.review || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\s\u0900-\u097F]/g, '')
+    .replace(/\s+/g, ' ')
+    .slice(0, 40);
+  return `${author}:::${snippet}`;
+}
+
+function deduplicateFeedbacks(list: FeedbackItem[]): FeedbackItem[] {
+  const seenIds = new Set<string>();
+  const seenKeys = new Set<string>();
+  const uniqueList: FeedbackItem[] = [];
+
+  for (const item of list) {
+    if (!item) continue;
+    const normKey = normalizeReviewKey(item);
+
+    // If already seen by ID or by author + content snippet, skip duplicate
+    if (item.id && seenIds.has(item.id)) {
+      continue;
+    }
+    if (normKey !== ':::' && seenKeys.has(normKey)) {
+      continue;
+    }
+
+    if (item.id) seenIds.add(item.id);
+    if (normKey !== ':::') seenKeys.add(normKey);
+    uniqueList.push(item);
+  }
+
+  return uniqueList;
+}
 
 export const FeedbackSection: React.FC = () => {
   const { t, language } = useLanguage();
@@ -135,11 +171,10 @@ export const FeedbackSection: React.FC = () => {
   const [newReview, setNewReview] = useState('');
   const [newRating, setNewRating] = useState(5);
 
-
-  // Load verified user reviews from backend API and local storage
+  // Load verified user reviews from backend API and local storage with strict deduplication
   useEffect(() => {
     const loadReviews = async () => {
-      let combined: FeedbackItem[] = [...DEFAULT_FEEDBACKS];
+      let backendItems: FeedbackItem[] = [];
 
       // 1. Fetch live published reviews from backend API
       try {
@@ -147,7 +182,7 @@ export const FeedbackSection: React.FC = () => {
         if (res.ok) {
           const backendReviews = await res.json();
           if (Array.isArray(backendReviews) && backendReviews.length > 0) {
-            const mapped: FeedbackItem[] = backendReviews.map((r: any) => ({
+            backendItems = backendReviews.map((r: any) => ({
               id: r.id,
               name: r.userName || 'Verified Seeker',
               city: r.city || 'India',
@@ -168,11 +203,6 @@ export const FeedbackSection: React.FC = () => {
               dateHi: 'हाल ही में',
               isVerifiedClient: true,
             }));
-
-            // Filter out any default IDs if matched, or prepend new published reviews
-            const existingIds = new Set(mapped.map((m) => m.id));
-            const remainingDefaults = DEFAULT_FEEDBACKS.filter((df) => !existingIds.has(df.id));
-            combined = [...mapped, ...remainingDefaults];
           }
         }
       } catch (e) {
@@ -180,21 +210,32 @@ export const FeedbackSection: React.FC = () => {
       }
 
       // 2. Also check local storage for instant client-side updates
+      let localItems: FeedbackItem[] = [];
       try {
         const stored = localStorage.getItem('astro_verified_reviews');
         if (stored) {
           const parsed: FeedbackItem[] = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            const currentIds = new Set(combined.map((c) => c.id));
-            const newLocal = parsed.filter((p) => !currentIds.has(p.id));
-            combined = [...newLocal, ...combined];
+            localItems = parsed;
           }
         }
       } catch (e) {
         console.error('Failed to load local reviews:', e);
       }
 
+      // 3. Strict Deduplication across Backend + Local + Default seeds
+      const combined = deduplicateFeedbacks([...backendItems, ...localItems, ...DEFAULT_FEEDBACKS]);
       setFeedbacksList(combined);
+
+      // Clean up localStorage to keep records clean
+      try {
+        if (localItems.length > 0) {
+          const cleanLocal = deduplicateFeedbacks(localItems);
+          if (cleanLocal.length !== localItems.length) {
+            localStorage.setItem('astro_verified_reviews', JSON.stringify(cleanLocal));
+          }
+        }
+      } catch {}
     };
 
     loadReviews();
@@ -363,15 +404,15 @@ export const FeedbackSection: React.FC = () => {
       isVerifiedClient: true,
     };
 
-    // Prepend to display list
-    const updated = [newFeedback, ...feedbacksList];
-    setFeedbacksList(updated);
+    // Prepend to display list with deduplication
+    setFeedbacksList((prev) => deduplicateFeedbacks([newFeedback, ...prev]));
 
-    // Save user verified reviews locally
+    // Save user verified reviews locally without duplicates
     try {
       const existing = localStorage.getItem('astro_verified_reviews');
       const parsed = existing ? JSON.parse(existing) : [];
-      localStorage.setItem('astro_verified_reviews', JSON.stringify([newFeedback, ...parsed]));
+      const cleanStored = deduplicateFeedbacks([newFeedback, ...parsed]);
+      localStorage.setItem('astro_verified_reviews', JSON.stringify(cleanStored));
     } catch (e) {
       console.error('Failed to save verified review:', e);
     }
