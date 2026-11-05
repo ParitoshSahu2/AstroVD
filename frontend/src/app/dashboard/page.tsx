@@ -42,7 +42,30 @@ export default function DashboardPage() {
   const pathname = usePathname();
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
+  const [activeTab, setActiveTab] = useState<DashboardTab>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const search = new URLSearchParams(window.location.search);
+        const tabParam = (search.get('tab') || localStorage.getItem('astrovd_dashboard_active_tab')) as DashboardTab | null;
+        if (tabParam && ['overview', 'consultations', 'orders', 'settings'].includes(tabParam)) {
+          return tabParam;
+        }
+      } catch (e) {}
+    }
+    return 'overview';
+  });
+
+  const switchDashboardTab = (tab: DashboardTab) => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('astrovd_dashboard_active_tab', tab);
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', tab);
+        window.history.replaceState(null, '', url.toString());
+      } catch (e) {}
+    }
+  };
 
   // Core Data States
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -380,7 +403,7 @@ export default function DashboardPage() {
               <div>
                 <button
                   type="button"
-                  onClick={() => setActiveTab('overview')}
+                  onClick={() => switchDashboardTab('overview')}
                   className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                     activeTab === 'overview'
                       ? 'bg-[#FDF2F4] text-[#8B1D2C]'
@@ -400,7 +423,7 @@ export default function DashboardPage() {
                 <div className="space-y-0.5">
                   <button
                     type="button"
-                    onClick={() => setActiveTab('consultations')}
+                    onClick={() => switchDashboardTab('consultations')}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                       activeTab === 'consultations'
                         ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
@@ -424,7 +447,7 @@ export default function DashboardPage() {
 
                   <button
                     type="button"
-                    onClick={() => setActiveTab('orders')}
+                    onClick={() => switchDashboardTab('orders')}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                       activeTab === 'orders'
                         ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
@@ -459,7 +482,7 @@ export default function DashboardPage() {
                 <div className="space-y-0.5">
                   <button
                     type="button"
-                    onClick={() => setActiveTab('settings')}
+                    onClick={() => switchDashboardTab('settings')}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                       activeTab === 'settings'
                         ? 'bg-[#FDF2F4] text-[#8B1D2C] font-semibold'
@@ -527,7 +550,7 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      setActiveTab('overview');
+                      switchDashboardTab('overview');
                       setMobileSidebarOpen(false);
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
@@ -548,7 +571,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          setActiveTab('consultations');
+                          switchDashboardTab('consultations');
                           setMobileSidebarOpen(false);
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
@@ -575,7 +598,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          setActiveTab('orders');
+                          switchDashboardTab('orders');
                           setMobileSidebarOpen(false);
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
@@ -612,7 +635,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          setActiveTab('settings');
+                          switchDashboardTab('settings');
                           setMobileSidebarOpen(false);
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
@@ -713,7 +736,7 @@ export default function DashboardPage() {
                           <div
                             key={b.id || idx}
                             onClick={() => {
-                              setActiveTab('consultations');
+                              switchDashboardTab('consultations');
                               setNotificationsOpen(false);
                             }}
                             className="p-2.5 rounded-xl cursor-pointer border border-transparent hover:bg-stone-50 transition-all flex items-start gap-2.5"
@@ -772,7 +795,7 @@ export default function DashboardPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          setActiveTab('settings');
+                          switchDashboardTab('settings');
                           setProfileDropdownOpen(false);
                         }}
                         className="w-full px-4 py-2 hover:bg-stone-50 flex items-center gap-2 text-left cursor-pointer"
@@ -807,7 +830,7 @@ export default function DashboardPage() {
                   profile={profile}
                   bookings={bookings}
                   orders={orders}
-                  onTabChange={(tab) => setActiveTab(tab)}
+                  onTabChange={(tab) => switchDashboardTab(tab)}
                   formatGoogleMeetLink={formatGoogleMeetLink}
                   t={t}
                 />
@@ -818,7 +841,7 @@ export default function DashboardPage() {
                   bookings={bookings}
                   bookingsLoading={bookingsLoading}
                   profile={profile}
-                  onOpenEditProfile={() => setActiveTab('settings')}
+                  onOpenEditProfile={() => switchDashboardTab('settings')}
                   t={t}
                 />
               )}
