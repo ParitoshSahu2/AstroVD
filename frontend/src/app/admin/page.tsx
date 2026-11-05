@@ -286,6 +286,10 @@ export default function AdminPage() {
     read: boolean;
     actionTab?: string;
     type?: 'booking' | 'order' | 'system';
+    bookingId?: string;
+    bookingData?: any;
+    orderId?: string;
+    orderData?: any;
   }[]>([]);
 
   const fetchAdminNotifications = async () => {
@@ -311,6 +315,10 @@ export default function AdminPage() {
         read: boolean;
         actionTab?: string;
         type: 'booking' | 'order' | 'system';
+        bookingId?: string;
+        bookingData?: any;
+        orderId?: string;
+        orderData?: any;
       }[] = [];
 
       let readSet = new Set<string>();
@@ -330,7 +338,6 @@ export default function AdminPage() {
           const serviceName = b.serviceTitle || b.serviceType || 'Consultation';
           const costStr = b.totalCost === 0 ? 'FREE' : `₹${Number(b.totalCost).toLocaleString('en-IN')}`;
           const notifId = `booking-${b.id}`;
-
           dynamicNotifs.push({
             id: notifId,
             title: `🗓️ New Booking: ${serviceName}`,
@@ -340,6 +347,8 @@ export default function AdminPage() {
             read: readSet.has(notifId),
             actionTab: 'appointments',
             type: 'booking',
+            bookingId: b.id,
+            bookingData: b,
           });
         });
       }
@@ -354,7 +363,6 @@ export default function AdminPage() {
           const totalStr = `₹${Number(o.totalAmount).toLocaleString('en-IN')}`;
           const itemCount = o.itemCount || o.items?.length || 1;
           const notifId = `order-${o.id}`;
-
           dynamicNotifs.push({
             id: notifId,
             title: `📦 New Product Order ${orderRef}`,
@@ -364,6 +372,8 @@ export default function AdminPage() {
             read: readSet.has(notifId),
             actionTab: 'orders',
             type: 'order',
+            orderId: o.id,
+            orderData: o,
           });
         });
       }
@@ -401,7 +411,15 @@ export default function AdminPage() {
 
   const unreadNotificationsCount = notificationsList.filter((n) => !n.read).length;
 
-  const handleNotificationClick = (item: { id: string; actionTab?: string }) => {
+  const handleNotificationClick = async (item: {
+    id: string;
+    actionTab?: string;
+    type?: 'booking' | 'order' | 'system';
+    bookingId?: string;
+    bookingData?: any;
+    orderId?: string;
+    orderData?: any;
+  }) => {
     setNotificationsList((prev) =>
       prev.map((n) => (n.id === item.id ? { ...n, read: true } : n))
     );
@@ -413,6 +431,64 @@ export default function AdminPage() {
     } catch (e) {}
 
     setNotificationsOpen(false);
+
+    // 1. If it's a product order notification -> open Order Fulfillment Lifecycle modal
+    if (item.type === 'order' || item.orderId || item.id.startsWith('order-')) {
+      const targetOrderId = item.orderId || item.id.replace('order-', '');
+      handleSidebarTabClick('orders');
+
+      if (item.orderData) {
+        setActiveOrder(item.orderData);
+      } else {
+        const found = ordersList.find((o) => o.id === targetOrderId);
+        if (found) {
+          setActiveOrder(found);
+        } else {
+          try {
+            const token = getAuthToken();
+            const res = await fetch(`${backendUrl}/api/admin/orders/${targetOrderId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+              const ord = await res.json();
+              setActiveOrder(ord);
+            }
+          } catch (err) {
+            console.error('Failed to load order for fulfillment lifecycle modal:', err);
+          }
+        }
+      }
+      return;
+    }
+
+    // 2. If it's a consultation booking notification -> open Booking Lifecycle modal
+    if (item.type === 'booking' || item.bookingId || item.id.startsWith('booking-')) {
+      const targetBookingId = item.bookingId || item.id.replace('booking-', '');
+      handleSidebarTabClick('appointments');
+
+      if (item.bookingData) {
+        setActiveBooking(item.bookingData);
+      } else {
+        const found = bookingsList.find((b) => b.id === targetBookingId);
+        if (found) {
+          setActiveBooking(found);
+        } else {
+          try {
+            const token = getAuthToken();
+            const res = await fetch(`${backendUrl}/api/admin/bookings/${targetBookingId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) {
+              const bkg = await res.json();
+              setActiveBooking(bkg);
+            }
+          } catch (err) {
+            console.error('Failed to load booking for lifecycle modal:', err);
+          }
+        }
+      }
+      return;
+    }
 
     if (item.actionTab) {
       if (item.actionTab === 'activity') {
@@ -2609,14 +2685,24 @@ export default function AdminPage() {
                                     item.read ? 'bg-stone-300' : 'bg-[#E11D48]'
                                   }`}
                                 />
-                                <div className="flex-1 min-w-0">
-                                  <div className="font-bold text-stone-900 truncate">
-                                    {item.title}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-bold text-stone-900 truncate flex items-center justify-between gap-1.5">
+                                      <span className="truncate">{item.title}</span>
+                                      {item.type === 'order' && (
+                                        <span className="text-[9px] font-bold text-amber-800 bg-amber-50 border border-amber-300 px-1.5 py-0.5 rounded-full shrink-0">
+                                          Open Fulfillment
+                                        </span>
+                                      )}
+                                      {item.type === 'booking' && (
+                                        <span className="text-[9px] font-bold text-[#5B0D15] bg-rose-50 border border-rose-300 px-1.5 py-0.5 rounded-full shrink-0">
+                                          Open Booking
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-[11px] text-stone-500 truncate">
+                                      {item.description} {item.time ? `• ${item.time}` : ''}
+                                    </div>
                                   </div>
-                                  <div className="text-[11px] text-stone-500 truncate">
-                                    {item.description} {item.time ? `• ${item.time}` : ''}
-                                  </div>
-                                </div>
                               </div>
                             ))}
                             {notificationsList.length === 0 && (
