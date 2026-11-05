@@ -215,7 +215,7 @@
         "date": "2026-11-07",
         "startTime": "11:00 AM",
         "durationMinutes": 45,
-        "isPublished": true,
+        "isPublished": false,
         "notes": null
       },
       {

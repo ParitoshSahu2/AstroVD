@@ -1,0 +1,40 @@
+[
+  {
+    "id": "act-1793862036779-rw0hy",
+    "adminId": "usr-admin-vishal",
+    "adminName": "Dr. Pandit Vishal Dubey",
+    "adminEmail": "vishal.dubey@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "1793862036750-screenshot_2026-10-27_162945.png",
+    "itemTitle": "Screenshot 2026-10-27 162945.png",
+    "action": "UPLOAD_IMAGE",
+    "timestamp": "2026-11-05T07:00:36.779Z",
+    "summary": "Uploaded image \"Screenshot 2026-10-27 162945.png\" (2207.3 KB)",
+    "details": {
+      "filename": "1793862036750-screenshot_2026-10-27_162945.png",
+      "size": 2260291,
+      "mimetype": "image/png",
+      "url": "/api/content/uploads/1793862036750-screenshot_2026-10-27_162945.png"
+    }
+  },
+  {
+    "id": "act-1793862022186-1jwfr",
+    "adminId": "usr-admin-vishal",
+    "adminName": "Dr. Pandit Vishal Dubey",
+    "adminEmail": "vishal.dubey@astrovd.com",
+    "adminRole": "ADMIN",
+    "contentType": "GALLERY",
+    "itemId": "1793862022153-screenshot_2026-10-27_162945.png",
+    "itemTitle": "Screenshot 2026-10-27 162945.png",
+    "action": "UPLOAD_IMAGE",
+    "timestamp": "2026-11-05T07:00:22.186Z",
+    "summary": "Uploaded image \"Screenshot 2026-10-27 162945.png\" (2207.3 KB)",
+    "details": {
+      "filename": "1793862022153-screenshot_2026-10-27_162945.png",
+      "size": 2260291,
+      "mimetype": "image/png",
+      "url": "/api/content/uploads/1793862022153-screenshot_2026-10-27_162945.png"
+    }
+  }
+]

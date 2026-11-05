@@ -193,9 +193,9 @@
     "id": "ORD-927373-DP31",
     "userId": "usr-superadmin",
     "totalAmount": 1299,
-    "status": "PROCESSING",
+    "status": "PACKED",
     "createdAt": "2026-11-04T12:05:27.373Z",
-    "updatedAt": "2026-11-04T12:05:37.257Z",
+    "updatedAt": "2026-11-05T10:53:34.138Z",
     "shippingAddress": {
       "recipient": "Paritosh Sahu",
       "addressLine": "B-14, Shivalik Enclave, Lanka",
@@ -211,7 +211,8 @@
       "shippingFee": 0,
       "statusTimestamps": {
         "ORDER_PLACED": "2026-11-04T12:05:27.373Z",
-        "PROCESSING": "2026-11-04T12:05:37.257Z"
+        "PROCESSING": "2026-11-04T12:05:37.257Z",
+        "PACKED": "2026-11-05T10:53:34.138Z"
       },
       "timeline": [
         {
@@ -225,6 +226,11 @@
           "stage": "PROCESSING",
           "timestamp": "2026-11-04T12:05:37.257Z",
           "notes": "Packed and ready"
+        },
+        {
+          "status": "PACKED",
+          "stage": "PACKED",
+          "timestamp": "2026-11-05T10:53:34.138Z"
         }
       ],
       "adminFulfillmentNotes": "Packed and ready"

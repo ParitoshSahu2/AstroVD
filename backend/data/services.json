@@ -14,7 +14,7 @@
     "durationMinutes": 20,
     "isActive": true,
     "createdAt": "2026-11-05T05:25:05.575Z",
-    "updatedAt": "2026-11-05T05:25:05.575Z"
+    "updatedAt": "2026-11-05T10:52:42.924Z"
   },
   {
     "id": "general_consultation",
@@ -30,7 +30,7 @@
     "durationMinutes": 30,
     "isActive": true,
     "createdAt": "2026-11-05T05:25:05.575Z",
-    "updatedAt": "2026-11-05T05:25:05.575Z"
+    "updatedAt": "2026-11-05T10:52:44.805Z"
   },
   {
     "id": "astrological_consultation",

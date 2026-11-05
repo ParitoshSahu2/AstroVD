@@ -1,0 +1,128 @@
+[
+  {
+    "id": "usr-paritosh-1",
+    "name": "Paritosh Sahu",
+    "email": "paritoshsahu9826@gmail.com",
+    "phone": "+917089390239",
+    "role": "USER",
+    "status": "ACTIVE",
+    "walletBalance": 500,
+    "emailVerified": true,
+    "phoneVerified": true,
+    "zodiacSign": "Taurus",
+    "dateOfBirth": "1998-05-10",
+    "placeOfBirth": "India",
+    "createdAt": "2026-11-01T10:00:00.000Z",
+    "updatedAt": "2026-11-04T12:00:00.000Z",
+    "_count": {
+      "bookings": 6,
+      "orders": 2,
+      "transactions": 4
+    }
+  },
+  {
+    "id": "usr-admin-vishal",
+    "name": "Dr. Pandit Vishal Dubey",
+    "email": "vishal.dubey@astrovd.com",
+    "phone": "+919826012345",
+    "role": "ADMIN",
+    "status": "ACTIVE",
+    "walletBalance": 50000,
+    "emailVerified": true,
+    "phoneVerified": true,
+    "zodiacSign": "Sagittarius",
+    "dateOfBirth": "1980-12-05",
+    "placeOfBirth": "Varanasi, India",
+    "createdAt": "2026-10-20T00:00:00.000Z",
+    "updatedAt": "2026-11-05T00:00:00.000Z",
+    "_count": {
+      "bookings": 10,
+      "orders": 0,
+      "transactions": 0
+    }
+  },
+  {
+    "id": "usr-admin-sourabh",
+    "name": "Acharya Sourabh Swami",
+    "email": "sourabh.swami@astrovd.com",
+    "phone": "+919826012346",
+    "role": "ADMIN",
+    "status": "ACTIVE",
+    "walletBalance": 25000,
+    "emailVerified": true,
+    "phoneVerified": true,
+    "zodiacSign": "Capricorn",
+    "dateOfBirth": "1985-01-15",
+    "placeOfBirth": "Varanasi, India",
+    "createdAt": "2026-10-21T00:00:00.000Z",
+    "updatedAt": "2026-11-05T00:00:00.000Z",
+    "_count": {
+      "bookings": 5,
+      "orders": 0,
+      "transactions": 0
+    }
+  },
+  {
+    "id": "usr-admin-madhuri",
+    "name": "Madhuri Dubey",
+    "email": "madhuri.dubey@astrovd.com",
+    "phone": "+919826012347",
+    "role": "ADMIN",
+    "status": "ACTIVE",
+    "walletBalance": 25000,
+    "emailVerified": true,
+    "phoneVerified": true,
+    "zodiacSign": "Libra",
+    "dateOfBirth": "1988-10-20",
+    "placeOfBirth": "Indore, India",
+    "createdAt": "2026-10-22T00:00:00.000Z",
+    "updatedAt": "2026-11-05T00:00:00.000Z",
+    "_count": {
+      "bookings": 3,
+      "orders": 0,
+      "transactions": 0
+    }
+  },
+  {
+    "id": "usr-admin-demo",
+    "name": "AstroVD Content Admin",
+    "email": "admin@astrovd.com",
+    "phone": "+919826012348",
+    "role": "ADMIN",
+    "status": "ACTIVE",
+    "walletBalance": 10000,
+    "emailVerified": true,
+    "phoneVerified": true,
+    "zodiacSign": "Aquarius",
+    "dateOfBirth": "1990-02-14",
+    "placeOfBirth": "New Delhi, India",
+    "createdAt": "2026-10-23T00:00:00.000Z",
+    "updatedAt": "2026-11-05T00:00:00.000Z",
+    "_count": {
+      "bookings": 0,
+      "orders": 0,
+      "transactions": 0
+    }
+  },
+  {
+    "id": "usr-superadmin",
+    "name": "Yash Patidar",
+    "email": "yash@astrovd.com",
+    "phone": "+919876543210",
+    "role": "SUPERADMIN",
+    "status": "ACTIVE",
+    "walletBalance": 99999,
+    "emailVerified": true,
+    "phoneVerified": true,
+    "zodiacSign": "Gemini",
+    "dateOfBirth": "1997-06-18",
+    "placeOfBirth": "Indore, India",
+    "createdAt": "2026-10-15T00:00:00.000Z",
+    "updatedAt": "2026-11-05T00:00:00.000Z",
+    "_count": {
+      "bookings": 1,
+      "orders": 1,
+      "transactions": 5
+    }
+  }
+]

@@ -1,0 +1,554 @@
+export interface ServiceItem {
+  id: string;
+  categoryTag: string;
+  categoryKey: 'astrology' | 'pooja' | 'occult' | 'education';
+  title: string;
+  displayTitle?: string;
+  pandit: string;
+  desc: string;
+  displayDesc?: string;
+  price: string;
+  displayPrice?: string;
+  priceNumber: number;
+  image: string;
+  badge?: string;
+  badgeType?: 'popular' | 'booked' | 'relationship' | 'pooja' | 'kundali' | 'special' | 'default';
+  isSpecial?: boolean;
+  durationMinutes: number;
+  durationDisplay?: string;
+  specialistDisplay?: string;
+  unitDisplay?: string;
+  filterCategory?: string;
+}
+
+export const SERVICES_CATALOGUE: ServiceItem[] = [
+  {
+    id: 'astrological_consultation',
+    categoryTag: 'VEDIC ASTROLOGY',
+    categoryKey: 'astrology',
+    title: 'ASTROLOGICAL CONSULTATION',
+    displayTitle: 'Astrological Consultation',
+    pandit: 'Dr. Pandit Vishal Dubey (PhD, Jyotishacharya)',
+    desc: 'Get personalized guidance from experienced astrologers for your life, career, health, and relationships.',
+    displayDesc: 'Get personalized guidance from experienced astrologers for your life, career, health, and relationships.',
+    price: '₹999',
+    displayPrice: '₹ 999',
+    priceNumber: 999,
+    image: '/services/consultation.jpg',
+    badge: 'Popular',
+    badgeType: 'popular',
+    durationMinutes: 60,
+    durationDisplay: '60 mins',
+    specialistDisplay: 'Expert Astrologers',
+    unitDisplay: '/ session',
+    filterCategory: 'astrology',
+  },
+  {
+    id: 'marriage_match_making',
+    categoryTag: 'KUNDLI MILAN',
+    categoryKey: 'astrology',
+    title: 'MARRIAGE MATCH MAKING',
+    displayTitle: 'Marriage Match Making',
+    pandit: 'Dr. Pandit Vishal Dubey (Gold Medalist)',
+    desc: 'Ensure a harmonious married life with accurate kundali matching and compatibility analysis.',
+    displayDesc: 'Ensure a harmonious married life with accurate kundali matching and compatibility analysis.',
+    price: '₹1,499',
+    displayPrice: '₹ 1,499',
+    priceNumber: 1499,
+    image: '/services/marriage.jpg',
+    badge: 'Most Booked',
+    badgeType: 'booked',
+    durationMinutes: 45,
+    durationDisplay: '45 mins',
+    specialistDisplay: 'Expert Astrologers',
+    unitDisplay: '/ session',
+    filterCategory: 'marriage',
+  },
+  {
+    id: 'love_relationship_issues',
+    categoryTag: 'RELATIONSHIP GUIDANCE',
+    categoryKey: 'astrology',
+    title: 'LOVE AND RELATIONSHIP ISSUES',
+    displayTitle: 'Love and Relationship Issues',
+    pandit: 'Dr. Pandit Vishal Dubey & Madhuri Dubey',
+    desc: 'Resolve relationship challenges and bring love, harmony, and understanding into your life.',
+    displayDesc: 'Resolve relationship challenges and bring love, harmony, and understanding into your life.',
+    price: '₹1,299',
+    displayPrice: '₹ 1,299',
+    priceNumber: 1299,
+    image: '/services/career.jpg',
+    badge: 'Relationship',
+    badgeType: 'relationship',
+    durationMinutes: 60,
+    durationDisplay: '60 mins',
+    specialistDisplay: 'Relationship Expert',
+    unitDisplay: '/ session',
+    filterCategory: 'marriage',
+  },
+  {
+    id: 'grah_pravesh_vaastu',
+    categoryTag: 'VEDIC YAGYA & POOJA',
+    categoryKey: 'pooja',
+    title: 'GRAH PRAVESH POOJAN AND VAASTU SHANTI',
+    displayTitle: 'Grah Pravesh Poojan and Vaastu Shanti',
+    pandit: 'Acharya Sourabh Swami & Karamkand Mandali',
+    desc: 'Bring positive energy to your new home and remove Vastu-related obstacles with traditional rituals.',
+    displayDesc: 'Bring positive energy to your new home and remove Vastu-related obstacles with traditional rituals.',
+    price: '₹3,499',
+    displayPrice: '₹ 3,499',
+    priceNumber: 3499,
+    image: '/services/puja.jpg',
+    badge: 'Pooja Services',
+    badgeType: 'pooja',
+    durationMinutes: 150,
+    durationDisplay: '2-3 hrs',
+    specialistDisplay: 'Puja Specialist',
+    unitDisplay: '/ pooja',
+    filterCategory: 'pooja',
+  },
+  {
+    id: 'birth_chart_kundli',
+    categoryTag: 'VEDIC ASTROLOGY',
+    categoryKey: 'astrology',
+    title: 'BIRTH CHART (JANAM KUNDALI)',
+    displayTitle: 'Birth Chart (Janam Kundali)',
+    pandit: 'Dr. Pandit Vishal Dubey Ji',
+    desc: 'Get a detailed analysis of your birth chart for a better understanding of your life path and future.',
+    displayDesc: 'Get a detailed analysis of your birth chart for a better understanding of your life path and future.',
+    price: '₹1,199',
+    displayPrice: '₹ 1,199',
+    priceNumber: 1199,
+    image: '/services/kundli.jpg',
+    badge: 'Kundali',
+    badgeType: 'kundali',
+    durationMinutes: 45,
+    durationDisplay: '45 mins',
+    specialistDisplay: 'Expert Astrologers',
+    unitDisplay: '/ session',
+    filterCategory: 'astrology',
+  },
+  {
+    id: 'mangal_dosh_shanti',
+    categoryTag: 'DOSH SHANTI',
+    categoryKey: 'pooja',
+    title: 'MANGAL DOSH SHANTI',
+    displayTitle: 'Mangal Doshi Shanti',
+    pandit: 'Acharya Sourabh Swami Ji',
+    desc: 'Peaceful remedies to reduce Mangal dosh effects and bring stability in marriage and life.',
+    displayDesc: 'Peaceful remedies to reduce Mangal dosh effects and bring stability in marriage and life.',
+    price: '₹2,999',
+    displayPrice: '₹ 2,999',
+    priceNumber: 2999,
+    image: '/services/gemstones.jpg',
+    badge: 'Pooja Services',
+    badgeType: 'pooja',
+    durationMinutes: 150,
+    durationDisplay: '2-3 hrs',
+    specialistDisplay: 'Puja Specialist',
+    unitDisplay: '/ pooja',
+    filterCategory: 'pooja',
+  },
+  {
+    id: 'navgrah_shanti_poojan',
+    categoryTag: 'VEDIC YAGYA & POOJA',
+    categoryKey: 'pooja',
+    title: 'NAVGRAH SHANTI POOJAN',
+    pandit: 'Vedic Acharyas of Kashi Yagyashala',
+    desc: 'Complete propitiation of all 9 planetary deities (Sun to Ketu) with authentic Shukla Yajurveda Samidha wood, pure cow ghee, and beej mantras.',
+    price: '₹5,500',
+    priceNumber: 5500,
+    image: '/services/puja.jpg',
+    badge: 'Highly Recommended',
+    durationMinutes: 60,
+  },
+  {
+    id: 'free_birth_chart_baby_girl',
+    categoryTag: 'SACRED BLESSING',
+    categoryKey: 'astrology',
+    title: 'FREE BIRTH CHART FOR BABY GIRL BELOW 9YEARS OLD',
+    pandit: 'Dr. Pandit Vishal Dubey (Kanya Seva Sankalp)',
+    desc: 'In honour of Maa Jagadamba, AstroVD offers 100% free authentic Vedic Janam Kundli analysis and planetary blessings for baby girls under 9 years old.',
+    price: '100% FREE',
+    priceNumber: 0,
+    image: '/services/kundli.jpg',
+    badge: 'Divine Free Initiative',
+    isSpecial: true,
+    durationMinutes: 20,
+  },
+  {
+    id: 'booking_for_pooja',
+    categoryTag: 'VEDIC YAGYA & POOJA',
+    categoryKey: 'pooja',
+    title: 'BOOKING FOR POOJA',
+    pandit: 'Shree Ganesh Vidyapith Pandits',
+    desc: 'Online & physical booking for personalized Rudrabhishek, Mahamrityunjaya Japa, Satyanarayan Katha, and specialized Vedic anushthans.',
+    price: '₹3,100',
+    priceNumber: 3100,
+    image: '/services/puja.jpg',
+    durationMinutes: 45,
+  },
+  {
+    id: 'vastu_consultation',
+    categoryTag: 'OCCULT & ENERGY',
+    categoryKey: 'occult',
+    title: 'VASTU CONSULTATION',
+    pandit: 'Dr. Pandit Vishal Dubey (Vastu Shastri)',
+    desc: 'Non-demolition spatial harmonization for residential flats, commercial complexes, and industrial plants balancing the 16 Vastu directional zones.',
+    price: '₹3,500',
+    priceNumber: 3500,
+    image: '/services/consultation.jpg',
+    durationMinutes: 45,
+  },
+  {
+    id: 'tarot_card_reading',
+    categoryTag: 'INTUITIVE TAROT',
+    categoryKey: 'occult',
+    title: 'TAROT CARD READING',
+    pandit: 'Madhuri Dubey (Tarot & Spiritual Guide)',
+    desc: 'Deep intuitive Celtic Cross and 3-card readings unveiling subconscious patterns, decision pathways, and relationship clarity through sacred symbolism.',
+    price: '₹1,500',
+    priceNumber: 1500,
+    image: '/services/consultation.jpg',
+    durationMinutes: 30,
+  },
+  {
+    id: 'pendulum_dowsing',
+    categoryTag: 'ENERGY HEALING',
+    categoryKey: 'occult',
+    title: 'PENDULUM DOWSING',
+    pandit: 'Madhuri Dubey & AstroVD Team',
+    desc: 'Subtle bio-energy radiant testing to identify energetic blockages, verify chakra alignment, and receive direct yes/no answers on life decisions.',
+    price: '₹1,100',
+    priceNumber: 1100,
+    image: '/services/consultation.jpg',
+    durationMinutes: 20,
+  },
+  {
+    id: 'annual_chart_varshaphal',
+    categoryTag: 'VEDIC ASTROLOGY',
+    categoryKey: 'astrology',
+    title: 'ANNUAL CHART (VARSHAPHAL)',
+    pandit: 'Dr. Pandit Vishal Dubey',
+    desc: 'Detailed Tajika-system Solar Return (Varshaphal) breakdown covering month-by-month financial forecasts, career crests, and precautionary periods.',
+    price: '₹2,500',
+    priceNumber: 2500,
+    image: '/services/career.jpg',
+    durationMinutes: 30,
+  },
+  {
+    id: 'lucky_gem_stone',
+    categoryTag: 'RATNA PARIKSHAN',
+    categoryKey: 'occult',
+    title: 'LUCKY GEM STONE',
+    pandit: 'Acharya Sourabh Swami & Dr. Vishal Dubey',
+    desc: 'Pinpointing your Yogakaraka life-stone based on planetary lordship, carat weight calculation, metal setting, and auspicious wearing Muhurta.',
+    price: '₹1,200',
+    priceNumber: 1200,
+    image: '/services/gemstones.jpg',
+    durationMinutes: 20,
+  },
+  {
+
+    id: 'general_consultation',
+    categoryTag: 'OPEN CONSULTATION',
+    categoryKey: 'astrology',
+    title: 'General Consultation (Ask Any Query / Open Guidance)',
+    pandit: 'Dr. Pandit Vishal Dubey (Jyotishacharya, Kashi)',
+    desc: 'Direct 1-on-1 personalized guidance with Dr. Pandit Vishal Dubey for any personal, career, spiritual, or karmic queries without pre-selecting a specific Vedic field.',
+    price: '₹2,100',
+    priceNumber: 2100,
+    image: '/services/consultation.jpg',
+    badge: 'Open Query',
+    durationMinutes: 30,
+  },
+  
+  {
+
+    id: 'hypnotism',
+    categoryTag: 'SUBCONSCIOUS MIND',
+    categoryKey: 'occult',
+    title: 'HYPNOTISM',
+    pandit: 'Dr. Pandit Vishal Dubey (Certified Hypnotherapist)',
+    desc: 'Clinical hypnosis and subconscious reprogramming sessions to dissolve deep phobias, stress, past trauma, and unlock peak confidence and focus.',
+    price: '₹3,500',
+    priceNumber: 3500,
+    image: '/services/consultation.jpg',
+    durationMinutes: 45,
+  },
+  {
+    id: 'grahan_shanti_surya_chandra',
+    categoryTag: 'DOSH SHANTI',
+    categoryKey: 'pooja',
+    title: 'GRAHAN SHANTI SURYA CHANDRA',
+    pandit: 'Vedic Kashi Pandits',
+    desc: 'Ritualistic eclipse dosha alleviation (Surya-Rahu or Chandra-Ketu conjunction) neutralizing mental anxiety, optical disorders, and career obstacles.',
+    price: '₹4,500',
+    priceNumber: 4500,
+    image: '/services/puja.jpg',
+    durationMinutes: 45,
+  },
+  {
+    id: 'kaal_sarp_dhosh_shanti',
+    categoryTag: 'DOSH SHANTI',
+    categoryKey: 'pooja',
+    title: 'KAAL SARP DHOSH SHANTI',
+    pandit: 'Acharya Sourabh Swami Ji',
+    desc: 'Complete 12-form Kaal Sarp Yog Nivaran with consecration of silver Naag-Nagin pair, Rahu-Ketu Stotram, and Mahamrityunjaya oblations.',
+    price: '₹5,100',
+    priceNumber: 5100,
+    image: '/services/puja.jpg',
+    badge: 'Life-Transforming',
+    durationMinutes: 60,
+  },
+  {
+    id: 'chandal_dosh_shanti',
+    categoryTag: 'DOSH SHANTI',
+    categoryKey: 'pooja',
+    title: 'CHANDAL DOSH SHANTI',
+    pandit: 'Pandit Ji (Karamkand Specialist)',
+    desc: 'Remedying Guru-Rahu afflicting conjunction (Guru Chandal Dosha) to restore wisdom, higher learning, financial integrity, and ancestral peace.',
+    price: '₹4,100',
+    priceNumber: 4100,
+    image: '/services/puja.jpg',
+    durationMinutes: 45,
+  },
+  {
+    id: 'lucky_number',
+    categoryTag: 'NUMEROLOGY & ANK VIDYA',
+    categoryKey: 'occult',
+    title: 'LUCKY NUMBER',
+    pandit: 'Dr. Pandit Vishal Dubey',
+    desc: 'Calculations based on Chaldean & Pythagorean Ank Shastra identifying your driver, conductor, and master numbers for bank, vehicle, and phone.',
+    price: '₹999',
+    priceNumber: 999,
+    image: '/services/consultation.jpg',
+    durationMinutes: 20,
+  },
+  {
+    id: 'know_your_lucky_color',
+    categoryTag: 'COLOR & COSMIC THERAPY',
+    categoryKey: 'occult',
+    title: 'KNOW YOUR LUCKY COLOR',
+    pandit: 'Dr. Pandit Vishal Dubey',
+    desc: 'Harmonize your electromagnetic aura with beneficial spectral hues based on your ruling planet, ascendant, and transit cycles.',
+    price: '₹750',
+    priceNumber: 750,
+    image: '/services/gemstones.jpg',
+    durationMinutes: 20,
+  },
+  {
+    id: 'shat_chandi_path',
+    categoryTag: 'MAHA ANUSHTHAN',
+    categoryKey: 'pooja',
+    title: 'SHAT CHANDI PATH',
+    pandit: '11 Initiated Vedic Brahmins',
+    desc: 'Grand 100 recitations of Durga Saptashati with full Samputit Vidhi, invoking supreme divine protection against adverse planetary transits and enemies.',
+    price: '₹21,000',
+    priceNumber: 21000,
+    image: '/services/puja.jpg',
+    badge: 'Supreme Maha Yagya',
+    durationMinutes: 90,
+  },
+  {
+    id: 'angrarak_dosh_shanti',
+    categoryTag: 'DOSH SHANTI',
+    categoryKey: 'pooja',
+    title: 'ANGRARAK DOSH SHANTI',
+    pandit: 'Acharya Sourabh Swami Ji',
+    desc: 'Specialized ritual neutralizing the volatile conjunction of Mars (Mangal) and Rahu, pacifying anger, accidental hazards, and legal complications.',
+    price: '₹4,500',
+    priceNumber: 4500,
+    image: '/services/puja.jpg',
+    durationMinutes: 45,
+  },
+  {
+    id: 'ark_vivah_kumbh_vivah',
+    categoryTag: 'RITUAL & REMEDY',
+    categoryKey: 'pooja',
+    title: 'ARK VIVAH/KUMBH VIVAH',
+    pandit: 'Pandit Ji (Karamkand Specialist)',
+    desc: 'Traditional Vedic symbolic marriage with Ark plant (for males) or Kumbh pitcher (for females) to nullify extreme Mangal and Vaidhavya doshas.',
+    price: '₹6,500',
+    priceNumber: 6500,
+    image: '/services/marriage.jpg',
+    durationMinutes: 60,
+  },
+  {
+    id: 'shreee_yantra_sthapana',
+    categoryTag: 'SACRED TANTRA & VAASTU',
+    categoryKey: 'pooja',
+    title: 'SHREEE YANTRA STHAPANA',
+    pandit: 'Dr. Pandit Vishal Dubey & Acharyas',
+    desc: 'Consecration and Pran Pratishtha of energized Maha Meru / Shree Yantra with Kanakadhara Stotra for eternal prosperity in your altar or cash vault.',
+    price: '₹3,500',
+    priceNumber: 3500,
+    image: '/services/puja.jpg',
+    durationMinutes: 45,
+  },
+  {
+    id: 'personal_appointment',
+    categoryTag: 'EXCLUSIVE GUIDANCE',
+    categoryKey: 'astrology',
+    title: 'PERSONAL APPOINTMENT',
+    pandit: 'Dr. Pandit Vishal Dubey (Face to Face)',
+    desc: 'Private in-person 45-minute consultation at Varanasi Sanctum, Indore, or New Delhi offices with comprehensive palmistry and horoscope reading.',
+    price: '₹5,000',
+    priceNumber: 5000,
+    image: '/services/consultation.jpg',
+    badge: 'VIP In-Person',
+    durationMinutes: 45,
+  },
+  {
+    id: 'nav_chandi_path',
+    categoryTag: 'SACRED DEVI POOJA',
+    categoryKey: 'pooja',
+    title: 'NAV CHANDI PATH',
+    pandit: 'Kashi Vidvat Parishad Acharyas',
+    desc: 'Powerful 9 recitations of Durga Saptashati culminating in a sanctified Havan for rapid hurdle clearance, business recovery, and household harmony.',
+    price: '₹7,500',
+    priceNumber: 7500,
+    image: '/services/puja.jpg',
+    durationMinutes: 60,
+  },
+  {
+    id: 'aura_scanning',
+    categoryTag: 'BIO-ENERGY & CHAKRA',
+    categoryKey: 'occult',
+    title: 'AURA SCANNING',
+    pandit: 'Dr. Pandit Vishal Dubey & Energy Masters',
+    desc: 'Advanced cosmic electro-photonic aura and 7-chakra scanning discovering energy depletion zones, negative entity interference, and vitality leaks.',
+    price: '₹2,500',
+    priceNumber: 2500,
+    image: '/services/consultation.jpg',
+    durationMinutes: 30,
+  },
+];
+
+export function getServiceById(id: string): ServiceItem | undefined {
+  return SERVICES_CATALOGUE.find((s) => s.id === id);
+}
+
+export const PUBLISHED_TIME_SLOTS = [
+  '10:00 AM',
+  '11:00 AM',
+  '12:00 PM',
+  '02:00 PM',
+  '04:00 PM',
+  '06:00 PM',
+];
+
+export const GURUJI_WORKING_HOURS = {
+  startHour: 10,
+  endHour: 19,
+  startMinutes: 10 * 60,
+  endMinutes: 19 * 60,
+  label: '10:00 AM – 07:00 PM IST',
+};
+
+export function parseTimeToMinutes(timeStr: string): number {
+  if (!timeStr || typeof timeStr !== 'string') return -1;
+  const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return -1;
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3].toUpperCase();
+  if (period === 'PM' && hours < 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+}
+
+export function formatMinutesToTimeStr(totalMinutes: number): string {
+  const hours24 = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  const period = hours24 >= 12 ? 'PM' : 'AM';
+  const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
+  const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
+  return `${pad(hours12)}:${pad(minutes)} ${period}`;
+}
+
+export function isWithinGurujiWorkingHours(timeStr: string, durationMinutes = 30): boolean {
+  const startMin = parseTimeToMinutes(timeStr);
+  if (startMin < 0) return false;
+  const safeDuration = durationMinutes > 0 ? durationMinutes : 30;
+  return (
+    startMin >= GURUJI_WORKING_HOURS.startMinutes &&
+    startMin + safeDuration <= GURUJI_WORKING_HOURS.endMinutes
+  );
+}
+
+export function generateWorkingHourSlots(durationMinutes = 30): string[] {
+  const safeDuration = Math.max(10, Math.min(240, durationMinutes || 30));
+  const slots: string[] = [];
+  for (
+    let m = GURUJI_WORKING_HOURS.startMinutes;
+    m + safeDuration <= GURUJI_WORKING_HOURS.endMinutes;
+    m += safeDuration
+  ) {
+    slots.push(formatMinutesToTimeStr(m));
+  }
+  return slots;
+}
+
+
+export const DEFAULT_GURUJI_MEET_LINK = 'https://meet.google.com/zrg-vfdz-jky';
+
+export function formatGoogleMeetLink(bookingId?: string): string {
+  const configured = typeof process !== 'undefined'
+    ? (process.env.NEXT_PUBLIC_GURUJI_MEET_LINK || process.env.GURUJI_MEET_LINK)
+    : undefined;
+  if (configured && configured.trim().startsWith('https://meet.google.com/')) {
+    return configured.trim();
+  }
+  return DEFAULT_GURUJI_MEET_LINK;
+}
+
+export interface MeetingTimeStatus {
+  isJoinable: boolean;
+  hasEnded: boolean;
+  isUpcoming: boolean;
+  diffMinutes: number;
+}
+
+export function getMeetingTimeStatus(
+  dateStr?: string,
+  timeStr?: string,
+  durationMinutes = 30
+): MeetingTimeStatus {
+  if (!dateStr || !timeStr) {
+    return { isJoinable: false, hasEnded: false, isUpcoming: true, diffMinutes: 999999 };
+  }
+
+  const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) {
+    return { isJoinable: false, hasEnded: false, isUpcoming: true, diffMinutes: 999999 };
+  }
+
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3].toUpperCase();
+  if (period === 'PM' && hours < 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const meetingStartTime = new Date(year, month - 1, day, hours, minutes, 0, 0).getTime();
+  const now = Date.now();
+
+  const fiveMinutesMs = 5 * 60 * 1000;
+  const sessionDurationMs = (durationMinutes || 30) * 60 * 1000;
+  const meetingEndTime = meetingStartTime + sessionDurationMs;
+
+  const enableTime = meetingStartTime - fiveMinutesMs;
+  const diffMinutes = Math.round((meetingStartTime - now) / (60 * 1000));
+
+  // Button unlocks exactly 5 minutes before scheduled session and stays available through the session + 15 min buffer
+  const isJoinable = now >= enableTime && now <= meetingEndTime + 15 * 60 * 1000;
+  const hasEnded = now > meetingEndTime + 15 * 60 * 1000;
+  const isUpcoming = now < enableTime;
+
+  return {
+    isJoinable,
+    hasEnded,
+    isUpcoming,
+    diffMinutes,
+  };
+}

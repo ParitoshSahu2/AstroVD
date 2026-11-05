@@ -6,8 +6,9 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   cacheComponents: true,
   partialPrefetching: true,
+  transpilePackages: ['lucide-react'],
   experimental: {
-    optimizePackageImports: ['lucide-react', 'clsx', 'tailwind-merge'],
+    optimizePackageImports: ['clsx', 'tailwind-merge'],
   },
   images: {
     formats: ['image/avif', 'image/webp'],
