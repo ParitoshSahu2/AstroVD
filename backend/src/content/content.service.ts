@@ -726,6 +726,8 @@ export class ContentService {
     const newReview: ReviewItem = {
       id: `rev-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       bookingId: dto.bookingId,
+      productId: dto.productId,
+      orderId: dto.orderId,
       userId: user?.sub,
       userName: dto.userName || user?.name || 'Devotee',
       userEmail: dto.userEmail || user?.email,
@@ -735,15 +737,73 @@ export class ContentService {
       country: dto.country || 'India',
       countryHi: dto.countryHi,
       rating: Math.max(1, Math.min(5, Number(dto.rating) || 5)),
-      serviceName: dto.serviceName || 'Vedic Consultation',
+      serviceName: dto.serviceName || (dto.productId ? `Product: ${dto.productId}` : 'Vedic Consultation'),
       serviceNameHi: dto.serviceNameHi,
       review: dto.review,
       reviewHi: dto.reviewHi || dto.review,
-      status: 'PENDING',
+      status: 'PUBLISHED',
       isVerifiedClient: true,
       createdAt: now,
       updatedAt: now,
+      publishedAt: now,
     };
+
+    // 1. If review is for a product, update product rating & reviewsCount in products.json
+    if (dto.productId) {
+      try {
+        const productsFilePath = path.join(this.dataDir, 'products.json');
+        if (fs.existsSync(productsFilePath)) {
+          const raw = fs.readFileSync(productsFilePath, 'utf-8');
+          const products = JSON.parse(raw);
+          if (Array.isArray(products)) {
+            const p = products.find(
+              (item: any) =>
+                item.id?.toLowerCase() === dto.productId?.toLowerCase() ||
+                item.slug?.toLowerCase() === dto.productId?.toLowerCase(),
+            );
+            if (p) {
+              const currentReviews = Number(p.reviewsCount) || 0;
+              const currentRating = Number(p.rating) || 5;
+              const newReviews = currentReviews + 1;
+              const updatedRating = Number(
+                (((currentRating * currentReviews) + newReview.rating) / newReviews).toFixed(1),
+              );
+              p.reviewsCount = newReviews;
+              p.rating = updatedRating;
+              fs.writeFileSync(productsFilePath, JSON.stringify(products, null, 2), 'utf-8');
+              this.logger.log(`Updated product ${p.id} rating to ${p.rating} (${p.reviewsCount} reviews)`);
+            }
+          }
+        }
+      } catch (err) {
+        this.logger.error('Failed to update product rating for review:', err);
+      }
+    }
+
+    // 2. If review is for a booking, update booking rating & review in appointments.json
+    if (dto.bookingId) {
+      try {
+        const appointmentsFilePath = path.join(this.dataDir, 'appointments.json');
+        if (fs.existsSync(appointmentsFilePath)) {
+          const raw = fs.readFileSync(appointmentsFilePath, 'utf-8');
+          const appointments = JSON.parse(raw);
+          if (Array.isArray(appointments)) {
+            const b = appointments.find(
+              (item: any) => item.id === dto.bookingId || item._id === dto.bookingId,
+            );
+            if (b) {
+              b.rating = newReview.rating;
+              b.review = newReview.review;
+              b.reviewedAt = now;
+              fs.writeFileSync(appointmentsFilePath, JSON.stringify(appointments, null, 2), 'utf-8');
+              this.logger.log(`Updated booking ${b.id} with customer rating ${b.rating}`);
+            }
+          }
+        }
+      } catch (err) {
+        this.logger.error('Failed to update appointment rating for review:', err);
+      }
+    }
 
     this.reviews.unshift(newReview);
     this.saveReviews();
@@ -755,7 +815,7 @@ export class ContentService {
         newReview.id,
         newReview.serviceName,
         'CREATE',
-        `New consultation review submitted by ${newReview.userName} for ${newReview.serviceName}`
+        `New verified review submitted by ${newReview.userName} for ${newReview.serviceName}`,
       );
     }
     return newReview;

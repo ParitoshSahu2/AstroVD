@@ -95,7 +95,7 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      await fetch(`${backendUrl}/api/content/reviews`, {
+      const res = await fetch(`${backendUrl}/api/content/reviews`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -109,6 +109,33 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
           review: reviewComment.trim(),
         }),
       });
+
+      if (res.ok) {
+        window.dispatchEvent(new CustomEvent('astro_review_added'));
+      }
+
+      if (typeof window !== 'undefined') {
+        try {
+          const newFeedback = {
+            id: `booking-rev-${Date.now()}`,
+            name: profile?.name || selectedReviewBooking.customerName || 'Devotee',
+            city: profile?.city || 'India',
+            country: 'India',
+            rating: reviewRating,
+            review: reviewComment.trim(),
+            reviewHi: reviewComment.trim(),
+            service: selectedReviewBooking.serviceTitle || selectedReviewBooking.service?.title || 'Vedic Consultation',
+            serviceHi: selectedReviewBooking.serviceTitle || selectedReviewBooking.service?.title || 'वैदिक परामर्श',
+            date: 'Just now',
+            dateHi: 'अभी-अभी',
+            isVerifiedClient: true,
+          };
+          const existing = localStorage.getItem('astro_verified_reviews');
+          const parsed = existing ? JSON.parse(existing) : [];
+          localStorage.setItem('astro_verified_reviews', JSON.stringify([newFeedback, ...parsed]));
+          window.dispatchEvent(new CustomEvent('astro_review_added', { detail: newFeedback }));
+        } catch (e) {}
+      }
     } catch (err) {
       console.error('Failed submitting review to backend:', err);
     } finally {
@@ -623,6 +650,32 @@ export const DashboardBookingsTab: React.FC<DashboardBookingsTabProps> = ({
                         {booking.isBookingForSomeoneElse && (
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
                             {t('Booked for family / friend', 'अन्य व्यक्ति हेतु बुक किया')}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Devotee Rating Snippet if reviewed */}
+                    {(consultationReviews[bId] || booking.rating) && (
+                      <div className="mt-2 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs flex items-center gap-2 flex-wrap animate-fadeIn">
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              className={`w-3.5 h-3.5 ${
+                                s <= ((consultationReviews[bId]?.rating || booking.rating) || 5)
+                                  ? 'fill-amber-500 text-amber-500'
+                                  : 'text-stone-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="font-bold text-amber-900 text-[11px]">
+                          {consultationReviews[bId]?.rating || booking.rating}/5 {t('Blessed Rating', 'पावन रेटिंग')}
+                        </span>
+                        {(consultationReviews[bId]?.comment || booking.review) && (
+                          <span className="text-stone-600 text-[11px] italic truncate max-w-sm">
+                            "{consultationReviews[bId]?.comment || booking.review}"
                           </span>
                         )}
                       </div>

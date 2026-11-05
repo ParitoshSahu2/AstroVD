@@ -376,6 +376,34 @@ export const FeedbackSection: React.FC = () => {
       console.error('Failed to save verified review:', e);
     }
 
+    // Submit to backend API so it persists in database, visible on homepage and admin panel
+    try {
+      const token = getAuthToken();
+      fetch(`${BACKEND_URL}/api/content/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          userName: user?.name || 'Verified Seeker',
+          userEmail: user?.email,
+          city: newCity.trim() || 'India',
+          rating: newRating,
+          serviceName: selectedService || 'Vedic Consultation & Puja',
+          review: newReview.trim(),
+        }),
+      })
+        .then((res) => {
+          if (res.ok) {
+            window.dispatchEvent(new CustomEvent('astro_review_added'));
+          }
+        })
+        .catch((e) => console.warn('Backend review sync note:', e));
+    } catch (err) {
+      console.warn('Backend review dispatch note:', err);
+    }
+
     setSubmitting(false);
     setSubmitted(true);
 

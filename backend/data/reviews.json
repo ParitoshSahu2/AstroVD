@@ -1,5 +1,37 @@
 [
   {
+    "id": "rev-1793856456049-jjizo",
+    "bookingId": "apt-test-1",
+    "userName": "Sunita Mishra",
+    "city": "Varanasi",
+    "country": "India",
+    "rating": 5,
+    "serviceName": "Kundli Consultation with Dr. Vishal Dubey",
+    "review": "Vishal Dubey ji answered every single question with astonishing Vedic accuracy. Truly divine!",
+    "reviewHi": "Vishal Dubey ji answered every single question with astonishing Vedic accuracy. Truly divine!",
+    "status": "PUBLISHED",
+    "isVerifiedClient": true,
+    "createdAt": "2026-11-05T05:27:36.049Z",
+    "updatedAt": "2026-11-05T05:27:36.049Z",
+    "publishedAt": "2026-11-05T05:27:36.049Z"
+  },
+  {
+    "id": "rev-1793855874875-ptw2l",
+    "productId": "tiger_eye",
+    "userName": "Amitabh Sharma",
+    "city": "Jaipur",
+    "country": "India",
+    "rating": 5,
+    "serviceName": "Product: TIGER EYE BRACELET",
+    "review": "Remarkable spiritual aura and lab certificate received. Feeling great positivity!",
+    "reviewHi": "Remarkable spiritual aura and lab certificate received. Feeling great positivity!",
+    "status": "PUBLISHED",
+    "isVerifiedClient": true,
+    "createdAt": "2026-11-05T05:17:54.875Z",
+    "updatedAt": "2026-11-05T05:17:54.875Z",
+    "publishedAt": "2026-11-05T05:17:54.875Z"
+  },
+  {
     "id": "rev-seed-1",
     "userName": "Rajesh & Meenakshi Iyer",
     "city": "Dubai",
@@ -14,8 +46,13 @@
     "status": "PUBLISHED",
     "isVerifiedClient": true,
     "createdAt": "2026-11-04T05:49:25.915Z",
-    "updatedAt": "2026-11-04T05:49:25.915Z",
-    "publishedAt": "2026-11-04T05:49:25.915Z"
+    "updatedAt": "2026-11-05T05:09:56.110Z",
+    "publishedAt": "2026-11-05T05:09:56.110Z",
+    "publishedBy": {
+      "id": "59e514c9-97f8-4acb-8c2f-dade27f86425",
+      "name": "Dr. Pandit Vishal Dubey",
+      "email": "vishal.dubey@astrovd.com"
+    }
   },
   {
     "id": "rev-seed-2",

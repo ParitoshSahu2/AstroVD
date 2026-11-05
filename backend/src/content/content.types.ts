@@ -332,6 +332,8 @@ export type ReviewStatus = 'PENDING' | 'PUBLISHED' | 'REJECTED';
 export interface ReviewItem {
   id: string;
   bookingId?: string;
+  productId?: string;
+  orderId?: string;
   userId?: string;
   userName: string;
   userEmail?: string;
@@ -357,6 +359,14 @@ export class CreateReviewDto {
   @IsOptional()
   @IsString()
   bookingId?: string;
+
+  @IsOptional()
+  @IsString()
+  productId?: string;
+
+  @IsOptional()
+  @IsString()
+  orderId?: string;
 
   @IsString()
   userName: string;

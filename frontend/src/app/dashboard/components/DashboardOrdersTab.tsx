@@ -266,6 +266,32 @@ export const DashboardOrdersTab: React.FC<DashboardOrdersTabProps> = ({
         JSON.stringify([newFeedback, ...existingList])
       );
 
+      // Submit to backend API so it persists in database, updates product rating, and displays on homepage & admin
+      const backendUrl = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api').replace(/\/api\/?$/, '');
+      const token = typeof window !== 'undefined' ? (localStorage.getItem('astro_token') || localStorage.getItem('token') || localStorage.getItem('astrovd_token')) : null;
+      const targetProductId = selectedReviewOrder.items?.[0]?.id || selectedReviewOrder.productId || null;
+
+      fetch(`${backendUrl}/api/content/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          orderId: selectedReviewOrder.id || selectedReviewOrder.orderNumber,
+          productId: targetProductId,
+          userName: selectedReviewOrder.shippingAddress?.recipient || userName,
+          city: shippingCity,
+          rating: reviewRating,
+          serviceName: `Product: ${productName}`,
+          review: reviewComment.trim(),
+        }),
+      })
+        .then(() => {
+          window.dispatchEvent(new CustomEvent('astro_review_added', { detail: newFeedback }));
+        })
+        .catch((e) => console.warn('Backend order review sync note:', e));
+
       // Dispatch event to inform FeedbackSection on home page
       window.dispatchEvent(new CustomEvent('astro_review_added', { detail: newFeedback }));
     } catch (err) {
