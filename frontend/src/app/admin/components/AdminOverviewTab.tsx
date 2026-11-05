@@ -350,7 +350,7 @@ export default function AdminOverviewTab({
 
         {/* Card 3: Pending Approvals */}
         <div
-          onClick={() => onNavigateTab('appointments')}
+          onClick={() => onNavigateTab('pending_bookings')}
           className="bg-white rounded-xl sm:rounded-2xl p-3.5 sm:p-4 border border-stone-200/70 shadow-xs hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between hover:border-amber-300 min-w-0"
         >
           <div className="flex items-center justify-between gap-1.5 min-w-0">
@@ -371,8 +371,8 @@ export default function AdminOverviewTab({
             >
               {pendingApprovalsCount}
             </div>
-            <div className="mt-1 text-[10.5px] sm:text-[11px] font-semibold text-[#EA580C] truncate" title="Needs attention">
-              Needs attention
+            <div className={`mt-1 text-[10.5px] sm:text-[11px] font-semibold truncate ${pendingApprovalsCount > 0 ? 'text-[#EA580C]' : 'text-emerald-600'}`} title={pendingApprovalsCount > 0 ? 'Needs attention' : 'All caught up'}>
+              {pendingApprovalsCount > 0 ? 'Needs attention' : 'All caught up'}
             </div>
           </div>
         </div>

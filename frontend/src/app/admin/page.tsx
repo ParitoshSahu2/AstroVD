@@ -2041,9 +2041,14 @@ export default function AdminPage() {
       setRoleFilter('SUPERADMIN');
       setPage(1);
       fetchUsers(1);
-    } else if (tabKey === 'appointments' || tabKey === 'consultations' || tabKey === 'bookings') {
+    } else if (tabKey === 'appointments' || tabKey === 'consultations' || tabKey === 'bookings' || tabKey === 'pending_bookings') {
       resolvedTab = 'bookings';
       setBookingServiceFilter('ALL');
+      if (tabKey === 'pending_bookings') {
+        setBookingStatusFilter('PENDING');
+      } else {
+        setBookingStatusFilter('ALL');
+      }
       fetchBookingsList(1);
     } else if (tabKey === 'orders') {
       resolvedTab = 'orders';

@@ -79,18 +79,18 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
           ord.deliveryDate ||
           (ord.createdAt
             ? new Date(ord.createdAt).toLocaleDateString('en-US', {
-                month: 'short',
-                day: '2-digit',
-                year: 'numeric',
-              })
+              month: 'short',
+              day: '2-digit',
+              year: 'numeric',
+            })
             : 'Nov 24, 2025');
 
         const placedDate = ord.createdAt
           ? new Date(ord.createdAt).toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            })
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          })
           : 'Nov 20, 2025';
 
         const deliveryHeading =
@@ -98,16 +98,16 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
           (status === 'DELIVERED'
             ? `Delivered on ${dateStr}`
             : status === 'SHIPPED' || status === 'IN_TRANSIT'
-            ? `Expected by ${dateStr}`
-            : `Consecration in Progress`);
+              ? `Expected by ${dateStr}`
+              : `Consecration in Progress`);
 
         const rawSubtext =
           ord.deliverySubtext ||
           (status === 'DELIVERED'
             ? 'Your item has been delivered'
             : status === 'SHIPPED' || status === 'IN_TRANSIT'
-            ? 'Your item is in transit'
-            : 'Pran-Pratishtha underway');
+              ? 'Your item is in transit'
+              : 'Pran-Pratishtha underway');
 
         const deliverySubtext =
           rawSubtext.toLowerCase().includes('pran-pratishtha') && rawSubtext.length > 25
@@ -118,16 +118,16 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
           ord.items && ord.items.length > 0
             ? ord.items
             : [
-                {
-                  id: `item-${rawId}`,
-                  name: ord.productName || 'Sacred Consecrated Relic',
-                  price: ord.totalAmount || ord.total || 1499,
-                  quantity: ord.quantity || 1,
-                  image: ord.image,
-                  subtitle: ord.subtitle || 'Vedic Consecrated & Energized',
-                  variant: ord.variant,
-                },
-              ];
+              {
+                id: `item-${rawId}`,
+                name: ord.productName || 'Sacred Consecrated Relic',
+                price: ord.totalAmount || ord.total || 1499,
+                quantity: ord.quantity || 1,
+                image: ord.image,
+                subtitle: ord.subtitle || 'Vedic Consecrated & Energized',
+                variant: ord.variant,
+              },
+            ];
 
         return items.map((it: any, itIdx: number) => {
           const itName =
@@ -354,56 +354,19 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                   <span>{t('Rate & Review Consultation', 'रेटिंग व समीक्षा')}</span>
                 </button>
               ) : nextBooking.status === 'CONFIRMED' ? (() => {
-                const meetStatus = getMeetingTimeStatus(
-                  nextBooking.bookingDate || nextBooking.scheduledDate || nextBooking.date,
-                  nextBooking.slot || nextBooking.scheduledTime || nextBooking.time,
-                  30
-                );
                 const meetUrl = (nextBooking.meetLink && nextBooking.meetLink.startsWith('http')) ? nextBooking.meetLink : formatGoogleMeetLink(nextBooking.id || nextBooking._id);
-
-                if (meetStatus.isJoinable) {
-                  return (
-                    <a
-                      href={meetUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-6 py-3 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
-                    >
-                      <Video className="w-4 h-4" />
-                      <span>{t('Join Meeting', 'मीटिंग में जुड़ें')}</span>
-                    </a>
-                  );
-                }
-
-                if (meetStatus.hasEnded) {
-                  return (
-                    <span className="px-5 py-2.5 rounded-full bg-stone-100 text-stone-500 font-medium text-xs border border-stone-200 text-center">
-                      {t('Session Concluded', 'सत्र समाप्त')}
-                    </span>
-                  );
-                }
-
                 return (
-                  <button
-                    type="button"
-                    disabled
-                    className="px-5 py-2.5 rounded-full bg-stone-100 text-stone-400 font-semibold text-xs border border-stone-200 cursor-not-allowed flex items-center justify-center gap-2"
-                    title={t('Unlocks 5 minutes prior to appointment', 'परामर्श समय से 5 मिनट पहले सक्रिय होगा')}
+                  <a
+                    href={meetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-6 py-3 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2"
                   >
-                    <Lock className="w-3.5 h-3.5 text-stone-400" />
-                    <span>{t('Join Meeting (Opens 5 Min Before)', 'मीटिंग से जुड़ें (5 मिनट पूर्व)')}</span>
-                  </button>
+                    <Video className="w-4 h-4" />
+                    <span>{t('Join Meeting', 'मीटिंग में जुड़ें')}</span>
+                  </a>
                 );
-              })() : (nextBooking.status === 'APPROVED' || nextBooking.status === 'PENDING_PAYMENT') ? (
-                <button
-                  type="button"
-                  onClick={() => onTabChange('consultations')}
-                  className="px-6 py-3 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#851622] to-[#5B0D15] text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 animate-pulse"
-                >
-                  <CreditCard className="w-4 h-4 text-amber-300" />
-                  <span>{t('Proceed to Pay & Confirm', 'दक्षिणा भुगतान कर पुष्ट करें')}</span>
-                </button>
-              ) : (nextBooking.status === 'CANCELLED' || nextBooking.status === 'REJECTED') ? (
+              })() : (nextBooking.status === 'CANCELLED' || nextBooking.status === 'REJECTED') ? (
                 <button
                   type="button"
                   onClick={() => onTabChange('consultations')}
@@ -412,11 +375,15 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>{t('Reschedule (Guruji Unavailable)', 'पुनर्निर्धारित करें (गुरुजी अनुपलब्ध)')}</span>
                 </button>
-              ) : (nextBooking.status === 'PENDING' || nextBooking.status === 'REVIEWING') ? (
-                <div className="px-5 py-2.5 rounded-full bg-amber-50 text-amber-800 text-xs font-semibold border border-amber-300 flex items-center justify-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-amber-600" />
-                  <span>{t('Waiting for Admin Approval', 'व्यवस्थापक स्वीकृति की प्रतीक्षा')}</span>
-                </div>
+              ) : (!['CONFIRMED', 'COMPLETED'].includes(nextBooking.status)) ? (
+                <button
+                  type="button"
+                  onClick={() => onTabChange('consultations')}
+                  className="px-6 py-3 rounded-full bg-gradient-to-r from-[#5B0D15] via-[#851622] to-[#5B0D15] text-white font-bold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 animate-pulse"
+                >
+                  <CreditCard className="w-4 h-4 text-amber-300" />
+                  <span>{t('Pay Dakshina & Lock Slot', 'दक्षिणा भुगतान कर स्लॉट लॉक करें')}</span>
+                </button>
               ) : null}
               <button
                 onClick={() => onTabChange('consultations')}
@@ -431,144 +398,143 @@ export const DashboardOverviewTab: React.FC<DashboardOverviewTabProps> = ({
 
       {/* 4. Recent Sacred Orders Tracker */}
       <div className="w-full bg-white rounded-3xl border border-stone-200/80 p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-stone-100">
-            <div className="flex items-center gap-2">
-              <Package className="w-5 h-5 text-amber-700" />
-              <h3 className="font-serif text-lg font-bold text-[#3B1E22]">
-                {t('Recent Sacred Orders', 'हाल के सिद्ध ऑर्डर्स')}
-              </h3>
-            </div>
-            <button
-              onClick={() => onTabChange('orders')}
-              className="text-xs font-semibold text-[#5B0D15] hover:underline flex items-center gap-1"
-            >
-              <span>{t('View All Orders', 'सभी ऑर्डर्स')}</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+        <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+          <div className="flex items-center gap-2">
+            <Package className="w-5 h-5 text-amber-700" />
+            <h3 className="font-serif text-lg font-bold text-[#3B1E22]">
+              {t('Recent Sacred Orders', 'हाल के सिद्ध ऑर्डर्स')}
+            </h3>
           </div>
+          <button
+            onClick={() => onTabChange('orders')}
+            className="text-xs font-semibold text-[#5B0D15] hover:underline flex items-center gap-1"
+          >
+            <span>{t('View All Orders', 'सभी ऑर्डर्स')}</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
 
-          {recentProductItems.length === 0 ? (
-            <div className="py-10 text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-stone-100 text-stone-400 flex items-center justify-center mx-auto">
-                <ShoppingCart className="w-5 h-5" />
-              </div>
-              <p className="text-xs text-stone-500">
-                {t('You have not placed any sacred store orders yet.', 'अभी तक आपने कोई ऑर्डर नहीं दिया है।')}
-              </p>
-              <Link
-                href="/products"
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#5B0D15] text-white text-xs font-semibold hover:bg-[#78121d] transition-all"
-              >
-                <span>{t('Browse Sacred Artifacts', 'सिद्ध उत्पाद देखें')}</span>
-              </Link>
+        {recentProductItems.length === 0 ? (
+          <div className="py-10 text-center space-y-3">
+            <div className="w-12 h-12 rounded-full bg-stone-100 text-stone-400 flex items-center justify-center mx-auto">
+              <ShoppingCart className="w-5 h-5" />
             </div>
-          ) : (
-            <div className="space-y-3">
-              {recentProductItems.map((entry: any) => {
-                const it = entry.item;
-                const status = entry.status;
-                const deliveryHeading = entry.deliveryHeading;
-                const deliverySubtext = entry.deliverySubtext;
-                const itImg = it.image || resolveProductImage(it);
-                const itPrice = it.price || 1499;
-                const itQty = it.quantity || 1;
+            <p className="text-xs text-stone-500">
+              {t('You have not placed any sacred store orders yet.', 'अभी तक आपने कोई ऑर्डर नहीं दिया है।')}
+            </p>
+            <Link
+              href="/products"
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#5B0D15] text-white text-xs font-semibold hover:bg-[#78121d] transition-all"
+            >
+              <span>{t('Browse Sacred Artifacts', 'सिद्ध उत्पाद देखें')}</span>
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {recentProductItems.map((entry: any) => {
+              const it = entry.item;
+              const status = entry.status;
+              const deliveryHeading = entry.deliveryHeading;
+              const deliverySubtext = entry.deliverySubtext;
+              const itImg = it.image || resolveProductImage(it);
+              const itPrice = it.price || 1499;
+              const itQty = it.quantity || 1;
 
-                return (
-                  <div
-                    key={entry.uniqueKey}
-                    className="bg-white border border-stone-200/90 hover:border-amber-400 rounded-2xl p-4 sm:p-5 hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4.5 group font-['Assistant',system-ui,-apple-system,sans-serif]"
-                  >
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                      {/* Full-bleed Product Image */}
-                      <div className="relative shrink-0">
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-stone-200/90 group-hover:border-amber-400 overflow-hidden shadow-xs transition-all duration-300">
-                          <img
-                            src={itImg}
-                            alt={it.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/products/rudraksha-mala.jpg';
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Product Details (Name -> Subtitle & Qty -> Price) */}
-                      <div className="min-w-0 flex-1 space-y-1">
-                        {/* 1. Product Name */}
-                        <h4
-                          className="font-serif font-bold text-base sm:text-[17px] text-stone-900 group-hover:text-[#5B0D15] transition-colors line-clamp-1 leading-snug tracking-tight"
-                          title={it.name}
-                        >
-                          {it.name}
-                        </h4>
-
-                        {/* 2. Subtitle / Energization Description */}
-                        {it.subtitle && (
-                          <p className="text-xs text-stone-500 font-medium line-clamp-1">
-                            {it.subtitle}
-                          </p>
-                        )}
-
-                        {/* 3. Price & Quantity (Paired logically together) */}
-                        <div className="flex items-center gap-2 pt-0.5">
-                          <span className="text-base sm:text-lg font-bold text-[#5B0D15]">
-                            ₹{Number(itPrice).toLocaleString('en-IN')}
-                          </span>
-                          <span className="text-[11px] font-semibold text-stone-600 bg-stone-100 border border-stone-200/60 px-2 py-0.5 rounded-md">
-                            Qty: {itQty}
-                          </span>
-                        </div>
+              return (
+                <div
+                  key={entry.uniqueKey}
+                  className="bg-white border border-stone-200/90 hover:border-amber-400 rounded-2xl p-4 sm:p-5 hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4.5 group font-['Assistant',system-ui,-apple-system,sans-serif]"
+                >
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    {/* Full-bleed Product Image */}
+                    <div className="relative shrink-0">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border border-stone-200/90 group-hover:border-amber-400 overflow-hidden shadow-xs transition-all duration-300">
+                        <img
+                          src={itImg}
+                          alt={it.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/products/rudraksha-mala.jpg';
+                          }}
+                        />
                       </div>
                     </div>
 
-                    {/* Delivery Status & Quick Actions */}
-                    <div className="sm:w-60 shrink-0 sm:pl-4 sm:border-l sm:border-stone-100 space-y-1.5 sm:text-right flex flex-col justify-between">
-                      <div className="space-y-0.5">
-                        <div className="flex items-center sm:justify-end gap-1.5 font-bold text-xs sm:text-[13px] text-stone-900">
-                          <span
-                            className={`w-2 h-2 rounded-full shrink-0 ${
-                              status === 'DELIVERED'
-                                ? 'bg-emerald-600'
-                                : 'bg-blue-600 animate-pulse'
-                            }`}
-                          />
-                          <span>{deliveryHeading}</span>
-                        </div>
-                        <p className="text-xs text-stone-500 line-clamp-1 sm:text-right">
-                          {deliverySubtext}
-                        </p>
-                      </div>
+                    {/* Product Details (Name -> Subtitle & Qty -> Price) */}
+                    <div className="min-w-0 flex-1 space-y-1">
+                      {/* 1. Product Name */}
+                      <h4
+                        className="font-serif font-bold text-base sm:text-[17px] text-stone-900 group-hover:text-[#5B0D15] transition-colors line-clamp-1 leading-snug tracking-tight"
+                        title={it.name}
+                      >
+                        {it.name}
+                      </h4>
 
-                      <div className="pt-0.5 flex sm:justify-end">
-                        {status === 'DELIVERED' ? (
-                          <button
-                            type="button"
-                            onClick={() => onTabChange('orders')}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold text-xs shadow-2xs hover:shadow-xs transition-all cursor-pointer active:scale-95 whitespace-nowrap"
-                          >
-                            <Star className="w-3.5 h-3.5 fill-white text-white" />
-                            <span>{t('Rate & Review', 'समीक्षा लिखें')}</span>
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => onTabChange('orders')}
-                            className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-stone-100 hover:bg-stone-200/80 text-stone-700 font-semibold text-xs transition-all cursor-pointer active:scale-95 whitespace-nowrap"
-                          >
-                            <Truck className="w-3.5 h-3.5 text-stone-500" />
-                            <span>{t('Track Order', 'ट्रैक करें')}</span>
-                            <ChevronRight className="w-3 h-3 text-stone-400" />
-                          </button>
-                        )}
+                      {/* 2. Subtitle / Energization Description */}
+                      {it.subtitle && (
+                        <p className="text-xs text-stone-500 font-medium line-clamp-1">
+                          {it.subtitle}
+                        </p>
+                      )}
+
+                      {/* 3. Price & Quantity (Paired logically together) */}
+                      <div className="flex items-center gap-2 pt-0.5">
+                        <span className="text-base sm:text-lg font-bold text-[#5B0D15]">
+                          ₹{Number(itPrice).toLocaleString('en-IN')}
+                        </span>
+                        <span className="text-[11px] font-semibold text-stone-600 bg-stone-100 border border-stone-200/60 px-2 py-0.5 rounded-md">
+                          Qty: {itQty}
+                        </span>
                       </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+
+                  {/* Delivery Status & Quick Actions */}
+                  <div className="sm:w-60 shrink-0 sm:pl-4 sm:border-l sm:border-stone-100 space-y-1.5 sm:text-right flex flex-col justify-between">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center sm:justify-end gap-1.5 font-bold text-xs sm:text-[13px] text-stone-900">
+                        <span
+                          className={`w-2 h-2 rounded-full shrink-0 ${status === 'DELIVERED'
+                            ? 'bg-emerald-600'
+                            : 'bg-blue-600 animate-pulse'
+                            }`}
+                        />
+                        <span>{deliveryHeading}</span>
+                      </div>
+                      <p className="text-xs text-stone-500 line-clamp-1 sm:text-right">
+                        {deliverySubtext}
+                      </p>
+                    </div>
+
+                    <div className="pt-0.5 flex sm:justify-end">
+                      {status === 'DELIVERED' ? (
+                        <button
+                          type="button"
+                          onClick={() => onTabChange('orders')}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold text-xs shadow-2xs hover:shadow-xs transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+                        >
+                          <Star className="w-3.5 h-3.5 fill-white text-white" />
+                          <span>{t('Rate & Review', 'समीक्षा लिखें')}</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => onTabChange('orders')}
+                          className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-stone-100 hover:bg-stone-200/80 text-stone-700 font-semibold text-xs transition-all cursor-pointer active:scale-95 whitespace-nowrap"
+                        >
+                          <Truck className="w-3.5 h-3.5 text-stone-500" />
+                          <span>{t('Track Order', 'ट्रैक करें')}</span>
+                          <ChevronRight className="w-3 h-3 text-stone-400" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
 
     </div>
